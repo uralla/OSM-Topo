@@ -1,0 +1,68 @@
+# 
+
+waterway=riverbank & mkgmap:area2poi!=true | landuse=basin & mkgmap:area2poi!=true | landuse=reservoir & mkgmap:area2poi!=true | water=reservoir & mkgmap:area2poi!=true {add natural=water}
+
+#(landuse=reservoir | water=reservoir) [0x3f resolution 18]
+
+#natural=bay [0x3d resolution 16]
+natural=bay [0x32 resolution 18]
+
+natural=glacier & area_size()>50000 & mkgmap:area2poi!=true [0x5d resolution 19-20 continue]
+natural=glacier & area_size()>10000 & mkgmap:area2poi!=true [0x5d resolution 21-23 continue]
+natural=glacier & mkgmap:area2poi!=true [0x4d resolution 24]
+
+natural=mud & area_size()>10000 & mkgmap:area2poi!=true [0x61 resolution 21-23 continue]
+natural=mud & mkgmap:area2poi!=true [0x62 resolution 24]
+
+
+
+
+
+#болоты с зумом
+
+#лесное болото
+natural=wetland & wetland=swamp & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
+natural=wetland & wetland=swamp & mkgmap:area2poi!=true { name 'заболоченный лес' } [0x1171d resolution 24 continue]
+natural=wetland & wetland=swamp & mkgmap:area2poi!=true  [0x50 resolution 24]
+
+#болото с чахлой растительностью
+natural=wetland & wetland=marsh & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
+natural=wetland & wetland=marsh & mkgmap:area2poi!=true { name 'заболоченная местность' } [0x1181a resolution 24]
+
+
+
+natural=wetland & wetland=wet_meadow & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
+natural=wetland & wetland=tidalflat & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
+natural=wetland & wetland=reedbed & area_size()>50000 & mkgmap:area2poi!=true [0x54 resolution 22-23 continue]
+natural=wetland & wetland=saltmarsh & mkgmap:area2poi!=true [0x54 resolution 24 continue]
+
+ 
+ 
+natural=wetland & wetland=wet_meadow & mkgmap:area2poi!=true { name 'заболоченный луг' } [0x54 resolution 24]
+natural=wetland & wetland=tidalflat & mkgmap:area2poi!=true { name 'приливная зона' } [0x1171a resolution 24]
+natural=wetland & wetland=reedbed & mkgmap:area2poi!=true { name 'камыши' } [0x54 resolution 24]
+natural=wetland & wetland=saltmarsh & mkgmap:area2poi!=true { name 'прибрежное болото' } [0x54 resolution 24]
+
+natural=wetland & mkgmap:area2poi!=true { name 'болото' } [0x1171d resolution 22] 
+
+
+
+natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi!=true [0x3f resolution 21]
+natural=sea { add mkgmap:skipSizeFilter=true; set mkgmap:drawLevel=2 } [0x32 resolution 16 continue]
+
+
+
+
+# Некоторые большие озера видно везде. Остальные только ниже.
+
+		
+		
+natural=water & area_size()>10000000 & mkgmap:area2poi!=true [0x3c resolution 16-16 continue]
+natural=water & area_size()>3500000 & mkgmap:area2poi!=true [0x3c resolution 17-18 continue]
+natural=water & area_size()>150000 & mkgmap:area2poi!=true [0x3f resolution 19-19 continue]
+natural=water & area_size()>50000 & mkgmap:area2poi!=true [0x3f resolution 20-21 continue]
+natural=water & area_size()>20000 & mkgmap:area2poi!=true [0x3f resolution 22-23 continue]
+natural=water & mkgmap:area2poi!=true [0x3b resolution 24]
+
+
+# natural=water [0x3c resolution 18]

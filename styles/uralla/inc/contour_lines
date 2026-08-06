@@ -1,0 +1,64 @@
+# Contours take their name from the elevation setting.
+
+contour=elevation & contour_ext=elevation_minor & ele!=0 & length()>800
+	{ name '${ele|conv:m=>ft}'; }
+	[0x20 resolution 23-23 continue]
+
+contour=elevation & contour_ext=elevation_minor & ele!=0 & length()>200
+	{ name '${ele|conv:m=>ft}'; }
+	[0x21 resolution 24]
+	
+
+
+contour=elevation & contour_ext=elevation_medium & ele!=0 & length()>800
+	{ name '${ele|conv:m=>ft}'; }
+	[0x20 resolution 21-22 continue]
+	
+contour=elevation & contour_ext=elevation_medium & ele!=0 & length()>500
+	{ name '${ele|conv:m=>ft}'; }
+	[0x21 resolution 23-23 continue]
+
+contour=elevation & contour_ext=elevation_medium & ele!=0 & length()>200
+	{ name '${ele|conv:m=>ft}'; }
+	[0x22 resolution 24]
+	
+
+
+contour=elevation & contour_ext=elevation_major & ele!=0 & length()>900
+	{ name '${ele|conv:m=>ft}'; }
+	[0x20 resolution 19-20 continue]
+
+contour=elevation & contour_ext=elevation_major & ele!=0 & length()>500
+	{ name '${ele|conv:m=>ft}'; }
+	[0x21 resolution 21-22 continue]
+
+contour=elevation & contour_ext=elevation_major & ele!=0 & length()>200
+	{ name '${ele|conv:m=>ft}'; }
+	[0x22 resolution 23]
+
+
+
+
+contour=elevation & ele!=0 | contour_ext=elevation & ele!=0 & length()>500
+	{ name '${ele|conv:m=>ft}'; }
+	[0x21 resolution 20]
+
+
+
+depth=major & length()>500 { name '${VALUE|conv:m=>ft}' } [0x24 resolution 18-21 continue]
+depth=major & length()>500 { name '${VALUE|conv:m=>ft}' } [0x25 resolution 22]
+
+depth=medium & length()>500 { name '${VALUE|conv:m=>ft}' } [0x23 resolution 19-21 continue]
+depth=medium & length()>500 { name '${VALUE|conv:m=>ft}' } [0x24 resolution 22]
+
+depth=minor & length()>500 { name '${VALUE|conv:m=>ft}' } [0x23 resolution 22]
+
+
+# VALUE ~ '-\d*(500|000).0' { name '${VALUE|conv:m=>ft}' } [0x23 resolution 19-20 continue]
+# VALUE ~ '-\d*(500|000).0' { name '${VALUE|conv:m=>ft}' } [0x24 resolution 21-22 continue]
+# VALUE ~ '-\d*(500|000).0' { name '${VALUE|conv:m=>ft}' } [0x25 resolution 23]
+# 
+# VALUE ~ '-\d*(100|400|200|300|400|600|700|800|900).0' { name '${VALUE|conv:m=>ft}' } [0x23 resolution 21-22 continue]
+# VALUE ~ '-\d*(100|400|200|300|400|600|700|800|900).0' { name '${VALUE|conv:m=>ft}' } [0x24 resolution 23]
+# 
+# VALUE ~ '-.(?!\d*00|!\d*50)\d+.0' { name '${VALUE|conv:m=>ft}' } [0x23 resolution 23]

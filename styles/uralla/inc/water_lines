@@ -1,0 +1,84 @@
+# natural=coastline [0x15 resolution 16]
+
+# route=ferry {set mkgmap:numbers = false }
+# route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
+# route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
+
+### роутинг по рекам - линия с синими стрелками направления течения на 0-м слое
+(waterway=canal 
+| waterway=river  
+| waterway=rapid 	| waterway=rapids | whitewater=rapid | whitewater=rapids 
+| waterway=waterfall 
+| waterway=drain  
+| waterway=yes
+| waterway=stream) & tunnel!=* {add access=no; add taxi=yes} [0x0f road_class=0 road_speed=0 resolution 24 continue]
+###
+
+
+
+waterway=river & name='Чусовая' & length()>500
+| waterway=river & name='Волга' & length()>500
+| waterway=river & name='Белая' & length()>500
+| waterway=river & name='Юрюзань' & length()>500
+| waterway=river & name='Урал' & length()>500
+| waterway=river & name='Дон' & length()>500
+| waterway=river & name='Кубань' & length()>500
+| waterway=river & name='Терек' & length()>500
+| waterway=river & name='Ока' & length()>500
+| waterway=river & name='Иртыш' & length()>500
+| waterway=river & name='Северная Двина' & length()>500
+| waterway=river & name='Енисей' & length()>500
+| waterway=river & name='Амур' & length()>500
+| waterway=river & name='Ангара' & length()>500
+| waterway=river & name='Лена' & length()>500
+| waterway=river & name='Колыма' & length()>500
+| waterway=river & name='Катунь' & length()>500
+| waterway=river & name='Чуя' & length()>500
+| waterway=river & name='Сырдарья' & length()>500
+| waterway=river & name='Сосьва' & length()>500
+| waterway=river & name='Вишера' & length()>500
+| waterway=river & name='Лозьва' & length()>500
+| waterway=river & name='Косью' & length()>500
+| waterway=river & name='Тшугор' & length()>500
+| waterway=river & name='Ивдель' & length()>500
+| waterway=river & name='Обь' & length()>500
+| waterway=river & name='Уса' & length()>500
+| waterway=river & name='Печора' & length()>500
+| waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]
+
+waterway=river & length()>500 | waterway=canal & length()>500 [0x01f resolution 20 continue]
+waterway=river | waterway=canal [0x01f resolution 23]
+
+waterway=drain [0x10109 resolution 24 continue]
+waterway=ditch [0x10109 resolution 24 continue]
+waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
+
+(waterway=stream | waterway=drain) & intermittent=yes [0x10f1d resolution 23 continue]
+(waterway=stream | waterway=drain) & intermittent=yes [0x10f1e resolution 24]
+
+
+#waterway=river { name 'р.${name}' } [0x01f resolution 19 continue]
+# waterway=river { name 'р.${name}' } [0x18 resolution 20]
+
+waterway=waterfall [0x1001e resolution 18]
+# waterway=stream | waterway=drain { name 'руч.${name}' } [0x18 resolution 20]
+
+
+
+### пороги
+waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
+	{name '${whitewater:section_name}, пор. ${whitewater:section_grade}' | '${whitewater:section_name}, пор. ${whitewater:rapid_grade}' |
+	'${whitewater:rapid_name}, пор. ${whitewater:section_grade}' | '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}'} [0x1001f resolution 18 continue]
+
+
+
+waterway=drain & length()>500 [0x18 resolution 21-23 continue]
+waterway=ditch [0x18 resolution 21-23 continue]
+
+
+waterway=stream & length()>500 [0x18 resolution 21-23 continue]
+waterway=stream [0x19 resolution 24 continue]
+
+
+
+

@@ -1,0 +1,110 @@
+# 
+landuse=cemetery|landuse=cemetary|amenity=grave_yard [0x6403 resolution 24]
+landuse=village_green & name=* [0x2c06 resolution 24]
+
+(landuse=wood | landuse=forest | natural=wood | natural=forest) 
+ & name=*  & (place!=island | place!=islet) [0x6618 resolution 24]
+
+
+
+landuse=military & name=* [0x640b resolution 24]
+landuse=basin & name=* [0x650f resolution 21] #
+(landuse=basin | landuse=reservoir) & name=* [0x650f resolution 21]
+landuse=village_green & name=* [0x2c06 resolution 24]
+landuse=retail & name=* [0x2e00 resolution 21]
+
+
+
+
+man_made=survey_point {name "${name} (${ele})"} [0x6617 resolution 24]
+ele=* & natural!=* {name "${ele} м"} [0x6405 resolution 24]
+
+natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
+
+natural=glacier [0x650a resolution 21]
+
+
+# Edge 705 displays 0x650a,0x6511,0x6512,0x6513,0x6603,0x6614 as hollow white circles, no menu
+natural=cave_entrance [0x6601 resolution 23]
+natural=cliff {name "${name}"} [0x6607 resolution 24]
+
+
+
+natural=peak & name='Ослянка'
+| natural=peak & name='Конжаковский Камень'
+| natural=peak & name='Большой Иремель'
+| natural=peak & name='Ямантау' & wikidata=Q1514176
+| natural=volcano & name='Эльбрус Западный'
+| natural=peak & name='Фишт'
+| natural=volcano & name:ru='Казбек'
+| natural=peak & name='Юдычвумчорр'
+| natural=peak & name='Белуха'
+| natural=peak & name='пик Семенова-Тян-Шанского'
+| natural=peak & name='Талғар шыңы'
+| natural=peak & name='Чок-Тал'
+| natural=peak & name='пик Меридиан'
+| natural=peak & name='Данков чокусу'
+| natural=peak & name='Хан Тәңірі - Хан-Теңири - 汗腾格里峰'
+| natural=peak & name='Сосьвинский'
+| natural=peak & name='Денежкин Камень'
+| natural=peak & name='Отортен'
+| natural=peak & name='Кожимзиз'
+| natural=peak & name='Толпоз-Из'
+| natural=peak & name='Неройка'
+| natural=peak & name='Сабля'
+| natural=peak & name='Манарага'
+| natural=peak & name='Пай-Ер'
+| natural=volcano & name:en='Mount Ararat'
+| natural=peak & name='Райиз' {add note=great-peak}
+
+note=great-peak {name "${name}"} [0x6616 resolution 16-22 continue] 
+
+note=great-peak {name "${name} (${ele} м)"} [0x6616 resolution 23-24]
+
+
+natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name}"} [0x6619 resolution 21-22 continue]
+
+natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 23-24 continue]
+
+  natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 23-24 continue]
+
+# natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${name}"} [0x6619 resolution 23-24 continue]
+
+natural=peak & ele!=* & name!=* & note!=great-peak | natural=hill & ele!=* & name!=* [0x6615 resolution 24]
+
+
+natural=volcano & note!=great-peak {name "${name}"} [0x2c0c resolution 21-22 continue]
+natural=volcano & note!=great-peak {name "${name} (${ele} м)"} [0x2c0c resolution 23-24]
+
+
+
+# natural=peak & ele=* & name=*
+# | natural=hill & ele=* & name=*
+# | natural=volcano & ele=* & name=*
+# {name "${name} (${ele})"} [0x6616 resolution 23]
+
+natural=hot_spring [0x6511 resolution 22]
+natural=stream & name=* [0x6511 resolution 23]
+
+
+natural=tree & leaf_type=broadleaved | natural=tree & leaf_type=mixed {name '${name}'} [0x2c08 resolution 24]
+natural=tree | natural=shrub | natural=tree & leaf_type=needleleaved {name '${name}'} [0x2c09 resolution 24]
+	
+# Перевалы с высотой и классом сложности
+mountain_pass=yes {name
+	 '${name} (${alt_name}), ${ele} (${rtsa_scale})'
+	| '${name}, ${ele} (${rtsa_scale})'
+	| '${name}, ${ele} (${pass:category})'
+	| '${name} (${alt_name}), ${ele} (${pass:category})'
+	| '${ele} (${rtsa_scale})'
+	| '${ele} (${pass:category})'
+	| '${name} (${alt_name}) (${rtsa_scale})'
+	| '${name} (${rtsa_scale})'
+	| '${name} (${alt_name}) (${pass:category})'
+	| '${name} (${pass:category})'
+	| '${name} (${alt_name}), ${ele}'
+	| '${name}, ${ele}'
+	| '${ele}'
+	| '${rtsa_scale}'
+	| '${name} (${alt_name})'
+	| '${name}' } [0x11507 resolution 23] 	
