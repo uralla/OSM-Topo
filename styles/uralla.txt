@@ -1,4 +1,7 @@
-
+; uralla.typ
+; Longueur: 31473 octets
+; Fichier TYP compilé     07.08.2026     13:16:53
+; Décompilé le 07.08.2026 à 13:25:19
 
 [_id]
 ProductCode=1
@@ -2474,12 +2477,9 @@ ContourColor=No
 Type=0x05
 ;GRMN_TYPE: Roads/COLLECTOR/Secondary city thoroughfare/Non NT, NT
 UseOrientation=Y
-Xpm="32 2 2  1"
-"! c #949494"
-"  c none"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-;12345678901234567890123456789012
+LineWidth=2
+Xpm="0 0 1 0"
+"1 c #949494"
 String1=0x19,неизвестная дорога
 String2=0x04,unknown road
 ExtendedLabels=N
@@ -2886,11 +2886,9 @@ ContourColor=No
 Type=0x20
 ;GRMN_TYPE: Contour Lines/MINOR_CONTOUR/Minor land-based contour line/Non NT
 UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #BD9541"
-"  c none"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-;12345678901234567890123456789012
+LineWidth=1
+Xpm="0 0 1 0"
+"1 c #BD9541"
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3930,22 +3928,11 @@ ExtendedLabels=N
 Type=0x10f16
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_55/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
-Xpm="32 12 2  1"
-"! c #7B3000"
-"# c #FFFFFF"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"################################"
-"################################"
-"################################"
-"################################"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-;12345678901234567890123456789012
+LineWidth=12
+BorderWidth=0
+Xpm="0 0 2 0"
+"1 c #7B3000"
+"2 c #FFFFFF"
 String1=0x19,мост
 String2=0x04,bridge
 ExtendedLabels=Y

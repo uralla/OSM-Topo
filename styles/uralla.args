@@ -67,7 +67,7 @@ keep-going
 
 check-styles 
 
-dem=/mnt/nod/dem
+dem=/mnt/f/media-gps/dem
 dem-dists=5520
 overview-dem-dist=276160
 dem-interpolation=auto
