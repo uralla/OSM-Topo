@@ -26,15 +26,15 @@ add-boundary-nodes-at-admin-boundaries
 
 
 #transparent
-max-jobs:4
+max-jobs=4
 tdbfile
 split-name-index
 lower-case
 
 
 
-process-destination
-process-exits
+
+
 #hide-gmapsupp-on-pc
 gmapi
 
@@ -57,8 +57,8 @@ order-by-decreasing-area
 cycle-map
 link-pois-to-ways
 #add-pois-to-areas
-process-exits
-process-destination
+
+
 
 
 remove-ovm-work-files=true
@@ -67,7 +67,7 @@ keep-going
 
 check-styles 
 
-dem=/mnt/f/media-gps/dem
+dem=/mnt/nod/dem
 dem-dists=5520
 overview-dem-dist=276160
 dem-interpolation=auto
