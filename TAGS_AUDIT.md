@@ -191,6 +191,157 @@ Type/SubType (для разумного fallback на встроенный Garmi
 
 Реструктуризация — отдельный этап **после** логической чистки, не одновременно с ней.
 
+## 4a. Обновление по shop= (финальное решение, уточняет раздел 4)
+
+- `shop=chemist` (аптека) — отдельно, `0x2e05` (MPC: PHARMACY, теперь правильно)
+- `shop=optician` — без отдельного значка, уходит в общий catch-all (не путать с «скрыть с карты полностью» — просто без своей иконки)
+- `shop=bicycle` — отдельно, `0x2f13` (приоритет карты — вело)
+- `shop=motorcycle` — НЕ с велосипедом, уходит в авто-группу
+- Авто-группа (`car`, `car_dealer`, `car_parts`, `car_rental`, `car_repair`, `car_wrecker`, `tires`, `tyres`, `motorcycle`) — один тип `0x2f03`
+- `department_store` + `mall` — объединены, тоже в общий catch-all (не отдельным типом)
+- Общий catch-all `shop=* & shop!=no & shop!=none [0x2e00]` — все остальные непродуктовые (beauty, hairdresser, boat, optician, clothes, fashion, shoes, doityourself, furniture, hardware, garden_centre, department_store, mall и т.д.)
+- `shop=kiosk` (points:365) — удалить, дублирует catch-all
+
+## 9. Аудит по смысловым группам тегов (систематический проход)
+
+Методология: для каждой группы — (1) вытащить текущее покрытие из файлов стиля,
+(2) сверить с актуальным статусом тегов на OSM Wiki (не полагаться на память —
+она тоже может быть устаревшей), (3) найти реальные пробелы, (4) для найденного —
+подобрать свободный TYP-слот по методике «MPC Name соответствует смыслу» там, где
+это осмысленно (custom-слоты с пустым MPC Name — свободны для любого переиспользования).
+
+### barrier=*
+- `barrier=motorcycle_barrier` + `barrier=cattle_grid` → иконка «шлагбаум»
+  **[TODO: не зафиксирован конкретный числовой код TYP-слота — уточнить у пользователя, какой именно "шлагбаум" (возможно `0x5800`/`0x5801`, уже используются под `barrier=gate`/`barrier=lift_gate` — уточнить, тот же слот или другой)]**
+- `barrier=motorcycle_barrier` — access по умолчанию **[открытый вопрос]**: задавать ли `bicycle=yes; foot=yes; access=no` как дефолт (по аналогии с `bollard`/`cycle_barrier` в `inc/access:81-86`), или не предполагать проезд на велосипеде без явного тега — решение не принято
+- `barrier=cattle_grid` — без ограничений доступа (чисто информационный POI, не блокирует никого)
+- `barrier=log | obstacle=fallen_tree | barrier=debris` → `0x6602` (свободный слот «камни», требует новой картинки в TYPViewer — завал, не камни)
+
+### natural=* (рельеф)
+- `natural=saddle` → тот же тип, что `mountain_pass=yes` (`0x11507`), тот же паттерн подписи `name`/`ele`/`rtsa_scale`
+- `natural=valley` → `0x6617` (MPC: VALLEY, точное совпадение)
+- `natural=arch` → `0x6601` (MPC: ARCH, точное совпадение — технически точный вариант, выбран пользователем осознанно)
+- `natural=cave_entrance` → перенесён на `0x11602` (custom-слот с пустым MPC, освобождён от arch; **требует новой картинки в TYPViewer**)
+- `sport=climbing` → `0x6607`, тот же тип, что `natural=rock`/`natural=cliff`
+
+### emergency=* (безопасность)
+- `amenity=emergency_phone | emergency=phone` → `0x2f12` (deprecated-тег, добавлен параллельно, не заменён)
+- `emergency=defibrillator` → добавить **[TODO: слот не подобран]**
+- `emergency=first_aid_kit` → добавить **[TODO: слот не подобран]**
+- `emergency=fire_hydrant` — сознательно ИСКЛЮЧЕНО (городская инфраструктура для пожарных, нерелевантно)
+- `emergency=assembly_point` — сознательно ИСКЛЮЧЕНО (городская эвакуационная логика, нерелевантно)
+
+### man_made=*
+- `man_made=cairn` (тур/пирамидка-ориентир) → `0x2f18` (custom-слот с пустым MPC, был «интернет»)
+
+### Источники воды
+Объединено в `inc/water_points:17`, с учётом `intermittent`/`seasonal`:
+```
+man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring
+    & (intermittent!=yes & !(seasonal=* & seasonal!=no)) {addlabel 'вода'} [0x6511 resolution 22]
+
+man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring
+    & (intermittent=yes | (seasonal=* & seasonal!=no)) {addlabel 'вода (пересых.)'} [0x6512 resolution 23]
+
+amenity=water_point {addlabel 'запас воды'} [0x5001 resolution 23]
+```
+Решение пользователя: `seasonal=*` (кроме `no`) автоматически трактуется как
+`intermittent=yes` — без попытки выводить конкретный сезон текстом (упрощение,
+т.к. точность разметки сезонности в реальных данных не гарантирована).
+
+### route=hiking / route=bicycle / route=mtb (relations) — КРУПНЕЙШАЯ находка сессии
+Полностью отсутствовала обработка промаркированных туристических/вело маршрутов
+(relations). Вся существующая `route=*` логика — только городской транспорт и
+автодороги (US/AsianHighway/TAH/e-road), нерелевантные для этой карты.
+
+**Связь с найденным ранее:** пустой файл `overlays` (0 байт, ранее помечен как
+«мусор на удаление») — это на самом деле штатный mkgmap-механизм именно для
+подсветки промаркированных маршрутов (hiking/mtb/bicycle relations). Официальная
+документация mkgmap: *«Can be used to highlight mtb, bicycle, foot or other
+relations»*.
+
+**Реализовано (минимум, согласовано с пользователем):**
+```
+# relations
+type=route & route=hiking & name=* {
+  apply { set mkgmap:trail_name='$(mkgmap:trail_name);${name|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name}'; }
+}
+type=route & (route=bicycle | route=mtb) & name=* {
+  apply { set mkgmap:trail_name='$(mkgmap:trail_name);${name|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name}'; }
+}
+
+# lines
+mkgmap:trail_name=* & name!=* { set name='${mkgmap:trail_name}' }
+```
+Плюс дополнительная идея пользователя —way, входящие в маркированный маршрут,
+показывать «на ступень дальше» (раньше видны при отдалении), без новой графики
+в TYP — просто более широкое окно `resolution`. Требует ~6 точек вставки в `lines`
+(`footway`, `cycleway`, `path`×2 ветки, `track`×2 ветки) + создание окна `resolution`
+для `bridleway` с нуля (сейчас у него нет разбивки по масштабам вообще, только
+`resolution 24`). Порог `length()` — предложено `>100`, по аналогии с уже принятым
+в файле решением для `track & tracktype=grade1`. **[TODO: не реализовано построчно,
+только согласован принцип — требует отдельного прохода по всем 6+1 точкам вставки]**
+
+**Отложено на будущую версию:** визуальная подсветка через `overlays`
+(новый line-тип в TYP, дифференциация `network=lwn/rwn/nwn`) — нужно тестировать
+на конкретных реальных маршрутах в регионе, не делать вслепую.
+
+### surface=* / smoothness=* (дорожный блок, `lines` finalize)
+Актуальный канонический список (OSM Wiki, `Template:Map_Features:surface`):
+мощёное — asphalt/concrete/concrete:lanes/concrete:plates/paving_stones/sett/
+unhewn_cobblestone/cobblestone/cobblestone:raised/metal/wood/tiles; немощёное —
+compacted/fine_gravel/gravel/pebblestone/dirt/earth/grass/grass_paver/gravel_turf/
+ground/mud/sand/woodchips/snow/ice; спец — clay/tartan/artificial_turf/decoturf/metal_grid.
+
+- «грунтовка»/«плохая грунтовка» — добавить `dirt`, `earth`, `woodchips`
+- `surface=snow` → объединить с существующей веткой `winter_road=yes`
+- `surface=ice` → объединить с существующей веткой `ice_road=yes`
+- Отдельную категорию snow/ice сознательно решили НЕ делать (упрощение)
+
+**Confirmed problem, исправлено:** полная шкала `smoothness` — 8 ступеней
+(`excellent → good → intermediate → bad → very_bad → horrible → very_horrible → impassable`,
+подтверждено OSM Wiki). Декоративные оверлеи битых дорог (`lines:79,81`) покрывали
+только 4 из 8 ступеней, причём тип `0x1001b` (авторская строка в TYP буквально
+**«плохая»**) реально триггерился только от `very_bad`, пропуская саму ступень `bad`.
+Исправлено:
+```
+highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
+    & ( smoothness=very_horrible | smoothness=impassable | smoothness=horrible ) [0x1001a resolution 24 continue]
+highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
+    & ( smoothness=bad | smoothness=very_bad ) [0x1001b resolution 24 continue]
+```
+Список исключений расширен по объяснению пользователя: доп. графика нужна только
+для типов дорог, проезжих для машин (машины — основная причина «убитого»
+покрытия), пешеходные/велосипедные типы исключены полностью, не только `path`.
+
+### piste:type=*
+- `piste:type=nordic` (беговые лыжи) → `0x10101`, тот же тип, что `skitour`
+
+### leisure=*
+- `leisure=picnic_table` (одиночный стол, в отличие от целого `tourism=picnic_site`) → `0x4a01`
+
+### boundary=*
+- `boundary=protected_area` (+`protect_class=*`) и `boundary=national_park` — добавлены в полигон (`area_size()>50000`, тот же порог, что у `nature_reserve`) и в линию-границу (`0x12d1b`, без порога площади)
+- Отдельная POI-точка для заповедников — **сознательно НЕ добавляется** (решение пользователя: граница уже даёт понять «пересёк/не пересёк», точка при этом только одна на большой объект с потенциально многими входами, поиск по имени не требуется для этой категории)
+- `boundary=national` — по данным самой OSM Wiki: *«no clear meaning, usage appears to be a mix of various mistakes»*. Вероятно, простаивающий код в `lines:479`. Не трогать без решения пользователя, просто зафиксировано
+- `boundary=political` — используется для электоральных округов, нерелевантно для карты, вероятно тоже простаивает (`lines:480`)
+
+### Вело-инфраструктура (amenity=*, приоритет карты)
+- `amenity=bicycle_repair_station` (бесплатный инструмент+насос) → `0x2e0d`
+- `amenity=bicycle_rental` → добавить **[TODO: слот не подобран]**
+- `amenity=bicycle_parking` → добавить **[TODO: слот не подобран]**
+- Отличие от уже существующего `shop=bicycle`: это некоммерческая инфраструктура, не магазин
+
+### aerialway=*
+Пробелов не найдено. `aerialway=zip_line` уже покрывается существующим catch-all
+`aerialway=* [0x10f15]` — падает в общий тип без отдельной подписи, что приемлемо.
+
+### amenity=* (остальные, широкий обзор)
+Покрытие уже очень плотное (74 разных значения). Единственный правдоподобный
+кандидат: `amenity=vending_machine` (+`vending=drinks`/`vending=food`) — устоявшийся,
+стабильный тег, полезен на отдалённых заправках/вокзалах. **[Предложено, ожидает
+подтверждения пользователя]**
+
 ## 8. Открытые вопросы (требуют решения пользователя)
 
 - [ ] `natural=saddle` — актуальность тега не подтверждена поиском, требует проверки
@@ -200,8 +351,65 @@ Type/SubType (для разумного fallback на встроенный Garmi
 - [ ] `0x2f03` при объединении авто-группы — использовать как итоговый тип для всей авто-группы, или тоже увести в общий `0x2e00`?
 - [ ] `0x10106`/`0x10107` («велодорожка»/«велотропа») в TYP — есть готовая графика, но нигде не подключено в правилах. Заготовка на будущее или забытый кусок?
 - [ ] Жёстко закодированные списки имён (реки/вершины/`М-5`) — какие пороги использовать для замены на условия?
+- [ ] Числовой код TYP-слота «шлагбаум» для `motorcycle_barrier`/`cattle_grid` — не зафиксирован
+- [ ] Access-дефолт для `barrier=motorcycle_barrier` (предполагать ли `bicycle=yes` без явного тега?)
+- [ ] TYP-слоты для `emergency=defibrillator`, `emergency=first_aid_kit` — не подобраны
+- [x] `amenity=bicycle_rental`, `amenity=bicycle_parking` — подтверждено добавить, слоты пока не подобраны
+- [ ] Подтверждение на `amenity=vending_machine` (drinks/food) — предложено, не подтверждено
+- [ ] Реализация «маркированный маршрут — на ступень дальше видимости» — согласован принцип и порог `length()>100`, не расписано построчно по всем ~7 точкам вставки (`footway`/`cycleway`/`path`×2/`track`×2/`bridleway`-с-нуля)
+- [ ] Новая графика в TYPViewer для переехавших/новых слотов: `0x6602` (было «камни» → «завал»), `0x11602` (было нейтральное → «пещера»), `0x2f` (было неиспользуемое → «канатка», проверить пригодность имеющейся заготовки)
 
-## 9. Следующие шаги
-Не зафиксировано — определяется по ходу обсуждения. Кандидаты: `lines`/`polygons`
-содержательно (дубли геометрии, `area_size()`-пороги), либо продолжение аудита
-покрытия тегов по другим смысловым группам (barrier=*, natural=* — рельеф, water).
+### craft=* / office=*
+Проверено, реальных пробелов для профиля карты не найдено. Остальные значения
+`craft=*` (плотник, электрик, фотограф и т.д.) и `office=*` (юридические/бизнес)
+— городские сервисы, нерелевантные для леса/тура. Посольства уже отдельно
+покрыты через `amenity=embassy`.
+
+### waterway=*
+- `waterway=weir` (водослив/небольшая плотина, вода течёт поверх, в отличие
+  от `waterway=dam`) — confirmed gap, действующий тег с 2007 г. RU Wiki
+  прямо отмечает опасность для водного туризма (сплав/рафтинг) — релевантно
+  вместе с уже существующей фичей роутинга по рекам через `taxi`. Добавлен
+  тем же/похожим типом, что `waterway=dam`.
+- Остальное (`lock`/`lock_gate`/`boatyard`/`fish_pass`) — низкая релевантность
+  для профиля карты, не добавлено.
+
+### landuse=* (детальный пробельный анализ)
+- `landuse=logging` — confirmed gap, **региональная находка**: по актуальному
+  описанию тега на OSM Wiki (в т.ч. RU-версия) — *«noticeable use in Russia,
+  very minor elsewhere»*. Параллельный вариант уже используемого
+  `man_made=clearcut` (оба тега действующие, сообщество не выбрало единый).
+  Для целевого региона карты (Урал/Россия) реальные вырубки в OSM с большей
+  вероятностью размечены именно `landuse=logging`. Добавлен параллельно
+  во все места, где уже фигурирует `man_made=clearcut`
+  (`inc/landuse_polygons`, `polygons:19`).
+- Остальное покрытие уже плотное (лес/поле/луг/кладбище/карьер/военные/
+  жилая застройка/сады-огороды-виноградники/торф/гаражи/резервуар) —
+  серьёзных пробелов не найдено.
+
+### railway=* (детальный пробельный анализ)
+- `railway=funicular` — confirmed gap, отсутствовал полностью.
+- **Найдено смещение слота** (тот же паттерн, что arch/cave_entrance ранее):
+  TYP-слот `0x10f00` имеет авторские строки буквально «funicular»/«фуникулер»,
+  но был занят под `aerialway=cable_car`. Исправлено:
+  ```
+  railway=funicular   → 0x10f00  (совпадение по названию слота)
+  aerialway=cable_car → 0x2f     (точное совпадение MPC Name: CABLE_CAR,
+                                   слот ранее не использовался)
+  ```
+- Остальное покрытие (halt/station/subway/tram/narrow_gauge/light_rail/
+  preserved/abandoned/disused/level_crossing/signal/buffer_stop/milestone)
+  — уже комплексное, пробелов не найдено.
+
+## 10. Следующие шаги
+Систематический проход по смысловым группам тегов (раздел 9) **завершён** —
+пройдены все запланированные группы: shop-финал, barrier, natural-рельеф,
+emergency, man_made=cairn, источники воды, route=hiking/bicycle/mtb (relations),
+surface/smoothness, piste, leisure=picnic_table, boundary, climbing, вело-инфраструктура,
+aerialway, amenity (общий обзор), craft/office (чисто), waterway, landuse, railway.
+
+Дальнейшая работа — не новые смысловые группы тегов, а закрытие технического
+хвоста из раздела 8 (номера TYP-слотов, не зафиксированные по ходу обсуждения)
+и переход к содержательному аудиту `lines`/`polygons` (дубли геометрии,
+`area_size()`-пороги, порядок правил), либо к структурной реорганизации файлов
+по ранее согласованному плану (см. раздел 7).
