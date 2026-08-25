@@ -28,8 +28,12 @@ Implemented in `main`:
 - human-readable and JSON CLI output;
 - read-only host doctor with a temporary atomic-rename probe;
 - dry-run-first Ubuntu/macOS bootstrap and pinned tool installer;
-- standard-library test suite for manifest, ranges, host policy, doctor and
-  bootstrap safety.
+- durable `StageRunner` workspaces, SQLite build history and validated
+  checkpoints;
+- manifest-driven DEM subset selection and standalone copy helper;
+- deterministic product queue ordered by priority, then overdue age;
+- validated two-artifact publication with rollback to the previous release;
+- standard-library test suite with 32 tests covering the implemented system.
 
 Current commands:
 
@@ -40,8 +44,23 @@ cp config/host.example.yaml config/host.yaml
 python3 -m uralla_build doctor
 python3 -m uralla_build bootstrap
 python3 -m uralla_build bootstrap --apply --capture-checksums
+python3 -m uralla_build queue
+python3 -m uralla_build run-stage PRODUCT STAGE --output RELATIVE_PATH -- COMMAND...
+python3 -m uralla_build show-build BUILD_ID
+python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY
+python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY --apply
 python3 -m unittest discover -s tests -v
 ```
+
+`queue` is read-only. Products with lower numeric priority values come first;
+within one priority, never-built products come first and then the oldest or
+most overdue successful build. A running product is omitted. A not-yet-due
+high-priority product remains visible but does not block the next due product.
+
+`publish` is plan-only unless `--apply` is supplied. It stages and validates
+both outputs before replacing either ready file. IMG keeps its manifest name;
+the GMAPI/MapSource package keeps the legacy `<IMG stem>-ms.zip` name and is
+written as one store ZIP. A failed promotion restores the previous pair.
 
 `bootstrap` is a plan-only command unless `--apply` is supplied. The first
 official archive admission additionally requires `--capture-checksums`; the
