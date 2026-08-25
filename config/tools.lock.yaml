@@ -1,0 +1,39 @@
+schema_version: 1
+
+# Official stable releases checked on 2026-08-25.
+# SHA-256 values are captured by bootstrap from the exact downloaded archives
+# before the distributions are admitted into the working tools directory.
+
+java:
+  minimum_major: 17
+
+mkgmap:
+  release: 4924
+  archive: mkgmap-r4924.zip
+  url: https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+  sha256: null
+  install_dir: mkgmap-r4924
+  jar: mkgmap.jar
+
+splitter:
+  release: 654
+  archive: splitter-r654.zip
+  url: https://www.mkgmap.org.uk/download/splitter-r654.zip
+  sha256: null
+  install_dir: splitter-r654
+  jar: splitter.jar
+
+system_packages:
+  ubuntu:
+    java: default-jre-headless
+    osmium: osmium-tool
+    osmosis: osmosis
+    zip: zip
+    unzip: unzip
+  macos:
+    java: openjdk
+    osmium: osmium-tool
+    osmosis: osmosis
+    zip: zip
+    unzip: unzip
+

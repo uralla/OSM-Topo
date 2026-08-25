@@ -26,15 +26,27 @@ Implemented in `main`:
 - static manifest, FID/PID, overview and reserved-block validation;
 - splitter `areas.list` and `template.args` range validation;
 - human-readable and JSON CLI output;
-- standard-library test suite for valid and invalid ranges.
+- read-only host doctor with a temporary atomic-rename probe;
+- dry-run-first Ubuntu/macOS bootstrap and pinned tool installer;
+- standard-library test suite for manifest, ranges, host policy, doctor and
+  bootstrap safety.
 
 Current commands:
 
 ```sh
 python3 -m uralla_build validate-manifest
 python3 -m uralla_build validate-areas PRODUCT areas.list --template template.args
+cp config/host.example.yaml config/host.yaml
+python3 -m uralla_build doctor
+python3 -m uralla_build bootstrap
+python3 -m uralla_build bootstrap --apply --capture-checksums
 python3 -m unittest discover -s tests -v
 ```
+
+`bootstrap` is a plan-only command unless `--apply` is supplied. The first
+official archive admission additionally requires `--capture-checksums`; the
+resulting `config/tools.lock.yaml` diff must be reviewed and committed. Later
+downloads must match the captured digest exactly.
 
 ## Frozen project decisions
 
@@ -54,6 +66,8 @@ python3 -m unittest discover -s tests -v
 - Bootstrap/doctor supports Ubuntu through apt and macOS through Homebrew.
 - Large DEM and pre-generated elevation inputs are externally synchronised;
   doctor validates them but does not download or regenerate them.
+- Split ZIP volumes are forbidden. IMG is published directly without an
+  archive; GMAPI/MapSource is published as one uncompressed/store ZIP.
 
 ## Product model
 
@@ -223,6 +237,13 @@ The initial publication root is the existing `/mnt/nod/garmin` Syncthing tree,
 with the MapSource/GMAPI package under its existing `mapsource` subdirectory.
 The path is host configuration, not repeated in every product record.
 
+Publication format is fixed:
+
+- one ready `.img` file, not wrapped in ZIP;
+- one GMAPI/MapSource store ZIP;
+- no `zip -s` split volumes;
+- temporary names during assembly and one atomic promotion after validation.
+
 ## Bootstrap and doctor
 
 `bootstrap` installs or prepares small reproducible dependencies:
@@ -250,6 +271,11 @@ changes and fail clearly when package installation needs user authority.
   validation directory.
 
 Doctor never downloads the large DEM/elevation datasets.
+
+Machine-specific roots are stored in ignored `config/host.yaml`, created from
+`config/host.example.yaml`. Manifest paths under `input/` and `elevation/` are
+resolved below `data_root`; repository-owned `poly/`, `styles/` and `scripts/`
+paths remain relative to the checkout. This replaces hard-coded DEM paths.
 
 ## Migration acceptance
 
