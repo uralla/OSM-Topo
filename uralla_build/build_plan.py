@@ -228,10 +228,10 @@ def plan_product_build(
     )
     if "ru-political-parties" in profiles:
         warnings.append(
-            "semantic preprocessing: peak landmarks + Russian political blacklist"
+            "semantic preprocessing: peak + river landmarks + Russian political blacklist"
         )
     else:
-        warnings.append("semantic preprocessing: static peak landmarks")
+        warnings.append("semantic preprocessing: static peak + river landmarks")
 
     elevation_value = product.get("elevation")
     if elevation_value is not None:
