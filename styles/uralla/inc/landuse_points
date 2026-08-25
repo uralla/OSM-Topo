@@ -29,6 +29,8 @@ natural=cave_entrance [0x6601 resolution 23]
 natural=cliff {name "${name}"} [0x6607 resolution 24]
 
 
+# Static catalogue enrichment from the semantic preprocessor.
+uralla:peak_landmark=yes {add note=great-peak}
 
 natural=peak & name='Ослянка'
 | natural=peak & name='Конжаковский Камень'
