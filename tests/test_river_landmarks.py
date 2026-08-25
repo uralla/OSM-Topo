@@ -25,7 +25,7 @@ class RiverLandmarkTests(unittest.TestCase):
         self.assertEqual(self.landmarks[normalize_river_name("Волга")], 1)
         self.assertEqual(self.landmarks[normalize_river_name("Ural")], 2)
         self.assertEqual(self.landmarks[normalize_river_name("Кубань")], 3)
-        self.assertEqual(self.landmarks[normalize_river_name("Чусовая")], 4)
+        self.assertNotIn(normalize_river_name("Чусовая"), self.landmarks)
 
     def test_alias_and_local_name_match(self) -> None:
         tags, changed = enrich_river_landmark_tags(
@@ -62,6 +62,17 @@ class RiverLandmarkTests(unittest.TestCase):
                 "rank\tlength_km\tname\taliases\torigin\n"
                 "1\t4000\tAlpha\tSame\ttest\n"
                 "2\t2000\tBeta\tSame\ttest\n",
+                encoding="utf-8",
+            )
+            with self.assertRaises(StageError):
+                load_river_landmarks(path)
+
+    def test_rank_four_is_rejected(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "rivers.tsv"
+            path.write_text(
+                "rank\tlength_km\tname\taliases\torigin\n"
+                "4\t500\tLegacy\t\ttest\n",
                 encoding="utf-8",
             )
             with self.assertRaises(StageError):
