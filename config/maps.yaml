@@ -1,0 +1,599 @@
+schema_version: 1
+
+# Migrated mechanically from scripts/*.sh on 2026-08-25.
+# ZIP archives are intentionally not used as inputs.
+
+defaults:
+  enabled: true
+  priority: 100
+  update_interval_days: null
+  product_id: 1
+  code_page: 1251
+  style: styles/uralla
+  typ: styles/uralla.typ
+  mkgmap_args: styles/uralla.args
+  transform_places: scripts/transform_places.xml
+  bounds: input/bounds-latest.zip
+  sea: input/sea-latest.zip
+  splitter:
+    output: pbf
+    keep_complete: true
+    wanted_admin_level: 8
+  areas:
+    mode: managed
+    root: build-state/areas
+
+sources:
+  armenia:
+    path: input/armenia-latest.osm.pbf
+  belarus:
+    path: input/belarus-latest.osm.pbf
+  crimea:
+    path: input/crimean-fed-district-latest.osm.pbf
+  georgia:
+    path: input/georgia-latest.osm.pbf
+  kazakhstan:
+    path: input/kazakhstan-latest.osm.pbf
+  kyrgyzstan:
+    path: input/kyrgyzstan-latest.osm.pbf
+  mongolia:
+    path: input/mongolia-latest.osm.pbf
+  northwestern:
+    path: input/northwestern-fed-district-latest.osm.pbf
+  russia:
+    path: input/russia-latest.osm.pbf
+  turkey:
+    path: input/turkey-latest.osm.pbf
+
+products:
+  armenia:
+    source: armenia
+    polygon: poly/armenia.poly
+    elevation: elevation/armenia.osm.pbf
+    geonames: null
+    identity:
+      family_id: 1053
+      product_id: 1
+      overview_mapnumber: "10530000"
+      first_tile_mapid: "10530001"
+      last_reserved_mapid: "10539999"
+    names:
+      family: Armenia.OSM
+      series: Armenia.OSM
+      overview: Armenia.OSM
+      description: Armenia.OSM
+      output_img: Armenia.OSM.img
+    splitter:
+      max_nodes: 2500000
+
+  belarus:
+    source: belarus
+    polygon: poly/belarus.poly
+    elevation: null
+    geonames: input/allCountries.zip
+    identity:
+      family_id: 1055
+      product_id: 1
+      overview_mapnumber: "10550000"
+      first_tile_mapid: "10550001"
+      last_reserved_mapid: "10559999"
+    names:
+      family: Belarus.OSM
+      series: Belarus.OSM
+      overview: Belarus.OSM
+      description: Belarus.OSM
+      output_img: Belarus.OSM.img
+    splitter:
+      max_nodes: 1000000
+
+  bu-zab-amu:
+    source: russia
+    polygon: poly/RU-BU_RU-ZAB_RU-AMU.poly
+    elevation: elevation/RU-BU_RU-ZAB_RU-AMU.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1023
+      product_id: 1
+      overview_mapnumber: "01023000"
+      first_tile_mapid: "01023001"
+      last_reserved_mapid: "01023999"
+    names:
+      family: topo-bu-zab-amu
+      series: topo-bu-zab-amu
+      overview: topo-bu-zab-amu
+      description: topo-bu-zab-amu
+      output_img: topo-bu-zab-amu.img
+    splitter:
+      max_nodes: 1000000
+      max_threads: 8
+
+  central-fed-district:
+    source: russia
+    polygon: poly/central-fed-district.poly
+    elevation: null
+    geonames: input/ru.zip
+    identity:
+      family_id: 1006
+      product_id: 1
+      overview_mapnumber: "10060000"
+      first_tile_mapid: "10060001"
+      last_reserved_mapid: "10069999"
+    names:
+      family: Central.OSM
+      series: Central.OSM
+      overview: Central.OSM
+      description: Central OSM
+      output_img: Central-fed-district.img
+    splitter:
+      max_nodes: 1000000
+
+  chu-kam:
+    source: russia
+    polygon: poly/RU-CHU_RU-KAM.poly
+    elevation: elevation/RU-CHU_RU-KAM.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1024
+      product_id: 1
+      overview_mapnumber: "01024000"
+      first_tile_mapid: "01024001"
+      last_reserved_mapid: "01024999"
+    names:
+      family: topo-chu-kam
+      series: topo-chu-kam
+      overview: topo-chu-kam
+      description: topo-chu-kam
+      output_img: topo-chu-kam.img
+    splitter:
+      max_nodes: 2000000
+
+  crimea:
+    source: crimea
+    polygon: poly/crimean-fed-district.poly
+    elevation: elevation/ele_10_ru_crimean-fed-district.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1021
+      product_id: 1
+      overview_mapnumber: "10210000"
+      first_tile_mapid: "10210001"
+      last_reserved_mapid: "10219999"
+    names:
+      family: Crimea.OSM
+      series: Crimea.OSM
+      overview: Crimea.OSM
+      description: Crimea OSM
+      output_img: Crimea.OSM.img
+    splitter:
+      max_nodes: 4000000
+
+  georgia:
+    source: georgia
+    polygon: poly/georgia.poly
+    elevation: null
+    geonames: null
+    identity:
+      family_id: 1052
+      product_id: 1
+      overview_mapnumber: "10520000"
+      first_tile_mapid: "10520001"
+      last_reserved_mapid: "10529999"
+    names:
+      family: Georgia.OSM
+      series: Georgia.OSM
+      overview: Georgia.OSM
+      description: Georgia.OSM
+      output_img: Georgia.OSM.img
+    splitter:
+      max_nodes: 2000000
+
+  irk:
+    source: russia
+    polygon: poly/RU-IRK.poly
+    elevation: elevation/RU-IRK.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1010
+      product_id: 1
+      overview_mapnumber: "01010000"
+      first_tile_mapid: "01010001"
+      last_reserved_mapid: "01010999"
+    names:
+      family: topo-irk
+      series: topo-irk
+      overview: topo-irk
+      description: topo-irk
+      output_img: topo-irk.img
+    splitter:
+      max_nodes: 2000000
+
+  kg:
+    source: kyrgyzstan
+    polygon: poly/KG.poly
+    elevation: elevation/kg.osm.pbf
+    geonames: input/allCountries.zip
+    identity:
+      family_id: 1051
+      product_id: 1
+      overview_mapnumber: "10510000"
+      first_tile_mapid: "10510001"
+      last_reserved_mapid: "10519999"
+    names:
+      family: KG.OSM
+      series: KG.OSM
+      overview: KG.OSM
+      description: KG OSM-topo
+      output_img: KG.OSM.img
+    splitter:
+      max_nodes: 2500000
+
+  kya-n:
+    source: russia
+    polygon: poly/RU-KYA-N.poly
+    elevation: elevation/RU-KYA-N.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1016
+      product_id: 1
+      overview_mapnumber: "01016000"
+      first_tile_mapid: "01016001"
+      last_reserved_mapid: "01016999"
+    names:
+      family: topo-kya-n
+      series: topo-kya-n
+      overview: topo-kya-n
+      description: topo-kya-n
+      output_img: topo-kya-n.img
+    splitter:
+      max_nodes: 1000000
+
+  kya-s:
+    source: russia
+    polygon: poly/RU-KYA-S.poly
+    elevation: elevation/RU-KYA-S.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1015
+      product_id: 1
+      overview_mapnumber: "01015000"
+      first_tile_mapid: "01015001"
+      last_reserved_mapid: "01015999"
+    names:
+      family: topo-kya-s
+      series: topo-kya-s
+      overview: topo-kya-s
+      description: topo-kya-s
+      output_img: topo-kya-s.img
+    splitter:
+      max_nodes: 1000000
+
+  kz:
+    source: kazakhstan
+    polygon: poly/KZ.poly
+    elevation: elevation/kz.osm.pbf
+    geonames: input/allCountries.zip
+    identity:
+      family_id: 1050
+      product_id: 1
+      overview_mapnumber: "10500000"
+      first_tile_mapid: "10500001"
+      last_reserved_mapid: "10509999"
+    names:
+      family: KZ.OSM
+      series: KZ.OSM
+      overview: KZ.OSM
+      description: KZ OSM-topo
+      output_img: KZ.OSM.img
+    splitter:
+      max_nodes: 500000
+    mkgmap:
+      dem_dists: 15000
+
+  mag:
+    source: russia
+    polygon: poly/RU-MAG.poly
+    elevation: elevation/RU-MAG.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1014
+      product_id: 1
+      overview_mapnumber: "01014000"
+      first_tile_mapid: "01014001"
+      last_reserved_mapid: "01014999"
+    names:
+      family: topo-mag
+      series: topo-mag
+      overview: topo-mag
+      description: topo-mag
+      output_img: topo-mag.img
+    splitter:
+      max_nodes: 2000000
+
+  mongolia:
+    source: mongolia
+    polygon: poly/mongolia.poly
+    elevation: null
+    geonames: input/allCountries.zip
+    identity:
+      family_id: 1056
+      product_id: 1
+      overview_mapnumber: "10560000"
+      first_tile_mapid: "10560001"
+      last_reserved_mapid: "10569999"
+    names:
+      family: Mongolia.OSM
+      series: Mongolia.OSM
+      overview: Mongolia.OSM
+      description: Mongolia.OSM
+      output_img: Mongolia.OSM.img
+    splitter:
+      max_nodes: 2000000
+
+  north-caucasus-fed-district:
+    source: russia
+    polygon: poly/north-caucasus-fed-district.poly
+    elevation: elevation/ele_10_ru_north-caucasus-fed-district.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1004
+      product_id: 1
+      overview_mapnumber: "10040000"
+      first_tile_mapid: "10040001"
+      last_reserved_mapid: "10049999"
+    names:
+      family: North-Caucasus.OSM
+      series: North-Caucasus.OSM
+      overview: North-Caucasus.OSM
+      description: North-Caucasus_OSM
+      output_img: North-Caucasus.OSM.img
+    splitter:
+      max_nodes: 1000000
+
+  northwestern-fed-district:
+    source: northwestern
+    extract: false
+    polygon: poly/northwestern-fed-district.poly
+    elevation: elevation/ele_10_ru_northwestern-fed-district.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1007
+      product_id: 1
+      overview_mapnumber: "10070000"
+      first_tile_mapid: "10070001"
+      last_reserved_mapid: "10079999"
+    names:
+      family: Northwestern.OSM
+      series: Northwestern.OSM
+      overview: Northwestern.OSM
+      description: Northwestern_OSM
+      output_img: Northwestern-fed-district.img
+    splitter:
+      max_nodes: 400000
+    mkgmap:
+      dem_dists: 15000
+
+  pri-kha-yev:
+    source: russia
+    polygon: poly/RU-PRI_RU-KHA_RU-YEV.poly
+    elevation: elevation/pri-kha-yev.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1025
+      product_id: 1
+      overview_mapnumber: "01025000"
+      first_tile_mapid: "01025001"
+      last_reserved_mapid: "01025999"
+    names:
+      family: topo-pri-kha-yev
+      series: topo-pri-kha-yev
+      overview: Prim-Khabar-Yevr
+      description: Prim-Khabar-Yevr
+      output_img: topo-pri-kha-yev.img
+    splitter:
+      max_nodes: 1000000
+    mkgmap:
+      dem_dists: 15000
+
+  sa-e:
+    source: russia
+    polygon: poly/RU-SA-E.poly
+    elevation: elevation/RU-SA-E.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1012
+      product_id: 1
+      overview_mapnumber: "01012000"
+      first_tile_mapid: "01012001"
+      last_reserved_mapid: "01012999"
+    names:
+      family: topo-sa-e
+      series: topo-sa-e
+      overview: topo-sa-e
+      description: topo-sa-e
+      output_img: topo-sa-e.img
+    splitter:
+      max_nodes: 1000000
+
+  sa-w:
+    source: russia
+    polygon: poly/RU-SA-W.poly
+    elevation: elevation/RU-SA-W.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1013
+      product_id: 1
+      overview_mapnumber: "01013000"
+      first_tile_mapid: "01013001"
+      last_reserved_mapid: "01013999"
+    names:
+      family: topo-sa-w
+      series: topo-sa-w
+      overview: topo-sa-w
+      description: topo-sa-w
+      output_img: topo-sa-w.img
+    splitter:
+      max_nodes: 1000000
+
+  sak:
+    source: russia
+    polygon: poly/RU-SAK.poly
+    elevation: elevation/RU-SAK.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1017
+      product_id: 1
+      overview_mapnumber: "01017000"
+      first_tile_mapid: "01017001"
+      last_reserved_mapid: "01017999"
+    names:
+      family: topo-sak
+      series: topo-sak
+      overview: topo-sak
+      description: topo-sak
+      output_img: topo-sak.img
+    splitter:
+      max_nodes: 2000000
+
+  south-fed-district:
+    source: russia
+    polygon: poly/south-fed-district.poly
+    elevation: null
+    geonames: input/ru.zip
+    identity:
+      family_id: 1003
+      product_id: 1
+      overview_mapnumber: "10030000"
+      first_tile_mapid: "10030001"
+      last_reserved_mapid: "10039999"
+    names:
+      family: South.OSM
+      series: South.OSM
+      overview: South.OSM
+      description: South_OSM
+      output_img: South-fed-district.img
+    splitter:
+      max_nodes: 2000000
+
+  turkey:
+    source: turkey
+    polygon: poly/turkey.poly
+    elevation: elevation/turkey.osm.pbf
+    geonames: input/allCountries.zip
+    identity:
+      family_id: 1054
+      product_id: 1
+      overview_mapnumber: "10540000"
+      first_tile_mapid: "10540001"
+      last_reserved_mapid: "10549999"
+    names:
+      family: Turkey.OSM
+      series: Turkey.OSM
+      overview: Turkey.OSM
+      description: Turkey.OSM
+      output_img: Turkey.OSM.img
+    splitter:
+      max_nodes: 800000
+
+  ural-fd:
+    source: russia
+    polygon: poly/ural-fed-district.poly
+    elevation: elevation/ele_10_ru_ural-fed-district.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1026
+      product_id: 1
+      overview_mapnumber: "10260000"
+      first_tile_mapid: "10260001"
+      last_reserved_mapid: "10269999"
+    names:
+      family: Ural-fed-district
+      series: Ural-fed-district
+      overview: Ural-fed-district
+      description: ural_fd
+      output_img: Ural-fed-district.img
+    splitter:
+      max_nodes: 2000000
+
+  ural-n:
+    source: russia
+    polygon: poly/ru_ural_polar.poly
+    elevation: elevation/ural_n.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1018
+      product_id: 1
+      overview_mapnumber: "01018000"
+      first_tile_mapid: "01018001"
+      last_reserved_mapid: "01018999"
+    names:
+      family: Topo-Ural-N
+      series: Topo-Ural-N
+      overview: Topo-Ural-N
+      description: Topo-Ural-N
+      output_img: Topo-Ural-N.img
+    splitter:
+      max_nodes: 2000000
+    mkgmap:
+      dem_dists: 9942
+
+  ural-s:
+    source: russia
+    polygon: poly/ru_ural.poly
+    elevation: elevation/ural.osm.pbf
+    geonames: null
+    identity:
+      family_id: 1022
+      product_id: 1
+      overview_mapnumber: "10220000"
+      first_tile_mapid: "10220001"
+      last_reserved_mapid: "10229999"
+    names:
+      family: Topo-Ural-S
+      series: Topo-Ural-S
+      overview: Topo-Ural-S
+      description: Topo-Ural-S
+      output_img: Topo-Ural-S.img
+    splitter:
+      max_nodes: 500000
+
+  volga-fed-district:
+    source: russia
+    polygon: poly/volga-fed-district.poly
+    elevation: elevation/ele_10_ru_volga-fed-district.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1001
+      product_id: 1
+      overview_mapnumber: "10010000"
+      first_tile_mapid: "10010001"
+      last_reserved_mapid: "10019999"
+    names:
+      family: Volga.OSM
+      series: Volga.OSM
+      overview: Volga.OSM
+      description: Volga_OSM
+      output_img: Volga-fed-district.img
+    splitter:
+      max_nodes: 2000000
+
+  zap-sib:
+    source: russia
+    polygon: poly/zap-sib.poly
+    elevation: elevation/zap-sib.osm.pbf
+    geonames: input/ru.zip
+    identity:
+      family_id: 1011
+      product_id: 1
+      overview_mapnumber: "01011000"
+      first_tile_mapid: "01011001"
+      last_reserved_mapid: "01011999"
+    names:
+      family: topo-zap-sib
+      series: topo-zap-sib
+      overview: topo-zap-sib
+      description: topo-zap-sib
+      output_img: topo-zap-sib.img
+    splitter:
+      max_nodes: 1000000
+    mkgmap:
+      dem_dists: 15000
