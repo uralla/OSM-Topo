@@ -27,6 +27,23 @@ python -m uralla_build select-dem \
 
 ## Copy safely on Ubuntu
 
+### Self-contained script
+
+Put `copy-dem-to-osm.sh` and `dem-required-files.txt` directly in the source
+DEM directory, then run:
+
+```bash
+chmod +x copy-dem-to-osm.sh
+./copy-dem-to-osm.sh
+```
+
+The script preflights the complete list before copying, creates the `OSM/`
+subdirectory, uses `rsync` when available (with a `cp` fallback), and verifies
+that every target file is non-empty and has the same size as its source.
+It never deletes files. An interrupted or repeated run is safe.
+
+### Explicit paths
+
 Adjust only the source and target paths:
 
 ```bash
