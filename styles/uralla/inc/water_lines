@@ -19,7 +19,6 @@
 uralla:river_rank=1 [0x18 resolution 16]
 uralla:river_rank=2 [0x18 resolution 17]
 uralla:river_rank=3 [0x18 resolution 18]
-uralla:river_rank=4 [0x18 resolution 18]
 
 # Старый ручной список оставляем как страховку до визуальной проверки каталога.
 waterway=river & name='Чусовая' & length()>500
