@@ -50,7 +50,7 @@ def load_river_landmarks(path: str | Path = DEFAULT_RIVER_CATALOG) -> dict[str, 
             raise StageError(
                 f"river landmark catalogue {catalog_path}:{line_number} has invalid rank/length"
             ) from exc
-        if rank not in {1, 2, 3, 4} or length_km <= 0 or not name:
+        if rank not in {1, 2, 3} or length_km <= 0 or not name:
             raise StageError(
                 f"river landmark catalogue {catalog_path}:{line_number} has invalid values"
             )
