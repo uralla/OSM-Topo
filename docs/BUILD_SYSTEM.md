@@ -18,6 +18,24 @@ The authoritative sources are:
 
 Previously supplied ZIP archives are not build inputs or reference sources.
 
+## Implementation checkpoint
+
+Implemented in `main`:
+
+- migrated 27-product manifest at `config/maps.yaml`;
+- static manifest, FID/PID, overview and reserved-block validation;
+- splitter `areas.list` and `template.args` range validation;
+- human-readable and JSON CLI output;
+- standard-library test suite for valid and invalid ranges.
+
+Current commands:
+
+```sh
+python3 -m uralla_build validate-manifest
+python3 -m uralla_build validate-areas PRODUCT areas.list --template template.args
+python3 -m unittest discover -s tests -v
+```
+
 ## Frozen project decisions
 
 - Preserve the existing product boundaries, names, FID/PID values and first
