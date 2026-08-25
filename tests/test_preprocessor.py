@@ -5,8 +5,10 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from uralla_build.preprocessor import (
+    enrich_peak_landmark_tags,
     filter_tags,
     load_blacklist_rules,
+    load_peak_landmarks,
     normalize_text,
     preprocess_pbf,
 )
@@ -14,17 +16,54 @@ from uralla_build.preprocessor import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config/preprocessor-blacklist.yaml"
+PEAK_CATALOG = ROOT / "catalog/peak-landmarks.tsv"
 
 
 class BlacklistPreprocessorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rules = load_blacklist_rules(CONFIG, ["ru-political-parties"])
+        cls.landmarks = load_peak_landmarks(PEAK_CATALOG)
 
     def test_profile_uses_stable_wikidata_ids(self) -> None:
         rules = {rule.rule_id: rule for rule in self.rules}
         self.assertEqual(rules["united-russia"].wikidata, frozenset({"Q151469"}))
         self.assertEqual(rules["cprf"].wikidata, frozenset({"Q192187"}))
+
+    def test_peak_catalog_loads_confirmed_landmarks(self) -> None:
+        self.assertIn("Q43105", self.landmarks)  # Elbrus
+        self.assertIn("Q39231", self.landmarks)  # Fuji
+        self.assertIn("Q583", self.landmarks)  # Mont Blanc
+
+    def test_peak_and_volcano_are_enriched_by_qid_only(self) -> None:
+        peak, changed = enrich_peak_landmark_tags(
+            {"natural": "peak", "wikidata": "Q583", "name": "Mont Blanc"},
+            self.landmarks,
+        )
+        self.assertTrue(changed)
+        self.assertEqual(peak["uralla:peak_landmark"], "yes")
+
+        volcano, changed = enrich_peak_landmark_tags(
+            {"natural": "volcano", "wikidata": "Q43105", "name": "Elbrus"},
+            self.landmarks,
+        )
+        self.assertTrue(changed)
+        self.assertEqual(volcano["uralla:peak_landmark"], "yes")
+
+        unrelated, changed = enrich_peak_landmark_tags(
+            {"natural": "peak", "wikidata": "Q999999999", "name": "Other"},
+            self.landmarks,
+        )
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:peak_landmark", unrelated)
+
+    def test_catalog_qid_does_not_enrich_non_peak_object(self) -> None:
+        tags, changed = enrich_peak_landmark_tags(
+            {"place": "city", "wikidata": "Q583", "name": "Not a peak"},
+            self.landmarks,
+        )
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:peak_landmark", tags)
 
     def test_party_wikidata_neutralizes_all_tags(self) -> None:
         decision = filter_tags(
@@ -104,7 +143,7 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         decision = filter_tags({"description": "Штаб ЕдРо."}, self.rules)
         self.assertEqual(decision.action, "scrub")
 
-    def test_real_osm_stream_is_written_and_verified(self) -> None:
+    def test_real_osm_stream_is_written_enriched_and_verified(self) -> None:
         try:
             import osmium
         except ImportError:
@@ -124,6 +163,12 @@ class BlacklistPreprocessorTests(unittest.TestCase):
   </node>
   <node id='2' lat='55.1' lon='37.1' version='1'/>
   <node id='3' lat='55.2' lon='37.2' version='1'/>
+  <node id='4' lat='43.35' lon='42.44' version='1'>
+    <tag k='natural' v='volcano'/>
+    <tag k='name' v='Эльбрус'/>
+    <tag k='wikidata' v='Q43105'/>
+    <tag k='ele' v='5642'/>
+  </node>
   <way id='10' version='1'>
     <nd ref='2'/><nd ref='3'/>
     <tag k='highway' v='residential'/>
@@ -141,6 +186,7 @@ class BlacklistPreprocessorTests(unittest.TestCase):
                 CONFIG,
                 ["ru-political-parties"],
                 report_path,
+                PEAK_CATALOG,
             )
 
             objects = {
@@ -152,8 +198,10 @@ class BlacklistPreprocessorTests(unittest.TestCase):
                 objects[("w", 10)],
                 {"highway": "residential", "surface": "asphalt"},
             )
+            self.assertEqual(objects[("n", 4)]["uralla:peak_landmark"], "yes")
             self.assertEqual(report["neutralized_objects"], 1)
             self.assertEqual(report["scrubbed_objects"], 1)
+            self.assertEqual(report["peak_landmarks_enriched"], 1)
             self.assertEqual(report["verified_forbidden_tags"], 0)
             self.assertTrue(report_path.is_file())
 
