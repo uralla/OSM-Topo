@@ -27,6 +27,7 @@ POLITICAL_OFFICES = {"political party", "politician"}
 WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
 PEAK_LANDMARK_TAG = "uralla:peak_landmark"
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
+DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
 
 
 def normalize_text(value: str) -> str:
@@ -147,7 +148,7 @@ def load_blacklist_rules(
     return tuple(result)
 
 
-def load_peak_landmarks(path: str | Path) -> frozenset[str]:
+def load_peak_landmarks(path: str | Path = DEFAULT_PEAK_CATALOG) -> frozenset[str]:
     """Load a manually maintained TSV catalogue and return its Wikidata QIDs."""
 
     catalog_path = Path(path)
@@ -270,7 +271,7 @@ def preprocess_pbf(
     config_path: str | Path,
     profile_names: Sequence[str],
     report_path: str | Path,
-    peak_catalog_path: str | Path = Path("catalog/peak-landmarks.tsv"),
+    peak_catalog_path: str | Path = DEFAULT_PEAK_CATALOG,
 ) -> dict[str, object]:
     """Filter and enrich one PBF atomically, then verify forbidden tags are gone."""
 
