@@ -1,0 +1,8 @@
+schema_version: 1
+
+# Shared OSM source downloads used by build-product --apply.
+# Keep URLs and refresh policy here instead of hard-coding them in Python.
+sources:
+  russia:
+    url: https://download.geofabrik.de/russia-latest.osm.pbf
+    refresh_days: 1
