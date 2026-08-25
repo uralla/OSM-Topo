@@ -1,0 +1,32 @@
+# Static landmark catalogue for distant-zoom peaks and volcanoes.
+# Matching is by wikidata=Q... only. Names are for human review.
+# This file is intentionally maintained manually and may be refreshed infrequently.
+# Existing hard-coded style rules remain authoritative until catalogue integration is visually validated.
+#
+# qid	name	origin
+Q919151	Ослянка	legacy
+Q4230794	Конжаковский Камень	legacy
+Q2669289	Большой Иремель / Иремель	legacy
+Q1514176	Ямантау	legacy
+Q43105	Эльбрус	legacy
+Q2392222	Фишт	legacy
+Q207680	Казбек	legacy
+Q167044	Юдычвумчорр	legacy
+Q724367	Белуха	legacy
+Q20619813	пик Семенова-Тян-Шанского	legacy
+Q608494	Талгар	legacy
+Q13174519	Чок-Тал	legacy
+Q211529	Хан-Тенгри	legacy
+Q1963840	Манарага	legacy
+Q72303	Арарат	legacy
+Q513	Эверест	extended
+Q43512	K2	extended
+Q82019	Канченджанга	extended
+Q583	Монблан	extended
+Q39231	Фудзи	extended
+Q1374	Маттерхорн	extended
+Q210252	Ключевская Сопка	extended
+Q40758	Демавенд	extended
+Q80344	Олимп	extended
+Q16990	Этна	extended
+Q524	Везувий	extended
