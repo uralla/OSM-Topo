@@ -121,6 +121,9 @@ def _usage_metrics(usage: object) -> dict[str, int | float]:
         "peak_rss_kib": peak,
         "minor_faults": int(getattr(usage, "ru_minflt")),
         "major_faults": int(getattr(usage, "ru_majflt")),
+        "swaps": int(getattr(usage, "ru_nswap")),
+        "block_input_operations": int(getattr(usage, "ru_inblock")),
+        "block_output_operations": int(getattr(usage, "ru_oublock")),
     }
 
 

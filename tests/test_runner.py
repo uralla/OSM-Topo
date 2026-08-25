@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sqlite3
 import sys
 from tempfile import TemporaryDirectory
 import unittest
 
 from uralla_build.errors import StageError
+from uralla_build.history import HistoryStore
 from uralla_build.runner import StageRunner
 
 
@@ -19,6 +21,36 @@ def _write_command(filename: str = "result.txt", content: str = "ok") -> list[st
 
 
 class StageRunnerTests(unittest.TestCase):
+    def test_v1_history_is_migrated_with_io_metrics(self) -> None:
+        with TemporaryDirectory() as directory:
+            database = Path(directory) / "history.sqlite3"
+            with sqlite3.connect(database) as connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE stage_attempts (
+                        attempt_id INTEGER PRIMARY KEY,
+                        build_id TEXT NOT NULL,
+                        stage_name TEXT NOT NULL,
+                        attempt_no INTEGER NOT NULL,
+                        status TEXT NOT NULL
+                    );
+                    PRAGMA user_version = 1;
+                    """
+                )
+
+            HistoryStore(database)
+
+            with sqlite3.connect(database) as connection:
+                columns = {
+                    row[1] for row in connection.execute("PRAGMA table_info(stage_attempts)")
+                }
+                version = connection.execute("PRAGMA user_version").fetchone()[0]
+            self.assertEqual(version, 2)
+            self.assertTrue(
+                {"swaps", "block_input_operations", "block_output_operations"}
+                <= columns
+            )
+
     def test_success_is_checkpointed_with_metrics_and_logs(self) -> None:
         with TemporaryDirectory() as directory:
             runner = StageRunner(Path(directory) / "work")
@@ -35,6 +67,9 @@ class StageRunnerTests(unittest.TestCase):
             self.assertEqual(len(attempts), 1)
             self.assertEqual(attempts[0]["status"], "success")
             self.assertIsNotNone(attempts[0]["peak_rss_kib"])
+            self.assertIsNotNone(attempts[0]["swaps"])
+            self.assertIsNotNone(attempts[0]["block_input_operations"])
+            self.assertIsNotNone(attempts[0]["block_output_operations"])
             checkpoint = json.loads(attempts[0]["checkpoint_json"])
             self.assertEqual(checkpoint[0]["path"], "result.txt")
             self.assertGreater(checkpoint[0]["size"], 0)

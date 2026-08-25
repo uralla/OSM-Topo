@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS stage_attempts (
     peak_rss_kib INTEGER,
     minor_faults INTEGER,
     major_faults INTEGER,
+    swaps INTEGER,
+    block_input_operations INTEGER,
+    block_output_operations INTEGER,
     resume_key TEXT NOT NULL,
     checkpoint_json TEXT,
     error TEXT,
@@ -67,7 +70,18 @@ class HistoryStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
             connection.executescript(SCHEMA)
-            connection.execute("PRAGMA user_version = 1")
+            columns = {
+                str(row[1])
+                for row in connection.execute("PRAGMA table_info(stage_attempts)")
+            }
+            for name in (
+                "swaps",
+                "block_input_operations",
+                "block_output_operations",
+            ):
+                if name not in columns:
+                    connection.execute(f"ALTER TABLE stage_attempts ADD COLUMN {name} INTEGER")
+            connection.execute("PRAGMA user_version = 2")
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
@@ -203,7 +217,9 @@ class HistoryStore:
                 """UPDATE stage_attempts SET
                        status = ?, finished_at = ?, duration_seconds = ?, exit_code = ?,
                        cpu_user_seconds = ?, cpu_system_seconds = ?, peak_rss_kib = ?,
-                       minor_faults = ?, major_faults = ?, checkpoint_json = ?, error = ?
+                       minor_faults = ?, major_faults = ?, swaps = ?,
+                       block_input_operations = ?, block_output_operations = ?,
+                       checkpoint_json = ?, error = ?
                    WHERE attempt_id = ? AND status = 'running'""",
                 (
                     status,
@@ -215,6 +231,9 @@ class HistoryStore:
                     values.get("peak_rss_kib"),
                     values.get("minor_faults"),
                     values.get("major_faults"),
+                    values.get("swaps"),
+                    values.get("block_input_operations"),
+                    values.get("block_output_operations"),
                     json.dumps(checkpoint, sort_keys=True) if checkpoint is not None else None,
                     error,
                     attempt_id,
