@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import time
@@ -55,6 +52,14 @@ def load_source_downloads(path: str | Path) -> dict[str, Any]:
 def _age_days(path: Path, now: float | None = None) -> float:
     current = time.time() if now is None else now
     return max(0.0, current - path.stat().st_mtime) / 86400.0
+
+
+def _partial_path(destination: Path) -> Path:
+    name = destination.name
+    if name.endswith(".osm.pbf"):
+        stem = name[: -len(".osm.pbf")]
+        return destination.with_name(f".{stem}.partial.osm.pbf")
+    return destination.with_name(f".{name}.partial")
 
 
 def _download(url: str, target: Path) -> None:
@@ -155,7 +160,7 @@ def ensure_source(
                 age,
             )
 
-    temporary = destination.with_name(f".{destination.name}.partial")
+    temporary = _partial_path(destination)
     temporary.unlink(missing_ok=True)
     previous_exists = destination.is_file()
     try:
