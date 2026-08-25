@@ -1063,17 +1063,19 @@ Garmin, перенесены в acceptance tests новой системы и н
 - выделение каждому продукту уникального overview-ID и зарезервированного
   непересекающегося блока;
 - обратная сверка manifest с legacy scripts по FID, первому map ID, именам и
-  `max-nodes`.
+  `max-nodes`;
+- реализация `uralla_build` validator для manifest и splitter ranges;
+- шесть автоматических тестов: valid manifest/range, overlap, некавыченный ID,
+  разрыв и переполнение tile range.
 
 Следующий этап реализации:
 
-1. реализовать schema/identity/range validator для `config/maps.yaml`;
-2. после splitter читать реальные `areas.list` и `template.args`, проверять
-   количество и диапазоны тайлов;
-3. реализовать read-only doctor и управляемый bootstrap для Ubuntu/macOS;
-4. реализовать общий stage runner, историю измерений, очередь
+1. реализовать read-only doctor и управляемый bootstrap для Ubuntu/macOS;
+2. реализовать общий stage runner, историю измерений, очередь
    «priority -> overdue age» и атомарную публикацию;
-5. сформировать согласованный style + TYP + args change set;
-6. выполнить Garmin smoke-check критичных встроенных point types;
-7. реализовать semantic preprocessor и каталог рек/вершин Евразии.
+3. прогнать `validate-areas` по реальным `areas.list` и `template.args`, которые
+   создаст splitter;
+4. сформировать согласованный style + TYP + args change set;
+5. выполнить Garmin smoke-check критичных встроенных point types;
+6. реализовать semantic preprocessor и каталог рек/вершин Евразии.
 
