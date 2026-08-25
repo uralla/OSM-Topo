@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = ["PyYAML>=6.0,<7", "osmium>=4.3.1,<5"]
 
 [project.scripts]
-uralla-build = "uralla_build.cli:main"
+uralla-build = "uralla_build.entrypoint:main"
 
 [tool.setuptools.packages.find]
 include = ["uralla_build*"]
