@@ -1072,13 +1072,18 @@ Garmin, перенесены в acceptance tests новой системы и н
 - dry-run-first `bootstrap` для apt/Homebrew и закреплённых mkgmap/splitter;
 - политика публикации: IMG без архива, один store ZIP для GMAPI/MapSource,
   split ZIP volumes запрещены;
-- всего 14 автоматических тестов новой системы.
+- общий `StageRunner` с отдельными workspace и логами каждой попытки;
+- SQLite-история сборок и стадий: status, exit code, duration, CPU, peak RSS,
+  minor/major page faults, команда, host/Python и checkpoint metadata;
+- безопасное возобновление только в том же `build_id`, при совпадении
+  `resume_key` и снимка ожидаемых непустых выходов;
+- CLI-команды `run-stage` и `show-build`;
+- всего 19 автоматических тестов новой системы.
 
 Следующий этап реализации:
 
-1. реализовать общий stage runner и безопасные checkpoints;
-2. добавить историю измерений, очередь «priority -> overdue age» и атомарную
-   публикацию;
+1. реализовать очередь «priority -> overdue age» и атомарную публикацию;
+2. расширить stage metrics показателями swap и дискового I/O;
 3. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
    проверить и закоммитить полученные SHA-256;
 4. прогнать `validate-areas` по реальным `areas.list` и `template.args`, которые
