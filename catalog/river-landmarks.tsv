@@ -11,6 +11,7 @@
 1	3531	Волга	Volga	legacy+length
 1	3487	Енисей	Yenisei|Enisei	legacy+length
 1	3150	Амур	Amur|黑龙江|Хэйлунцзян	legacy+length
+2	2800	Евфрат	Euphrates|Fırat|Firat	length
 2	2650	Вилюй	Vilyuy	length
 2	2450	Ишим	Ishim|Есіл|Esil	length
 2	2428	Урал	Ural|Жайық|Zhaiyq	legacy+length
@@ -20,50 +21,39 @@
 2	2129	Колыма	Kolyma	legacy+length
 2	1950	Дон	Don	legacy+length
 2	1865	Подкаменная Тунгуска	Podkamennaya Tunguska	length
+2	1850	Тигр	Tigris|Dicle	length
 2	1837	Витим	Vitim	length
 2	1809	Печора	Pechora	legacy+length
 2	1805	Кама	Kama	length
 2	1779	Ангара	Angara	legacy+length
 2	1642	Индигирка	Indigirka	length
 2	1591	Яна	Yana	length
+2	1591	Тобол	Tobol|Тобыл	length
 2	1500	Ока	Oka	legacy+length
 3	1430	Белая	Belaya|Ағиҙел|Агидель	legacy+length
-3	1236	Рейн	Rhine|Rhein|Rhin	length
-3	1130	Десна	Desna	length
-3	1091	Эльба	Elbe|Labe	length
-3	1047	Висла	Vistula|Wisła	length
-3	1020	Западная Двина	Daugava|Даўгава	length
-3	1012	Луара	Loire	length
-3	906	Кубань	Kuban	legacy+length
-3	857	Мезень	Mezen	length
-3	815	Рона	Rhône|Rhone	length
-3	802	Кума	Kuma	length
-3	744	Северная Двина	Northern Dvina	legacy
-3	744	Вычегда	Vychegda	length
-3	682	По	Po	length
-3	623	Терек	Terek	legacy
-3	565	Уса	Usa	legacy
-4	592	Чусовая	Chusovaya	legacy
-4	404	Юрюзань	Yuryuzan|Юрюзань	legacy
-4	688	Катунь	Katun	legacy
-4	320	Чуя	Chuya	legacy
-4	635	Сосьва	Sosva	legacy
-4	415	Вишера	Vishera	legacy
-4	637	Лозьва	Lozva	legacy
-4	259	Косью	Kosyu|Косъю	legacy
-4	300	Тшугор	Shchugor|Щугор|Щугер	legacy
-4	116	Ивдель	Ivdel	legacy
-4	202	Кожим	Kozhim	legacy
-3	815	Кура	Kura|Mtkvari|მტკვარი|Kür	length
-3	1072	Аракс	Aras|Araz|Araks|Արաքս	length
 3	1364	Кызылырмак	Kızılırmak|Kizilirmak	length
-3	824	Сакарья	Sakarya	length
-2	2800	Евфрат	Euphrates|Fırat|Firat	length
-2	1850	Тигр	Tigris|Dicle	length
-3	992	Селенга	Selenga|Сэлэнгэ	length
+3	1186	Чу	Chu|Шу	length
 3	1124	Керулен	Kherlen|Хэрлэн	length
 3	1124	Орхон	Orkhon|Орхон гол	length
-3	704	Или	Ili|Іле	length
-3	1591	Тобол	Tobol|Тобыл	length
-3	1186	Чу	Chu|Шу	length
-3	661	Нарын	Naryn	length
+3	1072	Аракс	Aras|Araz|Araks|Արաքս	length
+3	1020	Западная Двина	Daugava|Даўгава	length
+3	992	Селенга	Selenga|Сэлэнгэ	length
+3	906	Кубань	Kuban	legacy+length
+3	857	Мезень	Mezen	length
+3	824	Сакарья	Sakarya	length
+3	815	Кура	Kura|Mtkvari|მტკვარი|Kür	length
+3	802	Кума	Kuma	length
+4	744	Северная Двина	Northern Dvina	legacy
+4	688	Катунь	Katun	legacy
+4	637	Лозьва	Lozva	legacy
+4	635	Сосьва	Sosva	legacy
+4	623	Терек	Terek	legacy
+4	592	Чусовая	Chusovaya	legacy
+4	565	Уса	Usa	legacy
+4	415	Вишера	Vishera	legacy
+4	404	Юрюзань	Yuryuzan	legacy
+4	320	Чуя	Chuya	legacy
+4	300	Тшугор	Shchugor|Щугор|Щугер	legacy
+4	259	Косью	Kosyu|Косъю	legacy
+4	202	Кожим	Kozhim	legacy
+4	116	Ивдель	Ivdel	legacy
