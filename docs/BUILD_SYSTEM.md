@@ -30,10 +30,12 @@ Implemented in `main`:
 - dry-run-first Ubuntu/macOS bootstrap and pinned tool installer;
 - durable `StageRunner` workspaces, SQLite build history and validated
   checkpoints;
+- terminal `PipelineRunner` lifecycle with one global product-build lock;
 - manifest-driven DEM subset selection and standalone copy helper;
 - deterministic product queue ordered by priority, then overdue age;
 - validated two-artifact publication with rollback to the previous release;
-- standard-library test suite with 32 tests covering the implemented system.
+- stage metrics including CPU, peak RSS, page faults, swap and block I/O;
+- standard-library test suite with 36 tests covering the implemented system.
 
 Current commands:
 
