@@ -1,7 +1,8 @@
 # Static landmark catalogue for distant-zoom rivers.
 # Matching is by normalized river names/aliases on OSM ways; Wikidata is not required.
 # Lengths are approximate published river lengths and are used only to assign a stable display rank.
-# Ranks: 1 >=3000 km, 2 >=1500 km, 3 >=750 km, 4 = shorter legacy/manual landmark.
+# Ranks: 1 >=3000 km, 2 >=1500 km, 3 >=750 km.
+# Shorter legacy/manual rivers remain in the style fallback only.
 # This file is intentionally maintained manually and may be refreshed infrequently.
 #
 # rank	length_km	name	aliases	origin
@@ -43,17 +44,3 @@
 3	824	Сакарья	Sakarya	length
 3	815	Кура	Kura|Mtkvari|მტკვარი|Kür	length
 3	802	Кума	Kuma	length
-4	744	Северная Двина	Northern Dvina	legacy
-4	688	Катунь	Katun	legacy
-4	637	Лозьва	Lozva	legacy
-4	635	Сосьва	Sosva	legacy
-4	623	Терек	Terek	legacy
-4	592	Чусовая	Chusovaya	legacy
-4	565	Уса	Usa	legacy
-4	415	Вишера	Vishera	legacy
-4	404	Юрюзань	Yuryuzan	legacy
-4	320	Чуя	Chuya	legacy
-4	300	Тшугор	Shchugor|Щугор|Щугер	legacy
-4	259	Косью	Kosyu|Косъю	legacy
-4	202	Кожим	Kozhim	legacy
-4	116	Ивдель	Ivdel	legacy
