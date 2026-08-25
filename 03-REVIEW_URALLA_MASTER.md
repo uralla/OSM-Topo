@@ -786,8 +786,11 @@ Splitter назначает последовательные ID, начиная 
 
 ### 24.7 Новая автоматизированная сборочная система
 
-Единственный источник параметров сборки — registry/manifest. Для каждой карты
-он хранит как минимум:
+Единственный источник параметров сборки — registry/manifest. Принятая
+архитектура зафиксирована в [`docs/BUILD_SYSTEM.md`](docs/BUILD_SYSTEM.md), а
+первичная миграция всех 27 продуктов — в
+[`config/maps.yaml`](config/maps.yaml). Для каждой карты manifest хранит как
+минимум:
 
 ```text
 product_key
@@ -814,8 +817,9 @@ per_map_overrides
 ```text
 download/update source
   -> extract product polygon
-  -> merge elevation
+  -> place/address transform
   -> semantic preprocessor
+  -> merge external elevation/contour PBF
   -> splitter
   -> mkgmap
   -> packaging/range validator
@@ -846,7 +850,8 @@ Validator автоматически проверяет:
 
 Таким образом, все будущие исправления сборочной логики выполняются один раз в
 общем runner/validator или manifest, а не размножаются по региональным shell-
-скриптам.
+скриптам. Semantic preprocessor стоит до слияния внешних контуров высот, чтобы
+обрабатывать только исходные OSM-объекты и их relations.
 
 ---
 
@@ -1036,12 +1041,15 @@ uralla:manual_keep=yes
 
 ## 28. Текущий статус закрытия аудита
 
+Статический аудит закрыт. Проверки, требующие реального запуска mkgmap или
+Garmin, перенесены в acceptance tests новой системы и не блокируют её
+разработку.
+
 Закрыто:
 
 - логическая структура style;
 - обратный граф `lines/points/polygons <-> TYP`;
-- механическая проверка линий;
-- механическая проверка точек;
+- механическая проверка линий и точек;
 - выявление визуальных дублей;
 - определение места semantic preprocessor;
 - чтение фактических splitter/mkgmap build scripts из GitHub;
@@ -1049,18 +1057,23 @@ uralla:manual_keep=yes
 - поведение семизначных map ID splitter;
 - вопрос `FID/PID` готового бинарного TYP;
 - выявление общего default overview-ID;
-- выявление ошибки `/georgia.sh` как приёмочного теста миграции на общий runner.
+- фиксация legacy `/georgia.sh` как приёмочного теста миграции;
+- спецификация manifest-driven системы в `docs/BUILD_SYSTEM.md`;
+- первичный manifest всех 27 продуктов в `config/maps.yaml`;
+- выделение каждому продукту уникального overview-ID и зарезервированного
+  непересекающегося блока;
+- обратная сверка manifest с legacy scripts по FID, первому map ID, именам и
+  `max-nodes`.
 
-Осталось для полного закрытия:
+Следующий этап реализации:
 
-1. получить `areas.list` актуальных сборок или добавить отчёт валидатора и
-   подтвердить фактическое количество тайлов по каждой карте;
-2. согласовать единую схему блоков и уникальные `overview-mapnumber`;
-3. выполнить короткую проверку критичных встроенных point types на Garmin;
-4. сформировать единый согласованный change set style + TYP + args и каркас
-   новой сборочной системы; legacy `scripts/*.sh` при этом не дорабатывать;
-5. перенести параметры карт в manifest, проверить эквивалентность и только
-   затем вывести legacy scripts из рабочего контура;
-6. реализовать semantic preprocessor и каталог Евразии как штатную стадию
-   общего runner.
+1. реализовать schema/identity/range validator для `config/maps.yaml`;
+2. после splitter читать реальные `areas.list` и `template.args`, проверять
+   количество и диапазоны тайлов;
+3. реализовать read-only doctor и управляемый bootstrap для Ubuntu/macOS;
+4. реализовать общий stage runner, историю измерений, очередь
+   «priority -> overdue age» и атомарную публикацию;
+5. сформировать согласованный style + TYP + args change set;
+6. выполнить Garmin smoke-check критичных встроенных point types;
+7. реализовать semantic preprocessor и каталог рек/вершин Евразии.
 
