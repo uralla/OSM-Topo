@@ -1,8 +1,9 @@
 schema_version: 1
 
-# The blacklist is applied only through profiles selected in config/maps.yaml.
+# Semantic preprocessing profiles selected by config/maps.yaml/build planning.
 # Rule IDs are intentionally neutral and stable; aliases may be extended without
-# changing the preprocessor code.
+# changing the preprocessor code. The landmarks profile has no blacklist rules;
+# it exists so all products pass through static geographic enrichment.
 
 rules:
   united-russia:
@@ -42,6 +43,9 @@ rules:
       - kprf.ru
 
 profiles:
+  landmarks:
+    rules: []
+
   ru-political-parties:
     rules:
       - united-russia
