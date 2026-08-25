@@ -18,6 +18,36 @@ The authoritative sources are:
 
 Previously supplied ZIP archives are not build inputs or reference sources.
 
+## Implementation checkpoint
+
+Implemented in `main`:
+
+- migrated 27-product manifest at `config/maps.yaml`;
+- static manifest, FID/PID, overview and reserved-block validation;
+- splitter `areas.list` and `template.args` range validation;
+- human-readable and JSON CLI output;
+- read-only host doctor with a temporary atomic-rename probe;
+- dry-run-first Ubuntu/macOS bootstrap and pinned tool installer;
+- standard-library test suite for manifest, ranges, host policy, doctor and
+  bootstrap safety.
+
+Current commands:
+
+```sh
+python3 -m uralla_build validate-manifest
+python3 -m uralla_build validate-areas PRODUCT areas.list --template template.args
+cp config/host.example.yaml config/host.yaml
+python3 -m uralla_build doctor
+python3 -m uralla_build bootstrap
+python3 -m uralla_build bootstrap --apply --capture-checksums
+python3 -m unittest discover -s tests -v
+```
+
+`bootstrap` is a plan-only command unless `--apply` is supplied. The first
+official archive admission additionally requires `--capture-checksums`; the
+resulting `config/tools.lock.yaml` diff must be reviewed and committed. Later
+downloads must match the captured digest exactly.
+
 ## Frozen project decisions
 
 - Preserve the existing product boundaries, names, FID/PID values and first
