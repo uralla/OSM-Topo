@@ -120,7 +120,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
             self.assertIn("landmarks", preprocess.command)
             self.assertNotIn("ru-political-parties", preprocess.command)
-            self.assertIn("static peak landmarks", payload["warnings"][0])
+            self.assertIn("static peak + river landmarks", payload["warnings"][0])
 
     def test_russian_blacklist_runs_with_landmarks_before_elevation_merge(self) -> None:
         with TemporaryDirectory() as directory:
