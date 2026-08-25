@@ -787,7 +787,7 @@ Splitter назначает последовательные ID, начиная 
 ### 24.7 Новая автоматизированная сборочная система
 
 Единственный источник параметров сборки — registry/manifest. Принятая
-архитектура зафиксирована в [`docs/BUILD_SYSTEM.md`](docs/BUILD_SYSTEM.md), а
+архитектура зафиксирована в [`BUILD_SYSTEM.md`](BUILD_SYSTEM.md), а
 первичная миграция всех 27 продуктов — в
 [`config/maps.yaml`](config/maps.yaml). Для каждой карты manifest хранит как
 минимум:
@@ -992,8 +992,9 @@ Validator автоматически проверяет:
 
 ```text
 исходный OSM PBF
-  -> semantic preprocessor
-  -> enriched OSM PBF
+  -> extract/place transform
+  -> semantic preprocessor (blacklist + rank enrichment)
+  -> merge external elevation/contour PBF
   -> splitter
   -> mkgmap
   -> packaging/range validator
@@ -1003,6 +1004,24 @@ Validator автоматически проверяет:
 Препроцессор должен выполняться **до splitter**, чтобы связь целой реки с её
 `type=waterway` relation была разобрана один раз, а служебный ранг был перенесён
 на все нужные member ways до нарезки тайлов.
+
+### Конфигурируемый blacklist
+
+Первая рабочая функция препроцессора реализована в версии 0.8.0. Профиль
+`ru-political-parties` применяется только к российским source-профилям
+`russia`, `northwestern` и `crimea`. Правила хранятся отдельно в
+`config/preprocessor-blacklist.yaml`.
+
+Начальный набор исключает из будущих карт упоминания «Единой России» и КПРФ.
+Сопоставление использует устойчивые Wikidata ID, полные названия и падежные
+формы, контролируемые сокращения, английские/транслитерированные названия и
+официальные домены. Неоднозначное отдельное сокращение `ЕР` намеренно не
+используется.
+
+Чтобы не ломать ссылки node/way/relation, явно партийный объект сохраняется как
+нетегированная геометрия, а у постороннего объекта удаляются только совпавшие
+теги. После записи весь выходной PBF повторно сканируется теми же правилами:
+любое оставшееся совпадение завершает стадию ошибкой до splitter/mkgmap.
 
 ### Реки
 
@@ -1098,8 +1117,9 @@ Garmin, перенесены в acceptance tests новой системы и н
   operations в SQLite history;
 - manifest-to-command planner для всех 27 продуктов без shell-глобов и
   дублирования региональных скриптов;
-- полная цепочка `extract -> transform -> optional elevation merge -> splitter
-  -> validate-areas -> mkgmap -> atomic publish` в CLI `build-product`;
+- полная цепочка `extract -> transform -> optional blacklist preprocess ->
+  optional elevation merge -> splitter -> validate-areas -> mkgmap -> atomic
+  publish` в CLI `build-product`;
 - безопасный plan-only режим `build-product` по умолчанию и выполнение только
   с `--apply`;
 - создание stage-каталогов runner-ом, повторное использование managed
@@ -1108,7 +1128,16 @@ Garmin, перенесены в acceptance tests новой системы и н
   сохранение legacy `dem_poly` для `northwestern-fed-district`, `ural-n`,
   `ural-s` и `zap-sib`;
 - проверка безопасных и уникальных имён публикуемых файлов;
-- всего 45 автоматических тестов новой системы.
+- конфигурируемый streaming-PBF blacklist-препроцессор перед DEM/splitter для
+  российских продуктов;
+- структурно безопасные режимы neutralize/scrub и обязательная повторная
+  проверка выходного PBF на отсутствие запрещённых тегов;
+- профиль `ru-political-parties` с Wikidata `Q151469` и `Q192187`,
+  вариантами названий и доменами `er.ru` / `kprf.ru`;
+- CLI-команда `preprocess`, manifest scope и проверка Python-модуля `osmium`
+  в doctor;
+- всего 56 автоматических тестов новой системы, включая реальную потоковую
+  запись и повторное чтение PBF.
 
 Следующий этап реализации:
 
@@ -1118,8 +1147,8 @@ Garmin, перенесены в acceptance tests новой системы и н
    выполнить representative small-product build;
 3. принять первый managed `areas.list` и проверить реальные
    `template.args`/диапазоны splitter;
-4. реализовать semantic preprocessor и версионируемый каталог рек/вершин
-   Евразии;
+4. расширить реализованный semantic preprocessor версионируемым каталогом
+   рек/вершин Евразии и rank enrichment;
 5. сформировать согласованный style + TYP + args change set с переходом на
    `uralla:*_rank`;
 6. выполнить Garmin smoke-check критичных встроенных point types.
