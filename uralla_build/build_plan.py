@@ -178,7 +178,6 @@ def plan_product_build(
         )
     )
 
-    semantic_input = transformed
     warnings: list[str] = []
     preprocessor = _mapping(defaults.get("preprocessor", {}), "defaults.preprocessor")
     source_profiles = _mapping(
@@ -192,44 +191,48 @@ def plan_product_build(
         raise StageError(
             f"defaults.preprocessor.source_profiles.{source_key} must be a list"
         )
-    profiles = [str(profile) for profile in raw_profiles]
-    if profiles:
-        blacklist = repo_path(
-            repo,
-            _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
-        )
-        semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"
-        preprocess_command = [
-            sys.executable,
-            "-m",
-            "uralla_build",
+    profiles = ["landmarks"]
+    for profile in raw_profiles:
+        profile_text = str(profile)
+        if profile_text not in profiles:
+            profiles.append(profile_text)
+
+    blacklist = repo_path(
+        repo,
+        _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
+    )
+    semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"
+    preprocess_command = [
+        sys.executable,
+        "-m",
+        "uralla_build",
+        "preprocess",
+        "--input",
+        str(transformed),
+        "--output",
+        "preprocessed.osm.pbf",
+        "--config",
+        str(blacklist),
+        "--report",
+        "report.json",
+    ]
+    for profile in profiles:
+        preprocess_command.extend(("--profile", profile))
+    stages.append(
+        PipelineStage(
             "preprocess",
-            "--input",
-            str(transformed),
-            "--output",
-            "preprocessed.osm.pbf",
-            "--config",
-            str(blacklist),
-            "--report",
-            "report.json",
-        ]
-        for profile in profiles:
-            preprocess_command.extend(("--profile", profile))
-        stages.append(
-            PipelineStage(
-                "preprocess",
-                tuple(preprocess_command),
-                ("preprocessed.osm.pbf", "report.json"),
-                environment=(("PYTHONPATH", str(repo)),),
-            )
+            tuple(preprocess_command),
+            ("preprocessed.osm.pbf", "report.json"),
+            environment=(("PYTHONPATH", str(repo)),),
         )
+    )
+    if "ru-political-parties" in profiles:
         warnings.append(
-            "blacklist preprocessing is active; river/peak rank enrichment remains pending"
+            "semantic preprocessing: peak landmarks + Russian political blacklist"
         )
     else:
-        warnings.append(
-            "river/peak rank enrichment is not configured yet; current hard-coded style lists remain active"
-        )
+        warnings.append("semantic preprocessing: static peak landmarks")
+
     elevation_value = product.get("elevation")
     if elevation_value is not None:
         elevation = data_path(
