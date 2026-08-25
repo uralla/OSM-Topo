@@ -12,6 +12,7 @@ import sys
 from .bootstrap import apply_bootstrap, build_bootstrap_plan, load_tools_lock
 from .errors import ManifestError, StageError, ValidationIssue
 from .doctor import has_errors, run_doctor
+from .dem import select_dem_files, write_selection
 from .history import HistoryStore
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
@@ -210,6 +211,41 @@ def _show_build(args: argparse.Namespace) -> int:
     return 0
 
 
+def _select_dem(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        selection = select_dem_files(
+            manifest,
+            args.inventory,
+            args.repo_root,
+            halo=args.halo,
+        )
+        write_selection(selection, args.output, args.exact_output, args.report)
+    except (ManifestError, OSError) as exc:
+        return _emit([ValidationIssue("select-dem", str(exc))], None, args.json)
+    summary = {
+        "elevation_products": len(selection.elevation_products),
+        "polygons": len(selection.polygons),
+        "inventory_hgt_files": selection.inventory_hgt_files,
+        "inventory_hgt_bytes": selection.inventory_hgt_bytes,
+        "exact_tiles": selection.exact_tiles,
+        "exact_files": len(selection.exact_files),
+        "exact_bytes": selection.exact_bytes,
+        "halo": selection.halo,
+        "selected_files": len(selection.selected_files),
+        "selected_bytes": selection.selected_bytes,
+        "intersecting_tiles_without_file": len(selection.intersecting_tiles_without_file),
+        "output": str(args.output),
+        "exact_output": str(args.exact_output),
+        "report": str(args.report),
+    }
+    if args.json:
+        print(json.dumps({"ok": True, "report": summary}, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uralla-build")
     parser.add_argument("--manifest", default=Path("config/maps.yaml"), type=Path)
@@ -271,6 +307,17 @@ def build_parser() -> argparse.ArgumentParser:
     show_parser.add_argument("build_id")
     show_parser.add_argument("--repo-root", default=Path("."), type=Path)
     show_parser.set_defaults(handler=_show_build)
+
+    dem_parser = subparsers.add_parser("select-dem")
+    dem_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    dem_parser.add_argument("--inventory", default=Path("dem-files.tsv"), type=Path)
+    dem_parser.add_argument("--halo", default=1, type=int)
+    dem_parser.add_argument("--output", default=Path("config/dem-required-files.txt"), type=Path)
+    dem_parser.add_argument(
+        "--exact-output", default=Path("config/dem-required-files-exact.txt"), type=Path
+    )
+    dem_parser.add_argument("--report", default=Path("config/dem-selection-report.json"), type=Path)
+    dem_parser.set_defaults(handler=_select_dem)
     return parser
 
 
