@@ -277,3 +277,22 @@ class HistoryStore:
                 (build_id,),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def latest_success_by_product(self) -> dict[str, str]:
+        """Return the latest successful build completion for each product."""
+
+        with self.connect() as connection:
+            rows = connection.execute(
+                """SELECT product, MAX(finished_at) AS finished_at
+                   FROM builds
+                   WHERE status = 'success' AND finished_at IS NOT NULL
+                   GROUP BY product"""
+            ).fetchall()
+        return {str(row["product"]): str(row["finished_at"]) for row in rows}
+
+    def running_products(self) -> set[str]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT product FROM builds WHERE status = 'running'"
+            ).fetchall()
+        return {str(row["product"]) for row in rows}

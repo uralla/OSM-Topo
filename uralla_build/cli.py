@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
@@ -16,8 +17,10 @@ from .dem import select_dem_files, write_selection
 from .history import HistoryStore
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
+from .publish import publication_targets, publish_product
 from .ranges import validate_generated_range
 from .runner import StageRunner
+from .scheduler import build_queue, next_due_product
 
 
 def _emit(issues: list[ValidationIssue], report: object | None, as_json: bool) -> int:
@@ -246,6 +249,66 @@ def _select_dem(args: argparse.Namespace) -> int:
     return 0
 
 
+def _queue(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        issues = validate_manifest(manifest)
+        if issues:
+            return _emit(issues, None, args.json)
+        host = load_host_config(args.host, args.repo_root)
+        history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
+        items = build_queue(
+            manifest,
+            history.latest_success_by_product(),
+            history.running_products(),
+        )
+        next_item = next_due_product(items)
+    except ManifestError as exc:
+        return _emit([ValidationIssue("queue", str(exc))], None, args.json)
+    payload = {
+        "next": next_item.to_dict() if next_item else None,
+        "items": [item.to_dict() for item in items],
+    }
+    if args.json:
+        print(json.dumps({"ok": True, "report": payload}, ensure_ascii=False, indent=2))
+    else:
+        print(f"NEXT {next_item.product}" if next_item else "NEXT none")
+        for item in items:
+            state = "due" if item.due else "waiting"
+            age = "never" if item.never_built else f"{(item.overdue_seconds or 0) / 86400:.2f}d"
+            print(f"{item.priority:5} {state:7} {age:>10} {item.product}")
+    return 0
+
+
+def _publish(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        products = manifest.get("products")
+        if not isinstance(products, dict) or not isinstance(products.get(args.product), dict):
+            raise StageError(f"unknown product: {args.product}")
+        host = load_host_config(args.host, args.repo_root)
+        product = products[args.product]
+        targets = publication_targets(host, product, args.img, args.gmapi)
+        if not args.apply:
+            payload: object = {
+                "mode": "plan",
+                "targets": [asdict(target) for target in targets],
+            }
+        else:
+            artifacts = publish_product(host, product, args.img, args.gmapi)
+            payload = {
+                "mode": "apply",
+                "artifacts": [artifact.to_dict() for artifact in artifacts],
+            }
+    except (ManifestError, StageError, OSError) as exc:
+        return _emit([ValidationIssue("publish", str(exc))], None, args.json)
+    if args.json:
+        print(json.dumps({"ok": True, "report": payload}, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uralla-build")
     parser.add_argument("--manifest", default=Path("config/maps.yaml"), type=Path)
@@ -318,6 +381,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     dem_parser.add_argument("--report", default=Path("config/dem-selection-report.json"), type=Path)
     dem_parser.set_defaults(handler=_select_dem)
+
+    queue_parser = subparsers.add_parser("queue")
+    queue_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    queue_parser.set_defaults(handler=_queue)
+
+    publish_parser = subparsers.add_parser("publish")
+    publish_parser.add_argument("product")
+    publish_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    publish_parser.add_argument("--img", required=True, type=Path)
+    publish_parser.add_argument("--gmapi", required=True, type=Path)
+    publish_parser.add_argument("--apply", action="store_true")
+    publish_parser.set_defaults(handler=_publish)
     return parser
 
 

@@ -55,6 +55,16 @@ def _id_string(value: object) -> str | None:
     return value if isinstance(value, str) and MAP_ID_RE.fullmatch(value) else None
 
 
+def _valid_non_negative_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _valid_interval(value: object) -> bool:
+    return value is None or (
+        isinstance(value, int) and not isinstance(value, bool) and value > 0
+    )
+
+
 def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
     """Validate schema-critical fields and all reserved ID blocks."""
 
@@ -74,6 +84,19 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
     if products is None or not products:
         issues.append(ValidationIssue("products", "must be a non-empty mapping"))
         return issues
+
+    if "enabled" in defaults and not isinstance(defaults.get("enabled"), bool):
+        issues.append(ValidationIssue("defaults.enabled", "must be a boolean"))
+    if "priority" in defaults and not _valid_non_negative_int(defaults.get("priority")):
+        issues.append(ValidationIssue("defaults.priority", "must be a non-negative integer"))
+    if "update_interval_days" in defaults and not _valid_interval(
+        defaults.get("update_interval_days")
+    ):
+        issues.append(
+            ValidationIssue(
+                "defaults.update_interval_days", "must be null or a positive integer"
+            )
+        )
 
     for source_key, source_value in sources.items():
         location = f"sources.{source_key}"
@@ -99,6 +122,21 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
         if product is None:
             issues.append(ValidationIssue(location, "must be a mapping"))
             continue
+
+        if "enabled" in product and not isinstance(product.get("enabled"), bool):
+            issues.append(ValidationIssue(f"{location}.enabled", "must be a boolean"))
+        if "priority" in product and not _valid_non_negative_int(product.get("priority")):
+            issues.append(
+                ValidationIssue(f"{location}.priority", "must be a non-negative integer")
+            )
+        if "update_interval_days" in product and not _valid_interval(
+            product.get("update_interval_days")
+        ):
+            issues.append(
+                ValidationIssue(
+                    f"{location}.update_interval_days", "must be null or a positive integer"
+                )
+            )
 
         source_key = product.get("source")
         if source_key not in sources:
@@ -192,4 +230,3 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
                 )
             )
     return issues
-
