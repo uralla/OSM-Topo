@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uralla-build"
-version = "0.7.0"
+version = "0.8.0"
 description = "Manifest-driven Garmin map build orchestration for OSM-Topo"
 requires-python = ">=3.11"
-dependencies = ["PyYAML>=6.0,<7"]
+dependencies = ["PyYAML>=6.0,<7", "osmium>=4.3.1,<5"]
 
 [project.scripts]
 uralla-build = "uralla_build.cli:main"

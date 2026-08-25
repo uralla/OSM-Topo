@@ -13,6 +13,15 @@ defaults:
   typ: styles/uralla.typ
   mkgmap_args: styles/uralla.args
   transform_places: scripts/transform_places.xml
+  preprocessor:
+    blacklist: config/preprocessor-blacklist.yaml
+    source_profiles:
+      russia:
+        - ru-political-parties
+      crimea:
+        - ru-political-parties
+      northwestern:
+        - ru-political-parties
   bounds: input/bounds-latest.zip
   sea: input/sea-latest.zip
   splitter:

@@ -119,6 +119,37 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
         elif not _safe_project_path(source.get("path")):
             issues.append(ValidationIssue(f"{location}.path", "must be a safe relative path"))
 
+    preprocessor = _mapping(defaults.get("preprocessor"))
+    if "preprocessor" in defaults and preprocessor is None:
+        issues.append(ValidationIssue("defaults.preprocessor", "must be a mapping"))
+    elif preprocessor is not None:
+        if not _safe_project_path(preprocessor.get("blacklist")):
+            issues.append(
+                ValidationIssue(
+                    "defaults.preprocessor.blacklist", "must be a safe relative path"
+                )
+            )
+        source_profiles = _mapping(preprocessor.get("source_profiles"))
+        if source_profiles is None:
+            issues.append(
+                ValidationIssue(
+                    "defaults.preprocessor.source_profiles", "must be a mapping"
+                )
+            )
+        else:
+            for source_key, profiles in source_profiles.items():
+                location = f"defaults.preprocessor.source_profiles.{source_key}"
+                if source_key not in sources:
+                    issues.append(ValidationIssue(location, "references an unknown source"))
+                if not isinstance(profiles, list) or not profiles or any(
+                    not isinstance(profile, str) or not profile for profile in profiles
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            location, "must be a non-empty list of profile names"
+                        )
+                    )
+
     seen_fid_pid: dict[tuple[int, int], str] = {}
     seen_overview: dict[str, str] = {}
     seen_first: dict[str, str] = {}

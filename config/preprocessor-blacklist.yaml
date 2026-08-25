@@ -1,0 +1,48 @@
+schema_version: 1
+
+# The blacklist is applied only through profiles selected in config/maps.yaml.
+# Rule IDs are intentionally neutral and stable; aliases may be extended without
+# changing the preprocessor code.
+
+rules:
+  united-russia:
+    wikidata:
+      - Q151469
+    exact_aliases:
+      - Единая Россия
+      - Партия Единая Россия
+      - Всероссийская политическая партия Единая Россия
+      - ЕдРо
+      - United Russia
+      - Yedinaya Rossiya
+      - Edinaya Rossiya
+    text_patterns:
+      - '\bедин(?:ая|ой|ую|ою)\s+росси(?:я|и|ю|ей)\b'
+      - '\bедро\b'
+      - '\bunited\s+russia\b'
+      - '\b(?:y|e)dinaya\s+rossiya\b'
+    domains:
+      - er.ru
+
+  cprf:
+    wikidata:
+      - Q192187
+    exact_aliases:
+      - КПРФ
+      - Коммунистическая партия Российской Федерации
+      - Коммунистическая партия РФ
+      - Communist Party of the Russian Federation
+      - KPRF
+    text_patterns:
+      - '\bкпрф\b'
+      - '\bkprf\b'
+      - '\bкоммунистическ(?:ая|ой|ую|ою)\s+парти(?:я|и|ю|ей)\s+(?:российск(?:ой|ая|ую)\s+федераци(?:и|я|ю|ей)|рф)\b'
+      - '\bcommunist\s+party\s+of\s+the\s+russian\s+federation\b'
+    domains:
+      - kprf.ru
+
+profiles:
+  ru-political-parties:
+    rules:
+      - united-russia
+      - cprf

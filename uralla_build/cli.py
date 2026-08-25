@@ -21,6 +21,7 @@ from .host import load_host_config, validate_host_config
 from .manifest import load_manifest, validate_manifest
 from .pipeline import PipelineRunner, PipelineStage
 from .publish import publication_targets, publish_product
+from .preprocessor import preprocess_pbf
 from .ranges import validate_generated_range
 from .runner import StageRunner
 from .scheduler import build_queue, next_due_product
@@ -403,6 +404,24 @@ def _build_product(args: argparse.Namespace) -> int:
     return status
 
 
+def _preprocess(args: argparse.Namespace) -> int:
+    try:
+        report = preprocess_pbf(
+            args.input,
+            args.output,
+            args.config,
+            args.profile,
+            args.report,
+        )
+    except (StageError, OSError) as exc:
+        return _emit([ValidationIssue("preprocess", str(exc))], None, args.json)
+    if args.json:
+        print(json.dumps({"ok": True, "report": report}, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uralla-build")
     parser.add_argument("--manifest", default=Path("config/maps.yaml"), type=Path)
@@ -500,6 +519,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--apply", action="store_true", help="execute stages and publish the release"
     )
     product_parser.set_defaults(handler=_build_product)
+
+    preprocess_parser = subparsers.add_parser("preprocess")
+    preprocess_parser.add_argument("--input", required=True, type=Path)
+    preprocess_parser.add_argument("--output", required=True, type=Path)
+    preprocess_parser.add_argument(
+        "--config", default=Path("config/preprocessor-blacklist.yaml"), type=Path
+    )
+    preprocess_parser.add_argument(
+        "--profile", required=True, action="append", help="blacklist profile; repeatable"
+    )
+    preprocess_parser.add_argument("--report", required=True, type=Path)
+    preprocess_parser.set_defaults(handler=_preprocess)
     return parser
 
 

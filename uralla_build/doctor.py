@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import hashlib
+import importlib.util
 import os
 from pathlib import Path
 import platform
@@ -159,6 +160,16 @@ def run_doctor(
         for command in ("osmium", "osmosis", "zip", "unzip"):
             resolved = shutil.which(command)
             checks.append(_check(f"command:{command}", resolved is not None, resolved or "not found"))
+        has_python_osmium = importlib.util.find_spec("osmium") is not None
+        checks.append(
+            _check(
+                "python:osmium",
+                has_python_osmium,
+                "Python osmium module installed"
+                if has_python_osmium
+                else "Python osmium module not found; install project dependencies",
+            )
+        )
 
     tools_root = host.paths.tools_root
     for tool_name in ("mkgmap", "splitter"):
@@ -187,6 +198,9 @@ def run_doctor(
         value = defaults.get(key)
         if isinstance(value, str):
             project_paths.add(value)
+    preprocessor = defaults.get("preprocessor")
+    if isinstance(preprocessor, dict) and isinstance(preprocessor.get("blacklist"), str):
+        project_paths.add(preprocessor["blacklist"])
     for product in manifest.get("products", {}).values():
         if isinstance(product, dict) and isinstance(product.get("polygon"), str):
             project_paths.add(product["polygon"])

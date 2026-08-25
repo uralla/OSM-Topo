@@ -178,10 +178,58 @@ def plan_product_build(
         )
     )
 
-    warnings = (
-        "semantic preprocessor is not configured yet; current hard-coded style "
-        "river/peak lists remain active",
+    semantic_input = transformed
+    warnings: list[str] = []
+    preprocessor = _mapping(defaults.get("preprocessor", {}), "defaults.preprocessor")
+    source_profiles = _mapping(
+        preprocessor.get("source_profiles", {}),
+        "defaults.preprocessor.source_profiles",
     )
+    raw_profiles = source_profiles.get(source_key, [])
+    if not isinstance(raw_profiles, list) or any(
+        not isinstance(profile, str) or not profile for profile in raw_profiles
+    ):
+        raise StageError(
+            f"defaults.preprocessor.source_profiles.{source_key} must be a list"
+        )
+    profiles = [str(profile) for profile in raw_profiles]
+    if profiles:
+        blacklist = repo_path(
+            repo,
+            _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
+        )
+        semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"
+        preprocess_command = [
+            sys.executable,
+            "-m",
+            "uralla_build",
+            "preprocess",
+            "--input",
+            str(transformed),
+            "--output",
+            "preprocessed.osm.pbf",
+            "--config",
+            str(blacklist),
+            "--report",
+            "report.json",
+        ]
+        for profile in profiles:
+            preprocess_command.extend(("--profile", profile))
+        stages.append(
+            PipelineStage(
+                "preprocess",
+                tuple(preprocess_command),
+                ("preprocessed.osm.pbf", "report.json"),
+                environment=(("PYTHONPATH", str(repo)),),
+            )
+        )
+        warnings.append(
+            "blacklist preprocessing is active; river/peak rank enrichment remains pending"
+        )
+    else:
+        warnings.append(
+            "river/peak rank enrichment is not configured yet; current hard-coded style lists remain active"
+        )
     elevation_value = product.get("elevation")
     if elevation_value is not None:
         elevation = data_path(
@@ -197,7 +245,7 @@ def plan_product_build(
                     "merge",
                     "-O",
                     "--progress",
-                    str(transformed),
+                    str(semantic_input),
                     str(elevation),
                     "-o",
                     "enriched.osm.pbf",
@@ -206,7 +254,7 @@ def plan_product_build(
             )
         )
     else:
-        splitter_input = transformed
+        splitter_input = semantic_input
 
     areas_root = repo_path(repo, _text(areas.get("root"), "defaults.areas.root"))
     stable_areas = areas_root / product_key / "areas.list"
@@ -316,5 +364,5 @@ def plan_product_build(
         str(garmin / "gmapsupp.img"),
         str(gmapi),
         str(stable_areas) if stable_areas.is_file() else None,
-        warnings,
+        tuple(warnings),
     )

@@ -58,6 +58,16 @@ class ManifestTests(unittest.TestCase):
         self.assertIn("products.armenia.names.family", locations)
         self.assertIn("products.belarus.names.output_img", locations)
 
+    def test_invalid_preprocessor_scope_is_rejected(self) -> None:
+        manifest = load_manifest(ROOT / "config/maps.yaml")
+        manifest["defaults"]["preprocessor"]["blacklist"] = "/absolute.yaml"
+        manifest["defaults"]["preprocessor"]["source_profiles"]["unknown"] = []
+
+        issues = validate_manifest(manifest)
+        locations = {issue.location for issue in issues}
+        self.assertIn("defaults.preprocessor.blacklist", locations)
+        self.assertIn("defaults.preprocessor.source_profiles.unknown", locations)
+
 
 if __name__ == "__main__":
     unittest.main()
