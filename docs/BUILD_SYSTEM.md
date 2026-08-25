@@ -28,19 +28,11 @@ Implemented in `main`:
 - human-readable and JSON CLI output;
 - read-only host doctor with a temporary atomic-rename probe;
 - dry-run-first Ubuntu/macOS bootstrap and pinned tool installer;
-- durable `StageRunner` workspaces, SQLite build history and validated
-  checkpoints;
-- terminal `PipelineRunner` lifecycle with one global product-build lock;
-- shell-free manifest-to-command plans for all 27 products, including extract,
-  transform, optional elevation merge, splitter, range validation and mkgmap;
-- `build-product` plan/apply command that publishes only before terminal success;
-- manifest-driven DEM subset selection and standalone copy helper;
-- deterministic product queue ordered by priority, then overdue age;
-- validated two-artifact publication with rollback to the previous release;
-- stage metrics including CPU, peak RSS, page faults, swap and block I/O;
-- validation of safe and unique publication names plus material mkgmap/splitter
-  overrides;
-- standard-library test suite with 45 tests covering the implemented system.
+- resumable shell-free product plans covering extract, transform, elevation
+  merge, splitter, range validation, mkgmap and atomic publication;
+- streaming OSM PBF blacklist preprocessor, enabled for Russian source
+  profiles before elevation merge and splitter;
+- 56-test suite, including a real pyosmium PBF write/read verification test.
 
 Current commands:
 
@@ -51,34 +43,12 @@ cp config/host.example.yaml config/host.yaml
 python3 -m uralla_build doctor
 python3 -m uralla_build bootstrap
 python3 -m uralla_build bootstrap --apply --capture-checksums
-python3 -m uralla_build queue
-python3 -m uralla_build run-stage PRODUCT STAGE --output RELATIVE_PATH -- COMMAND...
-python3 -m uralla_build show-build BUILD_ID
-python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY
-python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY --apply
-python3 -m uralla_build build-product PRODUCT
-python3 -m uralla_build build-product PRODUCT --apply
+python3 -m uralla_build build-product ural-n
+python3 -m uralla_build preprocess --input input.osm.pbf \
+  --output output.osm.pbf --config config/preprocessor-blacklist.yaml \
+  --profile ru-political-parties --report blacklist-report.json
 python3 -m unittest discover -s tests -v
 ```
-
-`queue` is read-only. Products with lower numeric priority values come first;
-within one priority, never-built products come first and then the oldest or
-most overdue successful build. A running product is omitted. A not-yet-due
-high-priority product remains visible but does not block the next due product.
-
-`publish` is plan-only unless `--apply` is supplied. It stages and validates
-both outputs before replacing either ready file. IMG keeps its manifest name;
-the GMAPI/MapSource package keeps the legacy `<IMG stem>-ms.zip` name and is
-written as one store ZIP. A failed promotion restores the previous pair.
-
-`build-product` is also plan-only unless `--apply` is supplied. The plan is a
-complete argv list, never a shell script: no wildcard expansion, command
-substitution or legacy working-directory assumptions are required. On apply,
-the pipeline creates `tiles` and `garmin` stage directories, validates
-splitter ranges, runs mkgmap from `template.args`, publishes both artifacts and
-only then marks the build successful. Until the semantic preprocessor is
-implemented, the current hard-coded river/peak style rules remain active and
-the plan reports this transition explicitly.
 
 `bootstrap` is a plan-only command unless `--apply` is supplied. The first
 official archive admission additionally requires `--capture-checksums`; the
@@ -151,7 +121,21 @@ modify the published release.
 
 ## Semantic preprocessor contract
 
-The first implementation covers rivers and peaks without recalculating
+The first implemented profile is the configurable Russian political-party
+blacklist in `config/preprocessor-blacklist.yaml`. It currently removes map
+references to United Russia and the Communist Party of the Russian Federation
+from products based on the `russia`, `northwestern` and `crimea` sources.
+
+The blacklist scans every OSM tag value, using stable Wikidata IDs, controlled
+aliases, inflection-aware patterns and official domains. A party object is
+neutralised by removing all of its tags while retaining the primitive as
+untagged geometry, so node/way/relation references cannot be broken. On an
+otherwise unrelated object only the matching tags are removed. The output PBF
+is scanned again with the same rules; any remaining forbidden tag fails the
+stage. Ambiguous standalone abbreviations such as `ЕР` are deliberately not
+matched because they produce false positives.
+
+The next catalogue phase covers rivers and peaks without recalculating
 published geographic facts.
 
 Rivers:
@@ -299,6 +283,7 @@ changes and fail clearly when package installation needs user authority.
 - supported OS and architecture;
 - free disk space and writable work/publish paths;
 - Java and native tool versions;
+- the Python `osmium` module required by the streaming preprocessor;
 - pinned splitter/mkgmap artifacts and checksums;
 - style/TYP/args presence;
 - source, bounds, sea, GeoNames, polygon, DEM and elevation inputs;
@@ -339,6 +324,7 @@ the working build path.
 4. Implement the common stage runner and build history.
 5. Implement queue scheduling and atomic publication.
 6. Migrate and validate representative products.
-7. Implement the semantic preprocessor and Eurasia catalog.
+7. Extend the implemented blacklist preprocessor with the Eurasia river/peak
+   catalogue and rank enrichment.
 8. Switch style rules from hard-coded names to validated `uralla:*_rank` tags.
 9. Remove legacy scripts from the operational workflow.
