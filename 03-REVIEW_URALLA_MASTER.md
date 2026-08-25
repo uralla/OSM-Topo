@@ -1096,17 +1096,30 @@ Garmin, перенесены в acceptance tests новой системы и н
   после первой неуспешной стадии и обязательным terminal status всего build;
 - сохранение и миграция метрик swap, block input operations и block output
   operations в SQLite history;
-- всего 36 автоматических тестов новой системы.
+- manifest-to-command planner для всех 27 продуктов без shell-глобов и
+  дублирования региональных скриптов;
+- полная цепочка `extract -> transform -> optional elevation merge -> splitter
+  -> validate-areas -> mkgmap -> atomic publish` в CLI `build-product`;
+- безопасный plan-only режим `build-product` по умолчанию и выполнение только
+  с `--apply`;
+- создание stage-каталогов runner-ом, повторное использование managed
+  `areas.list` и чтение splitter `template.args` напрямую mkgmap;
+- явные восьмизначные first tile и overview ID, host-specific DEM root и
+  сохранение legacy `dem_poly` для `northwestern-fed-district`, `ural-n`,
+  `ural-s` и `zap-sib`;
+- проверка безопасных и уникальных имён публикуемых файлов;
+- всего 45 автоматических тестов новой системы.
 
 Следующий этап реализации:
 
-1. реализовать генерацию реальных команд стадий
-   `osmium/osmosis/splitter/mkgmap` из manifest и связать terminal pipeline с
-   range validation и атомарной публикацией;
-2. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
+1. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
    проверить и закоммитить полученные SHA-256;
-3. прогнать `validate-areas` по реальным `areas.list` и `template.args`,
-   которые создаст splitter;
-4. сформировать согласованный style + TYP + args change set;
-5. выполнить Garmin smoke-check критичных встроенных point types;
-6. реализовать semantic preprocessor и каталог рек/вершин Евразии.
+2. проверить plan `build-product` на фактическом `config/host.yaml`, затем
+   выполнить representative small-product build;
+3. принять первый managed `areas.list` и проверить реальные
+   `template.args`/диапазоны splitter;
+4. реализовать semantic preprocessor и версионируемый каталог рек/вершин
+   Евразии;
+5. сформировать согласованный style + TYP + args change set с переходом на
+   `uralla:*_rank`;
+6. выполнить Garmin smoke-check критичных встроенных point types.
