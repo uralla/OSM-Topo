@@ -10,12 +10,15 @@ The normal map build must not query Wikidata. Peak matching is by the OSM `wikid
 
 ## Rivers
 
-`river-landmarks.tsv` contains selected large rivers plus the legacy author-selected river core. It stores an approximate published length and a stable display rank:
+`river-landmarks.tsv` contains rivers selected by approximate published length and assigns three stable display ranks:
 
 - rank 1: 3000 km or longer;
 - rank 2: 1500-2999 km;
-- rank 3: 750-1499 km;
-- rank 4: shorter rivers retained from the legacy author-selected landmark set.
+- rank 3: 750-1499 km.
+
+For regions outside the Urals, length is intentionally the only selection criterion. This is a deliberately simple and reproducible approximation of distant-zoom importance rather than a hydrological classification.
+
+The existing hard-coded Ural river list is different: it is an author-selected set of regionally significant orientation landmarks. Some of those rivers are shorter than the global length threshold but are important on Ural maps, so they remain in the style independently of the length-ranked catalogue.
 
 River ways are matched by normalized `name`, `name:ru`, `name:en`, or `int_name` against the canonical name and aliases in the catalogue. This intentionally avoids relation-member propagation: the purpose is distant-zoom visual orientation, not a complete hydrological model.
 
