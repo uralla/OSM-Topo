@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -45,6 +44,7 @@ class SourceDownloadTests(unittest.TestCase):
 
             def downloader(url: str, target: Path) -> None:
                 calls.append(f"download:{url}")
+                self.assertTrue(target.name.endswith(".osm.pbf"))
                 target.write_bytes(b"pbf-data")
 
             def validator(path: Path) -> None:
@@ -63,7 +63,7 @@ class SourceDownloadTests(unittest.TestCase):
             self.assertEqual(result.action, "downloaded")
             self.assertEqual(destination.read_bytes(), b"pbf-data")
             self.assertEqual(len(calls), 2)
-            self.assertFalse((destination.parent / ".russia-latest.osm.pbf.partial").exists())
+            self.assertFalse((destination.parent / ".russia-latest.partial.osm.pbf").exists())
 
     def test_fresh_source_is_reused_without_network(self) -> None:
         with TemporaryDirectory() as directory:
@@ -139,7 +139,7 @@ class SourceDownloadTests(unittest.TestCase):
                 )
 
             self.assertEqual(destination.read_bytes(), b"good-old")
-            self.assertFalse((destination.parent / ".russia-latest.osm.pbf.partial").exists())
+            self.assertFalse((destination.parent / ".russia-latest.partial.osm.pbf").exists())
 
     def test_unmanaged_source_is_left_alone(self) -> None:
         with TemporaryDirectory() as directory:
