@@ -371,6 +371,7 @@ products:
       max_nodes: 400000
     mkgmap:
       dem_dists: 15000
+      dem_poly: true
 
   pri-kha-yev:
     source: russia
@@ -535,6 +536,7 @@ products:
       max_nodes: 2000000
     mkgmap:
       dem_dists: 9942
+      dem_poly: true
 
   ural-s:
     source: russia
@@ -555,6 +557,8 @@ products:
       output_img: Topo-Ural-S.img
     splitter:
       max_nodes: 500000
+    mkgmap:
+      dem_poly: true
 
   volga-fed-district:
     source: russia
@@ -597,3 +601,4 @@ products:
       max_nodes: 1000000
     mkgmap:
       dem_dists: 15000
+      dem_poly: true

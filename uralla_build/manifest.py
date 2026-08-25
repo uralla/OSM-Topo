@@ -55,6 +55,17 @@ def _id_string(value: object) -> str | None:
     return value if isinstance(value, str) and MAP_ID_RE.fullmatch(value) else None
 
 
+def _safe_file_component(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and value not in {".", ".."}
+        and "/" not in value
+        and "\\" not in value
+        and "\x00" not in value
+    )
+
+
 def _valid_non_negative_int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
@@ -111,6 +122,7 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
     seen_fid_pid: dict[tuple[int, int], str] = {}
     seen_overview: dict[str, str] = {}
     seen_first: dict[str, str] = {}
+    seen_output_img: dict[str, str] = {}
     blocks: list[tuple[int, int, str]] = []
 
     for product_key, product_value in products.items():
@@ -122,6 +134,9 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
         if product is None:
             issues.append(ValidationIssue(location, "must be a mapping"))
             continue
+
+        if "extract" in product and not isinstance(product.get("extract"), bool):
+            issues.append(ValidationIssue(f"{location}.extract", "must be a boolean"))
 
         if "enabled" in product and not isinstance(product.get("enabled"), bool):
             issues.append(ValidationIssue(f"{location}.enabled", "must be a boolean"))
@@ -211,6 +226,33 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
             for field in REQUIRED_NAMES:
                 if not isinstance(names.get(field), str) or not names[field].strip():
                     issues.append(ValidationIssue(f"{location}.names.{field}", "must be a non-empty string"))
+            family = names.get("family")
+            if not _safe_file_component(family):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.names.family", "must be a safe filename component"
+                    )
+                )
+            output_img = names.get("output_img")
+            if not _safe_file_component(output_img) or not str(output_img).lower().endswith(
+                ".img"
+            ):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.names.output_img",
+                        "must be a safe filename ending in .img",
+                    )
+                )
+            else:
+                folded = str(output_img).casefold()
+                if previous := seen_output_img.get(folded):
+                    issues.append(
+                        ValidationIssue(
+                            f"{location}.names.output_img", f"duplicates {previous}"
+                        )
+                    )
+                else:
+                    seen_output_img[folded] = key
 
         splitter = _mapping(product.get("splitter"))
         if splitter is None:
@@ -219,6 +261,37 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
             max_nodes = splitter.get("max_nodes")
             if not isinstance(max_nodes, int) or max_nodes <= 0:
                 issues.append(ValidationIssue(f"{location}.splitter.max_nodes", "must be a positive integer"))
+            max_threads = splitter.get("max_threads")
+            if max_threads is not None and (
+                not isinstance(max_threads, int)
+                or isinstance(max_threads, bool)
+                or max_threads <= 0
+            ):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.splitter.max_threads", "must be a positive integer"
+                    )
+                )
+
+        mkgmap = _mapping(product.get("mkgmap", {}))
+        if mkgmap is None:
+            issues.append(ValidationIssue(f"{location}.mkgmap", "must be a mapping"))
+        else:
+            dem_dists = mkgmap.get("dem_dists")
+            if dem_dists is not None and (
+                not isinstance(dem_dists, int)
+                or isinstance(dem_dists, bool)
+                or dem_dists <= 0
+            ):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.mkgmap.dem_dists", "must be a positive integer"
+                    )
+                )
+            if "dem_poly" in mkgmap and not isinstance(mkgmap.get("dem_poly"), bool):
+                issues.append(
+                    ValidationIssue(f"{location}.mkgmap.dem_poly", "must be a boolean")
+                )
 
     ordered = sorted(blocks)
     for current, following in zip(ordered, ordered[1:]):

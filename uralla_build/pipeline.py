@@ -7,7 +7,8 @@ from dataclasses import asdict, dataclass
 import errno
 import fcntl
 from pathlib import Path
-from typing import Iterator, Mapping, Sequence
+from pathlib import PurePosixPath
+from typing import Callable, Iterator, Mapping, Sequence
 
 from .errors import StageError
 from .runner import StageResult, StageRunner
@@ -18,6 +19,7 @@ class PipelineStage:
     name: str
     command: tuple[str, ...]
     expected_outputs: tuple[str, ...] = ()
+    prepare_directories: tuple[str, ...] = ()
     environment: tuple[tuple[str, str], ...] = ()
     resume_key: str | None = None
 
@@ -28,6 +30,7 @@ class PipelineResult:
     product: str
     status: str
     stages: tuple[StageResult, ...]
+    final_result: object | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -35,6 +38,7 @@ class PipelineResult:
             "product": self.product,
             "status": self.status,
             "stages": [asdict(stage) for stage in self.stages],
+            "final_result": self.final_result,
         }
 
 
@@ -71,12 +75,13 @@ class PipelineRunner:
         self,
         *,
         product: str,
-        stages: Sequence[PipelineStage],
+        stages: Sequence[PipelineStage] | Callable[[str], Sequence[PipelineStage]],
         build_id: str | None = None,
         metadata: Mapping[str, object] | None = None,
         resume: bool = True,
+        finalize: Callable[[str], object] | None = None,
     ) -> PipelineResult:
-        if not stages:
+        if not callable(stages) and not stages:
             raise StageError("product pipeline must contain at least one stage")
 
         with exclusive_pipeline_lock(self.runner.work_root):
@@ -93,9 +98,29 @@ class PipelineRunner:
                     f"build {identifier} is {build['status']}, not running"
                 )
 
+            resolved_stages = tuple(stages(identifier) if callable(stages) else stages)
+            if not resolved_stages:
+                self.runner.history.set_build_status(identifier, "failed")
+                raise StageError("product pipeline must contain at least one stage")
             results: list[StageResult] = []
             try:
-                for stage in stages:
+                for stage in resolved_stages:
+                    stage_root = self.runner.builds_root / identifier / stage.name
+                    for raw_directory in stage.prepare_directories:
+                        relative = PurePosixPath(raw_directory)
+                        if (
+                            not raw_directory
+                            or relative.is_absolute()
+                            or ".." in relative.parts
+                            or relative == PurePosixPath(".")
+                        ):
+                            raise StageError(
+                                "prepared directory must be a safe relative path: "
+                                f"{raw_directory!r}"
+                            )
+                        stage_root.joinpath(*relative.parts).mkdir(
+                            parents=True, exist_ok=True
+                        )
                     result = self.runner.run(
                         product=product,
                         stage=stage.name,
@@ -112,6 +137,7 @@ class PipelineRunner:
                         return PipelineResult(
                             identifier, product, "failed", tuple(results)
                         )
+                final_result = finalize(identifier) if finalize is not None else None
             except KeyboardInterrupt:
                 self.runner.history.set_build_status(identifier, "interrupted")
                 raise
@@ -120,4 +146,6 @@ class PipelineRunner:
                 raise
 
             self.runner.history.set_build_status(identifier, "success")
-            return PipelineResult(identifier, product, "success", tuple(results))
+            return PipelineResult(
+                identifier, product, "success", tuple(results), final_result
+            )

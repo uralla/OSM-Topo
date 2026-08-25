@@ -33,6 +33,31 @@ class ManifestTests(unittest.TestCase):
         issues = validate_manifest(broken)
         self.assertTrue(any("quoted eight-digit" in issue.message for issue in issues))
 
+    def test_invalid_execution_overrides_are_rejected(self) -> None:
+        manifest = load_manifest(ROOT / "config/maps.yaml")
+        product = manifest["products"]["ural-n"]
+        product["extract"] = "yes"
+        product["splitter"]["max_threads"] = True
+        product["mkgmap"]["dem_dists"] = 0
+        product["mkgmap"]["dem_poly"] = "yes"
+
+        issues = validate_manifest(manifest)
+        locations = {issue.location for issue in issues}
+        self.assertIn("products.ural-n.extract", locations)
+        self.assertIn("products.ural-n.splitter.max_threads", locations)
+        self.assertIn("products.ural-n.mkgmap.dem_dists", locations)
+        self.assertIn("products.ural-n.mkgmap.dem_poly", locations)
+
+    def test_unsafe_or_duplicate_publication_names_are_rejected(self) -> None:
+        manifest = load_manifest(ROOT / "config/maps.yaml")
+        manifest["products"]["armenia"]["names"]["family"] = "../Armenia"
+        manifest["products"]["belarus"]["names"]["output_img"] = "Armenia.OSM.IMG"
+
+        issues = validate_manifest(manifest)
+        locations = {issue.location for issue in issues}
+        self.assertIn("products.armenia.names.family", locations)
+        self.assertIn("products.belarus.names.output_img", locations)
+
 
 if __name__ == "__main__":
     unittest.main()

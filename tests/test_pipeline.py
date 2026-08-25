@@ -75,6 +75,60 @@ class PipelineRunnerTests(unittest.TestCase):
             self.assertEqual(result.stages[0].status, "skipped")
             self.assertEqual(result.stages[0].reused_attempt_id, first.attempt_id)
 
+    def test_finalize_runs_before_success_and_failure_is_terminal(self) -> None:
+        with TemporaryDirectory() as directory:
+            stage_runner = StageRunner(Path(directory) / "work")
+            pipeline = PipelineRunner(stage_runner)
+            seen_build_ids: list[str] = []
+
+            successful = pipeline.run(
+                product="armenia",
+                stages=lambda build_id: (
+                    _write_stage("extract.txt", build_id),
+                ),
+                finalize=lambda build_id: seen_build_ids.append(build_id) or {"published": True},
+            )
+            self.assertEqual(seen_build_ids, [successful.build_id])
+            self.assertEqual(successful.final_result, {"published": True})
+
+            with self.assertRaisesRegex(RuntimeError, "publish failed"):
+                pipeline.run(
+                    product="belarus",
+                    stages=(_write_stage("extract.txt", "ok"),),
+                    finalize=lambda _build_id: (_ for _ in ()).throw(
+                        RuntimeError("publish failed")
+                    ),
+                )
+            builds = stage_runner.history.latest_success_by_product()
+            self.assertIn("armenia", builds)
+            self.assertNotIn("belarus", builds)
+            self.assertNotIn("belarus", stage_runner.history.running_products())
+
+    def test_declared_directories_exist_before_command(self) -> None:
+        with TemporaryDirectory() as directory:
+            stage_runner = StageRunner(Path(directory) / "work")
+            command = (
+                sys.executable,
+                "-c",
+                "from pathlib import Path; "
+                "assert Path('tiles').is_dir(); "
+                "Path('tiles/result.txt').write_text('ok', encoding='utf-8')",
+            )
+
+            result = PipelineRunner(stage_runner).run(
+                product="armenia",
+                stages=(
+                    PipelineStage(
+                        "splitter",
+                        command,
+                        ("tiles",),
+                        ("tiles",),
+                    ),
+                ),
+            )
+
+            self.assertEqual(result.status, "success")
+
 
 if __name__ == "__main__":
     unittest.main()

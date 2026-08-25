@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
+from datetime import date
 import hashlib
 import json
 from pathlib import Path
@@ -11,12 +12,14 @@ import subprocess
 import sys
 
 from .bootstrap import apply_bootstrap, build_bootstrap_plan, load_tools_lock
+from .build_plan import ProductBuildPlan, plan_product_build
 from .errors import ManifestError, StageError, ValidationIssue
 from .doctor import has_errors, run_doctor
 from .dem import select_dem_files, write_selection
 from .history import HistoryStore
-from .host import load_host_config
+from .host import load_host_config, validate_host_config
 from .manifest import load_manifest, validate_manifest
+from .pipeline import PipelineRunner, PipelineStage
 from .publish import publication_targets, publish_product
 from .ranges import validate_generated_range
 from .runner import StageRunner
@@ -309,6 +312,97 @@ def _publish(args: argparse.Namespace) -> int:
     return 0
 
 
+def _build_product(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        issues = validate_manifest(manifest)
+        if issues:
+            return _emit(issues, None, args.json)
+        host = load_host_config(args.host, args.repo_root)
+        host_issues = validate_host_config(host)
+        if host_issues:
+            return _emit(host_issues, None, args.json)
+        lock = load_tools_lock(args.tools_lock)
+        products = manifest.get("products")
+        if not isinstance(products, dict) or not isinstance(products.get(args.product), dict):
+            raise StageError(f"unknown product: {args.product}")
+        product = products[args.product]
+
+        if not args.apply:
+            plan = plan_product_build(
+                manifest,
+                host,
+                lock,
+                product_key=args.product,
+                build_id=args.build_id or "PLAN",
+                repo_root=args.repo_root,
+                manifest_path=args.manifest,
+                build_date=date.today(),
+            )
+            targets = publication_targets(
+                host, product, plan.img_source, plan.gmapi_source
+            )
+            payload: object = {
+                "mode": "plan",
+                "plan": plan.to_dict(),
+                "targets": [asdict(target) for target in targets],
+            }
+            status = 0
+        else:
+            runner = StageRunner(host.paths.work_root)
+            pipeline = PipelineRunner(runner)
+            selected: dict[str, ProductBuildPlan] = {}
+
+            def stages(build_id: str) -> tuple[PipelineStage, ...]:
+                build = runner.history.get_build(build_id)
+                if build is None:
+                    raise StageError(f"unknown build id: {build_id}")
+                created = date.fromisoformat(str(build["created_at"])[:10])
+                selected["plan"] = plan_product_build(
+                    manifest,
+                    host,
+                    lock,
+                    product_key=args.product,
+                    build_id=build_id,
+                    repo_root=args.repo_root,
+                    manifest_path=args.manifest,
+                    build_date=created,
+                )
+                return selected["plan"].stages
+
+            def finalize(_build_id: str) -> object:
+                plan = selected["plan"]
+                artifacts = publish_product(
+                    host,
+                    product,
+                    plan.img_source,
+                    plan.gmapi_source,
+                )
+                return [artifact.to_dict() for artifact in artifacts]
+
+            result = pipeline.run(
+                product=args.product,
+                stages=stages,
+                build_id=args.build_id,
+                metadata={
+                    "manifest": str(args.manifest),
+                    "manifest_sha256": hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
+                },
+                resume=not args.no_resume,
+                finalize=finalize,
+            )
+            payload = {"mode": "apply", "result": result.to_dict()}
+            status = 0 if result.status == "success" else 1
+    except (ManifestError, StageError, OSError, ValueError) as exc:
+        return _emit([ValidationIssue("build-product", str(exc))], None, args.json)
+
+    if args.json:
+        print(json.dumps({"ok": status == 0, "report": payload}, ensure_ascii=False, indent=2))
+    else:
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return status
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uralla-build")
     parser.add_argument("--manifest", default=Path("config/maps.yaml"), type=Path)
@@ -393,6 +487,19 @@ def build_parser() -> argparse.ArgumentParser:
     publish_parser.add_argument("--gmapi", required=True, type=Path)
     publish_parser.add_argument("--apply", action="store_true")
     publish_parser.set_defaults(handler=_publish)
+
+    product_parser = subparsers.add_parser("build-product")
+    product_parser.add_argument("product")
+    product_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    product_parser.add_argument(
+        "--tools-lock", default=Path("config/tools.lock.yaml"), type=Path
+    )
+    product_parser.add_argument("--build-id")
+    product_parser.add_argument("--no-resume", action="store_true")
+    product_parser.add_argument(
+        "--apply", action="store_true", help="execute stages and publish the release"
+    )
+    product_parser.set_defaults(handler=_build_product)
     return parser
 
 
