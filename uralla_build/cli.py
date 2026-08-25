@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 import sys
 
 from .bootstrap import apply_bootstrap, build_bootstrap_plan, load_tools_lock
-from .errors import ManifestError, ValidationIssue
+from .errors import ManifestError, StageError, ValidationIssue
 from .doctor import has_errors, run_doctor
+from .history import HistoryStore
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
 from .ranges import validate_generated_range
+from .runner import StageRunner
 
 
 def _emit(issues: list[ValidationIssue], report: object | None, as_json: bool) -> int:
@@ -153,6 +156,60 @@ def _bootstrap(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_stage(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        products = manifest.get("products")
+        if not isinstance(products, dict) or args.product not in products:
+            raise StageError(f"unknown product: {args.product}")
+        host = load_host_config(args.host, args.repo_root)
+        command = list(args.stage_command)
+        if command and command[0] == "--":
+            command = command[1:]
+        runner = StageRunner(host.paths.work_root)
+        result = runner.run(
+            product=args.product,
+            stage=args.stage,
+            command=command,
+            build_id=args.build_id,
+            expected_outputs=args.output,
+            resume=not args.no_resume,
+            resume_key=args.resume_key,
+            metadata={
+                "manifest": str(args.manifest),
+                "manifest_sha256": hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
+            },
+        )
+    except (ManifestError, StageError) as exc:
+        return _emit([ValidationIssue("run-stage", str(exc))], None, args.json)
+    payload = result.to_dict()
+    if args.json:
+        print(json.dumps({"ok": result.status in {"success", "skipped"}, "result": payload}, indent=2))
+    else:
+        print(
+            f"{result.status.upper()} build={result.build_id} "
+            f"stage={result.stage} attempt={result.attempt_id} exit={result.exit_code}"
+        )
+        print(f"stdout: {result.stdout_log}")
+        print(f"stderr: {result.stderr_log}")
+    return 0 if result.status in {"success", "skipped"} else 1
+
+
+def _show_build(args: argparse.Namespace) -> int:
+    try:
+        host = load_host_config(args.host, args.repo_root)
+        history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
+        build = history.get_build(args.build_id)
+        if build is None:
+            raise StageError(f"unknown build id: {args.build_id}")
+        attempts = history.attempts(args.build_id)
+    except (ManifestError, StageError) as exc:
+        return _emit([ValidationIssue("show-build", str(exc))], None, args.json)
+    payload = {"build": build, "attempts": attempts}
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uralla-build")
     parser.add_argument("--manifest", default=Path("config/maps.yaml"), type=Path)
@@ -189,6 +246,31 @@ def build_parser() -> argparse.ArgumentParser:
     bootstrap_parser.add_argument("--skip-system", action="store_true")
     bootstrap_parser.add_argument("--skip-pinned-tools", action="store_true")
     bootstrap_parser.set_defaults(handler=_bootstrap)
+
+    stage_parser = subparsers.add_parser("run-stage")
+    stage_parser.add_argument("product")
+    stage_parser.add_argument("stage")
+    stage_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    stage_parser.add_argument("--build-id")
+    stage_parser.add_argument(
+        "--output",
+        action="append",
+        default=[],
+        help="expected non-empty output relative to the stage workspace; repeatable",
+    )
+    stage_parser.add_argument("--resume-key")
+    stage_parser.add_argument("--no-resume", action="store_true")
+    stage_parser.add_argument(
+        "stage_command",
+        nargs="+",
+        help="argv to execute; put -- before command options",
+    )
+    stage_parser.set_defaults(handler=_run_stage)
+
+    show_parser = subparsers.add_parser("show-build")
+    show_parser.add_argument("build_id")
+    show_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    show_parser.set_defaults(handler=_show_build)
     return parser
 
 

@@ -19,3 +19,6 @@ class ValidationIssue:
 class ManifestError(RuntimeError):
     """The manifest cannot be loaded as a mapping."""
 
+
+class StageError(RuntimeError):
+    """A build stage cannot be started, resumed, or checkpointed safely."""
