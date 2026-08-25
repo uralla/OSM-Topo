@@ -1,0 +1,125 @@
+"""Machine-specific host configuration and path resolution."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import os
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from .errors import ManifestError, ValidationIssue
+
+
+@dataclass(frozen=True, slots=True)
+class HostPaths:
+    data_root: Path
+    work_root: Path
+    publish_root: Path
+    tools_root: Path
+    dem_root: Path
+
+
+@dataclass(frozen=True, slots=True)
+class PublicationPolicy:
+    img_subdir: str
+    gmapi_subdir: str
+    img_archive: bool
+    gmapi_zip_mode: str
+    split_zip_volumes: bool
+
+
+@dataclass(frozen=True, slots=True)
+class HostConfig:
+    paths: HostPaths
+    publication: PublicationPolicy
+    product_concurrency: int
+    minimum_free_gib: int
+
+
+def _expanded_path(value: object, base: Path) -> Path:
+    if not isinstance(value, str) or not value.strip():
+        raise ManifestError("host path must be a non-empty string")
+    expanded = os.path.expanduser(os.path.expandvars(value))
+    if "$" in expanded:
+        raise ManifestError(f"unresolved environment variable in host path: {value}")
+    path = Path(expanded)
+    return path if path.is_absolute() else (base / path).resolve()
+
+
+def load_host_config(path: str | Path, repo_root: str | Path) -> HostConfig:
+    """Load host YAML and resolve all roots without changing the filesystem."""
+
+    config_path = Path(path)
+    try:
+        raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ManifestError(f"cannot read {config_path}: {exc}") from exc
+    except yaml.YAMLError as exc:
+        raise ManifestError(f"invalid YAML in {config_path}: {exc}") from exc
+    if not isinstance(raw, dict) or raw.get("schema_version") != 1:
+        raise ManifestError("host config root must be a mapping with schema_version: 1")
+
+    paths = raw.get("paths")
+    publication = raw.get("publication")
+    resources = raw.get("resources")
+    if not isinstance(paths, dict):
+        raise ManifestError("host paths must be a mapping")
+    if not isinstance(publication, dict):
+        raise ManifestError("host publication must be a mapping")
+    if not isinstance(resources, dict):
+        raise ManifestError("host resources must be a mapping")
+
+    root = Path(repo_root).resolve()
+    host_paths = HostPaths(
+        data_root=_expanded_path(paths.get("data_root"), root),
+        work_root=_expanded_path(paths.get("work_root"), root),
+        publish_root=_expanded_path(paths.get("publish_root"), root),
+        tools_root=_expanded_path(paths.get("tools_root"), root),
+        dem_root=_expanded_path(paths.get("dem_root"), root),
+    )
+    policy = PublicationPolicy(
+        img_subdir=str(publication.get("img_subdir", ".")),
+        gmapi_subdir=str(publication.get("gmapi_subdir", "mapsource")),
+        img_archive=bool(publication.get("img_archive", False)),
+        gmapi_zip_mode=str(publication.get("gmapi_zip_mode", "store")),
+        split_zip_volumes=bool(publication.get("split_zip_volumes", False)),
+    )
+    concurrency = resources.get("product_concurrency", 1)
+    minimum_free = resources.get("minimum_free_gib", 20)
+    if not isinstance(concurrency, int) or concurrency < 1:
+        raise ManifestError("resources.product_concurrency must be a positive integer")
+    if not isinstance(minimum_free, int) or minimum_free < 0:
+        raise ManifestError("resources.minimum_free_gib must be a non-negative integer")
+    return HostConfig(host_paths, policy, concurrency, minimum_free)
+
+
+def validate_host_config(config: HostConfig) -> list[ValidationIssue]:
+    """Validate frozen publication/concurrency invariants."""
+
+    issues: list[ValidationIssue] = []
+    policy = config.publication
+    if policy.img_archive:
+        issues.append(ValidationIssue("host.publication.img_archive", "must be false"))
+    if policy.gmapi_zip_mode != "store":
+        issues.append(ValidationIssue("host.publication.gmapi_zip_mode", "must be 'store'"))
+    if policy.split_zip_volumes:
+        issues.append(ValidationIssue("host.publication.split_zip_volumes", "must be false"))
+    if config.product_concurrency != 1:
+        issues.append(
+            ValidationIssue(
+                "host.resources.product_concurrency",
+                "initial reserve-host policy requires one product at a time",
+            )
+        )
+    return issues
+
+
+def repo_path(repo_root: Path, value: str) -> Path:
+    return (repo_root / value).resolve()
+
+
+def data_path(config: HostConfig, value: str) -> Path:
+    return (config.paths.data_root / value).resolve()
+

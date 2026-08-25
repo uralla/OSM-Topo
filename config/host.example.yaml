@@ -1,0 +1,33 @@
+schema_version: 1
+
+# Copy to config/host.yaml and adjust for the build machine.
+# config/host.yaml is intentionally not committed.
+
+paths:
+  # Shared large inputs. Manifest paths under input/ and elevation/ are
+  # resolved below this root.
+  data_root: /mnt/nod
+
+  # Build-specific workspaces and persistent history/checkpoints.
+  work_root: /mnt/nod/uralla-work
+
+  # Existing Syncthing ready-files tree.
+  publish_root: /mnt/nod/garmin
+
+  # Project-local pinned mkgmap/splitter distributions.
+  tools_root: tools
+
+  # Large externally synchronised HGT/DEM directory.
+  dem_root: /mnt/nod/dem
+
+publication:
+  img_subdir: .
+  gmapi_subdir: mapsource
+  img_archive: false
+  gmapi_zip_mode: store
+  split_zip_volumes: false
+
+resources:
+  product_concurrency: 1
+  minimum_free_gib: 20
+
