@@ -1092,17 +1092,21 @@ Garmin, перенесены в acceptance tests новой системы и н
   и rollback первого артефакта при сбое продвижения второго;
 - CLI-команда `publish`, безопасная по умолчанию (plan-only, запись только с
   `--apply`);
-- всего 32 автоматических теста новой системы.
+- последовательный `PipelineRunner` с единым lock на build-host, остановкой
+  после первой неуспешной стадии и обязательным terminal status всего build;
+- сохранение и миграция метрик swap, block input operations и block output
+  operations в SQLite history;
+- всего 36 автоматических тестов новой системы.
 
 Следующий этап реализации:
 
-1. связать очередь, `StageRunner`, реальные команды стадий и публикацию в
-   единый per-product pipeline с корректными статусами build;
-2. расширить stage metrics показателями swap и дискового I/O;
-3. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
+1. реализовать генерацию реальных команд стадий
+   `osmium/osmosis/splitter/mkgmap` из manifest и связать terminal pipeline с
+   range validation и атомарной публикацией;
+2. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
    проверить и закоммитить полученные SHA-256;
-4. прогнать `validate-areas` по реальным `areas.list` и `template.args`,
+3. прогнать `validate-areas` по реальным `areas.list` и `template.args`,
    которые создаст splitter;
-5. сформировать согласованный style + TYP + args change set;
-6. выполнить Garmin smoke-check критичных встроенных point types;
-7. реализовать semantic preprocessor и каталог рек/вершин Евразии.
+4. сформировать согласованный style + TYP + args change set;
+5. выполнить Garmin smoke-check критичных встроенных point types;
+6. реализовать semantic preprocessor и каталог рек/вершин Евразии.
