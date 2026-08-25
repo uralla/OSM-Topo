@@ -31,11 +31,16 @@ Implemented in `main`:
 - durable `StageRunner` workspaces, SQLite build history and validated
   checkpoints;
 - terminal `PipelineRunner` lifecycle with one global product-build lock;
+- shell-free manifest-to-command plans for all 27 products, including extract,
+  transform, optional elevation merge, splitter, range validation and mkgmap;
+- `build-product` plan/apply command that publishes only before terminal success;
 - manifest-driven DEM subset selection and standalone copy helper;
 - deterministic product queue ordered by priority, then overdue age;
 - validated two-artifact publication with rollback to the previous release;
 - stage metrics including CPU, peak RSS, page faults, swap and block I/O;
-- standard-library test suite with 36 tests covering the implemented system.
+- validation of safe and unique publication names plus material mkgmap/splitter
+  overrides;
+- standard-library test suite with 45 tests covering the implemented system.
 
 Current commands:
 
@@ -51,6 +56,8 @@ python3 -m uralla_build run-stage PRODUCT STAGE --output RELATIVE_PATH -- COMMAN
 python3 -m uralla_build show-build BUILD_ID
 python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY
 python3 -m uralla_build publish PRODUCT --img FILE.img --gmapi DIRECTORY --apply
+python3 -m uralla_build build-product PRODUCT
+python3 -m uralla_build build-product PRODUCT --apply
 python3 -m unittest discover -s tests -v
 ```
 
@@ -63,6 +70,15 @@ high-priority product remains visible but does not block the next due product.
 both outputs before replacing either ready file. IMG keeps its manifest name;
 the GMAPI/MapSource package keeps the legacy `<IMG stem>-ms.zip` name and is
 written as one store ZIP. A failed promotion restores the previous pair.
+
+`build-product` is also plan-only unless `--apply` is supplied. The plan is a
+complete argv list, never a shell script: no wildcard expansion, command
+substitution or legacy working-directory assumptions are required. On apply,
+the pipeline creates `tiles` and `garmin` stage directories, validates
+splitter ranges, runs mkgmap from `template.args`, publishes both artifacts and
+only then marks the build successful. Until the semantic preprocessor is
+implemented, the current hard-coded river/peak style rules remain active and
+the plan reports this transition explicitly.
 
 `bootstrap` is a plan-only command unless `--apply` is supplied. The first
 official archive admission additionally requires `--capture-checksums`; the
