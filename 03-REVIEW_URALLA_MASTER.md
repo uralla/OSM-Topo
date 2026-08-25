@@ -1065,8 +1065,6 @@ Garmin, перенесены в acceptance tests новой системы и н
 - обратная сверка manifest с legacy scripts по FID, первому map ID, именам и
   `max-nodes`;
 - реализация `uralla_build` validator для manifest и splitter ranges;
-- шесть исходных тестов validator: valid manifest/range, overlap,
-  некавыченный ID, разрыв и переполнение tile range;
 - read-only `doctor` для host policy, data-root, DEM/elevation, pinned tools,
   места на диске и Syncthing atomic rename;
 - dry-run-first `bootstrap` для apt/Homebrew и закреплённых mkgmap/splitter;
@@ -1084,17 +1082,27 @@ Garmin, перенесены в acceptance tests новой системы и н
   halo=1: 4214 HGT, 61,94 GB вместо 383,37 GB исходных HGT;
 - воспроизводимые `config/dem-required-files*.txt`, отчёт и безопасная
   инструкция `rsync --dry-run` в `docs/DEM_SUBSET.md`;
-- всего 24 автоматических теста новой системы.
+- очередь сборок `priority -> overdue age`: never-built first внутри одного
+  приоритета, исключение уже запущенного продукта и пропуск ещё не наступивших
+  сроков при выборе следующей карты;
+- CLI-команда `queue` с обычным и JSON-выводом;
+- атомарная публикация пары артефактов: IMG с прежним именем и один
+  store-compression ZIP `<IMG stem>-ms.zip` для GMAPI/MapSource;
+- staging и проверка обоих артефактов до замены, сохранение предыдущего выпуска
+  и rollback первого артефакта при сбое продвижения второго;
+- CLI-команда `publish`, безопасная по умолчанию (plan-only, запись только с
+  `--apply`);
+- всего 32 автоматических теста новой системы.
 
 Следующий этап реализации:
 
-1. реализовать очередь «priority -> overdue age» и атомарную публикацию;
+1. связать очередь, `StageRunner`, реальные команды стадий и публикацию в
+   единый per-product pipeline с корректными статусами build;
 2. расширить stage metrics показателями swap и дискового I/O;
 3. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
    проверить и закоммитить полученные SHA-256;
-4. прогнать `validate-areas` по реальным `areas.list` и `template.args`, которые
-   создаст splitter;
+4. прогнать `validate-areas` по реальным `areas.list` и `template.args`,
+   которые создаст splitter;
 5. сформировать согласованный style + TYP + args change set;
 6. выполнить Garmin smoke-check критичных встроенных point types;
 7. реализовать semantic preprocessor и каталог рек/вершин Евразии.
-
