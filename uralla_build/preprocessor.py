@@ -15,6 +15,11 @@ from uuid import uuid4
 import yaml
 
 from .errors import StageError
+from .river_landmarks import (
+    DEFAULT_RIVER_CATALOG,
+    enrich_river_landmark_tags,
+    load_river_landmarks,
+)
 
 
 STRONG_WIKIDATA_KEYS = {
@@ -272,6 +277,7 @@ def preprocess_pbf(
     profile_names: Sequence[str],
     report_path: str | Path,
     peak_catalog_path: str | Path = DEFAULT_PEAK_CATALOG,
+    river_catalog_path: str | Path = DEFAULT_RIVER_CATALOG,
 ) -> dict[str, object]:
     """Filter and enrich one PBF atomically, then verify forbidden tags are gone."""
 
@@ -285,14 +291,16 @@ def preprocess_pbf(
     target.parent.mkdir(parents=True, exist_ok=True)
     report_target.parent.mkdir(parents=True, exist_ok=True)
     rules = load_blacklist_rules(config_path, profile_names)
-    landmarks = load_peak_landmarks(peak_catalog_path)
+    peak_landmarks = load_peak_landmarks(peak_catalog_path)
+    river_landmarks = load_river_landmarks(river_catalog_path)
     osmium = _load_osmium()
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
     report_temporary = report_target.parent / f".{report_target.name}.{uuid4().hex}.partial"
     counters: Counter[str] = Counter()
     rule_hits: Counter[str] = Counter()
     samples: list[dict[str, object]] = []
-    landmark_samples: list[dict[str, object]] = []
+    peak_samples: list[dict[str, object]] = []
+    river_samples: list[dict[str, object]] = []
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             for item in osmium.FileProcessor(str(source)):
@@ -313,17 +321,32 @@ def preprocess_pbf(
                             }
                         )
 
-                final_tags, landmark_added = enrich_peak_landmark_tags(
-                    decision.tags, landmarks
+                final_tags, peak_added = enrich_peak_landmark_tags(
+                    decision.tags, peak_landmarks
                 )
-                if landmark_added:
+                if peak_added:
                     counters["peak_landmarks_enriched"] += 1
-                    if len(landmark_samples) < 100:
-                        landmark_samples.append(
+                    if len(peak_samples) < 100:
+                        peak_samples.append(
                             {
                                 "type": _object_kind(item),
                                 "id": int(item.id),
                                 "wikidata": final_tags.get("wikidata"),
+                                "name": final_tags.get("name") or final_tags.get("name:ru"),
+                            }
+                        )
+
+                final_tags, river_added = enrich_river_landmark_tags(
+                    final_tags, river_landmarks
+                )
+                if river_added:
+                    counters["river_landmarks_enriched"] += 1
+                    if len(river_samples) < 100:
+                        river_samples.append(
+                            {
+                                "type": _object_kind(item),
+                                "id": int(item.id),
+                                "rank": final_tags.get("uralla:river_rank"),
                                 "name": final_tags.get("name") or final_tags.get("name:ru"),
                             }
                         )
@@ -341,22 +364,26 @@ def preprocess_pbf(
                 f"{verified_objects} != {counters['objects_seen']}"
             )
         report: dict[str, object] = {
-            "schema_version": 2,
+            "schema_version": 3,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
             "rules": [rule.rule_id for rule in rules],
             "peak_catalog": str(Path(peak_catalog_path).resolve()),
-            "peak_catalog_entries": len(landmarks),
+            "peak_catalog_entries": len(peak_landmarks),
+            "river_catalog": str(Path(river_catalog_path).resolve()),
+            "river_catalog_names": len(river_landmarks),
             "objects_seen": counters["objects_seen"],
             "neutralized_objects": counters["neutralize_objects"],
             "scrubbed_objects": counters["scrub_objects"],
             "tags_removed": counters["tags_removed"],
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
+            "river_landmarks_enriched": counters["river_landmarks_enriched"],
             "rule_hits": dict(sorted(rule_hits.items())),
             "verified_forbidden_tags": 0,
             "samples": samples,
-            "peak_landmark_samples": landmark_samples,
+            "peak_landmark_samples": peak_samples,
+            "river_landmark_samples": river_samples,
         }
         report_temporary.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
