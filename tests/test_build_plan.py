@@ -92,7 +92,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertIn("preprocess", [stage.name for stage in northwestern.stages])
             self.assertIn("merge", [stage.name for stage in northwestern.stages])
             self.assertIn("extract", [stage.name for stage in belarus.stages])
-            self.assertNotIn("preprocess", [stage.name for stage in belarus.stages])
+            self.assertIn("preprocess", [stage.name for stage in belarus.stages])
             self.assertNotIn("merge", [stage.name for stage in belarus.stages])
 
     def test_existing_managed_areas_are_reused(self) -> None:
@@ -108,7 +108,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertIn(f"--split-file={stable}", splitter.command)
             self.assertEqual(plan.stable_areas, str(stable))
 
-    def test_plan_is_shell_free_and_exposes_preprocessor_transition(self) -> None:
+    def test_plan_is_shell_free_and_enriches_non_russian_products(self) -> None:
         with TemporaryDirectory() as directory:
             plan = self._plan(Path(directory), "armenia")
             payload = plan.to_dict()
@@ -117,14 +117,18 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertNotIn("*.pbf", " ".join(
                 argument for stage in plan.stages for argument in stage.command
             ))
-            self.assertIn("river/peak rank enrichment", payload["warnings"][0])
+            preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
+            self.assertIn("landmarks", preprocess.command)
+            self.assertNotIn("ru-political-parties", preprocess.command)
+            self.assertIn("static peak landmarks", payload["warnings"][0])
 
-    def test_russian_blacklist_runs_before_elevation_merge(self) -> None:
+    def test_russian_blacklist_runs_with_landmarks_before_elevation_merge(self) -> None:
         with TemporaryDirectory() as directory:
             plan = self._plan(Path(directory), "ural-n")
             preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
             merge = next(stage for stage in plan.stages if stage.name == "merge")
 
+            self.assertIn("landmarks", preprocess.command)
             self.assertIn("ru-political-parties", preprocess.command)
             self.assertTrue(any("preprocessed.osm.pbf" in value for value in merge.command))
             self.assertLess(
@@ -142,6 +146,7 @@ class ProductBuildPlanTests(unittest.TestCase):
 
             self.assertEqual(len(plans), 27)
             for product, plan in plans.items():
+                self.assertIn("preprocess", [stage.name for stage in plan.stages], product)
                 self.assertEqual(plan.stages[-2].name, "validate-areas", product)
                 self.assertEqual(plan.stages[-1].name, "mkgmap", product)
                 self.assertTrue(plan.img_source.endswith("gmapsupp.img"), product)
