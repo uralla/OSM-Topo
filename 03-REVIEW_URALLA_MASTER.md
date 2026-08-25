@@ -1065,17 +1065,25 @@ Garmin, перенесены в acceptance tests новой системы и н
 - обратная сверка manifest с legacy scripts по FID, первому map ID, именам и
   `max-nodes`;
 - реализация `uralla_build` validator для manifest и splitter ranges;
-- шесть автоматических тестов: valid manifest/range, overlap, некавыченный ID,
-  разрыв и переполнение tile range.
+- шесть исходных тестов validator: valid manifest/range, overlap,
+  некавыченный ID, разрыв и переполнение tile range;
+- read-only `doctor` для host policy, data-root, DEM/elevation, pinned tools,
+  места на диске и Syncthing atomic rename;
+- dry-run-first `bootstrap` для apt/Homebrew и закреплённых mkgmap/splitter;
+- политика публикации: IMG без архива, один store ZIP для GMAPI/MapSource,
+  split ZIP volumes запрещены;
+- всего 14 автоматических тестов новой системы.
 
 Следующий этап реализации:
 
-1. реализовать read-only doctor и управляемый bootstrap для Ubuntu/macOS;
-2. реализовать общий stage runner, историю измерений, очередь
-   «priority -> overdue age» и атомарную публикацию;
-3. прогнать `validate-areas` по реальным `areas.list` и `template.args`, которые
+1. реализовать общий stage runner и безопасные checkpoints;
+2. добавить историю измерений, очередь «priority -> overdue age» и атомарную
+   публикацию;
+3. на build-host выполнить первый `bootstrap --apply --capture-checksums`,
+   проверить и закоммитить полученные SHA-256;
+4. прогнать `validate-areas` по реальным `areas.list` и `template.args`, которые
    создаст splitter;
-4. сформировать согласованный style + TYP + args change set;
-5. выполнить Garmin smoke-check критичных встроенных point types;
-6. реализовать semantic preprocessor и каталог рек/вершин Евразии.
+5. сформировать согласованный style + TYP + args change set;
+6. выполнить Garmin smoke-check критичных встроенных point types;
+7. реализовать semantic preprocessor и каталог рек/вершин Евразии.
 
