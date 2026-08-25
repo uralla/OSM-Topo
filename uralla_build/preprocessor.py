@@ -1,4 +1,4 @@
-"""Streaming semantic preprocessing and configurable tag blacklists."""
+"""Streaming semantic preprocessing, tag blacklists, and static landmark enrichment."""
 
 from __future__ import annotations
 
@@ -25,6 +25,8 @@ STRONG_WIKIDATA_KEYS = {
 }
 POLITICAL_OFFICES = {"political party", "politician"}
 WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
+PEAK_LANDMARK_TAG = "uralla:peak_landmark"
+PEAK_NATURAL_TYPES = {"peak", "volcano"}
 
 
 def normalize_text(value: str) -> str:
@@ -75,6 +77,8 @@ def _list_of_text(value: object, location: str) -> list[str]:
 def load_blacklist_rules(
     path: str | Path, profile_names: Sequence[str]
 ) -> tuple[BlacklistRule, ...]:
+    if not profile_names:
+        return ()
     config_path = Path(path)
     try:
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -86,8 +90,6 @@ def load_blacklist_rules(
     profiles = data.get("profiles")
     if not isinstance(raw_rules, Mapping) or not isinstance(profiles, Mapping):
         raise StageError("blacklist rules/profiles must be mappings")
-    if not profile_names:
-        raise StageError("at least one blacklist profile is required")
 
     selected: list[str] = []
     for profile_name in profile_names:
@@ -145,6 +147,52 @@ def load_blacklist_rules(
     return tuple(result)
 
 
+def load_peak_landmarks(path: str | Path) -> frozenset[str]:
+    """Load a manually maintained TSV catalogue and return its Wikidata QIDs."""
+
+    catalog_path = Path(path)
+    try:
+        lines = catalog_path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise StageError(f"cannot load peak landmark catalogue {catalog_path}: {exc}") from exc
+
+    qids: set[str] = set()
+    for line_number, raw_line in enumerate(lines, start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = raw_line.split("\t")
+        qid = fields[0].strip().upper()
+        if qid.casefold() == "qid":
+            continue
+        if not re.fullmatch(r"Q[1-9][0-9]*", qid):
+            raise StageError(
+                f"peak landmark catalogue {catalog_path}:{line_number} has invalid QID {qid!r}"
+            )
+        if qid in qids:
+            raise StageError(
+                f"peak landmark catalogue {catalog_path}:{line_number} duplicates {qid}"
+            )
+        qids.add(qid)
+    return frozenset(qids)
+
+
+def enrich_peak_landmark_tags(
+    tags: Mapping[str, str] | object,
+    landmarks: frozenset[str],
+) -> tuple[dict[str, str], bool]:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    if result.get("natural") not in PEAK_NATURAL_TYPES:
+        return result, False
+    qids = {match.upper() for match in WIKIDATA_RE.findall(result.get("wikidata", ""))}
+    if not qids.intersection(landmarks):
+        return result, False
+    changed = result.get(PEAK_LANDMARK_TAG) != "yes"
+    result[PEAK_LANDMARK_TAG] = "yes"
+    return result, changed
+
+
 def filter_tags(
     tags: Mapping[str, str] | object, rules: Sequence[BlacklistRule]
 ) -> FilterDecision:
@@ -175,9 +223,7 @@ def filter_tags(
         sorted({rule for values in matched_by_key.values() for rule in values})
     )
     if neutralize:
-        return FilterDecision(
-            {}, "neutralize", tuple(sorted(original)), matched_rules
-        )
+        return FilterDecision({}, "neutralize", tuple(sorted(original)), matched_rules)
     cleaned = {
         key: value for key, value in original.items() if key not in matched_by_key
     }
@@ -224,8 +270,9 @@ def preprocess_pbf(
     config_path: str | Path,
     profile_names: Sequence[str],
     report_path: str | Path,
+    peak_catalog_path: str | Path = Path("catalog/peak-landmarks.tsv"),
 ) -> dict[str, object]:
-    """Filter one PBF atomically, then scan the output for forbidden tags."""
+    """Filter and enrich one PBF atomically, then verify forbidden tags are gone."""
 
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
@@ -237,54 +284,78 @@ def preprocess_pbf(
     target.parent.mkdir(parents=True, exist_ok=True)
     report_target.parent.mkdir(parents=True, exist_ok=True)
     rules = load_blacklist_rules(config_path, profile_names)
+    landmarks = load_peak_landmarks(peak_catalog_path)
     osmium = _load_osmium()
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
     report_temporary = report_target.parent / f".{report_target.name}.{uuid4().hex}.partial"
     counters: Counter[str] = Counter()
     rule_hits: Counter[str] = Counter()
     samples: list[dict[str, object]] = []
+    landmark_samples: list[dict[str, object]] = []
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             for item in osmium.FileProcessor(str(source)):
                 counters["objects_seen"] += 1
                 decision = filter_tags(item.tags, rules)
-                if decision.action == "none":
+                if decision.action != "none":
+                    counters[f"{decision.action}_objects"] += 1
+                    counters["tags_removed"] += len(decision.removed_keys)
+                    rule_hits.update(decision.matched_rules)
+                    if len(samples) < 100:
+                        samples.append(
+                            {
+                                "type": _object_kind(item),
+                                "id": int(item.id),
+                                "action": decision.action,
+                                "removed_keys": list(decision.removed_keys),
+                                "rules": list(decision.matched_rules),
+                            }
+                        )
+
+                final_tags, landmark_added = enrich_peak_landmark_tags(
+                    decision.tags, landmarks
+                )
+                if landmark_added:
+                    counters["peak_landmarks_enriched"] += 1
+                    if len(landmark_samples) < 100:
+                        landmark_samples.append(
+                            {
+                                "type": _object_kind(item),
+                                "id": int(item.id),
+                                "wikidata": final_tags.get("wikidata"),
+                                "name": final_tags.get("name") or final_tags.get("name:ru"),
+                            }
+                        )
+
+                original_tags = {str(key): str(value) for key, value in item.tags}
+                if final_tags == original_tags:
                     writer.add(item)
-                    continue
-                counters[f"{decision.action}_objects"] += 1
-                counters["tags_removed"] += len(decision.removed_keys)
-                rule_hits.update(decision.matched_rules)
-                if len(samples) < 100:
-                    samples.append(
-                        {
-                            "type": _object_kind(item),
-                            "id": int(item.id),
-                            "action": decision.action,
-                            "removed_keys": list(decision.removed_keys),
-                            "rules": list(decision.matched_rules),
-                        }
-                    )
-                writer.add(item.replace(tags=decision.tags))
+                else:
+                    writer.add(item.replace(tags=final_tags))
 
         verified_objects = _verify_output(temporary, rules, osmium)
         if verified_objects != counters["objects_seen"]:
             raise StageError(
-                "blacklist verification object count differs from input: "
+                "preprocessor verification object count differs from input: "
                 f"{verified_objects} != {counters['objects_seen']}"
             )
         report: dict[str, object] = {
-            "schema_version": 1,
+            "schema_version": 2,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
             "rules": [rule.rule_id for rule in rules],
+            "peak_catalog": str(Path(peak_catalog_path).resolve()),
+            "peak_catalog_entries": len(landmarks),
             "objects_seen": counters["objects_seen"],
             "neutralized_objects": counters["neutralize_objects"],
             "scrubbed_objects": counters["scrub_objects"],
             "tags_removed": counters["tags_removed"],
+            "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "rule_hits": dict(sorted(rule_hits.items())),
             "verified_forbidden_tags": 0,
             "samples": samples,
+            "peak_landmark_samples": landmark_samples,
         }
         report_temporary.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
