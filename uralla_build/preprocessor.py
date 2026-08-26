@@ -260,14 +260,23 @@ def _object_kind(item: object) -> str:
     return str(method()) if callable(method) else type(item).__name__.lower()
 
 
+def _emit_progress(message: str) -> None:
+    """Persist progress to stderr and mirror it to an attached controlling TTY."""
+
+    print(message, file=sys.stderr, flush=True)
+    if sys.stderr.isatty():
+        return
+    try:
+        with open("/dev/tty", "w", encoding="utf-8") as tty:
+            print(message, file=tty, flush=True)
+    except OSError:
+        pass
+
+
 def _progress(objects_seen: int, started: float) -> None:
     elapsed = max(time.monotonic() - started, 0.001)
     rate = objects_seen / elapsed
-    print(
-        f"[preprocess] {objects_seen:,} objects; {elapsed:.0f}s; {rate:,.0f} obj/s",
-        file=sys.stderr,
-        flush=True,
-    )
+    _emit_progress(f"[preprocess] {objects_seen:,} objects; {rate:,.0f} obj/s")
 
 
 def preprocess_pbf(
@@ -302,10 +311,8 @@ def preprocess_pbf(
     peak_samples: list[dict[str, object]] = []
     river_samples: list[dict[str, object]] = []
     started = time.monotonic()
-    print(
-        f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)",
-        file=sys.stderr,
-        flush=True,
+    _emit_progress(
+        f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)"
     )
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
