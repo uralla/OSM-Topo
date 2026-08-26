@@ -1,33 +1,12 @@
-# Settlement polygon hierarchy.
-# Polygon fills intentionally appear after their point labels.
-# On overview levels the delay is two real Garmin zoom levels where possible;
-# close to resolution 24 the gap naturally shrinks.
+# Settlement polygons use one common zoom for visual consistency.
+# Point labels may appear earlier by significance, but all settlement fills
+# start together at resolution 22 so they align with the rest of the polygon layer.
 
-# Cities. Point hierarchy: 12 / 14 / 15 / 16 / 17 / 18.
-place=city & population > 999999 [0x02 resolution 16]
-place=city & population > 499999 [0x02 resolution 17]
-place=city & population > 249999 [0x02 resolution 18]
-place=city & population > 99999  [0x02 resolution 18]
-place=city & population > 49999  [0x02 resolution 19]
-place=city & population > 0      [0x02 resolution 20]
-place=city                       [0x02 resolution 20]
-
-# Towns. Point hierarchy: 17 / 18 / 19 / 20.
-place=town & population > 49999 [0x01 resolution 19]
-place=town & population > 19999 [0x01 resolution 20]
-place=town & population > 4999  [0x01 resolution 21]
-place=town & population > 0     [0x01 resolution 22]
-place=town                      [0x01 resolution 22]
-
-# Villages. Point hierarchy: 19 / 20 / 21.
-place=village & population > 4999 [0x03 resolution 21]
-place=village & population > 999  [0x03 resolution 22]
-place=village & population > 0    [0x03 resolution 23]
-place=village                     [0x03 resolution 23]
-
-# Small places: preserve the delay until the maximum resolution is reached.
-place=suburb            [0x02 resolution 23]
-place=neighbourhood     [0x03 resolution 24]
-place=hamlet            [0x03 resolution 24]
-place=isolated_dwelling [0x03 resolution 24]
-place=locality          [0x03 resolution 24]
+place=city              [0x02 resolution 22]
+place=town              [0x01 resolution 22]
+place=suburb            [0x02 resolution 22]
+place=neighbourhood     [0x03 resolution 22]
+place=village           [0x03 resolution 22]
+place=hamlet            [0x03 resolution 22]
+place=isolated_dwelling [0x03 resolution 22]
+place=locality          [0x03 resolution 22]
