@@ -40,15 +40,15 @@ waterway=weir [0x12d01 resolution 23 continue]
 # route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
 # route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
 
-# Пирсы: закрытые way помечаем как polygon и убираем man_made,
-# чтобы старое общее line-правило ниже их не нарисовало. Polygon-style
-# восстановит отображение по uralla:pier_polygon.
-man_made=pier & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }
+# Пирсы и волнорезы используют один визуальный класс. Закрытые way
+# помечаем как polygon и убираем man_made, чтобы line-style не дал дубль.
+# Polygon-style восстановит отображение по uralla:pier_polygon.
+(man_made=pier | man_made=breakwater) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }
 
-# Открытый пирс рисуем один раз как линию, затем убираем только man_made=pier,
-# чтобы старое общее правило lines не наложило второй pier, а highway/footway
-# и другие независимые теги продолжили обрабатываться основным style.
+# Открытые объекты рисуем один раз той же линией 0x10f07. Пирс сохраняет
+# прежнюю подпись; волнорез использует собственное имя или понятный fallback.
 man_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]
+man_made=breakwater & is_closed()=false & area!=yes { name '${name}' | 'волнорез'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]
 uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
 
 ### роутинг по рекам - линия с синими стрелками направления течения на 0-м слое

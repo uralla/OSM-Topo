@@ -28,8 +28,9 @@ man_made=wastewater_plant [0x1321d resolution 24]
 
 man_made=geoglyph { set name='геоглиф' } [0x1181b resolution 24]
 
-# Пирсы 
-man_made=pier  [0x10f11 resolution 24]
+# Пирсы и волнорезы: один и тот же серый polygon. Это правило должно быть
+# раньше широкого man_made=* & area=yes, иначе breakwater станет зданием 0x13.
+(man_made=pier | man_made=breakwater) [0x10f11 resolution 24]
 
 # здания с улицами, номерами домов и, если есть, с названиями
 
