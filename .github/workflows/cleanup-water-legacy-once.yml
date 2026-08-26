@@ -1,0 +1,112 @@
+name: Cleanup water legacy once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cleanup-water-legacy-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove dead water style relics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('styles/uralla/inc/landuse_polygons')
+          s = p.read_text(encoding='utf-8')
+          old = "# защита от противоречивых тегов landuse= и natural= (пример - Рыбинка)\nlanduse=reservoir & natural!=* [0x3f resolution 19]\n\n"
+          if s.count(old) != 1:
+              raise SystemExit(f'landuse reservoir legacy block count={s.count(old)}')
+          p.write_text(s.replace(old, '', 1), encoding='utf-8', newline='')
+
+          p = Path('styles/uralla/inc/water_polygons')
+          s = p.read_text(encoding='utf-8')
+          for old in (
+              "#(landuse=reservoir | water=reservoir) [0x3f resolution 18]\n\n",
+              "#natural=bay [0x3d resolution 16]\n",
+              "\n\n# natural=water [0x3c resolution 18]",
+          ):
+              if s.count(old) != 1:
+                  raise SystemExit(f'water polygon legacy fragment count={s.count(old)}: {old!r}')
+              s = s.replace(old, '', 1)
+          p.write_text(s, encoding='utf-8', newline='')
+
+          p = Path('styles/uralla/inc/water_lines')
+          s = p.read_text(encoding='utf-8')
+          old = """# natural=coastline [0x15 resolution 16]
+
+# route=ferry {set mkgmap:numbers = false }
+# route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
+# route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
+
+"""
+          if s.count(old) != 1:
+              raise SystemExit(f'water line legacy block count={s.count(old)}')
+          p.write_text(s.replace(old, '', 1), encoding='utf-8', newline='')
+          PY
+
+      - name: Add water normalization regression test
+        run: |
+          cat > tests/test_water_normalization_style.py <<'PY'
+          from pathlib import Path
+          import unittest
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+          WATER_POLYGONS = ROOT / 'styles' / 'uralla' / 'inc' / 'water_polygons'
+          LANDUSE_POLYGONS = ROOT / 'styles' / 'uralla' / 'inc' / 'landuse_polygons'
+
+
+          class WaterNormalizationStyleTests(unittest.TestCase):
+              def test_reservoir_is_normalized_once_into_natural_water(self) -> None:
+                  water = WATER_POLYGONS.read_text(encoding='utf-8')
+                  landuse = LANDUSE_POLYGONS.read_text(encoding='utf-8')
+                  self.assertIn('landuse=reservoir & mkgmap:area2poi!=true', water)
+                  self.assertIn('{add natural=water}', water)
+                  self.assertNotIn('landuse=reservoir & natural!=*', landuse)
+
+              def test_old_commented_water_alternatives_are_gone(self) -> None:
+                  water = WATER_POLYGONS.read_text(encoding='utf-8')
+                  self.assertNotIn('#(landuse=reservoir | water=reservoir)', water)
+                  self.assertNotIn('#natural=bay [0x3d', water)
+                  self.assertNotIn('# natural=water [0x3c', water)
+
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Check style and tests
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          grep -q 'finished check-styles' /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+          python -m pip install -e . pytest
+          pytest -q tests/test_water_normalization_style.py tests/test_water_structures_style.py tests/test_typ_usage.py
+          pytest -q
+
+      - name: Commit cleanup and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/inc/landuse_polygons styles/uralla/inc/water_polygons styles/uralla/inc/water_lines tests/test_water_normalization_style.py
+          git rm .github/workflows/cleanup-water-legacy-once.yml
+          git commit -m "Remove dead water style relics"
+          git push origin HEAD:main
