@@ -20,6 +20,8 @@ from .history import HistoryStore
 
 
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
+HEARTBEAT_SECONDS = 30.0
+POLL_SECONDS = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +136,36 @@ def _terminate_group(process: subprocess.Popen[bytes]) -> None:
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
         return
+
+
+def _format_elapsed(seconds: float) -> str:
+    total = max(int(seconds), 0)
+    hours, remainder = divmod(total, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+    return f"{minutes:02d}:{secs:02d}"
+
+
+def _wait_with_heartbeat(
+    process: subprocess.Popen[bytes], stage: str, started: float
+) -> tuple[int, object]:
+    """Wait for one child while keeping the controlling terminal visibly alive."""
+
+    next_heartbeat = started + HEARTBEAT_SECONDS
+    while True:
+        waited_pid, status, usage = os.wait4(process.pid, os.WNOHANG)
+        if waited_pid == process.pid:
+            return status, usage
+        now = time.monotonic()
+        if now >= next_heartbeat:
+            print(
+                f"[{stage}] running {_format_elapsed(now - started)}",
+                file=sys.stderr,
+                flush=True,
+            )
+            next_heartbeat = now + HEARTBEAT_SECONDS
+        time.sleep(POLL_SECONDS)
 
 
 class StageRunner:
@@ -269,7 +301,7 @@ class StageRunner:
                     start_new_session=True,
                 )
                 self.history.update_attempt_pid(attempt_id, process.pid)
-                _, status, usage = os.wait4(process.pid, 0)
+                status, usage = _wait_with_heartbeat(process, stage, started)
                 exit_code = os.waitstatus_to_exitcode(status)
                 process.returncode = exit_code
                 metrics = _usage_metrics(usage)
