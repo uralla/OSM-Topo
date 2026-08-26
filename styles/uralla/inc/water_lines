@@ -18,7 +18,7 @@ piste:type=nordic & is_closed()=false & area!=yes [0x10101 resolution 22]
 # to the dedicated legacy railway rules below instead of being consumed here.
 railway=narrow_gauge & disused!=yes & abandoned!=yes { name '${name} (ужд)' | 'ужд' } [0x10f14 resolution 22-24]
 railway=funicular & disused!=yes & abandoned!=yes { name '${name}' | 'фуникулер' } [0x10f00 resolution 22]
-aerialway=cable_car { name '${name} (${ref})' | '${name}' | '${ref}' } [0x2f resolution 22]
+aerialway=cable_car { name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f15 resolution 22]
 
 # Modern protected-area tagging uses the same boundary line as nature reserves.
 (boundary=protected_area | boundary=national_park) { name '${name}' } [0x12d1b resolution 23]
