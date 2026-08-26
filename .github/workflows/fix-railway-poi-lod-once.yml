@@ -1,0 +1,62 @@
+name: Fix railway POI LOD once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-railway-poi-lod-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Separate overview and detailed railway station POIs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          changes = {
+              "railway=station & !(layer<0) [0x11601 resolution 21]":
+              "railway=station & !(layer<0) [0x11601 resolution 21-23]",
+              "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19]":
+              "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19-23]",
+          }
+          for old, new in changes.items():
+              if s.count(old) != 1:
+                  raise SystemExit(f'expected one occurrence of {old!r}, found {s.count(old)}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8', newline='')
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Check style and tests
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          grep -q 'finished check-styles' /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+          python -m pip install -e . pytest
+          pytest -q tests/test_railway_points_style.py tests/test_typ_usage.py
+          pytest -q
+
+      - name: Commit direct style and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/points tests/test_railway_points_style.py
+          git rm .github/workflows/fix-railway-poi-lod-once.yml
+          git commit -m "Separate railway station POI zoom levels"
+          git push origin HEAD:main
