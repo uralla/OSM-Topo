@@ -1,0 +1,29 @@
+name: Fix TYP marina collision
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/fix_typ_marina_collision.py
+      - .github/workflows/fix-typ-marina-collision.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Repair TYP line slot collision
+        run: python3 scripts/fix_typ_marina_collision.py
+      - name: Commit repaired direct sources and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/lines styles/uralla.txt
+          git rm scripts/fix_typ_marina_collision.py .github/workflows/fix-typ-marina-collision.yml
+          git commit -m "Resolve marina and service railway TYP slots"
+          git push origin HEAD:main
