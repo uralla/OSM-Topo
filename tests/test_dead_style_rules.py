@@ -28,6 +28,12 @@ class DeadStyleRuleTests(unittest.TestCase):
         self.assertIn("natural=cave_entrance [0x11602 resolution 23]", priority)
         self.assertNotIn("natural=cave_entrance [0x6601", landuse)
 
+    def test_residential_polygon_has_no_unreachable_duplicate(self) -> None:
+        landuse = (STYLE / "inc" / "landuse_polygons").read_text(encoding="utf-8")
+        self.assertIn("landuse=residential [0x10 resolution 21-21 continue]", landuse)
+        self.assertIn("landuse=residential [0x03 resolution 22]", landuse)
+        self.assertNotIn("boundary=administrative & landuse=residential [0x03", landuse)
+
 
 if __name__ == "__main__":
     unittest.main()
