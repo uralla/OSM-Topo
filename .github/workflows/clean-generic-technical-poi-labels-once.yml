@@ -1,0 +1,84 @@
+name: Clean generic technical POI labels once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/clean-generic-technical-poi-labels-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove forced generic names
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('styles/uralla/points')
+          text = path.read_text(encoding='utf-8')
+          replacements = {
+              'man_made=communications_tower | man_made=tower & tower:type=communication {name "башня связи"} [0x6410 resolution 22]':
+              '(man_made=communications_tower | (man_made=tower & tower:type=communication)) [0x6410 resolution 22]',
+              'man_made=antenna|man_made=mast {name "антенна"} [0x641c resolution 23]':
+              '(man_made=antenna | man_made=mast) [0x641c resolution 23]',
+              'man_made=tower|landmark=chimney {name "башня/труба"} [0x6411 resolution 23]':
+              '(man_made=tower | landmark=chimney) [0x6411 resolution 23]',
+              'man_made=water_tower {name "водонапорная башня"} [0x641d resolution 23]':
+              'man_made=water_tower [0x641d resolution 23]',
+              'man_made=wastewater_plant {name "очистные"} [0x11501 resolution 24] ':
+              'man_made=wastewater_plant [0x11501 resolution 24]',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing expected rule: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Add regression test
+        run: |
+          cat > tests/test_technical_poi_names_style.py <<'PY'
+          from pathlib import Path
+          import unittest
+
+          POINTS = Path(__file__).resolve().parents[1] / 'styles' / 'uralla' / 'points'
+
+          class TechnicalPoiNameTests(unittest.TestCase):
+              def test_technical_pois_do_not_force_generic_names(self):
+                  text = POINTS.read_text(encoding='utf-8')
+                  for generic in ('башня связи', 'антенна', 'башня/труба', 'водонапорная башня', 'очистные'):
+                      self.assertNotIn(f'name "{generic}"', text)
+                  self.assertIn('name=* { name \'${name}\' }', text)
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Validate
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+          python -m pip install -e . pytest
+          pytest -q tests/test_technical_poi_names_style.py
+          pytest -q
+
+      - name: Commit and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/points tests/test_technical_poi_names_style.py
+          git rm .github/workflows/clean-generic-technical-poi-labels-once.yml
+          git commit -m "Preserve real names for technical POIs"
+          git push origin HEAD:main
