@@ -1,0 +1,42 @@
+name: Check polygon precedence once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/check-polygon-precedence-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Check style and tests
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          grep -q 'finished check-styles' /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+          python -m pip install -e . pytest
+          pytest -q tests/test_polygon_precedence_style.py tests/test_clearcut_polygon_style.py tests/test_typ_usage.py
+          pytest -q
+
+      - name: Remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/check-polygon-precedence-once.yml
+          git commit -m "Complete polygon precedence validation"
+          git push origin HEAD:main
