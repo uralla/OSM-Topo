@@ -1,0 +1,73 @@
+name: Audit water TYP once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-water-typ-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Print water TYP metadata
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          raw = Path('styles/uralla.txt').read_bytes()
+          try:
+              text = raw.decode('utf-8')
+          except UnicodeDecodeError:
+              text = raw.decode('cp1251')
+
+          wanted = {
+              '_point': {0x5001,0x6503,0x6508,0x650a,0x650e,0x6511,0x6512,0x6513,0x6514,0x6515,0x6516,0x6517,0x6603,0x6604},
+              '_line': {0x0f,0x18,0x19,0x1f,0x10109,0x10c03,0x10f1d,0x10f1e,0x1001f,0x12d01,0x10f07},
+              '_polygon': {0x32,0x3b,0x3c,0x3f,0x4d,0x50,0x54,0x5d,0x61,0x62,0x1171a,0x1171d,0x1181a,0x10f11},
+          }
+          section_re = re.compile(r'(?ims)^\[(?P<kind>_point|_line|_polygon)\]\s*\r?\n(?P<body>.*?)^\[end\]\s*$')
+
+          found = {kind: set() for kind in wanted}
+          for m in section_re.finditer(text):
+              kind = m.group('kind').lower()
+              body = m.group('body')
+              tm = re.search(r'(?im)^Type\s*=\s*0x([0-9a-f]+)\b', body)
+              if not tm:
+                  continue
+              code = int(tm.group(1), 16)
+              if kind == '_point':
+                  sm = re.search(r'(?im)^SubType\s*=\s*0x([0-9a-f]+)\b', body)
+                  if sm:
+                      code = (code << 8) | int(sm.group(1), 16)
+              if code not in wanted[kind]:
+                  continue
+              found[kind].add(code)
+              print(f'=== {kind} 0x{code:x} ===')
+              for line in body.splitlines():
+                  stripped = line.strip()
+                  if re.match(r'(?i)^(Type|SubType|String\d+|ExtendedLabels|FontStyle|CustomColor|DaycustomColor|NightcustomColor|Xpm|DayXpm|NightXpm)\b', stripped):
+                      print(stripped)
+              print()
+
+          for kind, codes in wanted.items():
+              missing = sorted(codes - found[kind])
+              if missing:
+                  print(f'MISSING CUSTOM {kind}: ' + ', '.join(f'0x{x:x}' for x in missing))
+          PY
+
+      - name: Remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/audit-water-typ-once.yml
+          git commit -m "Remove one-shot water TYP audit"
+          git push origin HEAD:main
