@@ -51,21 +51,50 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
-    def test_unnamed_ridges_keep_lines_without_synthetic_label(self) -> None:
+    def test_unnamed_ridges_are_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
-            "natural=ridge & name=* & length()>500 { name 'хр. ${name}' }",
+            "natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]",
             lines,
         )
         self.assertIn(
-            "natural=ridge & name!=* & length()>500 [0x10e02 resolution 18 continue]",
+            "natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]",
             lines,
         )
         self.assertIn(
-            "natural=ridge & name!=* [0x10e01 resolution 23 continue]",
+            "natural=ridge & name!=* [0x10e01 resolution 24]",
             lines,
         )
-        self.assertNotIn("natural=ridge { name 'хр. ${name}' }", lines)
+        self.assertNotIn("natural=ridge & name!=* & length()>500", lines)
+        self.assertNotIn("natural=ridge & name!=* [0x10e01 resolution 23", lines)
+
+    def test_marked_trails_are_guaranteed_from_resolution_21(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        for rule in (
+            "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-21 continue]",
+            "mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]",
+            "mkgmap:trail_name=* & highway=footway & length()>100 [0x07 resolution 21-21 continue]",
+            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]",
+            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]",
+            "mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 21-21 continue]",
+        ):
+            self.assertIn(rule, lines)
+        self.assertNotIn("mkgmap:trail_name=* & highway=track & tracktype=grade1", lines)
+
+    def test_footway_is_not_duplicated_by_bicycle_path_rule(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn(
+            "bicycle=yes & highway=path & length()>100 [0x0b resolution 22-23 continue]",
+            lines,
+        )
+        self.assertIn(
+            "highway=footway & length()>100 [0x07 resolution 22-23 continue]",
+            lines,
+        )
+        self.assertNotIn(
+            "bicycle=yes & highway=path & length()>100 | highway=footway & length()>100",
+            lines,
+        )
 
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
