@@ -1,0 +1,95 @@
+name: Cleanup proven dead style rules once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/cleanup_dead_style_rules.py
+      - .github/workflows/cleanup-dead-style-rules-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove proven-unreachable rules and re-prune TYP
+        run: python3 scripts/cleanup_dead_style_rules.py
+
+      - name: Add dead-rule regression tests
+        run: |
+          cat > tests/test_dead_style_rules.py <<'PY'
+          from pathlib import Path
+          import unittest
+
+
+          ROOT = Path(__file__).resolve().parents[1]
+          STYLE = ROOT / "styles" / "uralla"
+
+
+          class DeadStyleRuleTests(unittest.TestCase):
+              def test_settlement_type_rules_live_only_in_place_points(self) -> None:
+                  points = (STYLE / "points").read_text(encoding="utf-8")
+                  self.assertIn("include 'inc/place_points';", points)
+                  self.assertIn("# Settlement rendering is defined entirely in inc/place_points.", points)
+                  active = []
+                  for line in points.splitlines():
+                      if line.lstrip().startswith("#"):
+                          continue
+                      active.append(line.split("#", 1)[0])
+                  active_text = "\n".join(active)
+                  self.assertNotIn("place=city & mkgmap:area2poi!=true\t[", active_text)
+                  self.assertNotIn("place=town & mkgmap:area2poi!=true\t[", active_text)
+                  self.assertNotIn("place=village & mkgmap:area2poi!=true\t[", active_text)
+                  self.assertNotIn("place=locality & mkgmap:area2poi!=true\t[", active_text)
+
+              def test_cave_entrance_has_only_priority_rule(self) -> None:
+                  priority = (STYLE / "inc" / "priority_points").read_text(encoding="utf-8")
+                  landuse = (STYLE / "inc" / "landuse_points").read_text(encoding="utf-8")
+                  self.assertIn("natural=cave_entrance [0x11602 resolution 23]", priority)
+                  self.assertNotIn("natural=cave_entrance [0x6601", landuse)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Check style with zero warnings
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          grep -q 'finished check-styles' /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+
+      - name: Compile authoritative TYP
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/typ
+          (cd /tmp/typ && java -jar "$GITHUB_WORKSPACE/mkgmap-r4924/mkgmap.jar" "$GITHUB_WORKSPACE/styles/uralla.txt" 2>&1 | tee /tmp/typ.log)
+          if grep -q '^Warning:' /tmp/typ.log; then exit 1; fi
+
+      - name: Run targeted and full regressions
+        run: |
+          python -m pip install -e . pytest
+          pytest -q tests/test_dead_style_rules.py tests/test_typ_usage.py
+          pytest -q
+
+      - name: Commit direct sources and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/points styles/uralla/inc/landuse_points styles/uralla.txt tests/test_dead_style_rules.py
+          git rm scripts/cleanup_dead_style_rules.py .github/workflows/cleanup-dead-style-rules-once.yml
+          git commit -m "Remove proven dead style fallbacks"
+          git push origin HEAD:main
