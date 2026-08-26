@@ -61,6 +61,7 @@ class ProductBuildPlanTests(unittest.TestCase):
                     "merge",
                     "splitter",
                     "validate-areas",
+                    "prepare-typ",
                     "mkgmap",
                 ],
             )
@@ -68,6 +69,9 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertIn("--mapid=01018001", splitter.command)
             self.assertIn("--max-nodes=2000000", splitter.command)
             self.assertEqual(splitter.prepare_directories, ("tiles",))
+            prepare_typ = next(stage for stage in plan.stages if stage.name == "prepare-typ")
+            self.assertIn("scripts/prepare-typ.py", " ".join(prepare_typ.command))
+            self.assertEqual(prepare_typ.expected_outputs, ("uralla.txt",))
             mkgmap = next(stage for stage in plan.stages if stage.name == "mkgmap")
             self.assertIn("--family-id=1018", mkgmap.command)
             self.assertIn("--product-id=1", mkgmap.command)
@@ -79,6 +83,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             )
             self.assertIn(f"--dem={root / 'dem'}", mkgmap.command)
             self.assertIn("--description=Topo-Ural-N (2026-08-25)", mkgmap.command)
+            self.assertTrue(mkgmap.command[-1].endswith("/prepare-typ/uralla.txt"))
             self.assertEqual(mkgmap.prepare_directories, ("garmin",))
             self.assertTrue(plan.img_source.endswith("/mkgmap/garmin/gmapsupp.img"))
             self.assertTrue(plan.gmapi_source.endswith("/mkgmap/garmin/Topo-Ural-N.gmap"))
@@ -191,7 +196,8 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertEqual(len(plans), 27)
             for product, plan in plans.items():
                 self.assertIn("preprocess", [stage.name for stage in plan.stages], product)
-                self.assertEqual(plan.stages[-2].name, "validate-areas", product)
+                self.assertEqual(plan.stages[-3].name, "validate-areas", product)
+                self.assertEqual(plan.stages[-2].name, "prepare-typ", product)
                 self.assertEqual(plan.stages[-1].name, "mkgmap", product)
                 self.assertTrue(plan.img_source.endswith("gmapsupp.img"), product)
                 self.assertTrue(plan.gmapi_source.endswith(".gmap"), product)
