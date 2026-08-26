@@ -35,6 +35,30 @@ def _tool_lock(checksum: str | None) -> dict[str, object]:
     }
 
 
+def _plan_lock() -> dict[str, object]:
+    return {
+        "java": {"minimum_major": 17},
+        "system_packages": {
+            "ubuntu": {
+                "java": "default-jre-headless",
+                "osmium": "osmium-tool",
+                "osmosis": "osmosis",
+                "zip": "zip",
+                "unzip": "unzip",
+            },
+            "macos": {
+                "java": "openjdk",
+                "osmium": "osmium-tool",
+                "osmosis": "osmosis",
+                "zip": "zip",
+                "unzip": "unzip",
+            },
+        },
+        "mkgmap": {"release": 4924, "install_dir": "mkgmap-r4924", "jar": "mkgmap.jar"},
+        "splitter": {"release": 654, "install_dir": "splitter-r654", "jar": "splitter.jar"},
+    }
+
+
 def _create_archive(path: Path) -> str:
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr("tool-r1/tool.jar", b"jar-bytes")
@@ -45,23 +69,43 @@ class BootstrapTests(unittest.TestCase):
     def test_plan_is_read_only_and_lists_missing_components(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            lock = {
-                "system_packages": {
-                    "ubuntu": {
-                        "java": "default-jre-headless",
-                        "osmium": "osmium-tool",
-                        "osmosis": "osmosis",
-                        "zip": "zip",
-                        "unzip": "unzip",
-                    }
-                },
-                "mkgmap": {"release": 4924, "install_dir": "mkgmap-r4924", "jar": "mkgmap.jar"},
-                "splitter": {"release": 654, "install_dir": "splitter-r654", "jar": "splitter.jar"},
-            }
-            plan = build_bootstrap_plan(_host(root), lock, system="Linux", which=lambda _: None)
+            plan = build_bootstrap_plan(_host(root), _plan_lock(), system="Linux", which=lambda _: None)
             self.assertTrue(any(action.kind == "system-install" for action in plan))
             self.assertEqual(sum(action.kind == "pinned-tool" for action in plan), 2)
             self.assertFalse((root / "tools").exists())
+
+    def test_macos_java_launcher_without_runtime_installs_openjdk(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def which(command: str) -> str | None:
+                return f"/usr/bin/{command}"
+
+            plan = build_bootstrap_plan(
+                _host(root),
+                _plan_lock(),
+                system="Darwin",
+                which=which,
+                java_major=lambda _: None,
+            )
+            installs = [action.command for action in plan if action.kind == "system-install"]
+            self.assertEqual(installs, [("brew", "install", "openjdk")])
+
+    def test_macos_supported_java_does_not_reinstall_openjdk(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def which(command: str) -> str | None:
+                return f"/usr/bin/{command}"
+
+            plan = build_bootstrap_plan(
+                _host(root),
+                _plan_lock(),
+                system="Darwin",
+                which=which,
+                java_major=lambda _: 17,
+            )
+            self.assertFalse(any(action.kind == "system-install" for action in plan))
 
     def test_verified_archive_is_installed(self) -> None:
         with TemporaryDirectory() as directory:
