@@ -3,10 +3,10 @@
 
 # delete FIXME values (they should be better used in maintenance maps)
 # better use option --ignore-fixme-values
-ref ~ '(?i)fix[ _]?+me'		{ delete ref; } 
-operator ~ '(?i)fix[ _]?+me'	{ delete operator; }
-brand ~ '(?i)fix[ _]?+me'		{ delete brand; }
-name ~ '(?i)fix[ _]?+me'		{ delete name; }
+ref ~ '(?i)fix[ _]?+me'        { delete ref; }
+operator ~ '(?i)fix[ _]?+me'   { delete operator; }
+brand ~ '(?i)fix[ _]?+me'      { delete brand; }
+name ~ '(?i)fix[ _]?+me'       { delete name; }
 
 # delete duplicate names
 operator=${brand} { delete operator; }
@@ -16,58 +16,54 @@ brand=${name}     { delete brand; }
 # Короткие подписи POI/объектов: иконка уже передаёт тип, но статусную часть имени сохраняем.
 name=* { set name='${name|subst:Беседка=>Бес.|subst:беседка=>бес.}' }
 
-### fuel
-### diesel=yes
-amenity=fuel & fuel:diesel=yes & fuel:lpg=yes 
-{ name	'${name} (Diesel, LPG)' |
- 	'${operator} (Diesel, LPG)' | 
- 	'${brand} (Diesel, LPG)' | 
- 	'${ref} (Diesel, LPG)' | 
-	'Diesel, LPG'}
+### fuel / АЗС
+amenity=fuel & fuel:diesel=yes & fuel:lpg=yes
+{ name '${name} (Дизель, Газ)' |
+       '${operator} (Дизель, Газ)' |
+       '${brand} (Дизель, Газ)' |
+       '${ref} (Дизель, Газ)' |
+       'Дизель, Газ'}
 
-amenity=fuel & fuel:diesel=yes 
-{ name 	'${name} (Diesel)' | 
-	'${operator} (Diesel)' | 
-	'${brand} (Diesel)' | 
-	'${ref} (Diesel)' | 
-	'Diesel'}
+amenity=fuel & fuel:diesel=yes
+{ name '${name} (Дизель)' |
+       '${operator} (Дизель)' |
+       '${brand} (Дизель)' |
+       '${ref} (Дизель)' |
+       'Дизель'}
 
-amenity=fuel & fuel:lpg=yes 
-{ name 	'${name} (LPG)' | 
-	'${operator} (LPG)' | 
-	'${brand} (LPG)' | 
-	'${ref} (LPG)' | 
-	'LPG'}
+amenity=fuel & fuel:lpg=yes
+{ name '${name} (Газ)' |
+       '${operator} (Газ)' |
+       '${brand} (Газ)' |
+       '${ref} (Газ)' |
+       'Газ'}
 
-amenity=fuel 
-{ name	'${name}' |
- 	'${operator}' | 
-	'${brand}' |
-	'${ref}'}
+amenity=fuel
+{ name '${name}' |
+       '${operator}' |
+       '${brand}' |
+       '${ref}'}
 
-amenity=fuel & fuel:HGV_diesel=yes 
-{ name 	'${name} (Diesel)' | 
-	'${operator} (Diesel)' | 
-	'${brand} (Diesel)' | 
-	'${ref} (Diesel)' | 
-	'Diesel'}
+amenity=fuel & fuel:HGV_diesel=yes
+{ name '${name} (Дизель)' |
+       '${operator} (Дизель)' |
+       '${brand} (Дизель)' |
+       '${ref} (Дизель)' |
+       'Дизель'}
 
-### diesel=no
-amenity=fuel & fuel:diesel=no & fuel:lpg=yes 
-{ name	'${name} (No Diesel, LPG)' |
- 	'${operator} (No Diesel, LPG)' | 
- 	'${brand} (No Diesel, LPG)' | 
- 	'${ref} (No Diesel, LPG)' | 
-	'No Diesel, LPG'}
+amenity=fuel & fuel:diesel=no & fuel:lpg=yes
+{ name '${name} (Без дизеля, Газ)' |
+       '${operator} (Без дизеля, Газ)' |
+       '${brand} (Без дизеля, Газ)' |
+       '${ref} (Без дизеля, Газ)' |
+       'Без дизеля, Газ'}
 
-amenity=fuel & fuel:diesel=no 
-{ name 	'${name} (No Diesel)' | 
-	'${operator} (No Diesel)' | 
-	'${brand} (No Diesel)' | 
-	'${ref} (No Diesel)' | 
-	'No Diesel'}
-
-###
+amenity=fuel & fuel:diesel=no
+{ name '${name} (Без дизеля)' |
+       '${operator} (Без дизеля)' |
+       '${brand} (Без дизеля)' |
+       '${ref} (Без дизеля)' |
+       'Без дизеля'}
 
 # None of operator, brand given
 #ref=* & (operator!=* & brand!=*) & (highway=bus_stop | railway=tram_stop | railway=halt | railway=station) { name '${name} ${ref}' | '${ref}' }
@@ -98,7 +94,7 @@ amenity=fuel & fuel:diesel=no
 #}
 #brand=* & operator!=* {
 # name '${name}: ${brand} ${ref}' |
-#      '${name}: ${brand}' | 
+#      '${name}: ${brand}' |
 #      '${brand}: ${ref}' |
 #      '${brand}' |
 #      '${ref}'
