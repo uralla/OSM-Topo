@@ -39,6 +39,8 @@ man_made=* & area=yes 			{name '${addr:street} ${addr:housenumber} (${name})' | 
 #man_made=* 				{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x13 resolution 24]
 (building=* | bridge=yes & area=yes) 	{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x13 resolution 24]
 tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x0d resolution 22]
+# Theme parks have an intentional earlier overview polygon than the generic tourism fallback.
+tourism=theme_park [0x0d resolution 21]
 tourism=* & building!=* & leisure!=* {name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x0d resolution 22]
 
 # man_made can be used on areas or lines
@@ -173,15 +175,14 @@ highway=pedestrian & (area=yes | mkgmap:mp_created=true)
 highway=* & (area=yes | mkgmap:mp_created=true) [0x05 resolution 21]
 
 historic=museum | historic=memorial [0x1e resolution 21]
-historic=archaeological_site | historic=ruins [0x1e resolution 21]
+# Keep ruins visible at overview level, then allow building ruins to get their detailed building polygon below.
+historic=archaeological_site | historic=ruins [0x1e resolution 21 continue]
 historic=ruins & building=yes {name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x13 resolution 24]
 
 # building tag should be last
 #(building=* | amenity=*) & area!=no & amenity!=grave_yard [0x13 resolution 24]
 
 ###tourism=* & area!=no & waterway!=* & building!=* [0x1f resolution 24]
-
-tourism=theme_park [0x0d resolution 21]
 
 
 
