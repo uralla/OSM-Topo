@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr
+import io
 import json
 from pathlib import Path
 import sqlite3
@@ -73,6 +75,37 @@ class StageRunnerTests(unittest.TestCase):
             checkpoint = json.loads(attempts[0]["checkpoint_json"])
             self.assertEqual(checkpoint[0]["path"], "result.txt")
             self.assertGreater(checkpoint[0]["size"], 0)
+
+    def test_mkgmap_output_is_streamed_live_and_kept_in_logs(self) -> None:
+        with TemporaryDirectory() as directory:
+            runner = StageRunner(Path(directory) / "work")
+            code = (
+                "from pathlib import Path; import sys; "
+                "print('DEM tile N44E033.hgt'); "
+                "print('missing N45E033.hgt', file=sys.stderr); "
+                "Path('map.img').write_text('ok', encoding='utf-8')"
+            )
+            terminal = io.StringIO()
+            with redirect_stderr(terminal):
+                result = runner.run(
+                    product="crimea",
+                    stage="mkgmap",
+                    command=[sys.executable, "-c", code],
+                    expected_outputs=["map.img"],
+                )
+
+            self.assertEqual(result.status, "success")
+            shown = terminal.getvalue()
+            self.assertIn("[mkgmap] DEM tile N44E033.hgt", shown)
+            self.assertIn("[mkgmap] missing N45E033.hgt", shown)
+            self.assertIn(
+                "DEM tile N44E033.hgt",
+                Path(result.stdout_log).read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "missing N45E033.hgt",
+                Path(result.stderr_log).read_text(encoding="utf-8"),
+            )
 
     def test_matching_checkpoint_is_reused_within_same_build(self) -> None:
         with TemporaryDirectory() as directory:
