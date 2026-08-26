@@ -13,8 +13,30 @@ operator=${brand} { delete operator; }
 operator=${name}  { delete operator; }
 brand=${name}     { delete brand; }
 
-# Короткие подписи POI/объектов: иконка уже передаёт тип, но статусную часть имени сохраняем.
-name=* { set name='${name|subst:Беседка=>Бес.|subst:беседка=>бес.}' }
+# [CUSTOM/АВТОРСКОЕ] Global compact labels for points, lines and polygons.
+# This include is intentionally used by all three production style entry files.
+name=* { set name='${name|subst:улица=> ул.
+                     |subst:переулок=> пер.
+                     |subst:проспект=> пр-т
+                     |subst:проезд=> пр-д
+                     |subst:разъезд=> раз.
+                     |subst:тракт=> тр-т
+                     |subst:площадь=> пл.
+                     |subst:имени=> им.
+                     |subst:бульвар=> бл-р
+                     |subst:шоссе=> ш.
+                     |subst:дорога=> дор.
+                     |subst:тупик=> туп.
+                     |subst:микрорайон=> мкр.
+                     |subst:аллея=> алл.
+                     |subst:линия=> лин.
+                     |subst:набережная=> наб.
+                     |subst:Восточный=> Вост.
+                     |subst:Западный=> Зап.
+                     |subst:Южный=> Юж.
+                     |subst:Северный=> Сев.
+                     |subst:Беседка=>Бес.
+                     |subst:беседка=>бес.}' }
 
 ### fuel / АЗС
 amenity=fuel & fuel:diesel=yes & fuel:lpg=yes

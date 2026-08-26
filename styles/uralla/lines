@@ -10,30 +10,7 @@
 
 addr:housenumber=* {set mkgmap:execute_finalize_rules=true}
 
-# сокращаем статусные части названий улиц (пока отлючено)
- name=* { name '${name|subst:улица=> ул.
-		     |subst:переулок=> пер.
-			 |subst:проспект=> пр-т
-		     |subst:проезд=> пр-д
-			 |subst:разъезд=> раз.
-		     |subst:тракт=> тр-т
-		     |subst:площадь=> пл.
-		     |subst:имени=> им.
-		     |subst:бульвар=> бл-р
-		     |subst:шоссе=> ш.
-		     |subst:дорога=> дор.
-		     |subst:тупик=> туп.
-		     |subst:микрорайон=> мкр.
-		     |subst:аллея=> алл.
-		     |subst:линия=> лин.
-		     |subst:набережная=> наб.
-			 |subst:Восточный=> Вост.
-			 |subst:Западный=> Зап.
-			 |subst:Южный=> Юж.
-			 |subst:Северный=> Сев.
-			 |subst:имени=> им.
-			}' }
-
+include 'inc/name';
 include 'inc/contour_lines';
 include 'inc/water_lines';
 

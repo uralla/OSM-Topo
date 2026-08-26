@@ -11,12 +11,9 @@ CodePage=1251
 [End]
 
 
-
-
 ;=========== POLYGONES : PRIORITE DANS L'AFFICHAGE ======
 [_drawOrder]
 Type=0x001,1
-Type=0x10f09,1
 Type=0x002,2
 Type=0x003,2
 Type=0x010,3
@@ -43,7 +40,6 @@ Type=0x10612,6
 Type=0x10f0c,6
 Type=0x005,7
 Type=0x006,7
-Type=0x015,7
 Type=0x04d,7
 Type=0x050,7
 Type=0x10100,7
@@ -56,7 +52,6 @@ Type=0x04f,8
 Type=0x052,8
 Type=0x05d,8
 Type=0x10c05,8
-Type=0x10e1a,8
 Type=0x10f00,8
 Type=0x10f0a,8
 Type=0x11100,8
@@ -69,30 +64,19 @@ Type=0x032,9
 Type=0x03b,9
 Type=0x03c,9
 Type=0x03f,9
-Type=0x046,9
-Type=0x1171b,9
-Type=0x1171c,9
 Type=0x004,10
 Type=0x016,10
-Type=0x051,10
 Type=0x054,10
 Type=0x061,10
 Type=0x062,10
 Type=0x10102,10
-Type=0x1100e,10
-Type=0x1110e,10
 Type=0x1171d,10
 Type=0x013,11
 Type=0x10f11,11
 Type=0x1181a,11
-Type=0x1321c,11
-Type=0x13300,11
 Type=0x1331a,11
 Type=0x1321d,12
 [End]
-
-
-
 
 
 ;===================== POLYGONES ========================
@@ -360,53 +344,6 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 Xpm="0 0 1 0"
 "1 c #7B3000"
-[end]
-
-
-[_polygon]
-Type=0x15
-;GRMN_TYPE: Park Areas/NATIONAL_PARK/National park/Non NT
-String1=0x19,лес/парк
-String2=0x04,forest/park
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-Xpm="32 32 2 1"
-"! c #006500"
-"# c #7BCA41"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"###!#######!#######!#######!####"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"###!#######!#######!#######!####"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"###!#######!#######!#######!####"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"################################"
-"###!#######!#######!#######!####"
-;12345678901234567890123456789012
 [end]
 
 
@@ -815,18 +752,6 @@ String1=0x19,водоем
 String2=0x04,water
 ExtendedLabels=Y
 FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#0000FF
-Xpm="0 0 1 0"
-"1 c #00CAFF"
-[end]
-
-
-[_polygon]
-Type=0x46
-;GRMN_TYPE: Water Areas/LARGE_RIVER/Major river, typically at least 700 ft in width/Non NT
-ExtendedLabels=Y
-FontStyle=LargeFont
 CustomColor=Day
 DaycustomColor:#0000FF
 Xpm="0 0 1 0"
@@ -1653,52 +1578,6 @@ Xpm="32 32 2 1"
 
 
 [_polygon]
-Type=0x10f09
-;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_10/Customizable area/Non NT, NT
-String1=0x19,частная территория
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-Xpm="32 32 2 1"
-"! c #7B0000"
-"  c none"
-"               !               !"
-"!             ! !             ! "
-" !           !   !           !  "
-"  !         !     !         !   "
-"   !       !       !       !    "
-"    !     !         !     !     "
-"     !   !           !   !      "
-"      ! !             ! !       "
-"       !               !        "
-"      ! !             ! !       "
-"     !   !           !   !      "
-"    !     !         !     !     "
-"   !       !       !       !    "
-"  !         !     !         !   "
-" !           !   !           !  "
-"!             ! !             ! "
-"               !               !"
-"!             ! !             ! "
-" !           !   !           !  "
-"  !         !     !         !   "
-"   !       !       !       !    "
-"    !     !         !     !     "
-"     !   !           !   !      "
-"      ! !             ! !       "
-"       !               !        "
-"      ! !             ! !       "
-"     !   !           !   !      "
-"    !     !         !     !     "
-"   !       !       !       !    "
-"  !         !     !         !   "
-" !           !   !           !  "
-"!             ! !             ! "
-;12345678901234567890123456789012
-[end]
-
-
-[_polygon]
 Type=0x10f0a
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_11/Customizable area/Non NT, NT
 String1=0x19,пасека
@@ -1935,98 +1814,6 @@ Xpm="0 0 1 0"
 
 
 [_polygon]
-Type=0x1171b
-;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_156/Customizable area/Non NT, NT
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-Xpm="32 32 2 1"
-"! c #00CAFF"
-"  c none"
-"                                "
-"!!   !!!!!!!!   !!!!!!    !!!!!!"
-"                                "
-"    !!!!!!     !!!!!    !!!!!!  "
-"                                "
-"     !!!   !!!!    !!!     !!!! "
-"                                "
-"!!!      !!!!   !!!        !!!!!"
-"                                "
-"   !!!!!!!!!       !!!!!!!!!    "
-"                                "
-"!!!!!     !!!!!   !!!!!!!    !!!"
-"                                "
-"!!!!      !!!!!!   !!!!!  !!!!! "
-"                                "
-"   !!!!!!       !!!!!!!     !!!!"
-"                                "
-"!!!!    !!! !!!!!!!   !!!!!!    "
-"                                "
-" !!!! !!!!!!!!    !!!!!!!!      "
-"                                "
-"!!!!     !!!!    !!!!!!     !!!!"
-"                                "
-"   !!!!!!!!  !!!!    !!!!!!!!   "
-"                                "
-"!!   !!!   !!!!!!!!     !!!   !!"
-"                                "
-" !!!!!!!!!     !!!!!      !!!!  "
-"                                "
-"!!    !!!!!!!!!!    !!!!   !!!!!"
-"                                "
-" !!!!!!!!!       !!!!!!!!!!!    "
-;12345678901234567890123456789012
-[end]
-
-
-[_polygon]
-Type=0x1171c
-;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_157/Customizable area/Non NT, NT
-String1=0x19,заболоченный лес
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#7B6520
-Xpm="32 32 2 1"
-"! c #7B6520"
-"# c #7BCA6A"
-"!!!!!!!!###!!!!!!!###!!!!!!!###!"
-"################################"
-"################################"
-"################################"
-"!!!!###!!!!!!!###!!!!!!!###!!!!!"
-"################################"
-"################################"
-"################################"
-"!!!!!!!!!###!!!!!!!###!!!!!!!###"
-"################################"
-"################################"
-"################################"
-"!!!!###!!!!!!!###!!!!!!!###!!!!!"
-"################################"
-"################################"
-"################################"
-"###!!!!!!!###!!!!!!!###!!!!!!!!!"
-"################################"
-"################################"
-"################################"
-"!!!!!!###!!!!!!!###!!!!!!!###!!!"
-"################################"
-"################################"
-"################################"
-"!!###!!!!!!!###!!!!!!!###!!!!!!!"
-"################################"
-"################################"
-"################################"
-"!!!!!###!!!!!!!###!!!!!!!###!!!!"
-"################################"
-"################################"
-"################################"
-;12345678901234567890123456789012
-[end]
-
-
-[_polygon]
 Type=0x1171d
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_158/Customizable area/Non NT, NT
 String1=0x19,болото
@@ -2172,17 +1959,6 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 Xpm="0 0 1 0"
 "1 c #BDFF8B"
-[end]
-
-
-[_polygon]
-Type=0x1321c
-;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_1021/Customizable area/Non NT, NT
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-Xpm="0 0 1 0"
-"1 c #E6E6E6"
 [end]
 
 
@@ -2441,36 +2217,6 @@ CustomColor=No
 
 
 [_line]
-Type=0x08
-;GRMN_TYPE: Roads/LOW_SPEED_RAMP/Highway ramp which is to be driven at low speeds/Non NT, NT
-UseOrientation=N
-LineWidth=2
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #838383"
-"2 c #000000"
-String1=0x19,съезд
-String2=0x04,highway ramp
-ExtendedLabels=N
-[end]
-
-
-[_line]
-Type=0x09
-;GRMN_TYPE: Roads/HIGH_SPEED_RAMP, RAMP/Highway ramp which is to be driven at high speeds/Non NT, NT
-UseOrientation=Y
-LineWidth=2
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #838383"
-"2 c #000000"
-String1=0x19,съезд
-String2=0x04,highway ramp
-ExtendedLabels=N
-[end]
-
-
-[_line]
 Type=0x0a
 ;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
 UseOrientation=N
@@ -2500,21 +2246,6 @@ ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=Day
 DaycustomColor:#101010
-[end]
-
-
-[_line]
-Type=0x0c
-;GRMN_TYPE: Roads/ROUNDABOUT/Roundabout/Non NT, NT
-UseOrientation=Y
-LineWidth=2
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #838383"
-"2 c #000000"
-String1=0x19,круговое движение
-String2=0x04,roundabout
-ExtendedLabels=N
 [end]
 
 
@@ -2629,24 +2360,6 @@ ExtendedLabels=N
 
 
 [_line]
-Type=0x14
-;GRMN_TYPE: Misc. Line Types/RAILROAD/Railroad/Non NT
-UseOrientation=Y
-Xpm="32 4 2  1"
-"! c #000000"
-"# c #FFFFFF"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"###!!!!!!!!########!!!!!!!!#####"
-"###!!!!!!!!########!!!!!!!!#####"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-[end]
-
-
-[_line]
 Type=0x16
 ;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
 UseOrientation=N
@@ -2685,40 +2398,6 @@ Xpm="0 0 1 0"
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
-[end]
-
-
-[_line]
-Type=0x1a
-;GRMN_TYPE: Roads/INTERNATIONAL_FERRY/Major water or rail ferry/Non NT, NT
-UseOrientation=Y
-Xpm="32 7 2  1"
-"! c #FFFFD5"
-"# c #000000"
-"################################"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"##!!!!!!!!!!!!####!!!!!!!!!!!!##"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"################################"
-;12345678901234567890123456789012
-ExtendedLabels=N
-[end]
-
-
-[_line]
-Type=0x1b
-;GRMN_TYPE: Roads/FERRY/Water or rail ferry/Non NT, NT
-UseOrientation=Y
-LineWidth=2
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #0000D5"
-"2 c #00006A"
-String1=0x19,паром
-String2=0x04,ferry
-ExtendedLabels=N
 [end]
 
 
@@ -2880,23 +2559,6 @@ DaycustomColor:#0000FF
 
 
 [_line]
-Type=0x26
-;GRMN_TYPE: Water Features/INTERMITTENT_STREAM/Intermittent or dry stream, creek, or ditch/Non NT
-UseOrientation=Y
-Xpm="32 2 2  1"
-"! c #0065FF"
-"  c none"
-"!!!!    !!!!    !!!!    !!!!    "
-"!!!!    !!!!    !!!!    !!!!    "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#0000FF
-[end]
-
-
-[_line]
 Type=0x27
 ;GRMN_TYPE: Misc. Line Types/AIRPORT_RUNWAY/Airport runway centerline/Non NT
 UseOrientation=Y
@@ -2964,21 +2626,6 @@ CustomColor=No
 
 
 [_line]
-Type=0x2c
-;GRMN_TYPE: //
-UseOrientation=N
-Xpm="32 1 2  1"
-"! c #000000"
-"  c none"
-"                                "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-[end]
-
-
-[_line]
 Type=0x2e
 ;GRMN_TYPE: Misc. Line Types/VIA_FERRATA/Via ferrata/Non NT, NT
 UseOrientation=Y
@@ -2991,17 +2638,6 @@ Xpm="32 2 2  1"
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
-[end]
-
-
-[_line]
-Type=0x2f
-;GRMN_TYPE: Misc. Line Types/CABLE_CAR/Cable car/Non NT, NT
-UseOrientation=N
-LineWidth=12
-Xpm="0 0 1 0"
-"1 c #FFFFFF"
-ExtendedLabels=N
 [end]
 
 
@@ -3062,34 +2698,6 @@ String1=0x19,плохая
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
-[end]
-
-
-[_line]
-Type=0x1001e
-;GRMN_TYPE: //
-UseOrientation=Y
-Xpm="32 8 4  1"
-"! c #0065FF"
-"  c none"
-"3 c #0000FF"
-"4 c none"
-" !       !       !       !      "
-"!!  !!  !!  !!  !!  !!  !!  !!  "
-"!   !   !   !   !   !   !   !   "
-"  !!  !!  !!  !!  !!  !!  !!  !!"
-"!!  !!  !!  !!  !!  !!  !!  !!  "
-"  !   !   !   !   !   !   !   ! "
-"  !!  !!  !!  !!  !!  !!  !!  !!"
-"       !       !       !       !"
-;12345678901234567890123456789012
-String1=0x19,водопад
-String2=0x04,waterfall
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=DayAndNight
-DaycustomColor:#0000FF
-NightcustomColor:#0065FF
 [end]
 
 
@@ -3204,57 +2812,6 @@ ExtendedLabels=N
 
 
 [_line]
-Type=0x10106
-;GRMN_TYPE: Marine Lines/OVERHEAD_CABLE/Overhead cable/Non NT, NT
-UseOrientation=N
-LineWidth=3
-BorderWidth=2
-Xpm="0 0 2 0"
-"1 c #7B3000"
-"2 c #FFCA00"
-String1=0x19,велодорожка
-String2=0x04,velo
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#7B3000
-[end]
-
-
-[_line]
-Type=0x10107
-;GRMN_TYPE: Marine Lines/BRIDGE/Bridge area outline/Non NT, NT
-UseOrientation=N
-Xpm="32 6 2  1"
-"! c #7B3000"
-"# c #FFCA00"
-"################################"
-"################################"
-"!!!!!###!!!!!###!!!!!###!!!!!###"
-"!!!!!###!!!!!###!!!!!###!!!!!###"
-"################################"
-"################################"
-;12345678901234567890123456789012
-String1=0x19,велотропа
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#7B3000
-[end]
-
-
-[_line]
-Type=0x10108
-;GRMN_TYPE: //
-UseOrientation=Y
-LineWidth=4
-Xpm="0 0 1 0"
-"1 c #00FFFF"
-ExtendedLabels=N
-[end]
-
-
-[_line]
 Type=0x10109
 ;GRMN_TYPE: //
 UseOrientation=Y
@@ -3356,20 +2913,6 @@ Xpm="32 6 2  1"
 ;12345678901234567890123456789012
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
-CustomColor=No
-[end]
-
-
-[_line]
-Type=0x10d1f
-;GRMN_TYPE: //
-UseOrientation=N
-LineWidth=2
-Xpm="0 0 2 0"
-"1 c #000000"
-"2 c #FFFFFF"
-ExtendedLabels=Y
-FontStyle=SmallFont
 CustomColor=No
 [end]
 
@@ -3610,26 +3153,6 @@ CustomColor=No
 
 
 [_line]
-Type=0x10f06
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_39/Non-routable customizable line/Non NT, NT
-UseOrientation=Y
-Xpm="32 4 4  1"
-"! c #FFFFB4"
-"# c #101010"
-"3 c #000000"
-"4 c #FFFFFF"
-"################################"
-"!!!!!!!!!!!!!!!!!!!#!!!!!#!!!!!!"
-"!!!!!!!!!!!!!!!!!!!!!!#!!!!!!!!!"
-"################################"
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=Default
-CustomColor=No
-[end]
-
-
-[_line]
 Type=0x10f07
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_40/Non-routable customizable line/Non NT, NT
 UseOrientation=N
@@ -3844,8 +3367,6 @@ ExtendedLabels=N
 [end]
 
 
-
-
 [_line]
 Type=0x10f1b
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_60/Non-routable customizable line/Non NT, NT
@@ -3860,21 +3381,6 @@ String1=0x19,пристань
 String2=0x04,marina
 ExtendedLabels=N
 [end]
-[_line]
-Type=0x10f1c
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_61/Non-routable customizable line/Non NT, NT
-UseOrientation=Y
-LineWidth=3
-Xpm="0 0 2 0"
-"1 c #0065FF"
-"2 c #0000FF"
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#0065FF
-[end]
-
-
 [_line]
 Type=0x10f1d
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_62/Non-routable customizable line/Non NT, NT
@@ -3965,23 +3471,6 @@ Xpm="32 12 4  1"
 ;12345678901234567890123456789012
 String1=0x04,dam
 String2=0x19,дамба
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-[end]
-
-
-[_line]
-Type=0x12d07
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_1000/Non-routable customizable line/Non NT, NT
-UseOrientation=Y
-Xpm="32 1 4  1"
-"! c #009500"
-"  c none"
-"3 c #101010"
-"4 c none"
-"!       !       !       !       "
-;12345678901234567890123456789012
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -4460,52 +3949,6 @@ DayXpm="11 12 3 1"   Colormode=16
 "  !!!   !! "
 ;12345678901
 [end]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 [_point]
@@ -5323,8 +4766,6 @@ DayXpm="13 13 4 1"   Colormode=16
 [end]
 
 
-
-
 [_point]
 Type=0x02e
 SubType=0x02
@@ -5352,10 +4793,6 @@ DayXpm="11 11 4 1"   Colormode=16
 " !!    !!  "
 ;12345678901
 [end]
-
-
-
-
 
 
 [_point]
@@ -5387,20 +4824,6 @@ DayXpm="14 14 3 1"   Colormode=0
 "!!!!!!!!!!!!!!"
 ;12345678901234
 [end]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 [_point]
@@ -5629,8 +5052,6 @@ DayXpm="11 14 17 1"   Colormode=16
 [end]
 
 
-
-
 [_point]
 Type=0x02f
 SubType=0x08
@@ -5667,8 +5088,6 @@ DayXpm="16 16 8 1"   Colormode=16
 "  ===      ===  "
 ;1234567890123456
 [end]
-
-
 
 
 [_point]
@@ -5776,8 +5195,6 @@ DayXpm="16 16 14 1"   Colormode=16
 "  *54      *46  "
 ;1234567890123456
 [end]
-
-
 
 
 [_point]
@@ -5892,8 +5309,6 @@ DayXpm="14 14 3 1"   Colormode=16
 "    ######    "
 ;12345678901234
 [end]
-
-
 
 
 [_point]
@@ -6276,67 +5691,6 @@ DayXpm="14 13 3 1"   Colormode=16
 " !##########! "
 "  !!!!!!!!!!  "
 ;12345678901234
-[end]
-
-
-[_point]
-Type=0x045
-SubType=0x00
-;GRMN_TYPE: //
-String1=0x19,ресторан
-String2=0x04,restaurant
-ExtendedLabels=N
-DayXpm="16 16 3 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #000000"
-"  	c none"
-"                "
-"                "
-"   ! ! !   !    "
-"  !#!#!#! !#!   "
-"  !#!#!#!!##!   "
-"  !#!#!#!###!   "
-"  !#####!###!   "
-"   !###!!###!   "
-"    !#!  !##!   "
-"    !#!  !##!   "
-"   !###! !##!   "
-"   !###! !##!   "
-"   !###! !##!   "
-"    !!!   !!    "
-"                "
-"                "
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x046
-SubType=0x00
-;GRMN_TYPE: //
-String1=0x19,бар
-String2=0x1A,bar
-ExtendedLabels=N
-DayXpm="15 15 3 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #000000"
-"  	c none"
-"               "
-"   !!!  !!     "
-"  !###!!##!    "
-" !#!!!##!!#!   "
-" !#!!!!!!!#!   "
-"  !#######!!   "
-"  !#########!  "
-"  !#!#!#!####! "
-"  !#!#!#!# ##! "
-"  !#!#!#!# ##! "
-"  !#!#!#!####! "
-"  !#########!  "
-"  !#######!!   "
-"   !!!!!!!     "
-"               "
-;123456789012345
 [end]
 
 
@@ -8036,37 +7390,6 @@ DayXpm="8 7 3 1"   Colormode=16
 
 
 [_point]
-Type=0x10f
-SubType=0x0c
-;GRMN_TYPE: Business - Shopping/CONSUMER_ELECTRONICS_STORE(NT)/Consumer electronics store/NT
-String1=0x19,электроника
-String2=0x04,electronics
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-DayXpm="13 13 4 1"   Colormode=16
-"!	c #0000FF"
-"#	c #FFFFFF"
-"%	c #101010"
-"  	c none"
-"             "
-"         ##  "
-"  #######!!# "
-" #!!!!!!!!!# "
-" #!#!#!#!##  "
-" #!#!#!#!#   "
-" #!#!#!#!#   "
-" #!!!!!!!#   "
-" #######!#   "
-" #%%%%%%%%#  "
-" #%%####%%#  "
-"  ##    ##   "
-"             "
-;1234567890123
-[end]
-
-
-[_point]
 Type=0x115
 SubType=0x00
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1/User customizable point type/Non NT, NT
@@ -8248,8 +7571,6 @@ DayXpm="13 14 5 1"   Colormode=16
 [end]
 
 
-
-
 [_point]
 Type=0x115
 SubType=0x07
@@ -8272,8 +7593,6 @@ DayXpm="8 8 3 1"   Colormode=16
 "###  ###"
 ;12345678
 [end]
-
-
 
 
 [_point]
@@ -8351,8 +7670,6 @@ Xpm="16 16 3 1"
 String1=0x19,пещера
 String2=0x04,cave entrance
 [end]
-
-
 
 
 [_point]
@@ -8546,197 +7863,3 @@ DayXpm="8 25 5 1"   Colormode=16
 [end]
 
 
-[_point]
-Type=0x135
-SubType=0x1d
-;GRMN_TYPE: Business - Food and Drink Extended/RESTAURANT_PUNJABI(NT)/Punjabi cuisine/NT
-String1=0x19,шиномонтаж
-String2=0x04,tyre service
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-DayXpm="16 16 4 1"   Colormode=16
-"!	c #626262"
-"#	c #000000"
-"%	c #FFFFFF"
-"  	c none"
-"                "
-"  %%%%    %%%%  "
-"  %!!%    %!!%  "
-"%%%%!%    %!%%%%"
-"%#%#!%%  %%!#%#%"
-"%####!%%%%!####%"
-"%%%%##!%%!#%%%%%"
-"   %%#%%!#%%    "
-"    %%%!#%%     "
-"   %%%!#%!%%    "
-"%%%%!!#%##!%%   "
-"%!!!##%%%##!%%  "
-"%!####% %%##!%  "
-"%%###%%  %%##%  "
-" %%##%    %%%%  "
-"  %%%%          "
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x135
-SubType=0x1d
-;GRMN_TYPE: Business - Food and Drink Extended/RESTAURANT_PUNJABI(NT)/Punjabi cuisine/NT
-String1=0x19,С€РёРЅРѕРјРѕРЅС‚Р°Р¶
-String2=0x04,tyre service
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-DayXpm="16 16 4 1"   Colormode=16
-"!	c #626262"
-"#	c #000000"
-"%	c #FFFFFF"
-"  	c none"
-"                "
-"  %%%%    %%%%  "
-"  %!!%    %!!%  "
-"%%%%!%    %!%%%%"
-"%#%#!%%  %%!#%#%"
-"%####!%%%%!####%"
-"%%%%##!%%!#%%%%%"
-"   %%#%%!#%%    "
-"    %%%!#%%     "
-"   %%%!#%!%%    "
-"%%%%!!#%##!%%   "
-"%!!!##%%%##!%%  "
-"%!####% %%##!%  "
-"%%###%%  %%##%  "
-" %%##%    %%%%  "
-"  %%%%          "
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x135
-SubType=0x1e
-;GRMN_TYPE: Business - Food and Drink Extended/RESTAURANT_RAJASTHANI(NT)/Rajasthani cuisine/NT
-String1=0x19,Озон
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-DayXpm="20 20 4 1"   Colormode=16
-"!	c #055FFF"
-"#	c #FF0000"
-"%	c #FFFFFF"
-"  	c none"
-"   !!!!!!!!!!!!!!   "
-" !!!!!!!!!!!!!!!!!! "
-" !!!!!!!!!!!!!!!!!! "
-"!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!%%%%%!!!!!!"
-"!!!!!!%%%%%%%%%%%!!!"
-"!!!!!%%%%%%%%%%%%%!!"
-"!!!!%%%%%#####%%%%%!"
-"!!!%%%%#########%%%!"
-"!!%%%%##########%%%!"
-"!!%%%###########%%%!"
-"!!%%%###########%%%!"
-"!!%%%##########%%%#!"
-"!!%%%%#######%%%%%##"
-"!!!%%%%%%%%%%%%%%###"
-"!!!!%%%%%%%%%%%#####"
-"!!!!#%%%%%%%%#######"
-" !!!############### "
-" !!!############### "
-"   !#############   "
-;12345678901234567890
-[end]
-
-
-[_point]
-Type=0x135
-SubType=0x1e
-;GRMN_TYPE: Business - Food and Drink Extended/RESTAURANT_RAJASTHANI(NT)/Rajasthani cuisine/NT
-String1=0x19,РћР·РѕРЅ
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-DayXpm="20 20 4 1"   Colormode=16
-"!	c #055FFF"
-"#	c #FF0000"
-"%	c #FFFFFF"
-"  	c none"
-"   !!!!!!!!!!!!!!   "
-" !!!!!!!!!!!!!!!!!! "
-" !!!!!!!!!!!!!!!!!! "
-"!!!!!!!!!!!!!!!!!!!!"
-"!!!!!!!!!%%%%%!!!!!!"
-"!!!!!!%%%%%%%%%%%!!!"
-"!!!!!%%%%%%%%%%%%%!!"
-"!!!!%%%%%#####%%%%%!"
-"!!!%%%%#########%%%!"
-"!!%%%%##########%%%!"
-"!!%%%###########%%%!"
-"!!%%%###########%%%!"
-"!!%%%##########%%%#!"
-"!!%%%%#######%%%%%##"
-"!!!%%%%%%%%%%%%%%###"
-"!!!!%%%%%%%%%%%#####"
-"!!!!#%%%%%%%%#######"
-" !!!############### "
-" !!!############### "
-"   !#############   "
-;12345678901234567890
-[end]
-
-
-[_point]
-Type=0x137
-SubType=0x03
-;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
-String1=0x19,горячий источник
-String2=0x04,hot spring
-ExtendedLabels=N
-DayXpm="12 12 3 1"   Colormode=16
-"!	c #FF0000"
-"#	c #FFFFFF"
-"  	c none"
-"  ########  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  ###!!###  "
-"   #!!##    "
-"   ##!!##   "
-"    ##!!#   "
-"   ##!!##   "
-"   #!!##    "
-"   ####     "
-;123456789012
-[end]
-
-
-[_point]
-Type=0x137
-SubType=0x03
-;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
-String1=0x19,РіРѕСЂСЏС‡РёР№ РёСЃС‚РѕС‡РЅРёРє
-String2=0x04,hot spring
-ExtendedLabels=N
-DayXpm="12 12 3 1"   Colormode=16
-"!	c #FF0000"
-"#	c #FFFFFF"
-"  	c none"
-"  ########  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  ###!!###  "
-"   #!!##    "
-"   ##!!##   "
-"    ##!!#   "
-"   ##!!##   "
-"   #!!##    "
-"   ####     "
-;123456789012
-[end]
