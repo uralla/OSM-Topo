@@ -89,6 +89,8 @@ place=* {delete admin_level delete boundary}
 ###
 
 include 'inc/name';
+include 'inc/place_points';
+include 'inc/priority_points';
 
 ###place=city & population > 999999 & name=*  {set cityxx=yes} [0x0100 resolution 12 continue with_actions]
 ###place=city & population > 799999 & cityxx!=yes & name=*  {set cityxx=yes} [0x0200 resolution 14 continue with_actions]
