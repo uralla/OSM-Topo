@@ -38,8 +38,8 @@ landuse=quarry [0x0c resolution 21]
 #landuse=recreation_ground [0x50 resolution 21]
 # dedicate resolution 24 for building=* instead of related landuse=*
 landuse=industrial [0x0c resolution 21]
-# Overview residential fill first, then keep processing for the more detailed type below.
-landuse=residential [0x10 resolution 21 continue]
+# Overview residential fill is only for resolution 21; detailed residential starts at 22 below.
+landuse=residential [0x10 resolution 21-21 continue]
 
 landuse=village_green [0x17 resolution 21]
 
