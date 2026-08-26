@@ -215,9 +215,9 @@ man_made=wastewater_plant {name "очистные"} [0x11501 resolution 24]
 
 #railway=station [0x2f08 resolution 22]
 railway=station & !(layer<0) [0x2f17 resolution 24 continue]
-railway=station & !(layer<0) [0x11601 resolution 21]
+railway=station & !(layer<0) [0x11601 resolution 21-23]
 ( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x2f17 resolution 24 continue]
-( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19]
+( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19-23]
 ( public_transport=platform & railway=platform & mkgmap:area2poi!=true) & !(layer<0) [0x2f17 resolution 24]
 
 #( public_transport=platform & rail=yes ) | railway=halt [0x2f08 resolution 23]
