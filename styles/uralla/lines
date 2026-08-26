@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------
 # This is the default mkgmap style file for converting OSM ways
 # into Garmin lines.
-# Any line prefaced with # is a comment and will not be applied.
+# Any line prefaced with # will not be applied.
 # Each line is a rule, of the generalised format:
 #  OSM_tag(s)_to_match  [Garmin_type_code resolution]
 # See http://wiki.openstreetmap.org/wiki/Mkgmap/help/style_rules
@@ -265,8 +265,8 @@ highway=track [0x0a road_class=0 road_speed=1 resolution 24]
 
 # power lines
 power=line {name '${name} ${ref}' | '${name}' | '${ref}' }
-power=line & length()>500 | (power=line & man_made=cutline & length()>500) [0x29 resolution 21-23 continue]
-power=line | (power=line & man_made=cutline) | power=minor_line [0x29 resolution 24]
+power=line & length()>500 [0x29 resolution 21-23 continue]
+power=line | power=minor_line [0x29 resolution 24]
 man_made=cutline & power!=line [0x10f10 resolution 24]
 
 ## недейств. ж/д
@@ -337,8 +337,12 @@ piste:type=downhill & piste:difficulty=advanced & is_closed()=false & area!=yes 
 piste:type=skitour & is_closed()=false & area!=yes [0x10101 resolution 22]
 # nordic is consumed in inc/water_lines with the same 0x10101 type.
 
-natural=ridge & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]
-natural=ridge { name 'хр. ${name}' } [0x10e01 resolution 23 continue]
+# Named ridges get the compact cartographic prefix. Unnamed ridges keep the
+# same visual lines but no synthetic label.
+natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]
+natural=ridge & name!=* & length()>500 [0x10e02 resolution 18 continue]
+natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]
+natural=ridge & name!=* [0x10e01 resolution 23 continue]
 natural=cliff [0x10f17 resolution 23 continue]
 
 man_made=embankment [0x10d01 resolution 24]
