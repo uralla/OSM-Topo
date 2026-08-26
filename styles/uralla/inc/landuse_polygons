@@ -51,9 +51,6 @@ boundary=administrative & landuse=residential [0x03 resolution 22]
 # Торфоразработки
 landuse=peat_cutting [0x10102 resolution 19]
 
-man_made=wastewater_plant [0x1321d resolution 24]
-
-
 # защита от противоречивых тегов landuse= и natural= (пример - Рыбинка)
 landuse=reservoir & natural!=* [0x3f resolution 19]
 
