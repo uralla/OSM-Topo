@@ -104,3 +104,14 @@ natural=bare_rock | natural=blockfield { name 'камни' } [0x1170d resolution
 
 natural=scree & area_size()>30000 [0x11100 resolution 22-23 continue]
 natural=scree { name 'сыпуха' } [0x11100 resolution 24]
+
+
+# Settlement area hierarchy. These rules run before the generic place fallbacks
+# in polygons, so small settlements do not clutter overview levels.
+place=city [0x02 resolution 18]
+place=town [0x01 resolution 19]
+place=suburb [0x02 resolution 22]
+place=village [0x03 resolution 21]
+place=hamlet [0x03 resolution 22]
+place=isolated_dwelling [0x03 resolution 23]
+place=locality [0x03 resolution 24]
