@@ -8,19 +8,21 @@ TYP = REPO_ROOT / "styles" / "uralla.txt"
 WATER_POINTS = REPO_ROOT / "styles" / "uralla" / "inc" / "water_points"
 
 
-def _point_section(text: str, type_code: str) -> str:
+def _point_section(text: str, type_code: str, subtype_code: str) -> str:
     for match in re.finditer(r"\[_point\]\n(.*?)\n\[end\]", text, re.S | re.I):
         section = match.group(1)
-        if re.search(rf"^Type={re.escape(type_code)}$", section, re.M | re.I):
+        if not re.search(rf"^Type={re.escape(type_code)}$", section, re.M | re.I):
+            continue
+        if re.search(rf"^SubType={re.escape(subtype_code)}$", section, re.M | re.I):
             return section
-    raise AssertionError(f"point type {type_code} not found")
+    raise AssertionError(f"point type {type_code}/{subtype_code} not found")
 
 
 class WaterSourceTypTests(unittest.TestCase):
     def test_water_source_icons_have_no_persistent_map_label(self) -> None:
         text = TYP.read_text(encoding="cp1251")
-        for type_code in ("0x6511", "0x6512"):
-            section = _point_section(text, type_code)
+        for subtype_code in ("0x11", "0x12"):
+            section = _point_section(text, "0x065", subtype_code)
             self.assertRegex(section, r"(?mi)^FontStyle=NoLabel$")
 
     def test_style_keeps_only_information_labels(self) -> None:
