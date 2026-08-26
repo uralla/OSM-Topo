@@ -13,6 +13,9 @@ operator=${brand} { delete operator; }
 operator=${name}  { delete operator; }
 brand=${name}     { delete brand; }
 
+# Короткие подписи POI/объектов: иконка уже передаёт тип, но статусную часть имени сохраняем.
+name=* { set name='${name|subst:Беседка=>Бес.|subst:беседка=>бес.}' }
+
 ### fuel
 ### diesel=yes
 amenity=fuel & fuel:diesel=yes & fuel:lpg=yes 
@@ -53,8 +56,8 @@ amenity=fuel & fuel:HGV_diesel=yes
 amenity=fuel & fuel:diesel=no & fuel:lpg=yes 
 { name	'${name} (No Diesel, LPG)' |
  	'${operator} (No Diesel, LPG)' | 
-	'${brand} (No Diesel, LPG)' | 
-	'${ref} (No Diesel, LPG)' | 
+ 	'${brand} (No Diesel, LPG)' | 
+ 	'${ref} (No Diesel, LPG)' | 
 	'No Diesel, LPG'}
 
 amenity=fuel & fuel:diesel=no 
