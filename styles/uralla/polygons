@@ -4,8 +4,8 @@
 # Any line prefaced with # is a comment and will not be applied.
 # Each line is a rule, of the generalised format:
 #  OSM_tag(s)_to_match  [Garmin_type_code resolution]
-# See http://wiki.openstreetmap.org/wiki/Mkgmap/help/style_rules
-# and http://wiki.openstreetmap.org/wiki/Mkgmap/help/Custom_styles
+# See http://wiki.openstreetmap.org/wiki/mkgmap/help/style_rules
+# and http://wiki.openstreetmap.org/wiki/mkgmap/help/Custom_styles
 # for more information.
 
 addr:housenumber=* {set mkgmap:execute_finalize_rules=true}
@@ -33,15 +33,16 @@ man_made=geoglyph { name '${name}' | 'геоглиф' } [0x1181b resolution 24]
 # раньше широкого man_made=* & area=yes, иначе breakwater станет зданием 0x13.
 (man_made=pier | man_made=breakwater) [0x10f11 resolution 24]
 
-# здания с улицами, номерами домов и, если есть, с названиями
+# Для видимой подписи реальное имя важнее адреса. Адресные поля отдельно
+# формируются в inc/address и остаются доступны для поиска Garmin.
 tourism=attraction & natural=water {delete tourism}
 
-man_made=* & area=yes 			{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x13 resolution 24]
-(building=* | bridge=yes & area=yes) 	{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x13 resolution 24]
-tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x0d resolution 22]
+man_made=* & area=yes 			{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
+(building=* | bridge=yes & area=yes) 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
+tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x0d resolution 22]
 # Theme parks have an intentional earlier overview polygon than the generic tourism fallback.
 tourism=theme_park [0x0d resolution 21]
-tourism=* & building!=* & leisure!=* {name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x0d resolution 22]
+tourism=* & building!=* & leisure!=* {name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x0d resolution 22]
 
 # man_made can be used on areas or lines
 man_made=* & area!=no
@@ -49,7 +50,7 @@ man_made=* & area!=no
    & man_made!=cable_line & man_made!=cutline & man_made!=cutting
    & man_made!=levee & man_made!=trench
    & man_made!=groyne & man_made!=reinforced_slope)
-	{name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}'  }[0x13 resolution 24]
+	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' }[0x13 resolution 24]
 
 include 'inc/name';
 include 'inc/water_polygons';
@@ -99,12 +100,12 @@ leisure=park & mkgmap:area2poi!=true [0x17 resolution 23]
 leisure=pitch | leisure=horse_riding  [0x19 resolution 24]
 leisure=playground | leisure=recreation_ground [0x17 resolution 23]
 leisure=sports_centre { name '${name}' } [0x10612 resolution 23]
-leisure=stadium { name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x19 resolution 23]
+leisure=stadium { name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x19 resolution 23]
 # Legacy amenity=swimming_pool is normalized into the same polygon branch as
 # the current leisure=swimming_pool tagging. Point POIs remain intentionally hidden.
 amenity=swimming_pool & leisure!=* { add leisure=swimming_pool }
 leisure=swimming_pool { set sport=swimming }
-leisure=swimming_pool { name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x19 resolution 24]
+leisure=swimming_pool { name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x19 resolution 24]
 leisure=track { name '${name}' } [0x19 resolution 24]
 leisure=water_park [0x19 resolution 23]
 # Nature reserves intentionally lose polygon fill after resolution 22; private
