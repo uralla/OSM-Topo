@@ -87,6 +87,14 @@ class TypUsageTests(unittest.TestCase):
         ):
             self.assertIn(fragment, name)
 
+    def test_every_include_file_is_reachable_from_production_style(self) -> None:
+        reachable = set()
+        for entry in ("points", "lines", "polygons"):
+            reachable.update(closure(STYLE / entry))
+        actual = {path.resolve() for path in (STYLE / "inc").iterdir() if path.is_file()}
+        unreachable = sorted(str(path.relative_to(ROOT)) for path in actual - reachable)
+        self.assertEqual([], unreachable)
+
     def test_typ_has_no_graphic_sections_unused_by_production_style(self) -> None:
         expected = {
             "_point": used("points"),
@@ -100,6 +108,18 @@ class TypUsageTests(unittest.TestCase):
             if code not in expected[kind]:
                 leftovers.append(f"{kind}:0x{code:x}")
         self.assertEqual([], leftovers)
+
+    def test_typ_has_no_duplicate_graphic_sections(self) -> None:
+        seen = set()
+        duplicates = []
+        for match in SECTION_RE.finditer(typ_text()):
+            kind = match.group("kind").lower()
+            code = section_code(kind, match.group(0))
+            key = (kind, code)
+            if key in seen:
+                duplicates.append(f"{kind}:0x{code:x}")
+            seen.add(key)
+        self.assertEqual([], duplicates)
 
     def test_draw_order_contains_only_used_polygon_types(self) -> None:
         text = typ_text()
