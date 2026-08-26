@@ -107,7 +107,9 @@ leisure=swimming_pool { set sport=swimming }
 leisure=swimming_pool { name '${addr:street} ${addr:housenumber} (${name})' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | '${name}' } [0x19 resolution 24]
 leisure=track { name '${name}' } [0x19 resolution 24]
 leisure=water_park [0x19 resolution 23]
-leisure=* & access=private [0x19 resolution 23]
+# Nature reserves intentionally lose polygon fill after resolution 22; private
+# access must not reintroduce a generic leisure fill at close zoom.
+leisure=* & access=private & leisure!=nature_reserve & leisure!=natural_reserve [0x19 resolution 23]
 leisure=dog_park { name 'площадка для собак' } [0x20 resolution 24]
 leisure=bleachers [0x1331a resolution 24]
 
