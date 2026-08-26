@@ -84,3 +84,8 @@ barrier=bus_trap
 	| barrier=cycle_barrier 
 	| barrier=stile 
 	| barrier=kissing_gate { add foot=yes; add access=no }
+
+# surface=paved is a generic paved surface. At this point road classification is
+# already complete; normalize it only for the remaining finalize label rules so
+# it cannot be mislabeled as gravel.
+surface=paved { set surface=asphalt }
