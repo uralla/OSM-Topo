@@ -150,7 +150,8 @@ amenity=prison [0x3009 resolution 24]
 amenity=pub [0x2d02 resolution 24]
 amenity=public_building [0x3007 resolution 24]
 #amenity=recycling [0x2f15 resolution 24]
-amenity=recycling | amenity=waste_disposal { name '${name} (${operator})' | '${name}' | '${operator}' }
+amenity=recycling { name '${name}' | 'переработка' }
+amenity=waste_disposal { name '${name}' | 'утилизация' }
 amenity=recycling | amenity=waste_disposal | amenity=waste_basket [0x2f15 resolution 24]
 
 amenity=school [0x2c05 resolution 24]
@@ -258,8 +259,8 @@ tourism=attraction [0x2c04 resolution 24 continue]
 tourism=artwork [0x2c04 resolution 24]
 tourism=aquarium [0x2c07 resolution 24]
 
-tourism=camp_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x4a01 resolution 23-23 continue]
-tourism=camp_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x2b03 resolution 24] #
+tourism=camp_site {name '${name}' | 'кемпинг'} [0x4a01 resolution 23-23 continue]
+tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
 tourism=chalet [0x2b02 resolution 21]
 tourism=information {name '${name}' | 'информация'} [0x4c00 resolution 24]
 # tourism=lean_to replaces some uses of amenity=shelter
@@ -272,7 +273,7 @@ tourism=picnic_site & shelter!=yes [0x4a00 resolution 24]
 leisure=firepit | amenity=firepit | amenity=bbq | tourism=picnic_site & fireplace=yes {name '${name}'} [0x2b06 resolution 24]
 amenity=bench [0x4a01 resolution 24]
 tourism=theme_park [0x2c01 resolution 24]
-tourism=viewpoint {name '${name} - ${description}' | '${name}'} [0x2c04 resolution 23]
+tourism=viewpoint {name '${name}' | 'видовая точка'} [0x2c04 resolution 23]
 tourism=wine_cellar [0x2c0a resolution 24]
 tourism=zoo [0x2c07 resolution 24]
 
