@@ -118,6 +118,8 @@ def plan_product_build(
     bounds = data_path(host, _text(defaults.get("bounds"), "defaults.bounds"))
     style = repo_path(repo, _text(defaults.get("style"), "defaults.style"))
     typ = repo_path(repo, _text(defaults.get("typ"), "defaults.typ"))
+    typ_source = typ.with_suffix(".txt")
+    typ_prepare = repo_path(repo, "scripts/prepare-typ.py")
     mkgmap_args = repo_path(
         repo, _text(defaults.get("mkgmap_args"), "defaults.mkgmap_args")
     )
@@ -315,6 +317,22 @@ def plan_product_build(
         )
     )
 
+    prepared_typ = build_root / "prepare-typ" / "uralla.txt"
+    stages.append(
+        PipelineStage(
+            "prepare-typ",
+            (
+                sys.executable,
+                str(typ_prepare),
+                "--input",
+                str(typ_source),
+                "--output",
+                "uralla.txt",
+            ),
+            ("uralla.txt",),
+        )
+    )
+
     garmin = build_root / "mkgmap" / "garmin"
     mkgmap_command = [
         "java",
@@ -347,7 +365,7 @@ def plan_product_build(
             "-c",
             str(tiles / "template.args"),
             f"--description={_text(names.get('description'), f'products.{product_key}.names.description')} ({(build_date or date.today()).isoformat()})",
-            str(typ),
+            str(prepared_typ),
         )
     )
     gmapi = garmin / f"{family_name}.gmap"
