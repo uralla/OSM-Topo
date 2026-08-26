@@ -54,8 +54,8 @@ natural=peak & name='Ослянка'
 | natural=peak & name='Райиз' {add note=great-peak}
 
 note=great-peak {name "${name}"} [0x6616 resolution 16-22 continue] 
-
-note=great-peak {name "${name} (${ele} м)"} [0x6616 resolution 23-24]
+note=great-peak & ele=* {name "${name} (${ele} м)"} [0x6616 resolution 23-24]
+note=great-peak & ele!=* {name "${name}"} [0x6616 resolution 23-24]
 
 
 natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name}"} [0x6619 resolution 21-22 continue]
@@ -75,7 +75,8 @@ natural=peak & ele!=* & name!=* & note!=great-peak | natural=hill & ele!=* & nam
 
 
 natural=volcano & note!=great-peak {name "${name}"} [0x2c0c resolution 21-22 continue]
-natural=volcano & note!=great-peak {name "${name} (${ele} м)"} [0x2c0c resolution 23-24]
+natural=volcano & note!=great-peak & ele=* {name "${name} (${ele} м)"} [0x2c0c resolution 23-24]
+natural=volcano & note!=great-peak & ele!=* {name "${name}"} [0x2c0c resolution 23-24]
 
 
 
