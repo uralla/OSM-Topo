@@ -1,6 +1,6 @@
 """Machine-local workspace helpers.
 
-The Git checkout is source-only.  setup.sh creates a launcher in the selected
+The Git checkout is source-only. setup.sh creates a launcher in the selected
 workspace which knows the checkout, host config and virtualenv interpreter.
 """
 
@@ -11,12 +11,23 @@ from pathlib import Path
 import shlex
 
 
+def _absolute_without_resolving(path: Path) -> Path:
+    """Return an absolute path without dereferencing its final symlink.
+
+    Virtualenv ``bin/python`` is normally a symlink to the base interpreter.
+    Resolving that symlink would make the generated launcher bypass the venv and
+    lose installed project dependencies.
+    """
+
+    return Path(os.path.abspath(os.fspath(path)))
+
+
 def launcher_text(repo_root: Path, host_config: Path, python: Path) -> str:
     """Return a self-contained shell launcher for one configured build machine."""
 
     repo = shlex.quote(str(repo_root.resolve()))
     host = shlex.quote(str(host_config.resolve()))
-    interpreter = shlex.quote(str(python.resolve()))
+    interpreter = shlex.quote(str(_absolute_without_resolving(python)))
     return f"""#!/usr/bin/env bash
 set -Eeuo pipefail
 
@@ -25,23 +36,23 @@ HOST_CONFIG={host}
 PYTHON={interpreter}
 
 if [[ ! -d \"$REPO_ROOT\" ]]; then
-  printf '[uralla] ERROR: repository not found: %s\\n' \"$REPO_ROOT\" >&2
-  printf '[uralla] Run setup.sh again from the current repository checkout.\\n' >&2
+  printf '[start] ERROR: repository not found: %s\\n' \"$REPO_ROOT\" >&2
+  printf '[start] Run setup.sh again from the current repository checkout.\\n' >&2
   exit 1
 fi
 if [[ ! -f \"$HOST_CONFIG\" ]]; then
-  printf '[uralla] ERROR: host config not found: %s\\n' \"$HOST_CONFIG\" >&2
-  printf '[uralla] Run setup.sh again to recreate the workspace configuration.\\n' >&2
+  printf '[start] ERROR: host config not found: %s\\n' \"$HOST_CONFIG\" >&2
+  printf '[start] Run setup.sh again to recreate the workspace configuration.\\n' >&2
   exit 1
 fi
 if [[ ! -x \"$PYTHON\" ]]; then
-  printf '[uralla] ERROR: configured Python is not available: %s\\n' \"$PYTHON\" >&2
-  printf '[uralla] Run setup.sh again to recreate the virtual environment.\\n' >&2
+  printf '[start] ERROR: configured Python is not available: %s\\n' \"$PYTHON\" >&2
+  printf '[start] Run setup.sh again to recreate the virtual environment.\\n' >&2
   exit 1
 fi
 
 # Commands are launched from the repository internally so all project-relative
-# defaults (manifest, tools lock, styles, polygons) continue to work.  The user
+# defaults (manifest, tools lock, styles, polygons) continue to work. The user
 # can stay in the machine-local workspace for normal operation.
 cd \"$REPO_ROOT\"
 exec \"$PYTHON\" -m uralla_build --host \"$HOST_CONFIG\" \"$@\"
