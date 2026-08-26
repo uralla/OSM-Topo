@@ -64,7 +64,6 @@ aeroway=helipad [0x0e resolution 20]
 amenity=kindergarten & building!=* [0x0a resolution 22 continue]
 amenity=cafe & building!=* | amenity=fast_food & building!=* | amenity=restaurant & building!=* | amenity=food_court & building!=* [0x08 resolution 22]
 amenity=college & building!=* [0x0a resolution 22]
-amenity=grave_yard [0x1a resolution 22]
 parking=underground | parking=multi-storey [0x06 resolution 24]
 amenity=parking | parking=surface [0x05 resolution 24]
 amenity=prison & building!=* [0x04 resolution 22]
@@ -183,9 +182,6 @@ historic=ruins & building=yes {name '${addr:street} ${addr:housenumber} (${name}
 ###tourism=* & area!=no & waterway!=* & building!=* [0x1f resolution 24]
 
 tourism=theme_park [0x0d resolution 21]
-
-# Торфоразработки
-landuse=peat_cutting [0x10102 resolution 19]
 
 
 
