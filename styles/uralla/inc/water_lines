@@ -1,3 +1,19 @@
+# Cross-cutting agreed line rules run here because this include is evaluated
+# before the broad generic line fallbacks in lines.
+
+# Marked trail relation names are a fallback only for unnamed member ways.
+mkgmap:trail_name=* & name!=* { set name='${mkgmap:trail_name}' }
+
+# Modern protected-area tagging uses the same boundary line as nature reserves.
+(boundary=protected_area | boundary=national_park) { name '${name}' } [0x12d1b resolution 23]
+
+# Underground subway is intentionally hidden; above-ground subway remains visible.
+railway=subway & tunnel=yes { delete railway }
+
+# Parking aisles are intentionally omitted from the visual map and must not fall
+# through to the generic highway=service rule.
+highway=service & service=parking_aisle { delete highway }
+
 # natural=coastline [0x15 resolution 16]
 
 # route=ferry {set mkgmap:numbers = false }
@@ -16,15 +32,13 @@ man_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=ye
 uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
 
 ### роутинг по рекам - линия с синими стрелками направления течения на 0-м слое
-(waterway=canal 
-| waterway=river  
-| waterway=rapid 	| waterway=rapids | whitewater=rapid | whitewater=rapids 
-| waterway=waterfall 
-| waterway=drain  
+(waterway=canal
+| waterway=river
+| waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
+| waterway=drain
 | waterway=yes
 | waterway=stream) & tunnel!=* {add access=no; add taxi=yes} [0x0f road_class=0 road_speed=0 resolution 24 continue]
 ###
-
 
 # Статический справочник опорных рек. Ранг выставляет semantic preprocessor.
 # continue нужен, чтобы на близких масштабах река также дошла до обычных waterway=river правил ниже.
@@ -55,6 +69,7 @@ waterway=river & length()>500 | waterway=canal & length()>500 [0x01f resolution 
 waterway=river & length()<=500 | waterway=canal & length()<=500 [0x01f resolution 23]
 
 waterway=drain [0x10109 resolution 24 continue]
+# [CUSTOM/АВТОРСКОЕ] ditch is visible only at the closest level.
 waterway=ditch [0x10109 resolution 24 continue]
 waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
 
@@ -63,29 +78,13 @@ waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
 (waterway=stream | waterway=drain) & intermittent=yes [0x10f1d resolution 23-23 continue]
 (waterway=stream | waterway=drain) & intermittent=yes [0x10f1e resolution 24]
 
-
-#waterway=river { name 'р.${name}' } [0x01f resolution 19 continue]
-# waterway=river { name 'р.${name}' } [0x18 resolution 20]
-
-waterway=waterfall [0x1001e resolution 18]
-# waterway=stream | waterway=drain { name 'руч.${name}' } [0x18 resolution 20]
-
-
+# Waterfalls are POIs; no additional waterfall line is emitted.
 
 ### пороги
 waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
-	{name '${whitewater:section_name}, пор. ${whitewater:section_grade}' | '${whitewater:section_name}, пор. ${whitewater:rapid_grade}' |
-	'${whitewater:rapid_name}, пор. ${whitewater:section_grade}' | '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}'} [0x1001f resolution 18 continue]
-
-
+    {name '${whitewater:section_name}, пор. ${whitewater:section_grade}' | '${whitewater:section_name}, пор. ${whitewater:rapid_grade}' |
+    '${whitewater:rapid_name}, пор. ${whitewater:section_grade}' | '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}'} [0x1001f resolution 18 continue]
 
 waterway=drain & length()>500 [0x18 resolution 21-23 continue]
-waterway=ditch [0x18 resolution 21-23 continue]
-
-
 waterway=stream & length()>500 [0x18 resolution 21-23 continue]
 waterway=stream [0x19 resolution 24 continue]
-
-
-
-
