@@ -7,6 +7,7 @@ import hashlib
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
@@ -63,7 +64,7 @@ def load_tools_lock(path: str | Path) -> dict[str, Any]:
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
-        for block in iter(lambda: source.read(1024 * 1024), b""):
+        for block in iter(lambda: source.read(1024 * 1024, ), b""):
             digest.update(block)
     return digest.hexdigest()
 
@@ -77,12 +78,35 @@ def platform_key(system: str | None = None) -> str:
     raise ManifestError(f"unsupported bootstrap platform: {current}")
 
 
+def _detected_java_major(java: str) -> int | None:
+    """Return the runnable Java major version, not merely the presence of a launcher."""
+
+    try:
+        result = subprocess.run(
+            [java, "-version"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    output = (result.stderr or result.stdout).strip().splitlines()
+    if not output:
+        return None
+    match = re.search(r'"(?:1\.)?([0-9]+)', output[0])
+    return int(match.group(1)) if match else None
+
+
 def build_bootstrap_plan(
     host: HostConfig,
     lock: dict[str, Any],
     *,
     system: str | None = None,
     which: Callable[[str], str | None] = shutil.which,
+    java_major: Callable[[str], int | None] = _detected_java_major,
 ) -> list[BootstrapAction]:
     """Return required actions without changing the machine."""
 
@@ -90,7 +114,19 @@ def build_bootstrap_plan(
     packages = lock.get("system_packages", {}).get(key)
     if not isinstance(packages, dict):
         raise ManifestError(f"system_packages.{key} must be a mapping")
-    missing_keys = [name for name, command in COMMAND_KEYS.items() if which(command) is None]
+
+    minimum_java = int(lock.get("java", {}).get("minimum_major", 17))
+    missing_keys: list[str] = []
+    for name, command in COMMAND_KEYS.items():
+        resolved = which(command)
+        if resolved is None:
+            missing_keys.append(name)
+            continue
+        if name == "java":
+            major = java_major(resolved)
+            if major is None or major < minimum_java:
+                missing_keys.append(name)
+
     missing_packages = sorted({str(packages[name]) for name in missing_keys if name in packages})
     actions: list[BootstrapAction] = []
     if missing_packages:
