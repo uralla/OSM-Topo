@@ -3773,7 +3773,7 @@ SubType=0x15
 String1=0x19,ж/д переезд
 String2=0x04,crossing
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="16 16 3 1"   Colormode=16
 "!	c #FF0000"
@@ -3806,7 +3806,7 @@ SubType=0x16
 String1=0x19,светофор
 String2=0x04,traffic signals
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="8 18 34 2"   Colormode=16
 "!!	c #FFFFFF"
@@ -6352,7 +6352,7 @@ SubType=0x11
 String1=0x19,источник
 String2=0x04,spring
 ExtendedLabels=Y
-FontStyle=Default
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="12 19 4 1"   Colormode=16
 "!	c #FFFFFF"
@@ -6388,7 +6388,7 @@ SubType=0x12
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/STREAM/Stream/Non NT, NT
 String1=0x19,пересыхающий источник
 ExtendedLabels=Y
-FontStyle=Default
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="12 19 3 1"   Colormode=16
 "!	c #FFFFFF"
@@ -7697,7 +7697,7 @@ SubType=0x1d
 String1=0x19,тупик
 String2=0x04,dead end
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="5 5 2 1"   Colormode=16
 "!	c #101010"
@@ -7718,7 +7718,7 @@ SubType=0x1e
 String1=0x19,пикет
 String2=0x04,picket
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="6 11 3 1"   Colormode=16
 "!	c #101010"
@@ -7746,7 +7746,7 @@ SubType=0x1f
 String1=0x19,семафор
 String2=0x04,semaphore
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NoLabel
 CustomColor=No
 DayXpm="8 25 5 1"   Colormode=16
 "!	c #101010"
