@@ -25,7 +25,7 @@ jobs:
           path = Path('styles/uralla.txt')
           raw = path.read_bytes()
           text = raw.decode('cp1251')
-          targets = {'0x6511', '0x6512'}
+          targets = {('0x065', '0x11'), ('0x065', '0x12')}
           found = set()
 
           block_re = re.compile(
@@ -37,11 +37,17 @@ jobs:
               type_match = re.search(
                   r'(?mi)^Type=(0x[0-9a-f]+)(?=\r?$|\r)', block
               )
-              if not type_match or type_match.group(1).lower() not in targets:
+              subtype_match = re.search(
+                  r'(?mi)^SubType=(0x[0-9a-f]+)(?=\r?$|\r)', block
+              )
+              if not type_match or not subtype_match:
                   return block
 
-              type_code = type_match.group(1).lower()
-              found.add(type_code)
+              key = (type_match.group(1).lower(), subtype_match.group(1).lower())
+              if key not in targets:
+                  return block
+
+              found.add(key)
               newline = '\r\n' if '\r\n' in block else ('\r' if '\r' in block else '\n')
 
               if re.search(r'(?mi)^FontStyle=.*?(?=\r?$|\r)', block):
@@ -54,7 +60,7 @@ jobs:
 
               end_pos = block.lower().rfind('[end]')
               if end_pos < 0:
-                  raise SystemExit(f'malformed point block for {type_code}')
+                  raise SystemExit(f'malformed point block for {key}')
               return block[:end_pos] + f'FontStyle=NoLabel{newline}' + block[end_pos:]
 
           updated = block_re.sub(patch, text)
