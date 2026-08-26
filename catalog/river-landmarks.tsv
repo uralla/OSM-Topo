@@ -18,11 +18,11 @@
 1	3150	Амур	Amur|黑龙江|Хэйлунцзян	legacy+length
 2	2989	Нижняя Тунгуска	Nizhnyaya Tunguska|Lower Tunguska	length
 2	2900	Ганг	Ganges|Ganga|Ganges River	length
+2	2860	Дунай	Danube|Donau|Dunav|Dunărea	length
 2	2840	Ярлунг-Цангпо	Yarlung Tsangpo|Yarlung Zangbo|Yarlung Zangbo Jiang	length
 2	2800	Брахмапутра	Brahmaputra|Brahmaputra River	length
 2	2800	Салуин	Salween|Salween River|Thanlwin	length
 2	2800	Евфрат	Euphrates|Fırat|Firat	length
-2	2860	Дунай	Danube|Donau|Dunav|Dunărea	length
 2	2650	Вилюй	Vilyuy	length
 2	2500	Амударья	Amu Darya|Amudarya|Oxus	length
 2	2450	Ишим	Ishim|Есіл|Esil	length
@@ -53,16 +53,75 @@
 2	1532	Ханьшуй	Han River|Han Jiang|汉江	length
 2	1520	Алазея	Alazeya	length
 2	1500	Ока	Oka	legacy+length
+3	1465	Годавари	Godavari|Godavari River	length
+3	1462	Амга	Amga	length
+3	1439	Или	Ili|Іле	length
+3	1436	Олёкма	Olyokma|Olekma|Олекма	length
 3	1430	Белая	Belaya|Ағиҙел|Агидель	legacy+length
+3	1401	Таз	Taz|Taz River	length
+3	1400	Сатледж	Sutlej|Satluj	length
+3	1390	Ляохэ	Liao River|Liao He|辽河	length
+3	1376	Ямуна	Yamuna|Jumna	length
+3	1364	Кура	Kura|Mtkvari|მტკვარი|Kür	length
 3	1364	Кызылырмак	Kızılırmak|Kizilirmak	length
+3	1352	Днестр	Dniester|Nistru	length
+3	1329	Хайхэ	Hai River|Hai He|海河	length
+3	1321	Тарим	Tarim|Tarim River|塔里木河	length
+3	1300	Нармада	Narmada|Narmada River|Rewa	length
+3	1290	Кришна	Krishna|Krishna River	length
+3	1236	Рейн	Rhine|Rhein|Rhin|Rijn	length
+3	1210	Зея	Zeya|Zeya River	length
+3	1207	Чиндуин	Chindwin|Chindwin River	length
+3	1203	Чуна	Chuna|Uda|Уда	length
+3	1200	Красная река	Red River|Sông Hồng|Song Hong|Yuan Jiang	length
+3	1190	Цзялинцзян	Jialing River|Jialing|嘉陵江	length
 3	1186	Чу	Chu|Шу	length
+3	1181	Марха	Markha	length
+3	1170	Нэньцзян	Nen River|Nenjiang|嫩江	length
+3	1159	Демьянка	Demyanka	length
+3	1150	Анадырь	Anadyr|Anadyr River	length
+3	1150	Теджен	Hari|Hari River|Hari Rud|Tejen	length
+3	1150	Гильменд	Helmand|Helmand River|Hilmand	length
+3	1143	Капуас	Kapuas|Kapuas River	length
+3	1130	Десна	Desna|Desna River	length
 3	1124	Керулен	Kherlen|Хэрлэн	length
 3	1124	Орхон	Orkhon|Орхон гол	length
+3	1114	Омолон	Omolon	length
+3	1100	Хуайхэ	Huai River|Huai He|淮河	length
+3	1100	Уцзян	Wu River|Wu Jiang|乌江	length
+3	1097	Конда	Konda	length
+3	1092	Тюнг	Tyung	length
+3	1091	Эльба	Elbe|Labe	length
+3	1090	Барито	Barito|Barito River	length
+3	1082	Васюган	Vasyugan	length
+3	1080	Гхагхара	Ghaghara|Karnali	length
 3	1072	Аракс	Aras|Araz|Araks|Արաքս	length
+3	1063	Большой Юган	Bolshoy Yugan|Bolshoi Yugan	length
+3	1053	Мая	Maya|Maya River	length
+3	1053	Северский Донец	Seversky Donets|Siverskyi Donets|Donets	length
+3	1047	Висла	Vistula|Wisła|Wisla	length
+3	1038	Тахо	Tagus|Tajo|Tejo	length
+3	1030	Тура	Tura|Tura River	length
+3	1024	Чамбал	Chambal|Chambal River	length
 3	1020	Западная Двина	Daugava|Даўгава	length
+3	1012	Бирюса	Biryusa	length
+3	1012	Луара	Loire	length
 3	992	Селенга	Selenga|Сэлэнгэ	length
+3	966	Тиса	Tisza|Tisa	length
+3	960	Эбро	Ebro	length
+3	953	Прут	Prut|Pruth	length
+3	937	Неман	Neman|Nemunas|Нёман	length
+3	933	Сава	Sava	length
+3	925	Маас	Meuse|Maas	length
 3	906	Кубань	Kuban	legacy+length
+3	897	Дуэро	Douro|Duero	length
 3	857	Мезень	Mezen	length
+3	854	Одра	Oder|Odra	length
+3	829	Гвадиана	Guadiana	length
 3	824	Сакарья	Sakarya	length
-3	815	Кура	Kura|Mtkvari|მტკვარი|Kür	length
+3	815	Рона	Rhône|Rhone	length
+3	806	Южный Буг	Southern Bug|Pivdennyi Buh|Південний Буг	length
 3	802	Кума	Kuma	length
+3	795	Варта	Warta	length
+3	776	Сена	Seine	length
+3	761	Муреш	Mureș|Mures|Maros	length
