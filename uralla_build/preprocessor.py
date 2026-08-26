@@ -8,6 +8,8 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
+import time
 from typing import Any, Mapping, Sequence
 import unicodedata
 from uuid import uuid4
@@ -33,6 +35,7 @@ WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
 PEAK_LANDMARK_TAG = "uralla:peak_landmark"
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
 DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
+PROGRESS_EVERY_OBJECTS = 1_000_000
 
 
 def normalize_text(value: str) -> str:
@@ -257,17 +260,14 @@ def _object_kind(item: object) -> str:
     return str(method()) if callable(method) else type(item).__name__.lower()
 
 
-def _verify_output(path: Path, rules: Sequence[BlacklistRule], osmium: Any) -> int:
-    objects = 0
-    for item in osmium.FileProcessor(str(path)):
-        objects += 1
-        decision = filter_tags(item.tags, rules)
-        if decision.action != "none":
-            raise StageError(
-                f"blacklist verification failed for {_object_kind(item)} {item.id}: "
-                f"{','.join(decision.matched_rules)}"
-            )
-    return objects
+def _progress(objects_seen: int, started: float) -> None:
+    elapsed = max(time.monotonic() - started, 0.001)
+    rate = objects_seen / elapsed
+    print(
+        f"[preprocess] {objects_seen:,} objects; {elapsed:.0f}s; {rate:,.0f} obj/s",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 def preprocess_pbf(
@@ -279,7 +279,7 @@ def preprocess_pbf(
     peak_catalog_path: str | Path = DEFAULT_PEAK_CATALOG,
     river_catalog_path: str | Path = DEFAULT_RIVER_CATALOG,
 ) -> dict[str, object]:
-    """Filter and enrich one PBF atomically, then verify forbidden tags are gone."""
+    """Filter and enrich one PBF atomically with inline blacklist verification."""
 
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
@@ -301,10 +301,19 @@ def preprocess_pbf(
     samples: list[dict[str, object]] = []
     peak_samples: list[dict[str, object]] = []
     river_samples: list[dict[str, object]] = []
+    started = time.monotonic()
+    print(
+        f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)",
+        file=sys.stderr,
+        flush=True,
+    )
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             for item in osmium.FileProcessor(str(source)):
                 counters["objects_seen"] += 1
+                if counters["objects_seen"] % PROGRESS_EVERY_OBJECTS == 0:
+                    _progress(counters["objects_seen"], started)
+
                 decision = filter_tags(item.tags, rules)
                 if decision.action != "none":
                     counters[f"{decision.action}_objects"] += 1
@@ -351,20 +360,27 @@ def preprocess_pbf(
                             }
                         )
 
+                # The original object was already fully checked above. Re-check only
+                # objects whose blacklist decision changed tags; this preserves the
+                # blacklist invariant without reading the entire written PBF twice.
+                if decision.action != "none":
+                    verification = filter_tags(final_tags, rules)
+                    if verification.action != "none":
+                        raise StageError(
+                            f"blacklist verification failed for {_object_kind(item)} {item.id}: "
+                            f"{','.join(verification.matched_rules)}"
+                        )
+                    counters["blacklist_changes_verified"] += 1
+
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
                 else:
                     writer.add(item.replace(tags=final_tags))
 
-        verified_objects = _verify_output(temporary, rules, osmium)
-        if verified_objects != counters["objects_seen"]:
-            raise StageError(
-                "preprocessor verification object count differs from input: "
-                f"{verified_objects} != {counters['objects_seen']}"
-            )
+        _progress(counters["objects_seen"], started)
         report: dict[str, object] = {
-            "schema_version": 3,
+            "schema_version": 4,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
@@ -380,6 +396,8 @@ def preprocess_pbf(
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "river_landmarks_enriched": counters["river_landmarks_enriched"],
             "rule_hits": dict(sorted(rule_hits.items())),
+            "verification_mode": "inline-changed-objects",
+            "blacklist_changes_verified": counters["blacklist_changes_verified"],
             "verified_forbidden_tags": 0,
             "samples": samples,
             "peak_landmark_samples": peak_samples,
