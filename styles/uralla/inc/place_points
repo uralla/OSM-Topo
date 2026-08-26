@@ -1,0 +1,18 @@
+# Population-aware settlement hierarchy.
+# This include is evaluated before the generic place fallbacks in points.
+# A matching Garmin type ends processing for the place node, so each settlement
+# receives exactly one significance class here.
+
+# Cities: large regional centres should remain visible on distant zooms.
+place=city & mkgmap:area2poi!=true & population > 999999 [0x0100 resolution 12]
+place=city & mkgmap:area2poi!=true & population > 499999 [0x0200 resolution 14]
+place=city & mkgmap:area2poi!=true & population > 249999 [0x0400 resolution 15]
+place=city & mkgmap:area2poi!=true & population > 99999  [0x0600 resolution 16]
+place=city & mkgmap:area2poi!=true & population > 49999  [0x0700 resolution 17]
+place=city & mkgmap:area2poi!=true & population > 0      [0x0800 resolution 18]
+
+# Towns: keep large towns visible earlier, small towns closer in.
+place=town & mkgmap:area2poi!=true & population > 49999 [0x0700 resolution 17]
+place=town & mkgmap:area2poi!=true & population > 19999 [0x0800 resolution 18]
+place=town & mkgmap:area2poi!=true & population > 4999  [0x0900 resolution 19]
+place=town & mkgmap:area2poi!=true & population > 0     [0x0a00 resolution 20]
