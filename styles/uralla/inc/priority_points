@@ -31,11 +31,20 @@ amenity=shelter [0x2b05 resolution 24]
 # Generic point buildings are buildings, not huts.
 (building=yes | building=true) & mkgmap:area2poi!=true [0x6402 resolution 24]
 
+# Confirmed empty-name fallbacks.
+historic=memorial { name '${inscription}' | 'памятник' } [0x6403 resolution 24]
+amenity=signpost { name '${label}' | 'указатель' } [0x5a00 resolution 24]
+
 # Agreed removals from point display. Polygon/line representations are unaffected.
 tourism=caravan_site { delete tourism }
 (highway=speed_bump | traffic_calming=bump | traffic_calming=hump) { delete highway; delete traffic_calming }
 man_made=utility_pole { delete man_made }
 (leisure=playground | leisure=sports_centre | leisure=pitch | leisure=swimming_pool | leisure=fitness_centre) { delete leisure }
+
+# Protected areas are represented by area fill + boundary, not a centre POI.
+leisure=nature_reserve { delete leisure }
+boundary=protected_area { delete boundary }
+boundary=national_park { delete boundary }
 
 # Unnamed trees/shrubs are map clutter; named ones continue to the existing rules.
 natural=tree & name!=* { delete natural }
