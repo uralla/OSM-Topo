@@ -1,0 +1,126 @@
+name: Apply breakwater rendering like pier once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-breakwater-as-pier-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply breakwater style rules
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          water_lines = Path('styles/uralla/inc/water_lines')
+          text = water_lines.read_text(encoding='utf-8')
+          old = """# Пирсы: закрытые way помечаем как polygon и убираем man_made,\n# чтобы старое общее line-правило ниже их не нарисовало. Polygon-style\n# восстановит отображение по uralla:pier_polygon.\nman_made=pier & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }\n\n# Открытый пирс рисуем один раз как линию, затем убираем только man_made=pier,\n# чтобы старое общее правило lines не наложило второй pier, а highway/footway\n# и другие независимые теги продолжили обрабатываться основным style.\nman_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]\nuralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}\n"""
+          new = """# Пирсы и волнорезы используют один визуальный класс. Закрытые way\n# помечаем как polygon и убираем man_made, чтобы line-style не дал дубль.\n# Polygon-style восстановит отображение по uralla:pier_polygon.\n(man_made=pier | man_made=breakwater) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }\n\n# Открытые объекты рисуем один раз той же линией 0x10f07. Пирс сохраняет\n# прежнюю подпись; волнорез использует собственное имя или понятный fallback.\nman_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]\nman_made=breakwater & is_closed()=false & area!=yes { name '${name}' | 'волнорез'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]\nuralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}\n"""
+          if old not in text:
+              raise SystemExit('expected pier block not found in water_lines')
+          water_lines.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          polygons = Path('styles/uralla/polygons')
+          text = polygons.read_text(encoding='utf-8')
+          old = "# Пирсы \nman_made=pier  [0x10f11 resolution 24]"
+          new = "# Пирсы и волнорезы: один и тот же серый polygon. Это правило должно быть\n# раньше широкого man_made=* & area=yes, иначе breakwater станет зданием 0x13.\n(man_made=pier | man_made=breakwater) [0x10f11 resolution 24]"
+          if old not in text:
+              raise SystemExit('expected pier polygon rule not found')
+          polygons.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          water_polygons = Path('styles/uralla/inc/water_polygons')
+          text = water_polygons.read_text(encoding='utf-8')
+          text = text.replace(
+              '# Закрытые pier приходят из line-style с этим внутренним маркером.\n# Отрисовываем их только как polygon, без дополнительной линии.',
+              '# Закрытые pier/breakwater приходят из line-style с этим внутренним маркером.\n# Отрисовываем их только как polygon, без дополнительной линии.',
+              1,
+          )
+          water_polygons.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Add regression test
+        run: |
+          cat > tests/test_water_structures_style.py <<'PY'
+          from pathlib import Path
+          import unittest
+
+
+          REPO_ROOT = Path(__file__).resolve().parents[1]
+          WATER_LINES = REPO_ROOT / "styles" / "uralla" / "inc" / "water_lines"
+          WATER_POLYGONS = REPO_ROOT / "styles" / "uralla" / "inc" / "water_polygons"
+          POLYGONS = REPO_ROOT / "styles" / "uralla" / "polygons"
+
+
+          class WaterStructuresStyleTests(unittest.TestCase):
+              def test_closed_breakwater_uses_pier_polygon_class(self) -> None:
+                  lines = WATER_LINES.read_text(encoding="utf-8")
+                  polygons = POLYGONS.read_text(encoding="utf-8")
+                  self.assertIn(
+                      "(man_made=pier | man_made=breakwater) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }",
+                      lines,
+                  )
+                  self.assertIn(
+                      "(man_made=pier | man_made=breakwater) [0x10f11 resolution 24]",
+                      polygons,
+                  )
+                  self.assertLess(
+                      polygons.index("(man_made=pier | man_made=breakwater) [0x10f11 resolution 24]"),
+                      polygons.index("man_made=* & area=yes"),
+                  )
+
+              def test_open_breakwater_uses_pier_line_class(self) -> None:
+                  lines = WATER_LINES.read_text(encoding="utf-8")
+                  self.assertIn(
+                      "man_made=breakwater & is_closed()=false & area!=yes { name '${name}' | 'волнорез'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]",
+                      lines,
+                  )
+
+              def test_pier_polygon_marker_is_still_consumed(self) -> None:
+                  self.assertIn(
+                      "uralla:pier_polygon=yes [0x10f11 resolution 24]",
+                      WATER_POLYGONS.read_text(encoding="utf-8"),
+                  )
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Check uralla style
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/check-styles.log
+          grep -q 'finished check-styles' /tmp/check-styles.log
+          if grep -q '^Warning:' /tmp/check-styles.log; then
+            echo 'mkgmap style warnings found'
+            exit 1
+          fi
+
+      - name: Run regression tests
+        run: |
+          python -m pip install -e . pytest
+          pytest -q tests/test_water_structures_style.py
+          pytest -q
+
+      - name: Commit style sources and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-breakwater-as-pier-once.yml
+          git add styles/uralla/inc/water_lines styles/uralla/inc/water_polygons styles/uralla/polygons tests/test_water_structures_style.py
+          git commit -m "Render breakwaters like piers"
+          git push origin HEAD:main
