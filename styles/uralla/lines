@@ -17,9 +17,6 @@ include 'inc/water_lines';
 # [CUSTOM/АВТОРСКОЕ] One tunnel overlay type for all surface road/rail classes.
 highway=* & tunnel=yes | railway=* & tunnel=yes [0x10e04 resolution 24 continue]
 
-# Legacy pier rule is kept as a fallback; inc/water_lines consumes normal pier tags first.
-man_made=pier { name 'пирс' } [0x10f07 resolution 24 continue]
-
 highway=escape { set highway=service }
 highway=unsurfaced { set highway=track }
 
@@ -277,13 +274,10 @@ railway=abandoned | (railway=* & abandoned=yes) | railway=disused
 { name '${name} (недейств. ж/д)' | 'недейств. ж/д' }
 
 ## недейств. ужд
-railway=narrow_gauge & disused=yes { name '${name} (недейств. ужд)' | 'недейств. ужд' }
-
-## узкоколейка
-railway=narrow_gauge { name '${name} (ужд)' | 'ужд' }
+railway=narrow_gauge & (disused=yes | abandoned=yes) { name '${name} (недейств. ужд)' | 'недейств. ужд' }
 
 ## Разделяем ЖД с трамваями и выносим их в кастомные типы
-railway=abandoned | railway=disused | railway=* & disused=yes [0x1011a resolution 23-24]
+railway=abandoned | railway=disused | railway=* & disused=yes | railway=* & abandoned=yes [0x1011a resolution 23-24]
 railway=light_rail & !(layer<0) [0x10f14 resolution 22-24]
 # narrow_gauge is consumed in inc/water_lines and uses the tram type 0x10f14.
 
@@ -327,7 +321,7 @@ barrier=retaining_wall [0x10d02 resolution 24]
 barrier=fence | barrier=hedge | barrier=wall [0x12d1a resolution 24 continue]
 
 ## Канатная дорога
-# cable_car is consumed in inc/water_lines and uses the native 0x2f line type.
+# cable_car is consumed in inc/water_lines and uses the non-routable aerialway type 0x10f15.
 aerialway=gondola    {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f01 resolution 22]
 aerialway=mixed_lift {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f02 resolution 22]
 aerialway=chair_lift {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f03 resolution 22]
