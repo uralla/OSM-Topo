@@ -62,15 +62,20 @@ def rebuild_from_mkgmap(
             f"latest successful build {previous_id} has no splitter areas: {previous_areas}"
         )
 
-    identifier = runner.create_build(
-        product_key,
-        {
-            "mode": "from-stage:mkgmap",
-            "reused_build_id": previous_id,
-            "reused_splitter": str(previous_tiles),
-        },
-        build_id=build_id,
-    )
+    metadata = {
+        "mode": "from-stage:mkgmap",
+        "reused_build_id": previous_id,
+        "reused_splitter": str(previous_tiles),
+    }
+    if build_id is None:
+        identifier = runner.create_build(product_key, metadata)
+    else:
+        identifier = runner.history.create_build(
+            product_key,
+            metadata,
+            build_id=build_id,
+        )
+
     build = runner.history.get_build(identifier)
     if build is None:
         raise StageError(f"unknown build id after creation: {identifier}")
