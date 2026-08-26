@@ -77,13 +77,13 @@ waterway=river & name='Чусовая' & length()>500
 | waterway=river & name='Уса' & length()>500
 | waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]
 
-# Long rivers/canals are emitted once from resolution 20. Short ones only
-# appear at close zoom; excluding long ways here avoids a second identical 0x01f.
-waterway=river & length()>500 | waterway=canal & length()>500 [0x01f resolution 20 continue]
-waterway=river & length()<=500 | waterway=canal & length()<=500 [0x01f resolution 23]
+# Rivers keep their own visual hierarchy. Canals are intentionally handled
+# with stream-like waterways below.
+waterway=river & length()>500 [0x01f resolution 20 continue]
+waterway=river & length()<=500 [0x01f resolution 23]
 
-waterway=drain [0x10109 resolution 24 continue]
-# [CUSTOM/АВТОРСКОЕ] ditch is visible only at the closest level.
+# [CUSTOM/АВТОРСКОЕ] ditch is visible only at the closest level and remains
+# visually distinct from stream/drain/canal.
 waterway=ditch [0x10109 resolution 24 continue]
 waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
 
@@ -99,6 +99,7 @@ waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
     {name '${whitewater:section_name}, пор. ${whitewater:section_grade}' | '${whitewater:section_name}, пор. ${whitewater:rapid_grade}' |
     '${whitewater:rapid_name}, пор. ${whitewater:section_grade}' | '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}'} [0x1001f resolution 18 continue]
 
-waterway=drain & length()>500 [0x18 resolution 21-23 continue]
-waterway=stream & length()>500 [0x18 resolution 21-23 continue]
-waterway=stream [0x19 resolution 24 continue]
+# Stream, drain and canal intentionally share one visual hierarchy.
+# Intermittent stream/drain rules above consume those objects first.
+(waterway=stream | waterway=drain | waterway=canal) & length()>500 [0x18 resolution 21-23 continue]
+(waterway=stream | waterway=drain | waterway=canal) [0x19 resolution 24 continue]
