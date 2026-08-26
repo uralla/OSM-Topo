@@ -14,10 +14,10 @@ surface=ice { add ice_road=yes }
 piste:type=nordic & is_closed()=false & area!=yes [0x10101 resolution 22]
 
 # [CUSTOM/АВТОРСКОЕ] Railway/aerialway classes agreed in the completed tag audit.
-# Narrow gauge shares the tram visual class. Funicular gets its dedicated 0x10f00
-# slot; cable car uses the native cable-car line type 0x2f.
-railway=narrow_gauge { name '${name} (ужд)' | 'ужд' } [0x10f14 resolution 22-24]
-railway=funicular { name '${name}' | 'фуникулер' } [0x10f00 resolution 22]
+# Narrow gauge shares the tram visual class. Disused/abandoned railways continue
+# to the dedicated legacy railway rules below instead of being consumed here.
+railway=narrow_gauge & disused!=yes & abandoned!=yes { name '${name} (ужд)' | 'ужд' } [0x10f14 resolution 22-24]
+railway=funicular & disused!=yes & abandoned!=yes { name '${name}' | 'фуникулер' } [0x10f00 resolution 22]
 aerialway=cable_car { name '${name} (${ref})' | '${name}' | '${ref}' } [0x2f resolution 22]
 
 # Modern protected-area tagging uses the same boundary line as nature reserves.
