@@ -3591,7 +3591,7 @@ CustomColor=No
 
 
 [_line]
-Type=0x10f1b
+Type=0x10f1f
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_38/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
 Xpm="32 3 2  1"
@@ -3846,6 +3846,20 @@ ExtendedLabels=N
 
 
 
+[_line]
+Type=0x10f1b
+;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_60/Non-routable customizable line/Non NT, NT
+UseOrientation=N
+Xpm="32 2 2  1"
+"! c #0065FF"
+"  c none"
+"!!!!!   !!!!!   !!!!!   !!!!!   "
+"!!!!!   !!!!!   !!!!!   !!!!!   "
+;12345678901234567890123456789012
+String1=0x19,пристань
+String2=0x04,marina
+ExtendedLabels=N
+[end]
 [_line]
 Type=0x10f1c
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_61/Non-routable customizable line/Non NT, NT

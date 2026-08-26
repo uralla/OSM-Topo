@@ -310,8 +310,8 @@ railway=abandoned | railway=disused | railway=* & disused=yes [0x1011a resolutio
 railway=light_rail & !(layer<0) [0x10f14 resolution 22-24]
 # narrow_gauge is consumed in inc/water_lines and uses the tram type 0x10f14.
 
-railway=rail & service=* & length()>500 [0x10f1b resolution 23-23 continue]
-railway=rail & service=* [0x10f1b resolution 24]
+railway=rail & service=* & length()>500 [0x10f1f resolution 23-23 continue]
+railway=rail & service=* [0x10f1f resolution 24]
 
 railway=rail & usage=main [0x10f13 resolution 19-20 continue]
 railway=rail & service!=* | railway=rail & usage=main [0x10f13 resolution 21-24 continue]
