@@ -6,3 +6,6 @@ sources:
   russia:
     url: https://download.geofabrik.de/russia-latest.osm.pbf
     refresh_days: 1
+  crimea:
+    url: https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf
+    refresh_days: 1
