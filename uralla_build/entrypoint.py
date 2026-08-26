@@ -49,14 +49,7 @@ def main(argv: list[str] | None = None) -> int:
             host = load_host_config(host_path, repo_root)
             downloads_path = (repo_root / DEFAULT_SOURCE_DOWNLOADS).resolve()
             downloads = load_source_downloads(downloads_path)
-            result = ensure_product_source(manifest, host, product, downloads)
-            if result is not None:
-                print(
-                    f"[source] {result.source}: {result.action}; "
-                    f"{result.size / 1073741824:.2f} GiB -> {result.destination}",
-                    file=sys.stderr,
-                    flush=True,
-                )
+            ensure_product_source(manifest, host, product, downloads)
         except (ManifestError, StageError, OSError) as exc:
             print(f"ERROR source: {exc}", file=sys.stderr)
             return 1
