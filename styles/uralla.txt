@@ -2331,11 +2331,9 @@ Type=0x11
 UseOrientation=Y
 LineWidth=2
 BorderWidth=1
-Xpm="0 0 4 0"
+Xpm="0 0 2 0"
 "1 c #FFFF6A"
 "2 c #101010"
-"3 c #000000"
-"4 c #FFFFFF"
 String1=0x19,дорога
 String2=0x04,tertiary highway
 ExtendedLabels=Y
@@ -2703,11 +2701,9 @@ CustomColor=No
 Type=0x1001f
 ;GRMN_TYPE: //
 UseOrientation=Y
-Xpm="32 8 4  1"
+Xpm="32 8 2 1"
 "! c #0065FF"
 "  c none"
-"3 c #0000FF"
-"4 c none"
 " !!      !!      !!      !!     "
 " !!      !!      !!      !!     "
 " !!  !!  !!  !!  !!  !!  !!  !! "
@@ -2963,11 +2959,9 @@ CustomColor=No
 Type=0x10e03
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_4/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
-Xpm="32 12 4  1"
+Xpm="32 12 2 1"
 "! c #BD6500"
 "  c none"
-"3 c #F8FCF8"
-"4 c none"
 " !           !                  "
 "  !          !            !     "
 "  !     !     !!    !      !    "
@@ -3166,9 +3160,8 @@ Type=0x10f1a
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_42/Non-routable customizable line/Non NT, NT
 UseOrientation=N
 LineWidth=4
-Xpm="0 0 2 0"
+Xpm="0 0 1 0"
 "1 c #7BCA6A"
-"2 c #006500"
 ExtendedLabels=N
 [end]
 
@@ -3263,11 +3256,9 @@ CustomColor=No
 Type=0x10f15
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_54/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
-Xpm="32 3 4  1"
+Xpm="32 3 2 1"
 "! c #000000"
 "  c none"
-"3 c #E6E6E6"
-"4 c none"
 "!!!!    !!!!    !!!!    !!!!    "
 "                                "
 "    !!!!    !!!!    !!!!    !!!!"
@@ -3445,11 +3436,9 @@ CustomColor=No
 Type=0x12d01
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_994/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
-Xpm="32 12 4  1"
+Xpm="32 12 2 1"
 "! c #101010"
 "  c none"
-"3 c #F8FCF8"
-"4 c none"
 "!   !   !   !   !   !   !   !   "
 "!   !   !   !   !   !   !   !   "
 "!   !   !   !   !   !   !   !   "
