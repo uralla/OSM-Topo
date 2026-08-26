@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -34,9 +35,9 @@ class ProductBuildPlanTests(unittest.TestCase):
         self.manifest = load_manifest(PROJECT_ROOT / "config/maps.yaml")
         self.lock = load_tools_lock(PROJECT_ROOT / "config/tools.lock.yaml")
 
-    def _plan(self, root: Path, product: str):
+    def _plan(self, root: Path, product: str, manifest=None):
         return plan_product_build(
-            self.manifest,
+            manifest or self.manifest,
             _host(root),
             self.lock,
             product_key=product,
@@ -135,6 +136,49 @@ class ProductBuildPlanTests(unittest.TestCase):
                 [stage.name for stage in plan.stages].index("preprocess"),
                 [stage.name for stage in plan.stages].index("merge"),
             )
+
+    def test_new_product_cut_from_russia_automatically_gets_blacklist(self) -> None:
+        with TemporaryDirectory() as directory:
+            manifest = deepcopy(self.manifest)
+            product = deepcopy(manifest["products"]["ural-n"])
+            product["polygon"] = "poly/competition-area.poly"
+            product["identity"] = {
+                "family_id": 65000,
+                "product_id": 1,
+                "overview_mapnumber": "65000000",
+                "first_tile_mapid": "65000001",
+                "last_reserved_mapid": "65000999",
+            }
+            product["names"] = {
+                "family": "Competition",
+                "series": "Competition",
+                "overview": "Competition",
+                "description": "Competition",
+                "output_img": "Competition.img",
+            }
+            product["source"] = "russia"
+            manifest["products"]["competition-area"] = product
+
+            plan = self._plan(Path(directory), "competition-area", manifest)
+            preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
+
+            self.assertIn("landmarks", preprocess.command)
+            self.assertIn("ru-political-parties", preprocess.command)
+
+    def test_blacklist_scope_includes_crimea_and_excludes_foreign_sources(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            crimea = self._plan(root, "crimea")
+            belarus = self._plan(root, "belarus")
+            armenia = self._plan(root, "armenia")
+
+            crimea_preprocess = next(stage for stage in crimea.stages if stage.name == "preprocess")
+            belarus_preprocess = next(stage for stage in belarus.stages if stage.name == "preprocess")
+            armenia_preprocess = next(stage for stage in armenia.stages if stage.name == "preprocess")
+
+            self.assertIn("ru-political-parties", crimea_preprocess.command)
+            self.assertNotIn("ru-political-parties", belarus_preprocess.command)
+            self.assertNotIn("ru-political-parties", armenia_preprocess.command)
 
     def test_every_manifest_product_has_a_complete_plan(self) -> None:
         with TemporaryDirectory() as directory:
