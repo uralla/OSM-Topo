@@ -14,6 +14,7 @@ from .cli import main as cli_main
 from .errors import ManifestError, StageError
 from .history import HistoryStore
 from .host import HostConfig, load_host_config
+from .incremental import rebuild_from_mkgmap
 from .manifest import load_manifest
 from .source import DEFAULT_SOURCE_DOWNLOADS, ensure_product_source, load_source_downloads
 
@@ -42,6 +43,15 @@ def _build_product_request(argv: Sequence[str]) -> tuple[str, Path, Path, Path] 
     host = Path(_option_value(argv, "--host", "config/host.yaml"))
     repo_root = Path(_option_value(argv, "--repo-root", "."))
     return product, manifest, host, repo_root
+
+
+def _from_stage(argv: Sequence[str]) -> str | None:
+    if "--from-stage" not in argv:
+        return None
+    value = _option_value(argv, "--from-stage", "")
+    if not value:
+        raise StageError("--from-stage requires a stage name")
+    return value
 
 
 def _format_elapsed(seconds: float) -> str:
@@ -116,11 +126,18 @@ def _human_build_summary(
         f"  Tile range     {identity.get('first_tile_mapid', '-')} .. {identity.get('last_reserved_mapid', '-')}",
         f"  Build ID       {build_id}",
         f"  Status         {status}",
-        "",
-        "  Stages",
-        f"  {'Stage':<24}{'Status':<12}{'Time':>10}",
-        "  " + thin[:46],
     ]
+    reused = payload.get("reused_build_id")
+    if isinstance(reused, str) and reused:
+        lines.append(f"  Reused build   {reused} (splitter output)")
+    lines.extend(
+        [
+            "",
+            "  Stages",
+            f"  {'Stage':<24}{'Status':<12}{'Time':>10}",
+            "  " + thin[:46],
+        ]
+    )
 
     for stage in stages:
         name = str(stage.get("stage", "-"))
@@ -156,19 +173,59 @@ def main(argv: list[str] | None = None) -> int:
     manifest: Mapping[str, object] | None = None
     host: HostConfig | None = None
     product: str | None = None
+    try:
+        from_stage = _from_stage(arguments)
+    except StageError as exc:
+        print(f"ERROR build-product: {exc}", file=sys.stderr)
+        return 1
+
+    if from_stage is not None and from_stage != "mkgmap":
+        print(
+            f"ERROR build-product: --from-stage currently supports only 'mkgmap', got {from_stage!r}",
+            file=sys.stderr,
+        )
+        return 1
+
     if request is not None:
         product, manifest_path, host_path, repo_root = request
         try:
             manifest = load_manifest(manifest_path)
             host = load_host_config(host_path, repo_root)
-            downloads_path = (repo_root / DEFAULT_SOURCE_DOWNLOADS).resolve()
-            downloads = load_source_downloads(downloads_path)
-            ensure_product_source(manifest, host, product, downloads)
+            if from_stage is None:
+                downloads_path = (repo_root / DEFAULT_SOURCE_DOWNLOADS).resolve()
+                downloads = load_source_downloads(downloads_path)
+                ensure_product_source(manifest, host, product, downloads)
         except (ManifestError, StageError, OSError) as exc:
             print(f"ERROR source: {exc}", file=sys.stderr)
             return 1
 
     human_summary = request is not None and "--json" not in arguments
+
+    if request is not None and from_stage == "mkgmap":
+        assert manifest is not None and host is not None and product is not None
+        tools_lock = Path(_option_value(arguments, "--tools-lock", "config/tools.lock.yaml"))
+        build_id = _option_value(arguments, "--build-id", "") or None
+        try:
+            payload = rebuild_from_mkgmap(
+                manifest,
+                host,
+                product_key=product,
+                repo_root=repo_root,
+                manifest_path=manifest_path,
+                tools_lock_path=tools_lock,
+                build_id=build_id,
+            )
+        except (ManifestError, StageError, OSError, ValueError) as exc:
+            print(f"ERROR build-product: {exc}", file=sys.stderr)
+            return 1
+        result = payload.get("result")
+        status = 0 if isinstance(result, Mapping) and result.get("status") == "success" else 1
+        if "--json" in arguments:
+            print(json.dumps({"ok": status == 0, "report": payload}, ensure_ascii=False, indent=2))
+        else:
+            print(_human_build_summary(payload, manifest, host, product))
+        return status
+
     if not human_summary:
         return cli_main(arguments)
 
