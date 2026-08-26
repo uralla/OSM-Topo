@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POINTS = ROOT / "styles" / "uralla" / "points"
 PRIORITY_POINTS = ROOT / "styles" / "uralla" / "inc" / "priority_points"
 WATER_POINTS = ROOT / "styles" / "uralla" / "inc" / "water_points"
+NAME_RULES = ROOT / "styles" / "uralla" / "inc" / "name"
 
 
 class GenericPoiLabelStyleTests(unittest.TestCase):
@@ -31,6 +32,7 @@ class GenericPoiLabelStyleTests(unittest.TestCase):
         self.assertNotIn("default_name 'избушка'", text)
         self.assertNotIn("| 'памятник'", text)
         self.assertNotIn("| 'указатель'", text)
+        self.assertNotIn("| 'АЗС (продукты)'", text)
         self.assertIn("historic=memorial { name '${name}' | '${inscription}' }", text)
         self.assertIn("amenity=signpost { name '${name}' | '${label}' }", text)
 
@@ -38,6 +40,19 @@ class GenericPoiLabelStyleTests(unittest.TestCase):
         text = WATER_POINTS.read_text(encoding="utf-8")
         self.assertIn("amenity=water_point [0x5001 resolution 23]", text)
         self.assertNotIn("addlabel 'запас воды'", text)
+
+    def test_fuel_details_do_not_become_names_for_unnamed_stations(self) -> None:
+        text = NAME_RULES.read_text(encoding="utf-8")
+        for synthetic in (
+            "       'дизель, газ'",
+            "       'дизель'",
+            "       'газ'",
+            "       'без дизеля, газ'",
+            "       'без дизеля'",
+        ):
+            self.assertNotIn(synthetic, text)
+        self.assertIn("'${name} (дизель, газ)'", text)
+        self.assertIn("'${operator} (дизель, газ)'", text)
 
 
 if __name__ == "__main__":
