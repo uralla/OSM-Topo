@@ -211,7 +211,7 @@ highway=minor & length()>400 [0x06 resolution 20-22 continue]
 highway=minor [0x06 road_class=1 road_speed=5 resolution 23]
 
 highway=unclassified & length()>500 [0x07 resolution 19-21 continue]
-highway=unclassified [0x06 road_class=1 road_speed=4 resolution 22 continue]
+highway=unclassified & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22 continue]
 highway=unclassified & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
 
 highway=residential & area!=yes & length()>200 [0x07 resolution 22-22 continue]
