@@ -4,6 +4,15 @@
 # Marked trail relation names are a fallback only for unnamed member ways.
 mkgmap:trail_name=* & name!=* { set name='${mkgmap:trail_name}' }
 
+# Agreed road-surface normalization before legacy label/routing fallbacks.
+surface=paved { set surface=asphalt }
+(surface=dirt | surface=earth | surface=woodchips) { set surface=ground }
+surface=snow { add winter_road=yes }
+surface=ice { add ice_road=yes }
+
+# Nordic ski routes use the same visual class as skitour.
+piste:type=nordic & is_closed()=false & area!=yes [0x10101 resolution 22]
+
 # Modern protected-area tagging uses the same boundary line as nature reserves.
 (boundary=protected_area | boundary=national_park) { name '${name}' } [0x12d1b resolution 23]
 
