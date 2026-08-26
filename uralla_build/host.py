@@ -12,6 +12,10 @@ import yaml
 from .errors import ManifestError, ValidationIssue
 
 
+DEFAULT_HOST_CONFIG = Path("config/host.yaml")
+HOST_POINTER = ".uralla-host"
+
+
 @dataclass(frozen=True, slots=True)
 class HostPaths:
     data_root: Path
@@ -48,10 +52,50 @@ def _expanded_path(value: object, base: Path) -> Path:
     return path if path.is_absolute() else (base / path).resolve()
 
 
+def _is_default_host_request(path: Path, repo_root: Path) -> bool:
+    if not path.is_absolute() and path == DEFAULT_HOST_CONFIG:
+        return True
+    try:
+        return path.resolve() == (repo_root / DEFAULT_HOST_CONFIG).resolve()
+    except OSError:
+        return False
+
+
+def resolve_host_config_path(path: str | Path, repo_root: str | Path) -> Path:
+    """Resolve the requested host config, including the local external-config pointer.
+
+    setup.sh stores the real machine-local host.yaml outside the Git checkout and
+    writes only its path to ``.uralla-host``.  The historical ``config/host.yaml``
+    location remains a fallback for existing installations.
+    """
+
+    root = Path(repo_root).resolve()
+    requested = Path(path)
+
+    if not _is_default_host_request(requested, root):
+        return requested
+
+    configured = os.environ.get("URALLA_HOST_CONFIG")
+    if configured and configured.strip():
+        return _expanded_path(configured, root)
+
+    pointer = root / HOST_POINTER
+    if pointer.is_file():
+        try:
+            value = pointer.read_text(encoding="utf-8").strip()
+        except OSError as exc:
+            raise ManifestError(f"cannot read host pointer {pointer}: {exc}") from exc
+        if not value:
+            raise ManifestError(f"host pointer is empty: {pointer}")
+        return _expanded_path(value, root)
+
+    return requested
+
+
 def load_host_config(path: str | Path, repo_root: str | Path) -> HostConfig:
     """Load host YAML and resolve all roots without changing the filesystem."""
 
-    config_path = Path(path)
+    config_path = resolve_host_config_path(path, repo_root)
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -122,4 +166,3 @@ def repo_path(repo_root: Path, value: str) -> Path:
 
 def data_path(config: HostConfig, value: str) -> Path:
     return (config.paths.data_root / value).resolve()
-
