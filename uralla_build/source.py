@@ -18,6 +18,8 @@ from .host import HostConfig, data_path
 
 
 DEFAULT_SOURCE_DOWNLOADS = Path("config/source-downloads.yaml")
+_MIB = 1024 * 1024
+_GIB = 1024 * 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +33,16 @@ class SourceResult:
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
+
+
+def _log(message: str) -> None:
+    print(f"[source] {message}", file=sys.stderr, flush=True)
+
+
+def _format_size(size: int) -> str:
+    if size >= _GIB:
+        return f"{size / _GIB:.2f} GiB"
+    return f"{size / _MIB:.1f} MiB"
 
 
 def load_source_downloads(path: str | Path) -> dict[str, Any]:
@@ -62,42 +74,53 @@ def _partial_path(destination: Path) -> Path:
     return destination.with_name(f".{name}.partial")
 
 
+def _progress_interval(expected: int | None) -> int:
+    """Report small downloads too, while keeping multi-GiB downloads readable."""
+
+    if expected is None:
+        return 64 * _MIB
+    return min(256 * _MIB, max(8 * _MIB, expected // 20))
+
+
 def _download(url: str, target: Path) -> None:
     with urlopen(url, timeout=300) as response, target.open("wb") as output:
         raw_length = response.headers.get("Content-Length")
         expected = int(raw_length) if raw_length and raw_length.isdigit() else None
+        if expected is not None:
+            _log(f"remote size: {_format_size(expected)}")
+        else:
+            _log("remote size: unknown")
+
         copied = 0
-        next_report = 256 * 1024 * 1024
+        interval = _progress_interval(expected)
+        next_report = interval
         while True:
-            block = response.read(8 * 1024 * 1024)
+            block = response.read(8 * _MIB)
             if not block:
                 break
             output.write(block)
             copied += len(block)
             if copied >= next_report:
                 if expected:
-                    percent = copied * 100.0 / expected
-                    print(
-                        f"[source] downloaded {copied / 1073741824:.2f} GiB / "
-                        f"{expected / 1073741824:.2f} GiB ({percent:.1f}%)",
-                        file=sys.stderr,
-                        flush=True,
+                    percent = min(100.0, copied * 100.0 / expected)
+                    _log(
+                        f"downloaded {_format_size(copied)} / {_format_size(expected)} "
+                        f"({percent:.1f}%)"
                     )
                 else:
-                    print(
-                        f"[source] downloaded {copied / 1073741824:.2f} GiB",
-                        file=sys.stderr,
-                        flush=True,
-                    )
-                next_report += 256 * 1024 * 1024
+                    _log(f"downloaded {_format_size(copied)}")
+                while next_report <= copied:
+                    next_report += interval
         output.flush()
         os.fsync(output.fileno())
+
     if expected is not None and copied != expected:
         raise StageError(
             f"source download size mismatch: expected {expected} bytes, received {copied}"
         )
     if copied == 0:
         raise StageError("source download is empty")
+    _log(f"download complete: {_format_size(copied)}")
 
 
 def _validate_pbf(path: Path) -> None:
@@ -148,38 +171,59 @@ def ensure_source(
     destination = data_path(host, source_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     current_time = time.time() if now is None else now
-    if destination.is_file() and destination.stat().st_size > 0:
+    previous_exists = destination.is_file() and destination.stat().st_size > 0
+
+    if previous_exists:
+        size = destination.stat().st_size
         age = _age_days(destination, current_time)
         if age < refresh_days:
+            _log(
+                f"{source_key}: local {_format_size(size)}, age {age:.2f} d; "
+                f"fresh (< {refresh_days} d), reused"
+            )
             return SourceResult(
                 source_key,
                 str(destination),
                 url,
                 "reused",
-                destination.stat().st_size,
+                size,
                 age,
             )
+        _log(
+            f"{source_key}: local {_format_size(size)}, age {age:.2f} d; "
+            f"stale (>= {refresh_days} d), update required"
+        )
+    else:
+        _log(f"{source_key}: local source missing, download required")
 
     temporary = _partial_path(destination)
     temporary.unlink(missing_ok=True)
-    previous_exists = destination.is_file()
+    _log(f"{source_key}: downloading {url}")
+    _log(f"temporary file: {temporary}")
+
     try:
         downloader(url, temporary)
         if not temporary.is_file() or temporary.stat().st_size == 0:
             raise StageError(f"source downloader did not create a non-empty file: {temporary}")
+        _log(f"validating PBF: {_format_size(temporary.stat().st_size)}")
         validator(temporary)
+        _log("validation OK")
+        _log("replacing existing source atomically" if previous_exists else "installing source atomically")
         os.replace(temporary, destination)
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
 
     age = _age_days(destination, current_time)
+    size = destination.stat().st_size
+    action = "updated" if previous_exists else "downloaded"
+    _log(f"{source_key}: {action}; saved {_format_size(size)} -> {destination}")
     return SourceResult(
         source_key,
         str(destination),
         url,
-        "updated" if previous_exists else "downloaded",
-        destination.stat().st_size,
+        action,
+        size,
         age,
     )
 
