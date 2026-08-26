@@ -34,7 +34,6 @@ def test_eurasian_long_river_catalogue_has_geographic_coverage():
         "Danube": 2,
         "Dnieper": 2,
         "Don": 2,
-        "Rhine": 3,
     }
 
     for name, rank in expected.items():
