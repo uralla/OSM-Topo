@@ -1,5 +1,6 @@
 .DS_Store
 .venv/
+.uralla-host
 __pycache__/
 *.py[cod]
 config/host.yaml
