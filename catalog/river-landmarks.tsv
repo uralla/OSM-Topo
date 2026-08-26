@@ -6,30 +6,52 @@
 # This file is intentionally maintained manually and may be refreshed infrequently.
 #
 # rank	length_km	name	aliases	origin
+1	6300	Янцзы	Yangtze|Yangzi|Chang Jiang|Cháng Jiāng|长江	length
+1	5464	Хуанхэ	Yellow River|Huang He|Huanghe|黄河	length
+1	4909	Меконг	Mekong	length
 1	4294	Лена	Lena	length
 1	4248	Иртыш	Irtysh|Ertis|Ертіс	legacy+length
 1	3700	Обь	Ob|Об	legacy+length
+1	3610	Инд	Indus|Indus River	length
 1	3531	Волга	Volga	legacy+length
 1	3487	Енисей	Yenisei|Enisei	legacy+length
 1	3150	Амур	Amur|黑龙江|Хэйлунцзян	legacy+length
+2	2989	Нижняя Тунгуска	Nizhnyaya Tunguska|Lower Tunguska	length
+2	2900	Ганг	Ganges|Ganga|Ganges River	length
+2	2840	Ярлунг-Цангпо	Yarlung Tsangpo|Yarlung Zangbo|Yarlung Zangbo Jiang	length
+2	2800	Брахмапутра	Brahmaputra|Brahmaputra River	length
+2	2800	Салуин	Salween|Salween River|Thanlwin	length
 2	2800	Евфрат	Euphrates|Fırat|Firat	length
+2	2860	Дунай	Danube|Donau|Dunav|Dunărea	length
 2	2650	Вилюй	Vilyuy	length
+2	2500	Амударья	Amu Darya|Amudarya|Oxus	length
 2	2450	Ишим	Ishim|Есіл|Esil	length
 2	2428	Урал	Ural|Жайық|Zhaiyq	legacy+length
+2	2320	Чжуцзян	Pearl River|Zhujiang|珠江	length
+2	2290	Днепр	Dnieper|Dnipro	length
 2	2273	Алдан	Aldan	length
 2	2270	Оленёк	Olenyok|Оленек	length
 2	2212	Сырдарья	Syr Darya|Сырдария|Сыр Дария	legacy+length
+2	2210	Иравади	Irrawaddy|Irrawaddy River|Ayeyarwady|Ayeyarwady River	length
+2	2197	Сицзян	Xi River|Xi Jiang|Xijiang|西江	length
 2	2129	Колыма	Kolyma	legacy+length
 2	1950	Дон	Don	legacy+length
+2	1925	Сунгари	Songhua|Songhua River|Sungari	length
 2	1865	Подкаменная Тунгуска	Podkamennaya Tunguska	length
 2	1850	Тигр	Tigris|Dicle	length
 2	1837	Витим	Vitim	length
 2	1809	Печора	Pechora	legacy+length
 2	1805	Кама	Kama	length
+2	1799	Чулым	Chulym	length
 2	1779	Ангара	Angara	legacy+length
 2	1642	Индигирка	Indigirka	length
+2	1621	Кеть	Ket|Ket River	length
+2	1620	Аргунь	Argun|Ergun|Ergune	length
 2	1591	Яна	Yana	length
 2	1591	Тобол	Tobol|Тобыл	length
+2	1571	Ялунцзян	Yalong|Yalong River|雅砻江	length
+2	1532	Ханьшуй	Han River|Han Jiang|汉江	length
+2	1520	Алазея	Alazeya	length
 2	1500	Ока	Oka	legacy+length
 3	1430	Белая	Belaya|Ағиҙел|Агидель	legacy+length
 3	1364	Кызылырмак	Kızılırmak|Kizilirmak	length
