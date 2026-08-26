@@ -34,7 +34,6 @@ natural=wetland & wetland=marsh & mkgmap:area2poi!=true { name 'заболоче
 natural=wetland & wetland=wet_meadow & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
 natural=wetland & wetland=tidalflat & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
 natural=wetland & wetland=reedbed & area_size()>50000 & mkgmap:area2poi!=true [0x54 resolution 22-23 continue]
-natural=wetland & wetland=saltmarsh & mkgmap:area2poi!=true [0x54 resolution 24 continue]
 
  
  
