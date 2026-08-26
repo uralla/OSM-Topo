@@ -64,50 +64,35 @@ resources:
             self.assertEqual(host.paths.tools_root, root / "tools")
             self.assertEqual(validate_host_config(host), [])
 
-    def test_default_host_uses_external_pointer(self) -> None:
+    def test_default_host_can_use_environment_override(self) -> None:
         with TemporaryDirectory() as directory:
             repo = Path(directory) / "repo"
             workspace = Path(directory) / "workspace"
             repo.mkdir()
             config = workspace / "host.yaml"
             _write_host(config, workspace)
-            (repo / ".uralla-host").write_text(f"{config}\n", encoding="utf-8")
 
-            resolved = resolve_host_config_path(Path("config/host.yaml"), repo)
+            with patch.dict(os.environ, {"URALLA_HOST_CONFIG": str(config)}):
+                resolved = resolve_host_config_path(Path("config/host.yaml"), repo)
+                host = load_host_config(Path("config/host.yaml"), repo)
+
             self.assertEqual(resolved, config)
-
-            host = load_host_config(Path("config/host.yaml"), repo)
-            self.assertEqual(host.paths.data_root, workspace / "data")
-            self.assertEqual(host.paths.tools_root, workspace / "tools")
-
-    def test_host_pointer_wins_over_legacy_default_file(self) -> None:
-        with TemporaryDirectory() as directory:
-            repo = Path(directory) / "repo"
-            workspace = Path(directory) / "workspace"
-            legacy_root = Path(directory) / "legacy"
-            repo.mkdir()
-            external = workspace / "host.yaml"
-            legacy = repo / "config" / "host.yaml"
-            _write_host(external, workspace)
-            _write_host(legacy, legacy_root)
-            (repo / ".uralla-host").write_text(f"{external}\n", encoding="utf-8")
-
-            host = load_host_config(Path("config/host.yaml"), repo)
             self.assertEqual(host.paths.data_root, workspace / "data")
 
-    def test_explicit_host_path_ignores_pointer(self) -> None:
+    def test_explicit_host_path_wins_over_environment_override(self) -> None:
         with TemporaryDirectory() as directory:
             repo = Path(directory) / "repo"
             workspace = Path(directory) / "workspace"
             explicit_root = Path(directory) / "explicit"
             repo.mkdir()
-            pointer_config = workspace / "host.yaml"
+            env_config = workspace / "host.yaml"
             explicit_config = explicit_root / "host.yaml"
-            _write_host(pointer_config, workspace)
+            _write_host(env_config, workspace)
             _write_host(explicit_config, explicit_root)
-            (repo / ".uralla-host").write_text(f"{pointer_config}\n", encoding="utf-8")
 
-            host = load_host_config(explicit_config, repo)
+            with patch.dict(os.environ, {"URALLA_HOST_CONFIG": str(env_config)}):
+                host = load_host_config(explicit_config, repo)
+
             self.assertEqual(host.paths.data_root, explicit_root / "data")
 
     def test_split_zip_policy_is_rejected(self) -> None:
@@ -123,4 +108,3 @@ resources:
 
 if __name__ == "__main__":
     unittest.main()
-
