@@ -20,7 +20,7 @@ class PolygonPrecedenceStyleTests(unittest.TestCase):
     def test_legacy_swimming_pool_normalizes_to_rendered_leisure_polygon(self) -> None:
         normalize = "amenity=swimming_pool & leisure!=* { add leisure=swimming_pool }"
         sport = "leisure=swimming_pool { set sport=swimming }"
-        render = "leisure=swimming_pool { name '${addr:street} ${addr:housenumber} (${name})'"
+        render = "leisure=swimming_pool { name '${name}' | '${addr:street} ${addr:housenumber}'"
         self.assertIn(normalize, self.text)
         self.assertIn(sport, self.text)
         self.assertIn(render, self.text)
