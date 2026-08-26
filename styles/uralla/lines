@@ -249,6 +249,16 @@ highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=0 resolution 24]
 
 highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
+# [CUSTOM/АВТОРСКОЕ] Marked route members: one extra LOD step.
+# Emit only the additional farther level; normal rules below render the usual levels.
+mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-21 continue]
+mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]
+mkgmap:trail_name=* & highway=footway & length()>100 [0x07 resolution 21-21 continue]
+mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-20 continue]
+mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]
+
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 highway=byway [0x16 road_class=0 road_speed=0 resolution 24]
 
@@ -300,8 +310,8 @@ railway=abandoned | railway=disused | railway=* & disused=yes [0x1011a resolutio
 railway=light_rail & !(layer<0) [0x10f14 resolution 22-24]
 # narrow_gauge is consumed in inc/water_lines and uses the tram type 0x10f14.
 
-railway=rail & service=* & length()>500 [0x10f05 resolution 23-23 continue]
-railway=rail & service=* [0x10f05 resolution 24]
+railway=rail & service=* & length()>500 [0x10f1b resolution 23-23 continue]
+railway=rail & service=* [0x10f1b resolution 24]
 
 railway=rail & usage=main [0x10f13 resolution 19-20 continue]
 railway=rail & service!=* | railway=rail & usage=main [0x10f13 resolution 21-24 continue]
@@ -364,7 +374,7 @@ natural=earth_bank [0x10d01 resolution 23]
 natural=gully [0x10e03 resolution 24]
 waterway=dam [0x12d01 resolution 23]
 
-natural=tree_row & length()>100 [0x10f09 resolution 23-24]
+natural=tree_row & area!=yes & length()>100 [0x10f1a resolution 23-24]
 
 <finalize>
 # The finalizer section is executed for each element when a rule with an element type matches

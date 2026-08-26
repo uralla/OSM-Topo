@@ -79,7 +79,6 @@ Type=0x054,10
 Type=0x061,10
 Type=0x062,10
 Type=0x10102,10
-Type=0x10f09,10
 Type=0x1100e,10
 Type=0x1110e,10
 Type=0x1171d,10
@@ -3455,37 +3454,13 @@ NightcustomColor:#BD6500
 
 [_line]
 Type=0x10e04
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_5/Non-routable customizable line/Non NT, NT
-UseOrientation=Y
-Xpm="32 24 2  1"
-"! c #626262"
-"  c none"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-"! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! "
-" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
-;12345678901234567890123456789012
+; [CUSTOM/АВТОРСКОЕ] единый тоннель / unified tunnel
+UseOrientation=N
+LineWidth=3
+Xpm="0 0 1 0"
+"1 c #626262"
 String1=0x19,туннель
+String2=0x04,tunnel
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -3616,7 +3591,7 @@ CustomColor=No
 
 
 [_line]
-Type=0x10f05
+Type=0x10f1b
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_38/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
 Xpm="32 3 2  1"
@@ -3670,7 +3645,7 @@ CustomColor=No
 
 
 [_line]
-Type=0x10f09
+Type=0x10f1a
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_42/Non-routable customizable line/Non NT, NT
 UseOrientation=N
 LineWidth=4
@@ -3869,20 +3844,6 @@ ExtendedLabels=N
 [end]
 
 
-[_line]
-Type=0x10f1b
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_60/Non-routable customizable line/Non NT, NT
-UseOrientation=N
-Xpm="32 2 2  1"
-"! c #0065FF"
-"  c none"
-"!!!!!   !!!!!   !!!!!   !!!!!   "
-"!!!!!   !!!!!   !!!!!   !!!!!   "
-;12345678901234567890123456789012
-String1=0x19,пристань
-String2=0x04,marina
-ExtendedLabels=N
-[end]
 
 
 [_line]
