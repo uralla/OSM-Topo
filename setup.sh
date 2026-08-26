@@ -67,7 +67,7 @@ PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$WORKSPACE/output}"
 DEM_ROOT="${URALLA_DEM_ROOT:-$WORKSPACE/dem}"
 TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$WORKSPACE/tools}"
 HOST_CONFIG="${URALLA_HOST_CONFIG:-$WORKSPACE/host.yaml}"
-LAUNCHER="$WORKSPACE/uralla"
+LAUNCHER="$WORKSPACE/start"
 
 log "working directory: $WORKSPACE"
 log "host config: $HOST_CONFIG"
@@ -236,7 +236,7 @@ cat <<EOF
 [setup]
 [setup] normal use:
 [setup]   cd "$WORKSPACE"
-[setup]   ./uralla doctor
-[setup]   ./uralla build-product crimea --apply
-[setup]   ./uralla build-product crimea --apply --from-stage mkgmap
+[setup]   ./start doctor
+[setup]   ./start build-product crimea --apply
+[setup]   ./start build-product crimea --apply --from-stage mkgmap
 EOF
