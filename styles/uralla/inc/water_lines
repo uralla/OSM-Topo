@@ -49,8 +49,10 @@ waterway=river & name='Чусовая' & length()>500
 | waterway=river & name='Уса' & length()>500
 | waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]
 
+# Long rivers/canals are emitted once from resolution 20. Short ones only
+# appear at close zoom; excluding long ways here avoids a second identical 0x01f.
 waterway=river & length()>500 | waterway=canal & length()>500 [0x01f resolution 20 continue]
-waterway=river | waterway=canal [0x01f resolution 23]
+waterway=river & length()<=500 | waterway=canal & length()<=500 [0x01f resolution 23]
 
 waterway=drain [0x10109 resolution 24 continue]
 waterway=ditch [0x10109 resolution 24 continue]
