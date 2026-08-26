@@ -6,4 +6,5 @@ config/host.yaml
 build-state/
 dist/
 *.egg-info/
+tools/
 
