@@ -1,0 +1,41 @@
+name: Validate uralla style once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/check-uralla-style-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+      - name: Confirm uralla style is recognized
+        run: |
+          java -jar mkgmap-r4924/mkgmap.jar \
+            --style-file=styles/uralla \
+            --list-styles | tee /tmp/list-styles.log
+          grep -qi 'uralla' /tmp/list-styles.log
+      - name: Check uralla style
+        run: |
+          java -jar mkgmap-r4924/mkgmap.jar \
+            --style-file=styles/uralla \
+            --check-styles | tee /tmp/check-styles.log
+          grep -qi 'checking style: uralla' /tmp/check-styles.log
+          grep -qi 'finished check-styles' /tmp/check-styles.log
+      - name: Remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/check-uralla-style-once.yml
+          git commit -m "Complete uralla style syntax validation"
+          git push origin HEAD:main
