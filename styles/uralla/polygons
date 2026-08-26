@@ -27,7 +27,7 @@ man_made=* & natural=* {delete man_made}
 man_made=water_works [0x0c resolution 22]
 man_made=wastewater_plant [0x1321d resolution 24]
 
-man_made=geoglyph { set name='геоглиф' } [0x1181b resolution 24]
+man_made=geoglyph { name '${name}' | 'геоглиф' } [0x1181b resolution 24]
 
 # Пирсы и волнорезы: один и тот же серый polygon. Это правило должно быть
 # раньше широкого man_made=* & area=yes, иначе breakwater станет зданием 0x13.
@@ -110,7 +110,7 @@ leisure=water_park [0x19 resolution 23]
 # Nature reserves intentionally lose polygon fill after resolution 22; private
 # access must not reintroduce a generic leisure fill at close zoom.
 leisure=* & access=private & leisure!=nature_reserve & leisure!=natural_reserve [0x19 resolution 23]
-leisure=dog_park { name 'площадка для собак' } [0x20 resolution 24]
+leisure=dog_park { name '${name}' | 'площадка для собак' } [0x20 resolution 24]
 leisure=bleachers [0x1331a resolution 24]
 
 place=town [0x01 resolution 19]
@@ -140,7 +140,7 @@ highway=pedestrian & (area=yes | mkgmap:mp_created=true)
 	| highway=unclassified & (area=yes | mkgmap:mp_created=true) [0x0d resolution 21]
 
 # ж/д платформы как площади
-(public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name 'платформа' } [0x0d resolution 21]
+(public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x0d resolution 21]
 
 # other highways that have area=yes set must be parking lots
 highway=* & (area=yes | mkgmap:mp_created=true) [0x05 resolution 21]
