@@ -62,7 +62,12 @@ natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=*
 
 natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 23-24 continue]
 
-  natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 23-24 continue]
+# Named summits without an elevation are still useful landmarks. Keep the same
+# LOD/icon hierarchy as named summits with ele=*, but omit the unavailable height.
+(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6619 resolution 21-22 continue]
+(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6614 resolution 23-24 continue]
+
+natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 23-24 continue]
 
 # natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${name}"} [0x6619 resolution 23-24 continue]
 
