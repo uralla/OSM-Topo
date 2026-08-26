@@ -2,7 +2,10 @@ from pathlib import Path
 import unittest
 
 
-POINTS = Path(__file__).resolve().parents[1] / "styles" / "uralla" / "points"
+ROOT = Path(__file__).resolve().parents[1]
+POINTS = ROOT / "styles" / "uralla" / "points"
+PRIORITY_POINTS = ROOT / "styles" / "uralla" / "inc" / "priority_points"
+WATER_POINTS = ROOT / "styles" / "uralla" / "inc" / "water_points"
 
 
 class GenericPoiLabelStyleTests(unittest.TestCase):
@@ -22,6 +25,19 @@ class GenericPoiLabelStyleTests(unittest.TestCase):
         ):
             self.assertNotIn(f'name "{generic}"', text)
         self.assertIn("name=* { name '${name}' }", text)
+
+    def test_priority_pois_prefer_real_or_data_derived_names(self) -> None:
+        text = PRIORITY_POINTS.read_text(encoding="utf-8")
+        self.assertNotIn("default_name 'избушка'", text)
+        self.assertNotIn("| 'памятник'", text)
+        self.assertNotIn("| 'указатель'", text)
+        self.assertIn("historic=memorial { name '${name}' | '${inscription}' }", text)
+        self.assertIn("amenity=signpost { name '${name}' | '${label}' }", text)
+
+    def test_water_point_has_no_generic_map_label(self) -> None:
+        text = WATER_POINTS.read_text(encoding="utf-8")
+        self.assertIn("amenity=water_point [0x5001 resolution 23]", text)
+        self.assertNotIn("addlabel 'запас воды'", text)
 
 
 if __name__ == "__main__":
