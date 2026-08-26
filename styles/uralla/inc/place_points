@@ -10,9 +10,32 @@ place=city & mkgmap:area2poi!=true & population > 249999 [0x0400 resolution 15]
 place=city & mkgmap:area2poi!=true & population > 99999  [0x0600 resolution 16]
 place=city & mkgmap:area2poi!=true & population > 49999  [0x0700 resolution 17]
 place=city & mkgmap:area2poi!=true & population > 0      [0x0800 resolution 18]
+place=city & mkgmap:area2poi!=true                       [0x0800 resolution 18]
 
 # Towns: keep large towns visible earlier, small towns closer in.
 place=town & mkgmap:area2poi!=true & population > 49999 [0x0700 resolution 17]
 place=town & mkgmap:area2poi!=true & population > 19999 [0x0800 resolution 18]
 place=town & mkgmap:area2poi!=true & population > 4999  [0x0900 resolution 19]
 place=town & mkgmap:area2poi!=true & population > 0     [0x0a00 resolution 20]
+place=town & mkgmap:area2poi!=true                       [0x0a00 resolution 20]
+
+# Villages: population helps important villages appear first, but ordinary
+# villages no longer clutter the same overview levels as towns.
+place=village & mkgmap:area2poi!=true & population > 4999 [0x0900 resolution 19]
+place=village & mkgmap:area2poi!=true & population > 999  [0x0900 resolution 20]
+place=village & mkgmap:area2poi!=true & population > 0    [0x0a00 resolution 21]
+place=village & mkgmap:area2poi!=true                       [0x0a00 resolution 21]
+
+# Urban subdivisions are useful inside cities, not on regional overview maps.
+place=suburb & mkgmap:area2poi!=true        [0x0600 resolution 21]
+place=neighbourhood & mkgmap:area2poi!=true [0x0900 resolution 22]
+
+# Very small settlements and named localities are deliberately close-zoom.
+place=hamlet & mkgmap:area2poi!=true            [0x0b00 resolution 22]
+place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]
+place=locality & mkgmap:area2poi!=true          [0x11504 resolution 24]
+
+# Islands are geographic labels rather than settlements; retain their existing
+# visual identity but separate large islands from islets by one zoom level.
+place=island & name=* [0x650c resolution 20]
+place=islet & name=*  [0x650c resolution 21]
