@@ -15,7 +15,7 @@ landuse=farm | landuse=farmland [0x10f00 resolution 24]
 landuse=allotments | landuse=vineyard | landuse=orchard [0x1321b resolution 22-23 continue]
 landuse=allotments | landuse=vineyard | landuse=orchard [0x4e resolution 24]
 
-landuse=farmyard & craft=beekeeper | craft=beekeeper [0x10f0a resolution 23]
+craft=beekeeper [0x10f0a resolution 23]
 
 landuse=farmyard [0x1321f resolution 22-23 continue]
 landuse=farmyard [0x4e resolution 24]
@@ -76,7 +76,7 @@ natural=wood & area_size()>5500000 [0x1181b resolution 17-18 continue]
 
 natural=wood | wood=coniferous | leaf_type=needleleaved | wood=deciduous [0x1321e resolution 19-21 continue]
 
-natural=wood | wood=coniferous | leaf_type=needleleaved | natural=wood & wood=deciduous [0x1321f resolution 22-23 continue]
+natural=wood | wood=coniferous | leaf_type=needleleaved [0x1321f resolution 22-23 continue]
 
 leaf_type=needleleaved [0x10100 resolution 24]
 leaf_type=broadleaved [0x10101 resolution 24]
