@@ -33,7 +33,14 @@ landuse=meadow | landuse=grass | natural=grassland { name 'луг' } [0x18 resol
 
 
 
-landuse=military [0x04 resolution 21 continue]
+# Specific military classes must win before the generic landuse fallback.
+# Otherwise landuse=military + military=* creates overlapping polygons via continue.
+military=airfield [0x07 resolution 18]
+military=barracks [0x04 resolution 24]
+military=danger_area [0x04 resolution 18]
+military=range [0x04 resolution 18]
+landuse=military [0x04 resolution 21]
+
 landuse=quarry [0x0c resolution 21]
 #landuse=recreation_ground [0x50 resolution 21]
 # dedicate resolution 24 for building=* instead of related landuse=*
@@ -55,12 +62,6 @@ landuse=peat_cutting [0x10102 resolution 19]
 landuse=reservoir & natural!=* [0x3f resolution 19]
 
 landuse=garages [0x06 resolution 24]
-
-military=airfield [0x07 resolution 18]
-# military=barracks [0x04 resolution 18]
-military=barracks [0x04 resolution 24]
-military=danger_area [0x04 resolution 18]
-military=range [0x04 resolution 18]
 
 natural=scrub | man_made=clearcut [0x1321e resolution 21-23 continue]
 natural=scrub | man_made=clearcut [0x4f resolution 24]
