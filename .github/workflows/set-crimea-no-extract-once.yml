@@ -1,0 +1,44 @@
+name: Set Crimea no-extract once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/set-crimea-no-extract-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set product-specific extract false
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path('config/maps.yaml')
+          text = path.read_text(encoding='utf-8')
+          old = "  crimea:\n    source: crimea\n    polygon: poly/crimean-fed-district.poly"
+          new = "  crimea:\n    source: crimea\n    extract: false\n    polygon: poly/crimean-fed-district.poly"
+          if text.count(old) != 1:
+              raise RuntimeError(f'expected one Crimea product header, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='')
+
+          manifest = yaml.safe_load(path.read_text(encoding='utf-8'))
+          crimea = manifest['products']['crimea']
+          assert crimea['source'] == 'crimea'
+          assert crimea['extract'] is False
+          print('Crimea now reuses its exact source PBF without an extract stage')
+          PY
+      - name: Commit direct manifest source and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/maps.yaml
+          git rm .github/workflows/set-crimea-no-extract-once.yml
+          git commit -m "Skip redundant Crimea extract stage"
+          git push origin HEAD:main
