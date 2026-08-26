@@ -23,34 +23,45 @@ jobs:
           import re
 
           path = Path('styles/uralla.txt')
-          text = path.read_text(encoding='cp1251')
+          raw = path.read_bytes()
+          text = raw.decode('cp1251')
           targets = {'0x6511', '0x6512'}
           found = set()
 
+          block_re = re.compile(
+              r'(?ms)^\[_point\](?:\r\n|\n|\r).*?^\[end\](?=(?:\r\n|\n|\r)|\Z)'
+          )
+
           def patch(match):
-              header = match.group(1)
-              body = match.group(2)
-              type_match = re.search(r'(?mi)^Type=(0x[0-9a-f]+)$', body)
+              block = match.group(0)
+              type_match = re.search(
+                  r'(?mi)^Type=(0x[0-9a-f]+)(?=\r?$|\r)', block
+              )
               if not type_match or type_match.group(1).lower() not in targets:
-                  return match.group(0)
+                  return block
+
               type_code = type_match.group(1).lower()
               found.add(type_code)
-              if re.search(r'(?mi)^FontStyle=', body):
-                  body = re.sub(r'(?mi)^FontStyle=.*$', 'FontStyle=NoLabel', body)
-              else:
-                  body = re.sub(
-                      r'(?mi)^(Type=' + re.escape(type_match.group(1)) + r')$',
-                      r'\1\nFontStyle=NoLabel',
-                      body,
+              newline = '\r\n' if '\r\n' in block else ('\r' if '\r' in block else '\n')
+
+              if re.search(r'(?mi)^FontStyle=.*?(?=\r?$|\r)', block):
+                  return re.sub(
+                      r'(?mi)^FontStyle=.*?(?=\r?$|\r)',
+                      'FontStyle=NoLabel',
+                      block,
                       count=1,
                   )
-              return header + body + '\n[end]'
 
-          updated = re.sub(r'(\[_point\]\n)(.*?)(?:\n\[end\])', patch, text, flags=re.S | re.I)
+              end_pos = block.lower().rfind('[end]')
+              if end_pos < 0:
+                  raise SystemExit(f'malformed point block for {type_code}')
+              return block[:end_pos] + f'FontStyle=NoLabel{newline}' + block[end_pos:]
+
+          updated = block_re.sub(patch, text)
           missing = targets - found
           if missing:
               raise SystemExit(f'missing point types: {sorted(missing)}')
-          path.write_text(updated, encoding='cp1251')
+          path.write_bytes(updated.encode('cp1251'))
           PY
 
       - name: Download pinned mkgmap r4924
