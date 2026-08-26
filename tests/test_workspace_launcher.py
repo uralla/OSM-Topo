@@ -5,7 +5,7 @@ import subprocess
 from tempfile import TemporaryDirectory
 import unittest
 
-from uralla_build.workspace import write_launcher
+from uralla_build.workspace import launcher_text, write_launcher
 
 
 class WorkspaceLauncherTests(unittest.TestCase):
@@ -51,6 +51,28 @@ class WorkspaceLauncherTests(unittest.TestCase):
             self.assertIn("arg=build-product", lines)
             self.assertIn("arg=crimea", lines)
             self.assertIn("arg=--apply", lines)
+
+    def test_launcher_preserves_virtualenv_python_symlink_path(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            workspace = root / "workspace"
+            venv_bin = workspace / ".venv" / "bin"
+            repo.mkdir()
+            venv_bin.mkdir(parents=True)
+
+            host = workspace / "host.yaml"
+            host.write_text("schema_version: 1\n", encoding="utf-8")
+
+            base_python = root / "base-python"
+            base_python.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            base_python.chmod(0o755)
+            venv_python = venv_bin / "python"
+            venv_python.symlink_to(base_python)
+
+            text = launcher_text(repo, host, venv_python)
+            self.assertIn(f"PYTHON={venv_python}", text)
+            self.assertNotIn(f"PYTHON={base_python}", text)
 
     def test_launcher_reports_missing_repository_cleanly(self) -> None:
         with TemporaryDirectory() as directory:
