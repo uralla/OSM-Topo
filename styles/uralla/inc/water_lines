@@ -16,40 +16,42 @@
 
 
 # Статический справочник опорных рек. Ранг выставляет semantic preprocessor.
-uralla:river_rank=1 [0x18 resolution 16]
-uralla:river_rank=2 [0x18 resolution 17]
-uralla:river_rank=3 [0x18 resolution 18]
+# continue нужен, чтобы на близких масштабах река также дошла до обычных waterway=river правил ниже.
+uralla:river_rank=1 [0x18 resolution 16 continue]
+uralla:river_rank=2 [0x18 resolution 17 continue]
+uralla:river_rank=3 [0x18 resolution 18 continue]
 
-# Старый ручной список оставляем как страховку до визуальной проверки каталога.
-waterway=river & name='Чусовая' & length()>500
-| waterway=river & name='Волга' & length()>500
-| waterway=river & name='Белая' & length()>500
-| waterway=river & name='Юрюзань' & length()>500
-| waterway=river & name='Урал' & length()>500
-| waterway=river & name='Дон' & length()>500
-| waterway=river & name='Кубань' & length()>500
-| waterway=river & name='Терек' & length()>500
-| waterway=river & name='Ока' & length()>500
-| waterway=river & name='Иртыш' & length()>500
-| waterway=river & name='Северная Двина' & length()>500
-| waterway=river & name='Енисей' & length()>500
-| waterway=river & name='Амур' & length()>500
-| waterway=river & name='Ангара' & length()>500
-| waterway=river & name='Лена' & length()>500
-| waterway=river & name='Колыма' & length()>500
-| waterway=river & name='Катунь' & length()>500
-| waterway=river & name='Чуя' & length()>500
-| waterway=river & name='Сырдарья' & length()>500
-| waterway=river & name='Сосьва' & length()>500
-| waterway=river & name='Вишера' & length()>500
-| waterway=river & name='Лозьва' & length()>500
-| waterway=river & name='Косью' & length()>500
-| waterway=river & name='Тшугор' & length()>500
-| waterway=river & name='Ивдель' & length()>500
-| waterway=river & name='Обь' & length()>500
-| waterway=river & name='Уса' & length()>500
-| waterway=river & name='Печора' & length()>500
-| waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]
+# Старый ручной список оставляем как страховку для коротких вручную выбранных рек,
+# которых нет в ранжированном каталоге. Уже ранжированные реки здесь повторно не рисуем.
+uralla:river_rank!=* & waterway=river & name='Чусовая' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Волга' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Белая' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Юрюзань' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Урал' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Дон' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Кубань' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Терек' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Ока' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Иртыш' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Северная Двина' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Енисей' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Амур' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Ангара' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Лена' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Колыма' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Катунь' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Чуя' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Сырдарья' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Сосьва' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Вишера' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Лозьва' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Косью' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Тшугор' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Ивдель' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Обь' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Уса' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Печора' & length()>500
+| uralla:river_rank!=* & waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]
 
 waterway=river & length()>500 | waterway=canal & length()>500 [0x01f resolution 20 continue]
 waterway=river | waterway=canal [0x01f resolution 23]
