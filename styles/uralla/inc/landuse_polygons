@@ -56,8 +56,9 @@ landuse=reservoir & natural!=* [0x3f resolution 19]
 
 landuse=garages [0x06 resolution 24]
 
-natural=scrub | man_made=clearcut [0x1321e resolution 21-23 continue]
-natural=scrub | man_made=clearcut [0x4f resolution 24]
+# Вырубки: оба актуальных варианта разметки используются в России.
+natural=scrub | man_made=clearcut | landuse=logging [0x1321e resolution 21-23 continue]
+natural=scrub | man_made=clearcut | landuse=logging [0x4f resolution 24]
 
 # лес весь
 landuse=forest | landuse=wood { add natural=wood }
