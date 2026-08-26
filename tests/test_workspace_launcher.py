@@ -29,7 +29,7 @@ class WorkspaceLauncherTests(unittest.TestCase):
             )
             fake_python.chmod(0o755)
 
-            launcher = workspace / "uralla"
+            launcher = workspace / "start"
             write_launcher(launcher, repo, host, fake_python)
 
             self.assertTrue(launcher.is_file())
@@ -63,7 +63,7 @@ class WorkspaceLauncherTests(unittest.TestCase):
             fake_python = workspace / "python"
             fake_python.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
             fake_python.chmod(0o755)
-            launcher = workspace / "uralla"
+            launcher = workspace / "start"
             write_launcher(launcher, repo, host, fake_python)
 
             result = subprocess.run(
