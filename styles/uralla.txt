@@ -7651,8 +7651,27 @@ DayXpm="18 9 3 1"   Colormode=16
 Type=0x066
 SubType=0x02
 ;GRMN_TYPE: //
-String1=0x19,камни
-String2=0x04,stones
+Xpm="16 16 2 1"
+"  c none"
+"X c #202020"
+"XX            XX"
+"XXX          XXX"
+" XXX        XXX "
+"  XXX      XXX  "
+"   XXX    XXX   "
+"    XXX  XXX    "
+"     XXXXXX     "
+"XXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXX"
+"     XXXXXX     "
+"    XXX  XXX    "
+"   XXX    XXX   "
+"  XXX      XXX  "
+" XXX        XXX "
+"XXX          XXX"
+"XX            XX"
+String1=0x19,завал
+String2=0x04,debris / fallen tree
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -8309,6 +8328,28 @@ DayXpm="15 16 3 1"   Colormode=16
 "  !###!#!###!  "
 "  !!!!!#!!!!!  "
 ;123456789012345
+Xpm="16 16 3 1"
+"  c none"
+"X c #202020"
+"O c #FFFFFF"
+"       XX       "
+"      XXXX      "
+"     XXXXXX     "
+"    XXXXXXXX    "
+"   XXXXXXXXXX   "
+"  XXXXXXXXXXXX  "
+" XXXXXXXXXXXXXX "
+"XXXXXXXXXXXXXXXX"
+"XXXXXXOOOOXXXXXX"
+"XXXXXOOOOOOXXXXX"
+"XXXXOOOOOOOOXXXX"
+"XXXOOOOOOOOOOXXX"
+"XXXOOOOOOOOOOXXX"
+"XXXOOOOOOOOOOXXX"
+"XXXOOOOOOOOOOXXX"
+"XXXOOOOOOOOOOXXX"
+String1=0x19,пещера
+String2=0x04,cave entrance
 [end]
 
 
