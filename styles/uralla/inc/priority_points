@@ -61,8 +61,9 @@ natural=shrub & name!=* { delete natural }
 # [CUSTOM/АВТОРСКОЕ] Trail obstacles: fallen logs/debris are one visual class.
 (barrier=log | obstacle=fallen_tree | barrier=debris) [0x6602 resolution 23]
 
-# Agreed terrain / tourist POIs.
-natural=saddle [0x11507 resolution 23]
+# Agreed terrain / tourist POIs. A real mountain_pass must continue to the richer
+# rule in inc/landuse_points instead of being consumed as a generic saddle.
+natural=saddle & mountain_pass!=yes [0x11507 resolution 23]
 natural=valley [0x6617 resolution 23]
 natural=arch [0x6601 resolution 23]
 natural=cave_entrance [0x11602 resolution 23]
