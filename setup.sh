@@ -4,13 +4,6 @@ set -Eeuo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-HOST_CONFIG="${URALLA_HOST_CONFIG:-$REPO_ROOT/config/host.yaml}"
-DATA_ROOT="${URALLA_DATA_ROOT:-$HOME/garmin_lab}"
-WORK_ROOT="${URALLA_WORK_ROOT:-$DATA_ROOT}"
-PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$DATA_ROOT/output}"
-DEM_ROOT="${URALLA_DEM_ROOT:-$DATA_ROOT/dem}"
-TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$DATA_ROOT/tools}"
-
 log() { printf '[setup] %s\n' "$*"; }
 die() { printf '[setup] ERROR: %s\n' "$*" >&2; exit 1; }
 
@@ -30,11 +23,54 @@ python_is_supported() {
   "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1
 }
 
+expand_user_path() {
+  local value="$1"
+  case "$value" in
+    "~") value="$HOME" ;;
+    "~/"*) value="$HOME/${value#~/}" ;;
+  esac
+  printf '%s\n' "$value"
+}
+
 OS="$(uname -s)"
 IS_WSL=false
 if [[ "$OS" == "Linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
   IS_WSL=true
 fi
+
+# One machine-local workspace owns all mutable data and the real host.yaml.
+# The Git checkout stores only an ignored pointer to that config.
+DEFAULT_WORKSPACE="$HOME/garmin_lab"
+if [[ -n "${URALLA_WORKSPACE:-}" ]]; then
+  WORKSPACE="$URALLA_WORKSPACE"
+  log "working directory from URALLA_WORKSPACE: $WORKSPACE"
+elif [[ -n "${URALLA_DATA_ROOT:-}" ]]; then
+  # Backward-compatible override for existing scripted installations.
+  WORKSPACE="$URALLA_DATA_ROOT"
+  log "working directory from URALLA_DATA_ROOT: $WORKSPACE"
+elif [[ -t 0 ]]; then
+  printf '[setup] Working directory [%s]: ' "$DEFAULT_WORKSPACE"
+  IFS= read -r WORKSPACE_INPUT
+  WORKSPACE="${WORKSPACE_INPUT:-$DEFAULT_WORKSPACE}"
+else
+  WORKSPACE="$DEFAULT_WORKSPACE"
+  log "non-interactive setup; using default working directory: $WORKSPACE"
+fi
+
+WORKSPACE="$(expand_user_path "$WORKSPACE")"
+mkdir -p "$WORKSPACE"
+WORKSPACE="$(cd "$WORKSPACE" && pwd -P)"
+
+DATA_ROOT="$WORKSPACE"
+WORK_ROOT="${URALLA_WORK_ROOT:-$WORKSPACE}"
+PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$WORKSPACE/output}"
+DEM_ROOT="${URALLA_DEM_ROOT:-$WORKSPACE/dem}"
+TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$WORKSPACE/tools}"
+HOST_CONFIG="${URALLA_HOST_CONFIG:-$WORKSPACE/host.yaml}"
+HOST_POINTER="$REPO_ROOT/.uralla-host"
+
+log "working directory: $WORKSPACE"
+log "host config: $HOST_CONFIG"
 
 # Python venvs require normal Unix filesystem semantics (notably symlinks).
 # WSL repositories are often checked out on Windows drives under /mnt/<drive>,
@@ -116,9 +152,18 @@ log "installing/updating Python project dependencies"
 "$VENV/bin/python" -m pip install --upgrade pip setuptools wheel
 "$VENV/bin/python" -m pip install -e "$REPO_ROOT"
 
+# The whole mutable workspace hangs from the single user-selected root.
+mkdir -p \
+  "$DATA_ROOT/input" \
+  "$DATA_ROOT/elevation" \
+  "$PUBLISH_ROOT" \
+  "$PUBLISH_ROOT/mapsource" \
+  "$DEM_ROOT" \
+  "$TOOLS_ROOT"
+
 if [[ ! -f "$HOST_CONFIG" ]]; then
-  log "creating local host config: $HOST_CONFIG"
-  mkdir -p "$(dirname "$HOST_CONFIG")" "$DATA_ROOT" "$WORK_ROOT" "$PUBLISH_ROOT" "$PUBLISH_ROOT/mapsource" "$DEM_ROOT" "$TOOLS_ROOT"
+  log "creating machine-local host config: $HOST_CONFIG"
+  mkdir -p "$(dirname "$HOST_CONFIG")"
   cat > "$HOST_CONFIG" <<EOF
 schema_version: 1
 
@@ -141,11 +186,14 @@ resources:
   minimum_free_gib: 20
 EOF
 else
-  log "using existing host config: $HOST_CONFIG"
+  log "using existing machine-local host config: $HOST_CONFIG"
 fi
 
-# Ensure local writable roots exist. External data files themselves are not created.
-mkdir -p "$WORK_ROOT" "$PUBLISH_ROOT" "$PUBLISH_ROOT/mapsource" "$DEM_ROOT" "$TOOLS_ROOT"
+# Store only a Git-ignored pointer in the checkout. The actual host.yaml remains
+# outside Git while normal CLI commands can keep using the historical default.
+printf '%s\n' "$HOST_CONFIG" > "$HOST_POINTER.partial"
+mv "$HOST_POINTER.partial" "$HOST_POINTER"
+log "local host pointer: $HOST_POINTER -> $HOST_CONFIG"
 
 log "installing/checking system tools and pinned mkgmap/splitter"
 "$VENV/bin/python" -m uralla_build \
@@ -177,7 +225,10 @@ cat <<EOF
 
 [setup] READY
 [setup] activate: source "$VENV/bin/activate"
+[setup] working directory: $WORKSPACE
 [setup] host config: $HOST_CONFIG
 [setup] full check after copying map/DEM data:
-[setup]   "$VENV/bin/python" -m uralla_build --host "$HOST_CONFIG" doctor --repo-root "$REPO_ROOT"
+[setup]   "$VENV/bin/python" -m uralla_build doctor --repo-root "$REPO_ROOT"
+[setup] build example (host config is resolved automatically):
+[setup]   "$VENV/bin/python" -m uralla_build build-product crimea --apply
 EOF
