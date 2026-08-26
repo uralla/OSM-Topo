@@ -10,7 +10,6 @@ WORK_ROOT="${URALLA_WORK_ROOT:-$DATA_ROOT}"
 PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$DATA_ROOT/output}"
 DEM_ROOT="${URALLA_DEM_ROOT:-$DATA_ROOT/dem}"
 TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$REPO_ROOT/tools}"
-VENV="${URALLA_VENV:-$REPO_ROOT/.venv}"
 
 log() { printf '[setup] %s\n' "$*"; }
 die() { printf '[setup] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -26,12 +25,31 @@ as_root() {
 }
 
 OS="$(uname -s)"
+IS_WSL=false
+if [[ "$OS" == "Linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+  IS_WSL=true
+fi
+
+# Python venvs require normal Unix filesystem semantics (notably symlinks).
+# WSL repositories are often checked out on Windows drives under /mnt/<drive>,
+# where drvfs permissions may prevent `python -m venv` from creating lib64 -> lib.
+# Keep the repository wherever the user wants, but place the default venv in the
+# Linux filesystem. An explicit URALLA_VENV always wins.
+if [[ -n "${URALLA_VENV:-}" ]]; then
+  VENV="$URALLA_VENV"
+elif [[ "$IS_WSL" == true && "$REPO_ROOT" =~ ^/mnt/[A-Za-z](/|$) ]]; then
+  VENV="$HOME/.venvs/osm-topo"
+  log "WSL repository is on a Windows-mounted drive; using Linux filesystem for virtualenv: $VENV"
+else
+  VENV="$REPO_ROOT/.venv"
+fi
+
 case "$OS" in
   Linux)
     if ! command -v apt-get >/dev/null 2>&1; then
       die "Linux setup currently supports Ubuntu/Debian apt-based hosts"
     fi
-    if grep -qi microsoft /proc/version 2>/dev/null; then
+    if [[ "$IS_WSL" == true ]]; then
       log "platform: WSL Ubuntu/Debian"
     else
       log "platform: Ubuntu/Debian Linux"
@@ -68,6 +86,7 @@ log "python: $($PYTHON --version 2>&1)"
 
 if [[ ! -x "$VENV/bin/python" ]]; then
   log "creating virtual environment: $VENV"
+  mkdir -p "$(dirname "$VENV")"
   "$PYTHON" -m venv "$VENV"
 else
   log "virtual environment already exists: $VENV"
