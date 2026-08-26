@@ -9,7 +9,7 @@ DATA_ROOT="${URALLA_DATA_ROOT:-$HOME/garmin_lab}"
 WORK_ROOT="${URALLA_WORK_ROOT:-$DATA_ROOT}"
 PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$DATA_ROOT/output}"
 DEM_ROOT="${URALLA_DEM_ROOT:-$DATA_ROOT/dem}"
-TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$REPO_ROOT/tools}"
+TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$DATA_ROOT/tools}"
 
 log() { printf '[setup] %s\n' "$*"; }
 die() { printf '[setup] ERROR: %s\n' "$*" >&2; exit 1; }
