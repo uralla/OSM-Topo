@@ -1,5 +1,9 @@
 # 
 
+# Закрытые pier приходят из line-style с этим внутренним маркером.
+# Отрисовываем их только как polygon, без дополнительной линии.
+uralla:pier_polygon=yes [0x10f11 resolution 24]
+
 waterway=riverbank & mkgmap:area2poi!=true | landuse=basin & mkgmap:area2poi!=true | landuse=reservoir & mkgmap:area2poi!=true | water=reservoir & mkgmap:area2poi!=true {add natural=water}
 
 #(landuse=reservoir | water=reservoir) [0x3f resolution 18]
