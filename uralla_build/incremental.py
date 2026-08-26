@@ -16,19 +16,29 @@ from .publish import publish_product
 from .runner import StageRunner
 
 
-def _latest_successful_build(history: HistoryStore, product: str) -> str:
+def _latest_successful_splitter_build(
+    history: HistoryStore,
+    builds_root: Path,
+    product: str,
+) -> tuple[str, Path]:
     with history.connect() as connection:
-        row = connection.execute(
+        rows = connection.execute(
             """SELECT build_id FROM builds
                WHERE product = ? AND status = 'success'
-               ORDER BY finished_at DESC LIMIT 1""",
+               ORDER BY finished_at DESC""",
             (product,),
-        ).fetchone()
-    if row is None:
-        raise StageError(
-            f"no successful build exists for {product!r}; run one full build first"
-        )
-    return str(row["build_id"])
+        ).fetchall()
+
+    for row in rows:
+        build_id = str(row["build_id"])
+        tiles = builds_root / build_id / "splitter" / "tiles"
+        if (tiles / "template.args").is_file() and (tiles / "areas.list").is_file():
+            return build_id, tiles
+
+    raise StageError(
+        f"no successful build with reusable splitter output exists for {product!r}; "
+        "run one full build first"
+    )
 
 
 def rebuild_from_mkgmap(
@@ -41,7 +51,7 @@ def rebuild_from_mkgmap(
     tools_lock_path: str | Path,
     build_id: str | None = None,
 ) -> dict[str, object]:
-    """Run only mkgmap and publication using splitter output from latest success."""
+    """Run only mkgmap and publication using splitter output from latest full success."""
 
     products = manifest.get("products")
     product = products.get(product_key) if isinstance(products, Mapping) else None
@@ -49,18 +59,12 @@ def rebuild_from_mkgmap(
         raise StageError(f"unknown product: {product_key}")
 
     runner = StageRunner(host.paths.work_root)
-    previous_id = _latest_successful_build(runner.history, product_key)
-    previous_tiles = runner.builds_root / previous_id / "splitter" / "tiles"
+    previous_id, previous_tiles = _latest_successful_splitter_build(
+        runner.history,
+        runner.builds_root,
+        product_key,
+    )
     previous_template = previous_tiles / "template.args"
-    previous_areas = previous_tiles / "areas.list"
-    if not previous_template.is_file():
-        raise StageError(
-            f"latest successful build {previous_id} has no splitter template: {previous_template}"
-        )
-    if not previous_areas.is_file():
-        raise StageError(
-            f"latest successful build {previous_id} has no splitter areas: {previous_areas}"
-        )
 
     metadata = {
         "mode": "from-stage:mkgmap",
