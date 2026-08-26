@@ -30,6 +30,10 @@ railway=subway & tunnel=yes { delete railway }
 # through to the generic highway=service rule.
 highway=service & service=parking_aisle { delete highway }
 
+# [CUSTOM/АВТОРСКОЕ] Weirs are relevant hazards/landmarks for water tourism.
+# Use the existing dam visual class; continue preserves any independent tags.
+waterway=weir [0x12d01 resolution 23 continue]
+
 # natural=coastline [0x15 resolution 16]
 
 # route=ferry {set mkgmap:numbers = false }
