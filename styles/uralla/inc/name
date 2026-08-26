@@ -40,25 +40,25 @@ name=* { set name='${name|subst:улица=> ул.
 
 ### fuel / АЗС
 amenity=fuel & fuel:diesel=yes & fuel:lpg=yes
-{ name '${name} (Дизель, Газ)' |
-       '${operator} (Дизель, Газ)' |
-       '${brand} (Дизель, Газ)' |
-       '${ref} (Дизель, Газ)' |
-       'Дизель, Газ'}
+{ name '${name} (дизель, газ)' |
+       '${operator} (дизель, газ)' |
+       '${brand} (дизель, газ)' |
+       '${ref} (дизель, газ)' |
+       'дизель, газ'}
 
 amenity=fuel & fuel:diesel=yes
-{ name '${name} (Дизель)' |
-       '${operator} (Дизель)' |
-       '${brand} (Дизель)' |
-       '${ref} (Дизель)' |
-       'Дизель'}
+{ name '${name} (дизель)' |
+       '${operator} (дизель)' |
+       '${brand} (дизель)' |
+       '${ref} (дизель)' |
+       'дизель'}
 
 amenity=fuel & fuel:lpg=yes
-{ name '${name} (Газ)' |
-       '${operator} (Газ)' |
-       '${brand} (Газ)' |
-       '${ref} (Газ)' |
-       'Газ'}
+{ name '${name} (газ)' |
+       '${operator} (газ)' |
+       '${brand} (газ)' |
+       '${ref} (газ)' |
+       'газ'}
 
 amenity=fuel
 { name '${name}' |
@@ -67,25 +67,25 @@ amenity=fuel
        '${ref}'}
 
 amenity=fuel & fuel:HGV_diesel=yes
-{ name '${name} (Дизель)' |
-       '${operator} (Дизель)' |
-       '${brand} (Дизель)' |
-       '${ref} (Дизель)' |
-       'Дизель'}
+{ name '${name} (дизель)' |
+       '${operator} (дизель)' |
+       '${brand} (дизель)' |
+       '${ref} (дизель)' |
+       'дизель'}
 
 amenity=fuel & fuel:diesel=no & fuel:lpg=yes
-{ name '${name} (Без дизеля, Газ)' |
-       '${operator} (Без дизеля, Газ)' |
-       '${brand} (Без дизеля, Газ)' |
-       '${ref} (Без дизеля, Газ)' |
-       'Без дизеля, Газ'}
+{ name '${name} (без дизеля, газ)' |
+       '${operator} (без дизеля, газ)' |
+       '${brand} (без дизеля, газ)' |
+       '${ref} (без дизеля, газ)' |
+       'без дизеля, газ'}
 
 amenity=fuel & fuel:diesel=no
-{ name '${name} (Без дизеля)' |
-       '${operator} (Без дизеля)' |
-       '${brand} (Без дизеля)' |
-       '${ref} (Без дизеля)' |
-       'Без дизеля'}
+{ name '${name} (без дизеля)' |
+       '${operator} (без дизеля)' |
+       '${brand} (без дизеля)' |
+       '${ref} (без дизеля)' |
+       'без дизеля'}
 
 # None of operator, brand given
 #ref=* & (operator!=* & brand!=*) & (highway=bus_stop | railway=tram_stop | railway=halt | railway=station) { name '${name} ${ref}' | '${ref}' }
