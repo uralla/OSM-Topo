@@ -100,3 +100,7 @@ amenity=fuel & fuel:diesel=no
 #      '${brand}' |
 #      '${ref}'
 #}
+
+# Settlement significance is kept in a separate include so visual thresholds can
+# be tuned independently after control builds.
+include 'inc/place_points';
