@@ -53,6 +53,11 @@ boundary=national_park { delete boundary }
 natural=tree & name!=* { delete natural }
 natural=shrub & name!=* { delete natural }
 
+# [CUSTOM/АВТОРСКОЕ] Trail obstacles: fallen logs/debris are one visual class.
+# cattle_grid/motorcycle_barrier are intentionally NOT folded into this rule: their
+# gate-style TYP slot/access defaults are still an explicit open decision.
+(barrier=log | obstacle=fallen_tree | barrier=debris) [0x6602 resolution 23]
+
 # Agreed terrain / tourist POIs.
 natural=saddle [0x11507 resolution 23]
 natural=valley [0x6617 resolution 23]
