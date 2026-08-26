@@ -38,8 +38,8 @@ if [[ "$OS" == "Linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
   IS_WSL=true
 fi
 
-# One machine-local workspace owns all mutable data and the real host.yaml.
-# The Git checkout stores only an ignored pointer to that config.
+# One machine-local workspace owns all mutable data. The Git checkout remains
+# source-only after setup: no host config, venv or launcher is written into it.
 DEFAULT_WORKSPACE="$HOME/garmin_lab"
 if [[ -n "${URALLA_WORKSPACE:-}" ]]; then
   WORKSPACE="$URALLA_WORKSPACE"
@@ -67,23 +67,21 @@ PUBLISH_ROOT="${URALLA_PUBLISH_ROOT:-$WORKSPACE/output}"
 DEM_ROOT="${URALLA_DEM_ROOT:-$WORKSPACE/dem}"
 TOOLS_ROOT="${URALLA_TOOLS_ROOT:-$WORKSPACE/tools}"
 HOST_CONFIG="${URALLA_HOST_CONFIG:-$WORKSPACE/host.yaml}"
-HOST_POINTER="$REPO_ROOT/.uralla-host"
+LAUNCHER="$WORKSPACE/uralla"
 
 log "working directory: $WORKSPACE"
 log "host config: $HOST_CONFIG"
 
-# Python venvs require normal Unix filesystem semantics (notably symlinks).
-# WSL repositories are often checked out on Windows drives under /mnt/<drive>,
-# where drvfs permissions may prevent `python -m venv` from creating lib64 -> lib.
-# Keep the repository wherever the user wants, but place the default venv in the
-# Linux filesystem. An explicit URALLA_VENV always wins.
+# Keep the virtualenv with the machine-local workspace too. The only exception
+# is WSL on drvfs: Python venvs need normal Unix symlink semantics, so a workspace
+# under /mnt/<drive> uses the Linux filesystem instead.
 if [[ -n "${URALLA_VENV:-}" ]]; then
   VENV="$URALLA_VENV"
-elif [[ "$IS_WSL" == true && "$REPO_ROOT" =~ ^/mnt/[A-Za-z](/|$) ]]; then
+elif [[ "$IS_WSL" == true && "$WORKSPACE" =~ ^/mnt/[A-Za-z](/|$) ]]; then
   VENV="$HOME/.venvs/osm-topo"
-  log "WSL repository is on a Windows-mounted drive; using Linux filesystem for virtualenv: $VENV"
+  log "WSL working directory is on a Windows-mounted drive; using Linux filesystem for virtualenv: $VENV"
 else
-  VENV="$REPO_ROOT/.venv"
+  VENV="$WORKSPACE/.venv"
 fi
 
 PYTHON=""
@@ -189,11 +187,19 @@ else
   log "using existing machine-local host config: $HOST_CONFIG"
 fi
 
-# Store only a Git-ignored pointer in the checkout. The actual host.yaml remains
-# outside Git while normal CLI commands can keep using the historical default.
-printf '%s\n' "$HOST_CONFIG" > "$HOST_POINTER.partial"
-mv "$HOST_POINTER.partial" "$HOST_POINTER"
-log "local host pointer: $HOST_POINTER -> $HOST_CONFIG"
+# Generate the normal entry point in the workspace. It embeds absolute paths to
+# this checkout, host config and virtualenv, so normal operation never needs to
+# cd into the repository, activate a venv or spell --host on the command line.
+log "creating/updating workspace launcher: $LAUNCHER"
+"$VENV/bin/python" - "$LAUNCHER" "$REPO_ROOT" "$HOST_CONFIG" "$VENV/bin/python" <<'PY'
+from pathlib import Path
+import sys
+
+from uralla_build.workspace import write_launcher
+
+launcher, repo_root, host_config, python = map(Path, sys.argv[1:])
+write_launcher(launcher, repo_root, host_config, python)
+PY
 
 log "installing/checking system tools and pinned mkgmap/splitter"
 "$VENV/bin/python" -m uralla_build \
@@ -224,11 +230,13 @@ log "environment doctor (external map data intentionally skipped)"
 cat <<EOF
 
 [setup] READY
-[setup] activate: source "$VENV/bin/activate"
 [setup] working directory: $WORKSPACE
 [setup] host config: $HOST_CONFIG
-[setup] full check after copying map/DEM data:
-[setup]   "$VENV/bin/python" -m uralla_build doctor --repo-root "$REPO_ROOT"
-[setup] build example (host config is resolved automatically):
-[setup]   "$VENV/bin/python" -m uralla_build build-product crimea --apply
+[setup] launcher: $LAUNCHER
+[setup]
+[setup] normal use:
+[setup]   cd "$WORKSPACE"
+[setup]   ./uralla doctor
+[setup]   ./uralla build-product crimea --apply
+[setup]   ./uralla build-product crimea --apply --from-stage mkgmap
 EOF
