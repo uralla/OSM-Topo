@@ -19,9 +19,6 @@ ele=* & natural!=* {name "${ele} м"} [0x6405 resolution 24]
 
 natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
 
-natural=glacier [0x650a resolution 21]
-
-
 # Edge 705 displays 0x650a,0x6511,0x6512,0x6513,0x6603,0x6614 as hollow white circles, no menu
 natural=cave_entrance [0x6601 resolution 23]
 natural=cliff {name "${name}"} [0x6607 resolution 24]
@@ -84,7 +81,6 @@ natural=volcano & note!=great-peak {name "${name} (${ele} м)"} [0x2c0c resoluti
 # {name "${name} (${ele})"} [0x6616 resolution 23]
 
 natural=hot_spring [0x6511 resolution 22]
-natural=stream & name=* [0x6511 resolution 23]
 
 
 natural=tree & leaf_type=broadleaved | natural=tree & leaf_type=mixed {name '${name}'} [0x2c08 resolution 24]
