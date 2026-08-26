@@ -89,7 +89,8 @@ def main() -> int:
     text = replace_once(text, PIER_POLYGON_OLD, PIER_POLYGON_NEW, "pier polygon")
     text = replace_once(text, PIER_LINE_OLD, PIER_LINE_NEW, "pier line")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(text, encoding="utf-8", newline="\n")
+    # mkgmap's TYP compiler recognizes the UTF-8 BOM and then converts labels to code page 1251.
+    destination.write_text(text, encoding="utf-8-sig", newline="\n")
     print(f"prepared TYP source: {destination}")
     return 0
 
