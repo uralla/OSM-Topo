@@ -1,0 +1,82 @@
+name: Hide rail technical labels once
+
+# cp1251-safe one-shot TYP edit
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/hide-rail-technical-labels-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set NoLabel on technical rail/traffic point types
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('styles/uralla.txt')
+          text = path.read_text(encoding='cp1251')
+          targets = {'0x1341f', '0x1341d', '0x1616', '0x1615'}
+          found = set()
+
+          def patch(match):
+              header = match.group(1)
+              body = match.group(2)
+              type_match = re.search(r'(?mi)^Type=(0x[0-9a-f]+)$', body)
+              if not type_match or type_match.group(1).lower() not in targets:
+                  return match.group(0)
+              type_code = type_match.group(1).lower()
+              found.add(type_code)
+              if re.search(r'(?mi)^FontStyle=', body):
+                  body = re.sub(r'(?mi)^FontStyle=.*$', 'FontStyle=NoLabel', body)
+              else:
+                  body = re.sub(
+                      r'(?mi)^(Type=' + re.escape(type_match.group(1)) + r')$',
+                      r'\1\nFontStyle=NoLabel',
+                      body,
+                      count=1,
+                  )
+              return header + body + '\n[end]'
+
+          updated = re.sub(r'(\[_point\]\n)(.*?)(?:\n\[end\])', patch, text, flags=re.S | re.I)
+          missing = targets - found
+          if missing:
+              raise SystemExit(f'missing point types: {sorted(missing)}')
+          path.write_text(updated, encoding='cp1251')
+          PY
+
+      - name: Download pinned mkgmap r4924
+        run: |
+          curl -fsSLO https://www.mkgmap.org.uk/download/mkgmap-r4924.zip
+          echo 'b2170799b61a95d4fc258e8e4fb4e21396809e0390789178f94c77109f8e0d84  mkgmap-r4924.zip' | sha256sum -c -
+          unzip -q mkgmap-r4924.zip
+
+      - name: Validate style and TYP
+        run: |
+          set -o pipefail
+          java -jar mkgmap-r4924/mkgmap.jar --style-file=styles/uralla --check-styles 2>&1 | tee /tmp/style.log
+          if grep -q '^Warning:' /tmp/style.log; then exit 1; fi
+          java -jar mkgmap-r4924/mkgmap.jar styles/uralla.txt 2>&1 | tee /tmp/typ.log
+          if grep -qE 'MapFailedExceptions: [1-9]|ExitExceptions: [1-9]' /tmp/typ.log; then exit 1; fi
+
+      - name: Run tests
+        run: |
+          python -m pip install -e . pytest
+          pytest -q
+
+      - name: Commit TYP update and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla.txt
+          git rm .github/workflows/hide-rail-technical-labels-once.yml
+          git commit -m "Hide technical rail and traffic labels in TYP"
+          git push origin HEAD:main
