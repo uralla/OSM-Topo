@@ -1,0 +1,85 @@
+name: Audit implicit TYP XPM palettes once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-typ-xpm-palettes-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Audit used XPM palettes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          from collections import Counter
+
+          p = Path('styles/uralla.txt')
+          raw = p.read_bytes()
+          try:
+              text = raw.decode('utf-8')
+              enc = 'utf-8'
+          except UnicodeDecodeError:
+              text = raw.decode('cp1251')
+              enc = 'cp1251'
+
+          sec_rx = re.compile(r'(?ims)^\[(_point|_line|_polygon)\]\s*\n.*?^\[end\]\s*(?:\n|$)')
+          hdr_rx = re.compile(r'(?im)^Xpm="(\d+)\s+(\d+)\s+(\d+)\s+(\d+)"([^\n]*)$')
+          type_rx = re.compile(r'(?im)^Type=(0x[0-9a-f]+)\b')
+          sub_rx = re.compile(r'(?im)^SubType=(0x[0-9a-f]+)\b')
+          string_rx = re.compile(r'(?im)^String\d+=.*$')
+
+          counts = Counter()
+          records = []
+          for m in sec_rx.finditer(text):
+              block = m.group(0)
+              hm = hdr_rx.search(block)
+              if not hm:
+                  continue
+              w, h, colors, cpp = map(int, hm.groups()[:4])
+              tm = type_rx.search(block)
+              sm = sub_rx.search(block)
+              typ = tm.group(1) if tm else '?'
+              if sm:
+                  typ += '/' + sm.group(1)
+              palette = []
+              lines = block.splitlines()
+              hi = next(i for i, line in enumerate(lines) if hdr_rx.match(line))
+              palette = lines[hi+1:hi+1+colors]
+              strings = string_rx.findall(block)
+              kind = m.group(1)
+              counts[(kind, colors, h)] += 1
+              if colors >= 2:
+                  records.append((kind, typ, w, h, colors, cpp, hm.group(5).strip(), palette, strings[:2]))
+
+          print('encoding:', enc)
+          print('XPM groups:')
+          for key, n in sorted(counts.items()):
+              print(' ', key, n)
+          print('\nSECTIONS WITH >=2 COLORS:')
+          for rec in records:
+              kind, typ, w, h, colors, cpp, extra, palette, strings = rec
+              print(f'--- {kind} {typ} Xpm={w}x{h} colors={colors} cpp={cpp} {extra}')
+              for line in strings:
+                  print(' ', line)
+              for line in palette:
+                  print(' ', line)
+          PY
+
+      - name: Remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/audit-typ-xpm-palettes-once.yml
+          git commit -m "Remove one-shot TYP palette audit"
+          git push origin HEAD:main
