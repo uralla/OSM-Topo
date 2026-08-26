@@ -14,14 +14,15 @@ natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi
     & name=* & mkgmap:area2poi!=true [0x6513 resolution 21]
 
 # [CUSTOM/АВТОРСКОЕ] Water sources: seasonal=* except seasonal=no is treated
-# as intermittent. Normal sources do not get a generic fallback label: the icon
-# already conveys the object type, while a real name=* remains available to Garmin.
+# as intermittent. Source labels are kept in the POI data but the corresponding
+# TYP points use FontStyle=NoLabel so icons stay uncluttered on the map.
 (man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring)
     & intermittent!=yes & !(seasonal=* & seasonal!=no)
     [0x6511 resolution 22]
 
 (man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring)
     & (intermittent=yes | (seasonal=* & seasonal!=no))
-    { addlabel 'вода (пересых.)' } [0x6512 resolution 23]
+    { name '${name} (пересых.)' | 'пересых. источник' }
+    [0x6512 resolution 23]
 
 amenity=water_point { addlabel 'запас воды' } [0x5001 resolution 23]
