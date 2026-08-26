@@ -43,6 +43,14 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn('aerialway=cable_car', water)
         self.assertIn('[0x10f15 resolution 22]', water)
 
+    def test_pipeline_reaches_its_dedicated_farther_lod_rule(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("man_made!=pipeline & man_made ~ '.*pipe.*'", lines)
+        self.assertIn(
+            "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 22]",
+            lines,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
