@@ -28,6 +28,23 @@ class PolygonPrecedenceStyleTests(unittest.TestCase):
         self.assertLess(self.text.index(sport), self.text.index(render))
         self.assertNotIn("leisure=swimming_pool | amenity=swimming_pool {set sport=swimming}", self.text)
 
+    def test_private_nature_reserve_does_not_regain_close_zoom_fill(self) -> None:
+        reserve = (
+            "leisure=nature_reserve & area_size()>50000 | "
+            "leisure=natural_reserve & area_size()>50000 | "
+            "landuse=nature_reserve & area_size()>50000 | "
+            "landuse=natural_reserve & area_size()>50000 "
+            "[0x16 resolution 19-22 continue]"
+        )
+        private_fallback = (
+            "leisure=* & access=private & leisure!=nature_reserve "
+            "& leisure!=natural_reserve [0x19 resolution 23]"
+        )
+        self.assertIn(reserve, self.text)
+        self.assertIn(private_fallback, self.text)
+        self.assertNotIn("leisure=* & access=private [0x19 resolution 23]", self.text)
+        self.assertLess(self.text.index(reserve), self.text.index(private_fallback))
+
 
 if __name__ == "__main__":
     unittest.main()
