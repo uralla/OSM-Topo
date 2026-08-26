@@ -74,6 +74,21 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertNotIn("power=line & man_made=cutline & length()>500", lines)
         self.assertNotIn("power=line | (power=line & man_made=cutline)", lines)
 
+    def test_unclassified_roundabout_uses_only_specialized_resolution_22_rule(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn(
+            "highway=unclassified & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22 continue]",
+            lines,
+        )
+        self.assertIn(
+            "highway=unclassified & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]",
+            lines,
+        )
+        self.assertNotIn(
+            "highway=unclassified [0x06 road_class=1 road_speed=4 resolution 22 continue]",
+            lines,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
