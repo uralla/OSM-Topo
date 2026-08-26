@@ -1,0 +1,110 @@
+name: Inspect open point TYP slots once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/inspect-open-point-slots-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect semantic point candidates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          raw = Path('styles/uralla.txt').read_bytes()
+          try:
+              typ = raw.decode('utf-8')
+          except UnicodeDecodeError:
+              typ = raw.decode('cp1251')
+
+          root = Path('styles/uralla')
+          active_parts = []
+          for p in root.rglob('*'):
+              if not p.is_file():
+                  continue
+              try:
+                  s = p.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              kept = []
+              for line in s.splitlines():
+                  if line.lstrip().startswith('#'):
+                      continue
+                  kept.append(line.split('#', 1)[0])
+              active_parts.append('\n'.join(kept))
+          active = '\n'.join(active_parts).lower()
+
+          rx = re.compile(r'(?ims)^\[_point\][ \t]*\r?\n.*?^\[end\][ \t]*(?:\r?\n)?')
+          sections = [m.group(0) for m in rx.finditer(typ)]
+
+          def code(block):
+              tm = re.search(r'(?im)^Type=0x([0-9a-f]+)\b', block)
+              sm = re.search(r'(?im)^SubType=0x([0-9a-f]+)\b', block)
+              if not tm:
+                  return None
+              t = int(tm.group(1), 16)
+              if sm:
+                  return f'0x{t:x}{int(sm.group(1), 16):02x}'
+              return f'0x{t:x}'
+
+          groups = {
+              'EMERGENCY': ['defib', 'aed', 'first aid', 'first_aid', 'medical', 'hospital', 'pharmacy', 'emergency'],
+              'BICYCLE': ['bicycle', 'bike', 'cycle', 'rental', 'parking'],
+              'HISTORIC_RELIGIOUS': ['wayside', 'cross', 'shrine', 'chapel', 'church', 'relig', 'worship'],
+              'BARRIER': ['gate', 'barrier', 'cattle', 'motorcycle', 'bollard', 'stile'],
+          }
+
+          print('=== MATCHING TYP POINT SECTIONS ===')
+          for group, words in groups.items():
+              print(f'\n## {group}')
+              found = 0
+              for block in sections:
+                  low = block.lower()
+                  if not any(w in low for w in words):
+                      continue
+                  c = code(block)
+                  refs = len(re.findall(rf'\[{re.escape(c)}\b', active)) if c else 0
+                  meta = []
+                  for line in block.splitlines():
+                      ls = line.strip()
+                      if ('GRMN_TYPE:' in ls or ls.startswith('String') or ls.startswith('Type=') or ls.startswith('SubType=')):
+                          meta.append(ls)
+                  print(f'[{c}] active_refs={refs}')
+                  for line in meta[:8]:
+                      print('  ' + line)
+                  found += 1
+              if not found:
+                  print('  (no semantic matches in TYP source)')
+
+          print('\n=== UNREFERENCED POINT SECTIONS WITH LABELS/MPC METADATA ===')
+          rows = []
+          for block in sections:
+              c = code(block)
+              if not c:
+                  continue
+              refs = len(re.findall(rf'\[{re.escape(c)}\b', active))
+              if refs:
+                  continue
+              grmn = re.search(r'(?im)^;?GRMN_TYPE:\s*(.+)$', block)
+              strings = re.findall(r'(?im)^String\d*=([^\r\n]+)', block)
+              if grmn or strings:
+                  rows.append((c, grmn.group(1).strip() if grmn else '', ' | '.join(x.strip() for x in strings[:3])))
+          for c, grmn, strings in rows:
+              print(f'{c:10s} MPC={grmn} LABELS={strings}')
+          PY
+      - name: Remove diagnostic workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/inspect-open-point-slots-once.yml
+          git commit -m "Complete open point TYP slot inspection"
+          git push origin HEAD:main
