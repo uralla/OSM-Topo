@@ -14,8 +14,9 @@ paths:
   # Existing Syncthing ready-files tree.
   publish_root: /mnt/nod/garmin
 
-  # Project-local pinned mkgmap/splitter distributions.
-  tools_root: tools
+  # Downloaded pinned mkgmap/splitter distributions. Keep them outside
+  # the Git repository with the rest of the machine-local working data.
+  tools_root: /mnt/nod/tools
 
   # Large externally synchronised HGT/DEM directory.
   dem_root: /mnt/nod/dem
