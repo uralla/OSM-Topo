@@ -4,7 +4,7 @@
 # Fuel: one fuel POI for amenity/waterway=fuel; convenience store gets an additional
 # grocery POI. HGV diesel and the duplicate 0x11603 fuel icon are intentionally gone.
 (amenity=fuel | waterway=fuel) { set uralla:fuel_rendered=yes } [0x2f01 resolution 24 continue]
-uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' | 'АЗС (продукты)' } [0x2e02 resolution 24 continue]
+uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' | 'азс (продукты)' } [0x2e02 resolution 24 continue]
 uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete fuel:HGV_diesel; delete uralla:fuel_rendered }
 
 # Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
