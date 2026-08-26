@@ -6,7 +6,10 @@ import unittest
 
 from uralla_build.errors import StageError
 from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
-from uralla_build.source import ensure_source
+from uralla_build.source import ensure_source, load_source_downloads
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _host(root: Path) -> HostConfig:
@@ -37,6 +40,16 @@ def _config() -> dict[str, object]:
 
 
 class SourceDownloadTests(unittest.TestCase):
+    def test_managed_download_config_includes_crimea(self) -> None:
+        config = load_source_downloads(PROJECT_ROOT / "config/source-downloads.yaml")
+        crimea = config["sources"]["crimea"]
+
+        self.assertEqual(
+            crimea["url"],
+            "https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf",
+        )
+        self.assertEqual(crimea["refresh_days"], 1)
+
     def test_missing_source_is_downloaded_and_validated(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
