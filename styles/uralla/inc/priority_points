@@ -1,7 +1,59 @@
-# Point rules that must run before broad generic POI fallbacks in points.
-# A matched Garmin type ends normal point processing, so put only genuinely
-# more-specific variants here.
+# [IMPORTANT/ВАЖНО] Agreed point rules that must run before broad generic fallbacks.
+# A matched Garmin type ends normal point processing unless continue is explicit.
 
-# Fuel stations: the generic amenity=fuel rule appears later in points.
-amenity=fuel & fuel:HGV_diesel=yes [0x2f16 resolution 24]
-amenity=fuel & shop=convenience [0x2e06 resolution 24]
+# Fuel: one fuel POI for amenity/waterway=fuel; convenience store gets an additional
+# grocery POI. HGV diesel and the duplicate 0x11603 fuel icon are intentionally gone.
+(amenity=fuel | waterway=fuel) { set uralla:fuel_rendered=yes } [0x2f01 resolution 24 continue]
+uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' | 'АЗС (продукты)' } [0x2e02 resolution 24 continue]
+uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete fuel:HGV_diesel; delete uralla:fuel_rendered }
+
+# Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
+(amenity=restaurant | amenity=cafe | amenity=fast_food | amenity=food_court) [0x2a00 resolution 24]
+
+# Grocery group.
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=organic | shop=supermarket) [0x2e02 resolution 24]
+
+# Pharmacy and bicycle shop remain distinct tourist-useful POIs.
+shop=chemist [0x2e05 resolution 24]
+shop=bicycle [0x2f13 resolution 24]
+
+# Motor-vehicle shops/services are one class.
+(shop=car | shop=car_dealer | shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
+
+# All remaining shops use one generic shop icon.
+shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
+
+# Tourist accommodation / shelters.
+(tourism=hotel | tourism=hostel | tourism=guest_house | tourism=motel) [0x2b01 resolution 24]
+amenity=shelter [0x2b05 resolution 24]
+(tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 24]
+
+# Generic point buildings are buildings, not huts.
+(building=yes | building=true) & mkgmap:area2poi!=true [0x6402 resolution 24]
+
+# Agreed removals from point display. Polygon/line representations are unaffected.
+tourism=caravan_site { delete tourism }
+(highway=speed_bump | traffic_calming=bump | traffic_calming=hump) { delete highway; delete traffic_calming }
+man_made=utility_pole { delete man_made }
+(leisure=playground | leisure=sports_centre | leisure=pitch | leisure=swimming_pool | leisure=fitness_centre) { delete leisure }
+
+# Unnamed trees/shrubs are map clutter; named ones continue to the existing rules.
+natural=tree & name!=* { delete natural }
+natural=shrub & name!=* { delete natural }
+
+# Agreed terrain / tourist POIs.
+natural=saddle [0x11507 resolution 23]
+natural=valley [0x6617 resolution 23]
+natural=arch [0x6601 resolution 23]
+natural=cave_entrance [0x11602 resolution 23]
+sport=climbing [0x6607 resolution 23]
+man_made=cairn [0x2f18 resolution 23]
+
+# Emergency phone legacy/current tags.
+(amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
+
+# Bicycle repair infrastructure is not a bicycle shop.
+amenity=bicycle_repair_station [0x2e0d resolution 24]
+
+# Small tourist infrastructure.
+leisure=picnic_table [0x4a01 resolution 24]
