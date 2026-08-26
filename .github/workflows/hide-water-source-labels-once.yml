@@ -22,7 +22,7 @@ jobs:
           import re
 
           path = Path('styles/uralla.txt')
-          text = path.read_text(encoding='utf-8-sig')
+          text = path.read_text(encoding='cp1251')
           targets = {'0x6511', '0x6512'}
           found = set()
 
@@ -45,11 +45,11 @@ jobs:
                   )
               return header + body + '\n[end]'
 
-          updated = re.sub(r'(\[_point\]\n)(.*?)(?:\n\[end\])', patch, text, flags=re.S)
+          updated = re.sub(r'(\[_point\]\n)(.*?)(?:\n\[end\])', patch, text, flags=re.S | re.I)
           missing = targets - found
           if missing:
               raise SystemExit(f'missing point types: {sorted(missing)}')
-          path.write_text(updated, encoding='utf-8')
+          path.write_text(updated, encoding='cp1251')
           PY
 
       - name: Download pinned mkgmap r4924
