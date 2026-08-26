@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 TYP_PATH = Path('styles/uralla.txt')
-TARGET_TYPES = {'0x1341f', '0x1341d', '0x1616', '0x1615'}
+TARGET_TYPES = {'0x1341f', '0x1341e', '0x1341d', '0x1616', '0x1615'}
 
 
 def _point_blocks(text: str):
