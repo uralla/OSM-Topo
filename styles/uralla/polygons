@@ -16,7 +16,7 @@ leisure=* & sport=* & name=* { set name='${name} (${sport})' }
 
 leisure=fitness_station & sport=* { set leisure=playground }
 
-man_made=clearcut {add natural=heath}
+(man_made=clearcut | landuse=logging) {add natural=heath}
 
 # Все бесхозные man_made до зданий
 man_made=* & landuse=* {delete man_made}
