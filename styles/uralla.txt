@@ -3579,36 +3579,6 @@ DayXpm="10 10 15 1"   Colormode=16
 
 
 [_point]
-Type=0x005
-SubType=0x00
-;GRMN_TYPE: Political Entities/CITY_500K/City with the range of (0.5, 1] million inhabitants/Non NT
-String1=0x19,
-String2=0x04,
-ExtendedLabels=Y
-FontStyle=LargeFont
-CustomColor=No
-DayXpm="8 8 8 1"   Colormode=16
-"!	c #000000"
-"#	c #006400"
-"%	c #009000"
-"?	c #009C00"
-"$	c #00A000"
-"*	c #00C800"
-"=	c #F8FCF8"
-"  	c none"
-"   ==   "
-"  =!!=  "
-" =!*?!= "
-"=!**$#!="
-"=!?$%#!="
-" =!##!= "
-"  =!!=  "
-"   ==   "
-;12345678
-[end]
-
-
-[_point]
 Type=0x006
 SubType=0x00
 ;GRMN_TYPE: Political Entities/CITY_200K/City with the range of (200, 500] thousand inhabitants/Non NT
