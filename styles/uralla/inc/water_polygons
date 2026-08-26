@@ -23,12 +23,12 @@ natural=mud & mkgmap:area2poi!=true [0x62 resolution 24]
 
 #лесное болото
 natural=wetland & wetland=swamp & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
-natural=wetland & wetland=swamp & mkgmap:area2poi!=true { name 'заболоченный лес' } [0x1171d resolution 24 continue]
+natural=wetland & wetland=swamp & mkgmap:area2poi!=true { name '${name}' | 'заболоченный лес' } [0x1171d resolution 24 continue]
 natural=wetland & wetland=swamp & mkgmap:area2poi!=true  [0x50 resolution 24]
 
 #болото с чахлой растительностью
 natural=wetland & wetland=marsh & area_size()>50000 & mkgmap:area2poi!=true [0x1171a resolution 22-23 continue]
-natural=wetland & wetland=marsh & mkgmap:area2poi!=true { name 'заболоченная местность' } [0x1181a resolution 24]
+natural=wetland & wetland=marsh & mkgmap:area2poi!=true { name '${name}' | 'заболоченная местность' } [0x1181a resolution 24]
 
 
 
@@ -38,12 +38,12 @@ natural=wetland & wetland=reedbed & area_size()>50000 & mkgmap:area2poi!=true [0
 
  
  
-natural=wetland & wetland=wet_meadow & mkgmap:area2poi!=true { name 'заболоченный луг' } [0x54 resolution 24]
-natural=wetland & wetland=tidalflat & mkgmap:area2poi!=true { name 'приливная зона' } [0x1171a resolution 24]
-natural=wetland & wetland=reedbed & mkgmap:area2poi!=true { name 'камыши' } [0x54 resolution 24]
-natural=wetland & wetland=saltmarsh & mkgmap:area2poi!=true { name 'прибрежное болото' } [0x54 resolution 24]
+natural=wetland & wetland=wet_meadow & mkgmap:area2poi!=true { name '${name}' | 'заболоченный луг' } [0x54 resolution 24]
+natural=wetland & wetland=tidalflat & mkgmap:area2poi!=true { name '${name}' | 'приливная зона' } [0x1171a resolution 24]
+natural=wetland & wetland=reedbed & mkgmap:area2poi!=true { name '${name}' | 'камыши' } [0x54 resolution 24]
+natural=wetland & wetland=saltmarsh & mkgmap:area2poi!=true { name '${name}' | 'прибрежное болото' } [0x54 resolution 24]
 
-natural=wetland & mkgmap:area2poi!=true { name 'болото' } [0x1171d resolution 22] 
+natural=wetland & mkgmap:area2poi!=true { name '${name}' | 'болото' } [0x1171d resolution 22] 
 
 
 
