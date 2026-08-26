@@ -24,6 +24,12 @@ as_root() {
   fi
 }
 
+python_is_supported() {
+  local candidate="$1"
+  [[ -x "$candidate" ]] || return 1
+  "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1
+}
+
 OS="$(uname -s)"
 IS_WSL=false
 if [[ "$OS" == "Linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
@@ -44,6 +50,7 @@ else
   VENV="$REPO_ROOT/.venv"
 fi
 
+PYTHON=""
 case "$OS" in
   Linux)
     if ! command -v apt-get >/dev/null 2>&1; then
@@ -58,14 +65,28 @@ case "$OS" in
     as_root apt-get update
     as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y \
       python3 python3-venv python3-pip ca-certificates git
+    PYTHON="$(command -v python3 || true)"
     ;;
 
   Darwin)
     log "platform: macOS"
     command -v brew >/dev/null 2>&1 || die "Homebrew is required; install it from https://brew.sh and rerun setup.sh"
-    if ! command -v python3 >/dev/null 2>&1; then
-      log "installing Python with Homebrew"
+
+    SYSTEM_PYTHON="$(command -v python3 || true)"
+    if [[ -n "$SYSTEM_PYTHON" ]] && python_is_supported "$SYSTEM_PYTHON"; then
+      PYTHON="$SYSTEM_PYTHON"
+    else
+      if [[ -n "$SYSTEM_PYTHON" ]]; then
+        log "system python is too old for this project: $($SYSTEM_PYTHON --version 2>&1 || true)"
+      else
+        log "python3 is not installed"
+      fi
+      log "installing/updating Python with Homebrew"
       brew install python
+      PYTHON="$(brew --prefix)/bin/python3"
+      if ! python_is_supported "$PYTHON"; then
+        die "Homebrew Python >= 3.11 is required; expected a supported interpreter at $PYTHON"
+      fi
     fi
     ;;
 
@@ -74,15 +95,14 @@ case "$OS" in
     ;;
 esac
 
-PYTHON="$(command -v python3 || true)"
-[[ -n "$PYTHON" ]] || die "python3 is not available after system setup"
+[[ -n "$PYTHON" && -x "$PYTHON" ]] || die "python3 is not available after system setup"
 
 PY_MAJOR="$($PYTHON -c 'import sys; print(sys.version_info.major)')"
 PY_MINOR="$($PYTHON -c 'import sys; print(sys.version_info.minor)')"
 if (( PY_MAJOR < 3 || (PY_MAJOR == 3 && PY_MINOR < 11) )); then
   die "Python >= 3.11 is required; found $($PYTHON --version 2>&1)"
 fi
-log "python: $($PYTHON --version 2>&1)"
+log "python: $($PYTHON --version 2>&1) ($PYTHON)"
 
 if [[ ! -x "$VENV/bin/python" ]]; then
   log "creating virtual environment: $VENV"
@@ -139,7 +159,7 @@ if [[ "$OS" == "Darwin" ]]; then
   if command -v brew >/dev/null 2>&1 && brew --prefix openjdk >/dev/null 2>&1; then
     JDK_LINK="/Library/Java/JavaVirtualMachines/openjdk.jdk"
     JDK_SOURCE="$(brew --prefix openjdk)/libexec/openjdk.jdk"
-    if [[ ! -e "$JDK_LINK" ]]; then
+    if [[ ! -e "$JDK_LINK" || "$(readlink "$JDK_LINK" 2>/dev/null || true)" != "$JDK_SOURCE" ]]; then
       log "registering Homebrew OpenJDK with macOS"
       as_root mkdir -p /Library/Java/JavaVirtualMachines
       as_root ln -sfn "$JDK_SOURCE" "$JDK_LINK"
