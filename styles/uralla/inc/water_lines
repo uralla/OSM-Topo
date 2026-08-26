@@ -5,9 +5,11 @@
 # route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
 
 # Пирсы: закрытые way обслуживает polygon style, открытые — только line style.
-# Это не даёт старому общему правилу lines наложить линию поверх полигона.
+# После линейной отрисовки убираем только man_made=pier, чтобы highway/footway
+# и другие независимые теги продолжили обрабатываться основным style.
 man_made=pier & is_closed()=true {delete man_made}
-man_made=pier & is_closed()=false { name 'пирс' } [0x10f07 resolution 24]
+man_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]
+uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
 
 ### роутинг по рекам - линия с синими стрелками направления течения на 0-м слое
 (waterway=canal 
