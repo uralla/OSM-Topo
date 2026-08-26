@@ -4,10 +4,10 @@
 # route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
 # route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
 
-# Пирсы: закрытые way обслуживает polygon style, открытые — только line style.
-# После линейной отрисовки убираем только man_made=pier, чтобы highway/footway
+# Пирсы: закрытые way не трогаем — их обслуживает polygon style.
+# Открытый пирс рисуем один раз как линию, затем удаляем только man_made=pier,
+# чтобы старое общее правило lines не наложило второй pier, а highway/footway
 # и другие независимые теги продолжили обрабатываться основным style.
-man_made=pier & is_closed()=true {delete man_made}
 man_made=pier & is_closed()=false { name 'пирс'; set uralla:pier_rendered=yes } [0x10f07 resolution 24 continue]
 uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
 
