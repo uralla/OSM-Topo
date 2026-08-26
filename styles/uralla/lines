@@ -223,15 +223,15 @@ highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=0 resolution 24]
 
 highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
-# [CUSTOM/АВТОРСКОЕ] Marked route members: one extra LOD step.
-# Emit only the additional farther level; normal rules below render the usual levels.
+# [CUSTOM/АВТОРСКОЕ] Marked route members: guarantee visibility from resolution 21.
+# Emit only the missing far level; normal rules below own the closer levels.
 mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-21 continue]
 mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]
 mkgmap:trail_name=* & highway=footway & length()>100 [0x07 resolution 21-21 continue]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]
 mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]
-mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-20 continue]
-mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]
+# tracktype=grade1 already starts at resolution 21 in the normal track rule below.
+mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 21-21 continue]
 
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 highway=byway [0x16 road_class=0 road_speed=0 resolution 24]
@@ -248,7 +248,7 @@ highway=* & area!=yes & highway!=path & highway!=steps & highway!=footway & high
 highway=cycleway & length()>200 [0x07 resolution 22-23 continue]
 highway=cycleway [0x0e road_class=0 road_speed=1 resolution 24]
 
-bicycle=yes & highway=path & length()>100 | highway=footway & length()>100 [0x0b resolution 22-23 continue]
+bicycle=yes & highway=path & length()>100 [0x0b resolution 22-23 continue]
 bicycle=yes & highway=path [0x16 road_class=0 road_speed=1 resolution 24]
 
 highway=footway & length()>100 [0x07 resolution 22-23 continue]
@@ -337,12 +337,10 @@ piste:type=downhill & piste:difficulty=advanced & is_closed()=false & area!=yes 
 piste:type=skitour & is_closed()=false & area!=yes [0x10101 resolution 22]
 # nordic is consumed in inc/water_lines with the same 0x10101 type.
 
-# Named ridges get the compact cartographic prefix. Unnamed ridges keep the
-# same visual lines but no synthetic label.
+# Named ridges keep their overview hierarchy. Unnamed ridges are close-zoom only.
 natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]
-natural=ridge & name!=* & length()>500 [0x10e02 resolution 18 continue]
 natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]
-natural=ridge & name!=* [0x10e01 resolution 23 continue]
+natural=ridge & name!=* [0x10e01 resolution 24]
 natural=cliff [0x10f17 resolution 23 continue]
 
 man_made=embankment [0x10d01 resolution 24]
