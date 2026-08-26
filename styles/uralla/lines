@@ -58,8 +58,8 @@ highway=* {add taxi=no}
 highway=proposed | railway=proposed | bridge=proposed | proposed=* 
 	{delete highway; delete rail; delete bridge}
 
-# удаляем мост если bridge=no
-bridge=no	{delete highway; delete rail; delete bridge}
+# bridge=no означает обычную дорогу, а не отсутствие дороги
+bridge=no	{delete bridge}
 
 # Assign the street name for house number search
 highway=* & name=* { set mkgmap:street='${name}' }
@@ -194,12 +194,12 @@ mkgmap:exit_hint=true
 # Flag paved roads
 highway=* & (surface=asphalt | surface=paved | surface=sett | 
     surface=concrete | surface=concrete:lanes | surface=concrete:plates | 
-    surface=paving_stones  | surface=cobblestone  | surface=gravel  |
+    surface=paving_stones  | surface=cobblestone |
    	surface=cobblestone:flattened  | surface=metal  | surface=wood) 
 { set mkgmap:unpaved=0 }
 highway=* & tracktype=grade1 & surface!=* { set mkgmap:unpaved=0 }
 
-# Flag unpaved roads.
+# Flag unpaved roads. Gravel is intentionally treated as unpaved.
 highway=* & mkgmap:unpaved!=0 & (  
     surface=* |
 	mtb:scale=* | 
