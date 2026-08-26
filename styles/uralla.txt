@@ -2449,9 +2449,7 @@ Xpm="32 4 2  1"
 ;12345678901234567890123456789012
 ExtendedLabels=Y
 FontStyle=SmallFont
-CustomColor=DayAndNight
 DaycustomColor:#FF0000
-NightcustomColor:#FFCA00
 [end]
 
 
@@ -2723,9 +2721,7 @@ String1=0x19,пороги
 String2=0x04,rapids
 ExtendedLabels=Y
 FontStyle=SmallFont
-CustomColor=DayAndNight
 DaycustomColor:#0000FF
-NightcustomColor:#0065FF
 [end]
 
 
@@ -2989,9 +2985,7 @@ String1=0x19,овраг
 String2=0x1F,gully
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
-CustomColor=DayAndNight
 DaycustomColor:#BD6500
-NightcustomColor:#BD6500
 [end]
 
 
@@ -3656,16 +3650,6 @@ DayXpm="6 6 4 1"   Colormode=16
 "!    !"
 ;123456
 
-NightXpm="6 6 3 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #39958B"
-"  	c none"
-"!    !"
-" !  ! "
-"  !#  "
-"  #!  "
-" !  ! "
-"!    !"
 ;123456
 [end]
 
@@ -7024,29 +7008,6 @@ DayXpm="20 20 2 1"   Colormode=16
 "          !!!!!     "
 ;12345678901234567890
 
-NightXpm="20 20 2 1"   Colormode=16
-"!	c #202020"
-"  	c none"
-"                    "
-"                    "
-"     !!!!           "
-"     !!!!           "
-"     !!!            "
-"     !!!            "
-"     !!       !!!!!!"
-"     !!        !!!!!"
-"     !!          !!!"
-"     !             !"
-"                    "
-"                    "
-"          !         "
-"          !!        "
-"          !!        "
-"          !!!       "
-"          !!!!      "
-"          !!!!      "
-"          !!!!!     "
-"          !!!!!     "
 ;12345678901234567890
 [end]
 
