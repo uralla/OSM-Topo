@@ -47,20 +47,32 @@ jobs:
 
           def replace_icon(block: str, code: str, ru: str, en: str, palette, pixels):
               lines = block.splitlines()
-              xpm_i = next((i for i, line in enumerate(lines) if line.startswith('Xpm=')), None)
-              if xpm_i is None:
-                  raise RuntimeError(f'{code}: Xpm line not found')
-              m = re.match(r'Xpm="(\d+)\s+(\d+)\s+(\d+)\s+(\d+)"', lines[xpm_i])
-              if not m:
-                  raise RuntimeError(f'{code}: unsupported Xpm declaration: {lines[xpm_i]}')
-              old_h, old_colors = int(m.group(2)), int(m.group(3))
-              old_end = xpm_i + 1 + old_colors + old_h
-              if old_end > len(lines):
-                  raise RuntimeError(f'{code}: malformed Xpm block')
               if len(pixels) != 16 or any(len(row) != 16 for row in pixels):
                   raise RuntimeError(f'{code}: icon must be exactly 16x16')
               new_xpm = ['Xpm="16 16 %d 1"' % len(palette), *palette, *[f'"{row}"' for row in pixels]]
-              lines[xpm_i:old_end] = new_xpm
+
+              xpm_i = next((i for i, line in enumerate(lines) if line.startswith('Xpm=')), None)
+              if xpm_i is None:
+                  # 0x11602 is an intentionally empty custom slot: insert its first
+                  # graphic before labels/[end], preserving the existing Type/SubType
+                  # and metadata lines exactly.
+                  insert_i = next(
+                      (i for i, line in enumerate(lines)
+                       if line.startswith('String') or line.strip().lower() == '[end]'),
+                      None,
+                  )
+                  if insert_i is None:
+                      raise RuntimeError(f'{code}: no safe Xpm insertion point')
+                  lines[insert_i:insert_i] = new_xpm
+              else:
+                  m = re.match(r'Xpm="(\d+)\s+(\d+)\s+(\d+)\s+(\d+)"', lines[xpm_i])
+                  if not m:
+                      raise RuntimeError(f'{code}: unsupported Xpm declaration: {lines[xpm_i]}')
+                  old_h, old_colors = int(m.group(2)), int(m.group(3))
+                  old_end = xpm_i + 1 + old_colors + old_h
+                  if old_end > len(lines):
+                      raise RuntimeError(f'{code}: malformed Xpm block')
+                  lines[xpm_i:old_end] = new_xpm
 
               def set_string(prefix, value):
                   for i, line in enumerate(lines):
@@ -140,8 +152,6 @@ jobs:
           if found != {'0x6602': 1, '0x11602': 1}:
               raise RuntimeError(f'expected exactly one section for each target, got {found}')
 
-          # Assert that only the two target point sections changed. All line/polygon
-          # graphics and all other POIs must remain byte-for-byte identical logically.
           before = raw.decode(enc)
           def sections(src, kind):
               rx = re.compile(rf'(?ims)^\[{re.escape(kind)}\][ \t]*\r?\n.*?^\[end\][ \t]*(?:\r?\n)?')
