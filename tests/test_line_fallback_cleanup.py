@@ -51,6 +51,29 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_unnamed_ridges_keep_lines_without_synthetic_label(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn(
+            "natural=ridge & name=* & length()>500 { name 'хр. ${name}' }",
+            lines,
+        )
+        self.assertIn(
+            "natural=ridge & name!=* & length()>500 [0x10e02 resolution 18 continue]",
+            lines,
+        )
+        self.assertIn(
+            "natural=ridge & name!=* [0x10e01 resolution 23 continue]",
+            lines,
+        )
+        self.assertNotIn("natural=ridge { name 'хр. ${name}' }", lines)
+
+    def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
+        self.assertIn("power=line | power=minor_line [0x29 resolution 24]", lines)
+        self.assertNotIn("power=line & man_made=cutline & length()>500", lines)
+        self.assertNotIn("power=line | (power=line & man_made=cutline)", lines)
+
 
 if __name__ == '__main__':
     unittest.main()
