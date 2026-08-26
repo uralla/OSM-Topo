@@ -24,7 +24,7 @@ jobs:
 
           path = Path('styles/uralla.txt')
           text = path.read_text(encoding='cp1251')
-          targets = {'0x1341f', '0x1341d', '0x1616', '0x1615'}
+          targets = {'0x1341f', '0x1341e', '0x1341d', '0x1616', '0x1615'}
           found = set()
 
           def patch(match):
