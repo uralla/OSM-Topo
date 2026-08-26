@@ -34,12 +34,6 @@ highway=service & service=parking_aisle { delete highway }
 # Use the existing dam visual class; continue preserves any independent tags.
 waterway=weir [0x12d01 resolution 23 continue]
 
-# natural=coastline [0x15 resolution 16]
-
-# route=ferry {set mkgmap:numbers = false }
-# route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
-# route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
-
 # Пирсы и волнорезы используют один визуальный класс. Закрытые way
 # помечаем как polygon и убираем man_made, чтобы line-style не дал дубль.
 # Polygon-style восстановит отображение по uralla:pier_polygon.

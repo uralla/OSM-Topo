@@ -6,9 +6,6 @@ uralla:pier_polygon=yes [0x10f11 resolution 24]
 
 waterway=riverbank & mkgmap:area2poi!=true | landuse=basin & mkgmap:area2poi!=true | landuse=reservoir & mkgmap:area2poi!=true | water=reservoir & mkgmap:area2poi!=true {add natural=water}
 
-#(landuse=reservoir | water=reservoir) [0x3f resolution 18]
-
-#natural=bay [0x3d resolution 16]
 natural=bay [0x32 resolution 18]
 
 natural=glacier & area_size()>50000 & mkgmap:area2poi!=true [0x5d resolution 19-20 continue]
@@ -66,6 +63,3 @@ natural=water & area_size()>150000 & mkgmap:area2poi!=true [0x3f resolution 19-1
 natural=water & area_size()>50000 & mkgmap:area2poi!=true [0x3f resolution 20-21 continue]
 natural=water & area_size()>20000 & mkgmap:area2poi!=true [0x3f resolution 22-23 continue]
 natural=water & mkgmap:area2poi!=true [0x3b resolution 24]
-
-
-# natural=water [0x3c resolution 18]
