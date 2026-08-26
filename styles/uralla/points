@@ -129,7 +129,7 @@ amenity=courthouse [0x3004 resolution 24]
 
 #amenity=embassy & country=* { set name='${country} ${name|def:}' } [0x3003 resolution 24]
 amenity=embassy & country=* { set name='${name|def:} (${country})' } [0x3003 resolution 24]
-amenity=embassy & country!=* [0x3003 resolution 24 default_name 'Посольство']
+amenity=embassy & country!=* [0x3003 resolution 24]
 #amenity=ferry_terminal [0x2f08 resolution 21]
 amenity=ferry_terminal [0x4300 resolution 22]
 amenity=fire_station [0x11503 resolution 24]
@@ -160,10 +160,10 @@ amenity=school [0x2c05 resolution 24]
 # amenity=supermarket is superceded by shop=supermarket
 amenity=supermarket [0x2e02 resolution 23]
 amenity=taxi [0x2f11 resolution 24]
-amenity=telephone [0x2f12 resolution 24 default_name 'Телефон']
+amenity=telephone [0x2f12 resolution 24]
 amenity=theatre [0x2d01 resolution 24]
 amenity=toilets & highway=rest_area [0x2f0c resolution 24]
-amenity=toilets [0x4e00 resolution 24 default_name 'Туалет' ]
+amenity=toilets [0x4e00 resolution 24]
 amenity=townhall [0x3003 resolution 24]
 amenity=university [0x2c05 resolution 24]
 # amenity=zoo is superceded by tourism=zoo
@@ -175,7 +175,7 @@ healthcare=* | amenity=doctors [0x3002 resolution 24]
 
 highway=motorway_junction [0x2100 resolution 24]
 
-highway=services & mkgmap:area2poi!=true [0x210f resolution 24 default_name 'Сервис']
+highway=services & mkgmap:area2poi!=true [0x210f resolution 24]
 
 historic=museum [0x2c02 resolution 24]
 historic=archaeological_site [0x2c04 resolution 24]
@@ -197,14 +197,14 @@ leisure=track { name '${name} (${sport})' | '${name}' | '${sport}' } [0x2c08 res
 leisure=water_park [0x2d09 resolution 24]
 
 
-man_made=communications_tower | man_made=tower & tower:type=communication {name "башня связи"} [0x6410 resolution 22]
-man_made=antenna|man_made=mast {name "антенна"} [0x641c resolution 23]
-man_made=tower|landmark=chimney {name "башня/труба"} [0x6411 resolution 23]
-man_made=water_tower {name "водонапорная башня"} [0x641d resolution 23]
+man_made=communications_tower | man_made=tower & tower:type=communication [0x6410 resolution 22]
+man_made=antenna|man_made=mast [0x641c resolution 23]
+man_made=tower|landmark=chimney [0x6411 resolution 23]
+man_made=water_tower [0x641d resolution 23]
 
 power=generator & generator:source=wind [0x641a resolution 22]
 man_made=windmill [0x641b resolution 22]
-man_made=wastewater_plant {name "очистные"} [0x11501 resolution 24] 
+man_made=wastewater_plant [0x11501 resolution 24]
 
 
 
