@@ -53,9 +53,12 @@ boundary=national_park { delete boundary }
 natural=tree & name!=* { delete natural }
 natural=shrub & name!=* { delete natural }
 
+# [CUSTOM/АВТОРСКОЕ] Barrier landmarks. The real TYP identifies 0x5800 as
+# "шлагбаум / gate" and 0x5801 as "ворота / gateway". This rule is visual only:
+# do NOT infer bicycle/foot/access permissions for motorcycle_barrier here.
+(barrier=motorcycle_barrier | barrier=cattle_grid) [0x5800 resolution 24]
+
 # [CUSTOM/АВТОРСКОЕ] Trail obstacles: fallen logs/debris are one visual class.
-# cattle_grid/motorcycle_barrier are intentionally NOT folded into this rule: their
-# gate-style TYP slot/access defaults are still an explicit open decision.
 (barrier=log | obstacle=fallen_tree | barrier=debris) [0x6602 resolution 23]
 
 # Agreed terrain / tourist POIs.
