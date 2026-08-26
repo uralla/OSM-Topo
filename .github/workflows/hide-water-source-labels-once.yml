@@ -1,5 +1,6 @@
 name: Hide water source labels once
 
+# cp1251-safe one-shot TYP edit
 on:
   push:
     branches: [main]
