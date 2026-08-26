@@ -34,6 +34,12 @@ class DeadStyleRuleTests(unittest.TestCase):
         self.assertIn("landuse=residential [0x03 resolution 22]", landuse)
         self.assertNotIn("boundary=administrative & landuse=residential [0x03", landuse)
 
+    def test_boundary_name_is_assigned_once(self) -> None:
+        lines = (STYLE / "lines").read_text(encoding="utf-8")
+        rule = "boundary=administrative { name '${mkgmap:boundary_name}' }"
+        self.assertEqual(lines.count(rule), 1)
+        self.assertNotIn("boundary=administrative & place!=* { name '${mkgmap:boundary_name}' }", lines)
+
 
 if __name__ == "__main__":
     unittest.main()
