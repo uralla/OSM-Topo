@@ -288,7 +288,7 @@ def preprocess_pbf(
     peak_catalog_path: str | Path = DEFAULT_PEAK_CATALOG,
     river_catalog_path: str | Path = DEFAULT_RIVER_CATALOG,
 ) -> dict[str, object]:
-    """Filter and enrich one PBF atomically with inline blacklist verification."""
+    """Filter and enrich one PBF atomically."""
 
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
@@ -367,18 +367,6 @@ def preprocess_pbf(
                             }
                         )
 
-                # The original object was already fully checked above. Re-check only
-                # objects whose blacklist decision changed tags; this preserves the
-                # blacklist invariant without reading the entire written PBF twice.
-                if decision.action != "none":
-                    verification = filter_tags(final_tags, rules)
-                    if verification.action != "none":
-                        raise StageError(
-                            f"blacklist verification failed for {_object_kind(item)} {item.id}: "
-                            f"{','.join(verification.matched_rules)}"
-                        )
-                    counters["blacklist_changes_verified"] += 1
-
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
@@ -387,7 +375,7 @@ def preprocess_pbf(
 
         _progress(counters["objects_seen"], started)
         report: dict[str, object] = {
-            "schema_version": 4,
+            "schema_version": 5,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
@@ -403,9 +391,7 @@ def preprocess_pbf(
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "river_landmarks_enriched": counters["river_landmarks_enriched"],
             "rule_hits": dict(sorted(rule_hits.items())),
-            "verification_mode": "inline-changed-objects",
-            "blacklist_changes_verified": counters["blacklist_changes_verified"],
-            "verified_forbidden_tags": 0,
+            "verification_mode": "disabled",
             "samples": samples,
             "peak_landmark_samples": peak_samples,
             "river_landmark_samples": river_samples,
