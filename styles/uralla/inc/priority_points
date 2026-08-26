@@ -1,0 +1,7 @@
+# Point rules that must run before broad generic POI fallbacks in points.
+# A matched Garmin type ends normal point processing, so put only genuinely
+# more-specific variants here.
+
+# Fuel stations: the generic amenity=fuel rule appears later in points.
+amenity=fuel & fuel:HGV_diesel=yes [0x2f16 resolution 24]
+amenity=fuel & shop=convenience [0x2e06 resolution 24]
