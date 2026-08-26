@@ -13,7 +13,6 @@ route
 drive-on=detect,right
 process-destination
 process-exits
-make-cycleways
 #report-roundabout-issues
 
 
