@@ -48,9 +48,10 @@ landuse=peat_cutting [0x10102 resolution 19]
 
 landuse=garages [0x06 resolution 24]
 
-# Вырубки: оба актуальных варианта разметки используются в России.
-natural=scrub | man_made=clearcut | landuse=logging [0x1321e resolution 21-23 continue]
-natural=scrub | man_made=clearcut | landuse=logging [0x4f resolution 24]
+# Clearcuts/logging are normalized to natural=scrub near the top of polygons,
+# before generic man_made handling. This is the single rendering branch.
+natural=scrub [0x1321e resolution 21-23 continue]
+natural=scrub [0x4f resolution 24]
 
 # Лес: landuse-формы нормализуются в natural=wood перед общей иерархией.
 landuse=forest | landuse=wood { add natural=wood }
