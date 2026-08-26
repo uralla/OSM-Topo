@@ -29,7 +29,7 @@ shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 tourism=guest_house [0x2b01 resolution 21]
 (tourism=hotel | tourism=hostel | tourism=motel) [0x2b01 resolution 24]
 amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
-(tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23 default_name 'Избушка']
+(tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23 default_name 'избушка']
 
 # Generic point buildings are buildings, not huts.
 (building=yes | building=true) & mkgmap:area2poi!=true [0x6402 resolution 24]
