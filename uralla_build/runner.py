@@ -12,8 +12,9 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
-from typing import Mapping, Sequence
+from typing import BinaryIO, Mapping, Sequence
 
 from .errors import StageError
 from .history import HistoryStore
@@ -22,6 +23,7 @@ from .history import HistoryStore
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HEARTBEAT_SECONDS = 30.0
 POLL_SECONDS = 1.0
+LIVE_OUTPUT_STAGES = frozenset({"mkgmap"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +147,24 @@ def _format_elapsed(seconds: float) -> str:
     if hours:
         return f"{hours:02d}:{minutes:02d}:{secs:02d}"
     return f"{minutes:02d}:{secs:02d}"
+
+
+def _tee_live_output(
+    pipe: BinaryIO,
+    log: BinaryIO,
+    stage: str,
+) -> None:
+    """Copy one child stream to its durable log and the controlling terminal."""
+
+    try:
+        for raw_line in iter(pipe.readline, b""):
+            log.write(raw_line)
+            log.flush()
+            text = raw_line.decode("utf-8", errors="replace").rstrip("\r\n")
+            if text:
+                print(f"[{stage}] {text}", file=sys.stderr, flush=True)
+    finally:
+        pipe.close()
 
 
 def _wait_with_heartbeat(
@@ -296,18 +316,50 @@ class StageRunner:
         terminal_status = "failed"
         checkpoint: list[dict[str, object]] | None = None
         error: str | None = None
+        live_output = stage in LIVE_OUTPUT_STAGES
         try:
             with stdout_log.open("wb") as stdout, stderr_log.open("wb") as stderr:
-                process = subprocess.Popen(
-                    argv,
-                    cwd=stage_root,
-                    env={**os.environ, **env_overlay},
-                    stdout=stdout,
-                    stderr=stderr,
-                    start_new_session=True,
-                )
+                if live_output:
+                    process = subprocess.Popen(
+                        argv,
+                        cwd=stage_root,
+                        env={**os.environ, **env_overlay},
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        start_new_session=True,
+                    )
+                    assert process.stdout is not None
+                    assert process.stderr is not None
+                    threads = [
+                        threading.Thread(
+                            target=_tee_live_output,
+                            args=(process.stdout, stdout, stage),
+                            daemon=True,
+                        ),
+                        threading.Thread(
+                            target=_tee_live_output,
+                            args=(process.stderr, stderr, stage),
+                            daemon=True,
+                        ),
+                    ]
+                    for thread in threads:
+                        thread.start()
+                else:
+                    process = subprocess.Popen(
+                        argv,
+                        cwd=stage_root,
+                        env={**os.environ, **env_overlay},
+                        stdout=stdout,
+                        stderr=stderr,
+                        start_new_session=True,
+                    )
+                    threads = []
                 self.history.update_attempt_pid(attempt_id, process.pid)
-                status, usage = _wait_with_heartbeat(process, stage, started)
+                try:
+                    status, usage = _wait_with_heartbeat(process, stage, started)
+                finally:
+                    for thread in threads:
+                        thread.join(timeout=5.0)
                 exit_code = os.waitstatus_to_exitcode(status)
                 process.returncode = exit_code
                 metrics = _usage_metrics(usage)
