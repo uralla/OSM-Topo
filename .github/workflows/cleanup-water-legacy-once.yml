@@ -43,13 +43,12 @@ jobs:
 
           p = Path('styles/uralla/inc/water_lines')
           s = p.read_text(encoding='utf-8')
-          old = """# natural=coastline [0x15 resolution 16]
-
-# route=ferry {set mkgmap:numbers = false }
-# route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]
-# route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]
-
-"""
+          old = (
+              "# natural=coastline [0x15 resolution 16]\n\n"
+              "# route=ferry {set mkgmap:numbers = false }\n"
+              "# route=ferry & (motorcar=no | motor_vehicle=no) {add mkgmap:ferry=1} [0x1b road_class=0 road_speed=0 resolution 24]\n"
+              "# route=ferry {add mkgmap:ferry=1} [0x1b road_class=3 road_speed=0 resolution 24]\n\n"
+          )
           if s.count(old) != 1:
               raise SystemExit(f'water line legacy block count={s.count(old)}')
           p.write_text(s.replace(old, '', 1), encoding='utf-8', newline='')
