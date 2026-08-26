@@ -104,3 +104,6 @@ amenity=fuel & fuel:diesel=no
 # Settlement significance is kept in a separate include so visual thresholds can
 # be tuned independently after control builds.
 include 'inc/place_points';
+
+# Specific POIs that must win before broad generic rules later in points.
+include 'inc/priority_points';
