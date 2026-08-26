@@ -322,9 +322,10 @@ office=government [0x3003 resolution 24]
 # http://wiki.openstreetmap.org/wiki/WikiProject_Whitewater_Maps
 whitewater=rapid	  {name '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}' |
 			  '${whitewater:rapid_name}' } [0x650e resolution 24]
+# Combined access point must precede the single-tag fallbacks.
+whitewater=put_in & whitewater=egress [0x6516 resolution 24]
 whitewater=egress	  [0x6514 resolution 24]
 whitewater=put_in	  [0x6515 resolution 24]
-whitewater=put_in & whitewater=egress [0x6516 resolution 24]
 whitewater=hazard	  [0x6517 resolution 24]
 
 # Всякие лежачие милиционэры
