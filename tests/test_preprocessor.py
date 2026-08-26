@@ -143,7 +143,7 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         decision = filter_tags({"description": "Штаб ЕдРо."}, self.rules)
         self.assertEqual(decision.action, "scrub")
 
-    def test_real_osm_stream_is_written_enriched_and_verified(self) -> None:
+    def test_real_osm_stream_is_written_and_enriched(self) -> None:
         try:
             import osmium
         except ImportError:
@@ -202,7 +202,8 @@ class BlacklistPreprocessorTests(unittest.TestCase):
             self.assertEqual(report["neutralized_objects"], 1)
             self.assertEqual(report["scrubbed_objects"], 1)
             self.assertEqual(report["peak_landmarks_enriched"], 1)
-            self.assertEqual(report["verified_forbidden_tags"], 0)
+            self.assertEqual(report["verification_mode"], "disabled")
+            self.assertNotIn("verified_forbidden_tags", report)
             self.assertTrue(report_path.is_file())
 
 
