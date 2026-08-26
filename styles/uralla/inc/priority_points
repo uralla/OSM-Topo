@@ -1,6 +1,12 @@
 # [IMPORTANT/ВАЖНО] Agreed point rules that must run before broad generic fallbacks.
 # A matched Garmin type ends normal point processing unless continue is explicit.
 
+# Localized fallbacks for otherwise generic English defaults.
+amenity=embassy & country!=* & name!=* { add name='Посольство' }
+amenity=telephone & name!=* { add name='Телефон' }
+amenity=toilets & name!=* { add name='Туалет' }
+highway=services & name!=* { add name='Сервис' }
+
 # Fuel: one fuel POI for amenity/waterway=fuel; convenience store gets an additional
 # grocery POI. HGV diesel and the duplicate 0x11603 fuel icon are intentionally gone.
 (amenity=fuel | waterway=fuel) { set uralla:fuel_rendered=yes } [0x2f01 resolution 24 continue]
