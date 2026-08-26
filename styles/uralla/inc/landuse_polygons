@@ -22,7 +22,7 @@ landuse=greenfield [0x18 resolution 22]
 
 # Луг с зумом
 landuse=meadow & area_size()>50000 | landuse=grass & area_size()>50000 | natural=grassland & area_size()>50000 [0x1321b resolution 22-23 continue]
-landuse=meadow | landuse=grass | natural=grassland { name 'луг' } [0x18 resolution 24]
+landuse=meadow | landuse=grass | natural=grassland { name '${name}' | 'луг' } [0x18 resolution 24]
 
 # Specific military classes must win before the generic landuse fallback.
 # Otherwise landuse=military + military=* creates overlapping polygons via continue.
@@ -68,12 +68,12 @@ wood=deciduous [0x10101 resolution 24]
 natural=wood [0x50 resolution 24]
 
 natural=tundra | natural=heath | natural=fell [0x10c05 resolution 22-23 continue]
-natural=tundra | natural=heath | natural=fell { name 'пустошь' } [0x52 resolution 24]
+natural=tundra | natural=heath | natural=fell { name '${name}' | 'пустошь' } [0x52 resolution 24]
 
 natural=beach | natural=sand | natural=shingle [0x10c06 resolution 21]
 
 natural=bare_rock & area_size()>50000 | natural=blockfield & area_size()>50000 [0x1170d resolution 22-23 continue]
-natural=bare_rock | natural=blockfield { name 'камни' } [0x1170d resolution 24]
+natural=bare_rock | natural=blockfield { name '${name}' | 'камни' } [0x1170d resolution 24]
 
 natural=scree & area_size()>30000 [0x11100 resolution 22-23 continue]
-natural=scree { name 'сыпуха' } [0x11100 resolution 24]
+natural=scree { name '${name}' | 'сыпуха' } [0x11100 resolution 24]
