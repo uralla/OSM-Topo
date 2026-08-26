@@ -149,7 +149,6 @@ amenity=bar [0x2d02 resolution 24]
 amenity=biergarten [0x2d02 resolution 24]
 amenity=border_control | barrier=border_control [0x3006 resolution 24]
 # amenity=bus_station [0x2f08 resolution 21]
-amenity=cafe [0x2a0e resolution 24]
 amenity=car_club [0x2f0d resolution 24]
 amenity=car_rental [0x2f02 resolution 24]
 amenity=car_sharing [0x2f02 resolution 24]
@@ -166,30 +165,11 @@ amenity=courthouse [0x3004 resolution 24]
 
 #amenity=embassy & country=* { set name='${country} ${name|def:}' } [0x3003 resolution 24]
 amenity=embassy & country=* { set name='${name|def:} (${country})' } [0x3003 resolution 24]
-amenity=embassy & country!=* [0x3003 resolution 24 default_name 'Embassy']
-amenity=emergency_phone [0x2f12 resolution 23]
+amenity=embassy & country!=* [0x3003 resolution 24 default_name 'Посольство']
 #amenity=ferry_terminal [0x2f08 resolution 21]
 amenity=ferry_terminal [0x4300 resolution 22]
-amenity=fast_food & cuisine=grill [0x2a03 resolution 24]
-amenity=fast_food & cuisine ~ '.*pizza.*' [0x2a0a resolution 24]
-amenity=fast_food [0x2a07 resolution 24]
 amenity=fire_station [0x11503 resolution 24]
-amenity=food_court [0x2a13 resolution 24]
 
-
-amenity=fuel [0x2f01 resolution 24]
-#amenity=fuel [0x11603 resolution 24]
-amenity=fuel & fuel:HGV_diesel=yes [0x2f16 resolution 24]
-#amenity=fuel & fuel:HGV_diesel=yes { name '${name} (D)' | 'Diesel Fuel' } [0x2f16 resolution 24]
-amenity=fuel & shop=convenience [ 0x2e06 resolution 24]
-waterway=fuel [0x2f01 resolution 24 continue]
-waterway=fuel [0x11603 resolution 24]
-
-#amenity=fuel & fuel:diesel=yes & fuel:lpg=yes { name '${name} (D, LPG)' | '${operator} (D, LPG)' | 'Gas D, LPG'}
-#amenity=fuel & fuel:diesel=yes { name '${name} (D)' | '${operator} (D)' | 'Gas (D)'}
-#amenity=fuel & fuel:lpg=yes { name '${name} (LPG)' | '${operator} (LPG)' | 'LPG'}
-#amenity=fuel { name '${name}' | '${operator}' } [0x2f01 resolution 24 continue]
-#amenity=fuel { name '${name}' | '${operator}' } [0x11603 resolution 22-19]
 
 amenity=grave_yard [0x6403 resolution 24]
 amenity=kindergarten [0x2c05 resolution 24]
@@ -209,44 +189,17 @@ amenity=public_building [0x3007 resolution 24]
 amenity=recycling | amenity=waste_disposal { name '${name} (${operator})' | '${name}' | '${operator}' }
 amenity=recycling | amenity=waste_disposal | amenity=waste_basket [0x2f15 resolution 24]
 
-amenity=restaurant & cuisine=american [0x2a01 resolution 24]
-amenity=restaurant & cuisine=asian [0x2a02 resolution 24]
-amenity=restaurant & cuisine=bagel [0x2a0d resolution 24]
-amenity=restaurant & cuisine=barbecue [0x2a03 resolution 24]
-amenity=restaurant & cuisine=british [0x2a11 resolution 24]
-amenity=restaurant & cuisine='cafe/diner' [0x2a0e resolution 24]
-amenity=restaurant & fast_food=cafeteria [0x2a0e resolution 24]
-amenity=restaurant & cuisine=chinese [0x2a04 resolution 24]
-amenity=restaurant & cuisine=deli [0x2a05 resolution 24]
-amenity=restaurant & cuisine=french [0x2a0f resolution 24]
-amenity=restaurant & (cuisine=german | cuisine=bavarian) [0x2a10 resolution 24]
-amenity=restaurant & cuisine=grill [0x2a03 resolution 24]
-amenity=restaurant & cuisine=international [0x2a06 resolution 24]
-amenity=restaurant & cuisine=italian [0x2a08 resolution 24]
-amenity=restaurant & cuisine=japanese [0x2a02 resolution 24]
-amenity=restaurant & cuisine=korean [0x2a02 resolution 24]
-amenity=restaurant & cuisine=mexican [0x2a09 resolution 24]
-amenity=restaurant & cuisine ~ '.*pizza.*' [0x2a0a resolution 24]
-amenity=restaurant & cuisine=sea_food [0x2a0b resolution 24]
-amenity=restaurant & cuisine=spanish [0x2a09 resolution 24]
-amenity=restaurant & cuisine=speciality [0x2a12 resolution 24]
-amenity=restaurant & cuisine=steak [0x2a0c resolution 24]
-amenity=restaurant & cuisine=thai [0x2a02 resolution 24]
-amenity=restaurant & cuisine=* [0x2a00 resolution 24]
-amenity=restaurant [0x2a00 resolution 24]
-
 amenity=school [0x2c05 resolution 24]
 # amenity=shelter is ambiguous; when possible, consider using other tags:
 #  tourism=lean_to or tourism=picnic_site
 #  shelter=yes on highway=bus_stop or highway=tram_stop or railway=halt
-amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
 # amenity=supermarket is superceded by shop=supermarket
 amenity=supermarket [0x2e02 resolution 23]
 amenity=taxi [0x2f11 resolution 24]
-amenity=telephone [0x2f12 resolution 24 default_name 'Telephone']
+amenity=telephone [0x2f12 resolution 24 default_name 'Телефон']
 amenity=theatre [0x2d01 resolution 24]
 amenity=toilets & highway=rest_area [0x2f0c resolution 24]
-amenity=toilets [0x4e00 resolution 24 default_name 'Toilets' ]
+amenity=toilets [0x4e00 resolution 24 default_name 'Туалет' ]
 amenity=townhall [0x3003 resolution 24]
 amenity=university [0x2c05 resolution 24]
 # amenity=zoo is superceded by tourism=zoo
@@ -258,11 +211,10 @@ healthcare=* | amenity=doctors [0x3002 resolution 24]
 
 highway=motorway_junction [0x2100 resolution 24]
 
-highway=services & mkgmap:area2poi!=true [0x210f resolution 24 default_name 'Services']
+highway=services & mkgmap:area2poi!=true [0x210f resolution 24 default_name 'Сервис']
 
 historic=museum [0x2c02 resolution 24]
 historic=archaeological_site [0x2c04 resolution 24]
-historic=memorial {name '${inscription}'} [0x6403 resolution 24]
 historic=ruins [0x11605 resolution 24]
 historic=monument [0x2c04 resolution 24]
 historic=fort [0x11604 resolution 21]
@@ -274,17 +226,11 @@ leisure=garden & name=* [0x2c06 resolution 24]
 leisure=golf_course [0x2d05 resolution 24]
 leisure=ice_rink [0x2d08 resolution 24]
 leisure=marina [0x4300 resolution 24]
-leisure=nature_reserve & name=* [0x6612 resolution 20]
 leisure=park & name=* [0x2c06 resolution 24]
-leisure=pitch & name=* { name '${name} (${sport})' | '${name}' }[0x2c08 resolution 24]
-leisure=playground & name=* [0x2c06 resolution 24]
 leisure=recreation_ground & name=* [0x2c08 resolution 24]
-(leisure=sports_center | leisure=sports_centre) & name=* { name '${name} (${sport})' | '${name}' } [0x2d0b resolution 24]
 leisure=stadium { name '${name} (${sport})' | '${name}' } [0x2c08 resolution 24]
 leisure=track { name '${name} (${sport})' | '${name}' | '${sport}' } [0x2c08 resolution 24]
 leisure=water_park [0x2d09 resolution 24]
-leisure=swimming_pool [0x2d09 resolution 24]
-leisure=fitness_centre [0x2d0a resolution 23]
 
 
 man_made=communications_tower | man_made=tower & tower:type=communication {name "башня связи"} [0x6410 resolution 22]
@@ -296,7 +242,6 @@ power=generator & generator:source=wind [0x641a resolution 22]
 man_made=windmill [0x641b resolution 22]
 man_made=wastewater_plant {name "очистные"} [0x11501 resolution 24] 
 
-man_made=utility_pole [0x11506 resolution 24]
 
 
 
@@ -328,46 +273,6 @@ railway=milestone 	{name '${distance} (${ref})' | '${distance}'} [0x1341e resolu
 	
 	
 	
-shop=bakers [0x2e02 resolution 24]
-shop=bakery [0x2e02 resolution 24]
-shop=beauty [0x2f10 resolution 24]
-shop=bicycle [0x2f13 resolution 23]
-shop=motorcycle [0x2f13 resolution 24]
-shop=boat [0x2f09 resolution 24]
-shop=butcher [0x2e0c resolution 24]
-
-# shop=car [0x2f07 resolution 24]
-shop=car & service!=* [0x2f0d resolution 24]
-shop=car & service=* [0x2f03 resolution 24]
-shop=car_dealer [0x2f0d resolution 24]
-shop=car_parts [0x2f07 resolution 24]
-shop=car_rental [0x2f02 resolution 24]
-shop=car_repair [0x2f03 resolution 24]
-shop=car_wrecker [0x2f0a resolution 24]
-
-shop=optician [0x2e05 resolution 24] # оптика, как аптека
-shop=chemist [0x2e08 resolution 24]
-shop=clothes [0x2e07 resolution 24]
-(shop=computer | shop=electronics) [0x10f0c resolution 24]
-shop=convenience [0x2e02 resolution 24]
-shop=department_store [0x2e01 resolution 24]
-shop=doityourself [0x2e09 resolution 24]
-shop=fashion [0x2e07 resolution 24]
-shop=furniture [0x2e09 resolution 24]
-shop=garden_centre [0x2e08 resolution 24]
-shop=garden_center [0x2e08 resolution 24]
-shop=general [0x2e03 resolution 24]
-shop=hardware [0x2e09 resolution 24]
-shop=hairdresser [0x2f10 resolution 24]
-shop=mall [0x2e04 resolution 24]
-shop=organic [0x2e0a resolution 24]
-shop=shoes [0x2e07 resolution 24]
-shop=supermarket {name '${name}'} [0x2e02 resolution 22 continue]
-shop=tires | shop=tyres | car_repair=tyres [0x2f03 resolution 24]
-shop=kiosk [0x2e00 resolution 24]
-#shop=outpost & brand=Ozon | shop=outpost & name=Ozon [0x1351e resolution 24]
-shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
-
 
 sport=9pin [0x2d07 resolution 24]
 sport=10pin | leisure=bowling_alley [0x2d07 resolution 24]
@@ -382,14 +287,6 @@ sport=swimming [0x2d09 resolution 24]
 # обходим появление точек на всех полигонах building=yes с опцией --add-pois-to-areas
 # теперь отдельные точки с building=yes не тянут за собой порождение тучи 
 # аналогичных на всех полигональных зданиях! Волшебное слово - "& mkgmap:area2poi!=true"
-tourism=wilderness_hut 
-| tourism=alpine_hut 
-| building=yes & mkgmap:area2poi!=true
-| building=true & mkgmap:area2poi!=true 
-	{name '${name} (${alt_name})'
-	| '${name}'
-	| '${description}'} [0x2b07 resolution 24 continue with_actions] #
-
 man_made=geoglyph [0x2c02 resolution 24]
 
 tourism=attraction & historic=* [0x2c02 resolution 24]
@@ -399,16 +296,7 @@ tourism=aquarium [0x2c07 resolution 24]
 
 tourism=camp_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x4a01 resolution 23-23 continue]
 tourism=camp_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x2b03 resolution 24] #
-tourism=caravan_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x4a01 resolution 23-23 continue] #
-tourism=caravan_site {name '${name} (capacity: ${capacity})' | '(capacity: ${capacity})' | '${name}'} [0x2b03 resolution 24]
 tourism=chalet [0x2b02 resolution 21]
-tourism=guest_house [0x2b02 resolution 21]
-tourism=hostel [0x2b02 resolution 24]
-tourism=hotel | tourism=motel 
-{ name '${name|def:}(${stars}*)${operator|def:}' |
-	'${name} ${operator}' |
-	'${name}' |
-	'${operator}' } [0x2b01 resolution 24]
 tourism=information 
 	{name '${name} - ${description} (${operator})'|
 	'${name} - (${description})' |
@@ -418,7 +306,6 @@ tourism=information
 	'${ref}'} [0x4c00 resolution 24]
 # tourism=lean_to replaces some uses of amenity=shelter
 tourism=lean_to [0x2b05 resolution 24]
-tourism=wilderness_hut [0x2b07 resolution 23 default_name 'Избушка']
 tourism=museum [0x2c02 resolution 24]
 
 tourism=picnic_site & shelter=yes [0x2b05 resolution 24]
@@ -441,7 +328,6 @@ barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate [0x
 barrier=gate [0x5801 resolution 24]
 barrier=lift_gate [0x5800 resolution 24]
 
-amenity=signpost { name '${label}' } [0x5a00 resolution  24]
 
 traffic_sign=city_limit [0x5600 resolution 23]
 highway=ford | ford=yes [0x6406 resolution 24]	
@@ -478,7 +364,6 @@ whitewater=put_in & whitewater=egress [0x6516 resolution 24]
 whitewater=hazard	  [0x6517 resolution 24]
 
 # Всякие лежачие милиционэры
-traffic_calming=*	[0x11511 resolution 24]
 
 
 	
