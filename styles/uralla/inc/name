@@ -53,8 +53,8 @@ amenity=fuel & fuel:HGV_diesel=yes
 amenity=fuel & fuel:diesel=no & fuel:lpg=yes 
 { name	'${name} (No Diesel, LPG)' |
  	'${operator} (No Diesel, LPG)' | 
- 	'${brand} (No Diesel, LPG)' | 
- 	'${ref} (No Diesel, LPG)' | 
+	'${brand} (No Diesel, LPG)' | 
+	'${ref} (No Diesel, LPG)' | 
 	'No Diesel, LPG'}
 
 amenity=fuel & fuel:diesel=no 
@@ -100,10 +100,3 @@ amenity=fuel & fuel:diesel=no
 #      '${brand}' |
 #      '${ref}'
 #}
-
-# Settlement significance is kept in a separate include so visual thresholds can
-# be tuned independently after control builds.
-include 'inc/place_points';
-
-# Specific POIs that must win before broad generic rules later in points.
-include 'inc/priority_points';
