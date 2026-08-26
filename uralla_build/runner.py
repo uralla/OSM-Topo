@@ -255,6 +255,11 @@ class StageRunner:
                     reused_attempt_id=int(reusable["attempt_id"]),
                     checkpoint=current,
                 )
+                print(
+                    f"[{stage}] reused checkpoint from attempt {reusable['attempt_id']}",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 return StageResult(
                     identifier,
                     attempt_id,
@@ -283,6 +288,7 @@ class StageRunner:
             stderr_log=stderr_log,
             resume_key=key,
         )
+        print(f"[{stage}] start", file=sys.stderr, flush=True)
         started = time.monotonic()
         process: subprocess.Popen[bytes] | None = None
         metrics: dict[str, int | float] = {}
@@ -334,6 +340,16 @@ class StageRunner:
             checkpoint=checkpoint,
             error=error,
         )
+        elapsed = _format_elapsed(duration)
+        if terminal_status == "success":
+            print(f"[{stage}] done {elapsed}", file=sys.stderr, flush=True)
+        elif terminal_status != "interrupted":
+            detail = f": {error}" if error else ""
+            print(
+                f"[{stage}] FAILED {elapsed}{detail}; stderr: {stderr_log}",
+                file=sys.stderr,
+                flush=True,
+            )
         result_exit_code = exit_code if exit_code not in {None, 0} else (
             0 if terminal_status == "success" else 1
         )
