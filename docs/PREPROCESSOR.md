@@ -75,6 +75,55 @@ The implementation uses streaming pyosmium processing and atomic output
 replacement. The package is declared as a project dependency and is available
 as binary wheels for the supported Ubuntu and Apple Silicon macOS hosts.
 
+## Future: semantic geographic-name cleanup and compact labels
+
+Add a conservative semantic name-normalization stage for geographic objects.
+Its purpose is to remove obvious renderer-oriented type words that have been
+incorrectly placed at the beginning of `name=*`, while avoiding edits to real
+toponyms.
+
+Normalization must be object-type aware. Examples:
+
+- `natural=ridge`: `хребет Нурали`, `Хребет Нурали`, `хр. Нурали`, `хр Нурали`
+  -> render as `Нурали`;
+- `natural=peak` / `natural=volcano`: `гора Ямантау`, `Г. Ямантау`, `г Ямантау`
+  -> render as `Ямантау`;
+- lake/water objects: `озеро Тургояк`, `Оз. Тургояк`, `оз Тургояк`
+  -> render as `Тургояк`.
+
+Only a leading type token is eligible for automatic removal. A trailing word
+that can legitimately be part of the proper name must be preserved. For
+example, `Гора Большая` may be normalized to `Большая`, but `Большая Гора`
+must remain unchanged. The same principle applies to names such as `Белая
+Гора`, `Черное Озеро` and `Каменный Хребет`.
+
+Support common capitalization and punctuation variants (`гора`, `Гора`, `г.`,
+`г`, `озеро`, `Озеро`, `оз.`, `оз`, `хребет`, `Хребет`, `хр.`, `хр`) only when
+they agree with the OSM object type. Do not use a global regular expression
+that strips these words from unrelated objects.
+
+Keep the original OSM `name=*` available for object inspection/search. The
+cleaned value should be stored in a separate render-only tag (for example
+`uralla:label=*`) rather than silently overwriting the source name. This makes
+mapping errors visible when the user selects an object and allows later OSM
+correction.
+
+The same render-only label path can provide semantic compacting of common
+geographic adjectives where it is safe and useful on a topo map, for example:
+
+- `Большой Шелом` -> `Б. Шелом`;
+- `Малый Ямантау` -> `М. Ямантау`.
+
+Do not add `Большой=>Б.` / `Малый=>М.` to the existing global `inc/name`
+substitution block, because that block applies to points, lines and polygons
+of every kind and would also abbreviate unrelated proper names such as towns,
+streets or organizations. Compacting must be scoped to agreed geographic
+object classes.
+
+Any implementation of this section changes preprocessor output, so testing it
+requires a full rebuild through the preprocessing stage; rebuilding only the
+style against an older intermediate PBF is insufficient.
+
 References:
 
 - [OSM `office=political_party`](https://wiki.openstreetmap.org/wiki/Tag:office%3Dpolitical_party)
