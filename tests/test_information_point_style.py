@@ -8,7 +8,7 @@ class InformationPointStyleTests(unittest.TestCase):
     def test_guideposts_are_prioritized_over_generic_information(self) -> None:
         points = POINTS.read_text(encoding='utf-8')
         guidepost = "tourism=information & information=guidepost {name '${name}' | '${ref}' | 'указатель'} [0x4c00 resolution 23]"
-        route_marker = "tourism=information & information=route_marker {name '${name}' | '${ref}' | 'маркер'} [0x4c00 resolution 24]"
+        route_marker = "tourism=information & (information=route_marker | information=trail_blaze) {name '${name}' | '${ref}' | 'маркер'} [0x4c00 resolution 24]"
         generic = "tourism=information {name '${name}' | 'информация'} [0x4c00 resolution 24]"
         self.assertIn(guidepost, points)
         self.assertIn(route_marker, points)
