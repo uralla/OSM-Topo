@@ -5,9 +5,6 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,15 +17,6 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-
-      - name: Apply bridge value patch
-        run: |
-          python scripts/bridge_values_once.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add styles/uralla/lines tests/test_line_fallback_cleanup.py
-          git commit -m "Render all active bridge values with bridge overlays"
-          git push
 
       - name: Install project
         run: python -m pip install -e .
