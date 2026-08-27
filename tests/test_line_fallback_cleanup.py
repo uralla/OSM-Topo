@@ -47,13 +47,15 @@ class LineFallbackCleanupTests(unittest.TestCase):
             self.assertNotIn(f'Type={code}', typ)
             self.assertNotIn(code, lines)
 
-    def test_pipeline_reaches_its_dedicated_farther_lod_rule(self) -> None:
+    def test_pipeline_is_a_close_zoom_infrastructure_corridor(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("man_made!=pipeline & man_made ~ '.*pipe.*'", lines)
         self.assertIn(
-            "man_made=pipeline & tunnel!=yes & location!=underground {name '${name}' | '${operator}'} [0x28 resolution 22]",
+            "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 23]",
             lines,
         )
+        self.assertNotIn("man_made=pipeline & tunnel!=yes", lines)
+        self.assertNotIn("man_made=pipeline & location!=underground", lines)
         self.assertNotIn(
             "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 22]",
             lines,

@@ -338,15 +338,16 @@ railway=tram [0x10f14 resolution 24]
 railway=subway [0x10e1a resolution 23-24 continue]
 railway=platform & area!=yes [0x16 road_class=0 road_speed=0 resolution 24 continue]
 
-# Pipelines have their own farther LOD rule. Keep the broad cable/pipe fallback
-# from consuming man_made=pipeline before it can reach that rule.
+# Pipelines are mapped as infrastructure corridors, not only as visible surface pipes.
+# Keep them at close topo zooms regardless of tunnel/location, and prevent the broad fallback
+# from consuming man_made=pipeline before this dedicated rule.
 (man_made=cable|(man_made=* & man_made!=pipeline & man_made ~ '.*pipe.*')) & area!=yes &
 tunnel!=yes & location != underground
 {name '${name} (${operator})' | '${name}' | '${operator}' }
 [0x28 resolution 23]
 
 # трубопроводы
-man_made=pipeline & tunnel!=yes & location!=underground {name '${name}' | '${operator}'} [0x28 resolution 22]
+man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 23]
 
 # The following boundary styles are after the highway rules because ways
 # are frequently tagged with both and we want the highway to take priority.
