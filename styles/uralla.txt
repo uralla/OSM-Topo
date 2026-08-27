@@ -2439,6 +2439,25 @@ ExtendedLabels=N
 
 
 [_line]
+Type=0x13
+;URALLA_ROLE: forest-road-bad-near
+;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_7/Routable customizable line/Non NT, NT
+UseOrientation=N
+Xpm="32 2 2  1"
+"! c #000000"
+"# c #FFFFFF"
+"!!!!!###!!!!!###!!!!!###!!!!!###"
+"!!!!!###!!!!!###!!!!!###!!!!!###"
+;12345678901234567890123456789012
+String1=0x19,дорога
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+[end]
+
+
+[_line]
 Type=0x16
 ;URALLA_ROLE: foot-bicycle-trail-near
 ;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
@@ -3655,22 +3674,6 @@ ContourColor=No
 
 
 
-[_line]
-Type=0x13504
-;URALLA_ROLE: forest-road-bad-near
-UseOrientation=N
-Xpm="32 2 2  1"
-"! c #000000"
-"# c #FFFFFF"
-"!!!!!###!!!!!###!!!!!###!!!!!###"
-"!!!!!###!!!!!###!!!!!###!!!!!###"
-;12345678901234567890123456789012
-String1=0x19,дорога
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-[end]
 
 
 

@@ -94,7 +94,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
         rule = "(boundary=protected_area | boundary=national_park) { name '${name}' } [0x12d1b resolution 23]"
         self.assertNotIn(rule, water)
         self.assertIn(rule, lines)
-        self.assertGreater(lines.index(rule), lines.index('highway=track [0x0a road_class=0 road_speed=1 resolution 24]'))
+        self.assertGreater(lines.index(rule), lines.index('highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]'))
 
     def test_ridge_lod_is_non_overlapping_and_unnamed_is_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
@@ -118,11 +118,12 @@ class LineFallbackCleanupTests(unittest.TestCase):
     def test_marked_trails_use_close_zoom_type_one_level_farther(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         for rule in (
+            "mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e resolution 21-21 continue]",
             "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e resolution 21-21 continue]",
             "mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 resolution 21-21 continue]",
             "mkgmap:trail_name=* & highway=footway & length()>100 [0x0e resolution 21-21 continue]",
-            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x2e resolution 22-22 continue]",
-            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x0a resolution 21-21 continue]",
+            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 resolution 22-22 continue]",
+            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 resolution 21-21 continue]",
             "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a resolution 20-20 continue]",
             "mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]",
         ):
@@ -135,6 +136,15 @@ class LineFallbackCleanupTests(unittest.TestCase):
             "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]",
             lines,
         )
+
+    def test_canonical_road_and_trail_near_types_are_routable(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=1 resolution 24]", lines)
+        self.assertIn("highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]", lines)
+        self.assertIn("bicycle=yes & highway=path [0x16 road_class=0 road_speed=1 resolution 24]", lines)
+        self.assertIn("bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]", lines)
+        self.assertNotIn("0x13504", lines)
+        self.assertNotIn("bicycle!=yes & highway=path [0x2e", lines)
 
     def test_footway_is_not_duplicated_by_bicycle_path_rule(self) -> None:
         lines = LINES.read_text(encoding='utf-8')

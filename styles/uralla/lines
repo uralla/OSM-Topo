@@ -236,11 +236,12 @@ highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 # [CUSTOM/АВТОРСКОЕ] Marked route members are shown one level farther out than
 # ordinary ways of the same class. At that extra level use the close-zoom line
 # type, making the route visually stronger without introducing new graphics.
+mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e resolution 21-21 continue]
 mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e resolution 21-21 continue]
 mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 resolution 21-21 continue]
 mkgmap:trail_name=* & highway=footway & length()>100 [0x0e resolution 21-21 continue]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x2e resolution 22-22 continue]
-mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x0a resolution 21-21 continue]
+mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 resolution 22-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 resolution 21-21 continue]
 mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a resolution 20-20 continue]
 mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]
 
@@ -266,13 +267,14 @@ highway=footway & length()>100 [0x07 resolution 22-23 continue]
 highway=footway [0x0e road_class=0 road_speed=1 resolution 24]
 
 bicycle!=yes & highway=path & length()>100 [0x0b resolution 23-23 continue]
-bicycle!=yes & highway=path [0x2e road_class=0 road_speed=0 resolution 24]
+bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]
 
 highway=road { add mkgmap:dead-end-check = false} [0x05 road_class=0 road_speed=1 resolution 21]
 
 highway=track & tracktype!=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]
 highway=track & tracktype=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]
-highway=track [0x0a road_class=0 road_speed=1 resolution 24]
+highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=1 resolution 24]
+highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]
 
 # power lines
 power=line {name '${name} ${ref}' | '${name}' | '${ref}' }
