@@ -1,0 +1,39 @@
+name: Doctor source PBF warning once
+
+on:
+  push:
+    paths:
+      - scripts/tools/doctor-source-pbf-warning-once.py
+      - .github/workflows/doctor-source-pbf-warning-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch doctor severity
+        run: python scripts/tools/doctor-source-pbf-warning-once.py
+      - name: Run doctor tests
+        run: |
+          python -m pip install -e .
+          python -m unittest tests.test_doctor -v
+      - name: Commit doctor change
+        shell: bash
+        run: |
+          if git diff --quiet -- uralla_build/doctor.py tests/test_doctor.py; then
+            echo "No doctor changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uralla_build/doctor.py tests/test_doctor.py
+          git commit -m "Warn when source PBF files are not downloaded"
+          git push origin HEAD:main
