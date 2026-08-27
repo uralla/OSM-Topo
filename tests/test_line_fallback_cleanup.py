@@ -272,6 +272,14 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(corridor), lines.index(fallback))
         self.assertIn("highway=corridor                           { add foot=yes; add access=no }", access)
 
+    def test_linear_highway_platform_is_visible_but_not_motor_routable(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        platform = "highway=platform [0x16 resolution 24]"
+        fallback = "highway=* & area!=yes & highway!=path & highway!=steps & highway!=footway & highway!=track & highway!=cycleway & highway!=service [0x07 road_class=0 road_speed=0 resolution 24]"
+        self.assertIn(platform, lines)
+        self.assertLess(lines.index(platform), lines.index(fallback))
+        self.assertNotIn("highway=platform [0x16 road_class=0", lines)
+
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
