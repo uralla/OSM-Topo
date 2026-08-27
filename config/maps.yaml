@@ -10,7 +10,7 @@ defaults:
   product_id: 1
   code_page: 1251
   style: styles/uralla
-  typ: styles/uralla.typ
+  typ: styles/uralla.txt
   mkgmap_args: styles/uralla.args
   transform_places: scripts/transform_places.xml
   preprocessor:
@@ -355,7 +355,7 @@ products:
       series: North-Caucasus.OSM
       overview: North-Caucasus.OSM
       description: North-Caucasus_OSM
-      output_img: North-Caucasus.OSM.img
+      output_img: North-Caucasus-fed-district.img
     splitter:
       max_nodes: 1000000
 
