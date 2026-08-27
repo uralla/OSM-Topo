@@ -107,8 +107,8 @@ def plan_product_build(
     source_path = data_path(
         host, _text(source.get("path"), f"sources.{source_key}.path")
     )
-    polygon = repo_path(
-        repo, _text(product.get("polygon"), f"products.{product_key}.polygon")
+    polygon = data_path(
+        host, _text(product.get("polygon"), f"products.{product_key}.polygon")
     )
     transform = repo_path(
         repo,
