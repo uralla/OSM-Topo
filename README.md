@@ -12,17 +12,17 @@ Manifest-driven build project for Garmin topographic maps based on OpenStreetMap
 - `tests/` — regression tests.
 - `uralla_build/` — Python build orchestration and semantic preprocessing.
 
-## Local build data
+## External build data
 
-Large or static build inputs are intentionally not versioned. The following paths are local working data and are ignored by Git:
+Large or static build inputs are intentionally not versioned. They live below the host-specific `data_root` configured in `host.yaml`:
 
-- `poly/`
-- `input/`
-- `elevation/`
-- `OSM/`
-- `dem-files.tsv`
+- `input/` — source OSM PBF, bounds, sea and GeoNames inputs;
+- `elevation/` — pre-generated elevation/contour PBF files;
+- `poly/` — product extraction polygons.
 
-Paths such as `poly/*.poly` remain stable in `config/maps.yaml`; keep the corresponding local directories beside the repository checkout on the build host.
+Manifest paths such as `poly/crimea.poly` are resolved relative to `data_root`, not relative to the repository checkout.
+
+The very large HGT/DEM tree remains separately configurable through `dem_root`.
 
 ## Documentation
 
