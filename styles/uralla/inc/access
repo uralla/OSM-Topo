@@ -40,6 +40,7 @@ highway=path & bicycle!=yes & mtb:scale!=* { add bicycle=no; }
 highway=bridleway                          { add access=no }
 highway=cycleway                           { add bicycle=yes; add foot=yes; add access=no }
 highway=footway                            { add bicycle=yes; add foot=yes; add access=no }
+highway=corridor                           { add foot=yes; add access=no }
 # Platforms stay routable on foot and for a cyclist walking the bike, while
 # access=no keeps motor vehicles and all other unspecified profiles closed.
 railway=platform                           { add bicycle=yes; add foot=yes; add access=no }

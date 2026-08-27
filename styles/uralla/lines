@@ -282,6 +282,8 @@ highway=service [0x0d road_class=0 road_speed=2 resolution 24]
 highway=raceway [0x07 resolution 24]
 highway=escape [0x07 resolution 24]
 highway=busway | highway=bus_guideway [0x07 resolution 24]
+# Indoor corridors are pedestrian ways, not generic motor roads.
+highway=corridor [0x16 road_class=0 road_speed=0 resolution 24]
 
 # Mop up any unrecognised highway types
 highway=* & area!=yes & highway!=path & highway!=steps & highway!=footway & highway!=track & highway!=cycleway & highway!=service [0x07 road_class=0 road_speed=0 resolution 24]
