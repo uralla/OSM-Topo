@@ -19,6 +19,8 @@ def test_eurasian_river_catalogue_has_geographic_coverage():
         "Songhua River": 2,
         "Han Jiang": 2,
         "Sông Hồng": 3,
+        "Mahakam": 3,
+        "Rajang": 3,
         # South and Central Asia.
         "Indus": 1,
         "Ganges": 2,
@@ -26,6 +28,8 @@ def test_eurasian_river_catalogue_has_geographic_coverage():
         "Amu Darya": 2,
         "Syr Darya": 2,
         "Godavari": 3,
+        "Mahanadi": 3,
+        "Chenab": 3,
         # Siberia and the Far East.
         "Lena": 1,
         "Yenisei": 1,
@@ -33,6 +37,7 @@ def test_eurasian_river_catalogue_has_geographic_coverage():
         "Amur": 1,
         "Argun": 2,
         "Anadyr": 3,
+        "Pyasina": 3,
         # Europe.
         "Volga": 1,
         "Danube": 2,
