@@ -2,8 +2,9 @@
 """Audit Garmin type usage in the mkgmap style against the TYP source.
 
 The style uses combined hexadecimal codes (for example 0x1341f), while the
-TYP source represents extended codes as Type=0x134 + SubType=0x1f.  This tool
-normalizes both forms before comparing them.
+TYP source represents extended codes as Type=0x134 + SubType=0x1f. This tool
+normalizes both forms before comparing them and reports visually identical TYP
+sections as review candidates.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ TYPE_RE = re.compile(r"\[(0x[0-9a-fA-F]+)\b")
 INCLUDE_RE = re.compile(r"^\s*include\s+['\"]([^'\"]+)['\"]\s*;?\s*$")
 SECTION_RE = re.compile(r"^\s*\[_(point|line|polygon)\]\s*$", re.IGNORECASE)
 FIELD_RE = re.compile(r"^\s*(Type|SubType)\s*=\s*(0x[0-9a-fA-F]+)\s*$", re.IGNORECASE)
+STRING_RE = re.compile(r"^\s*String\d+\s*=", re.IGNORECASE)
 END_RE = re.compile(r"^\s*\[end\]\s*$", re.IGNORECASE)
 
 STYLE_ENTRYPOINTS = {
@@ -28,7 +30,6 @@ STYLE_ENTRYPOINTS = {
 
 
 def split_style_code(code: str) -> tuple[int, int]:
-    """Convert a mkgmap combined code into TYP Type/SubType components."""
     value = int(code, 16)
     if value <= 0xFF:
         return value, 0
@@ -43,26 +44,26 @@ def format_code(code: tuple[int, int]) -> str:
 
 
 def is_extended_custom(code: tuple[int, int]) -> bool:
-    """Return true for custom/extended Garmin types that require TYP support."""
     type_id, _ = code
     return type_id > 0xFF
 
 
+def _normalize_typ_code(type_id: int, subtype: int | None) -> tuple[int, int]:
+    if subtype is None and type_id > 0xFFF:
+        return type_id >> 8, type_id & 0xFF
+    return type_id, 0 if subtype is None else subtype
+
+
 def _active_text(text: str) -> str:
-    """Drop comments while preserving multiline style expressions."""
     active: list[str] = []
     for line in text.splitlines():
-        stripped = line.lstrip()
-        if stripped.startswith("#"):
+        if line.lstrip().startswith("#"):
             continue
-        # Style comments are line comments in this project. Keep '#' inside
-        # quoted labels untouched rather than trying to implement a full lexer.
         active.append(line)
     return "\n".join(active)
 
 
 def collect_style_codes(style_root: Path, entrypoint: str) -> set[tuple[int, int]]:
-    """Collect active Garmin codes reachable from one style entrypoint."""
     seen: set[Path] = set()
     codes: set[tuple[int, int]] = set()
 
@@ -71,24 +72,28 @@ def collect_style_codes(style_root: Path, entrypoint: str) -> set[tuple[int, int
         if resolved in seen:
             return
         seen.add(resolved)
-        text = path.read_text(encoding="utf-8")
-        active = _active_text(text)
+        active = _active_text(path.read_text(encoding="utf-8"))
         for match in TYPE_RE.finditer(active):
             codes.add(split_style_code(match.group(1)))
         for line in active.splitlines():
             match = INCLUDE_RE.match(line)
             if match:
-                # mkgmap resolves includes from the style root, not relative to
-                # the including file. This matters for nested inc/* includes.
                 visit(style_root / match.group(1))
 
     visit(style_root / entrypoint)
     return codes
 
 
+def _typ_text(path: Path) -> str:
+    raw = path.read_bytes()
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw.decode("cp1251")
+
+
 def parse_typ_codes(path: Path) -> dict[str, set[tuple[int, int]]]:
-    """Parse point/line/polygon definitions from the cp1251 TYP source."""
-    text = path.read_bytes().decode("cp1251")
+    text = _typ_text(path)
     result: dict[str, set[tuple[int, int]]] = defaultdict(set)
     section: str | None = None
     type_id: int | None = None
@@ -97,14 +102,7 @@ def parse_typ_codes(path: Path) -> dict[str, set[tuple[int, int]]]:
     def flush() -> None:
         nonlocal type_id, subtype
         if section is not None and type_id is not None:
-            raw_subtype = 0 if subtype is None else subtype
-            # Accept historical combined Type=0x1341f syntax too, so the audit
-            # can identify semantic coverage even in an old source revision.
-            if subtype is None and type_id > 0xFFF:
-                normalized = (type_id >> 8, type_id & 0xFF)
-            else:
-                normalized = (type_id, raw_subtype)
-            result[section].add(normalized)
+            result[section].add(_normalize_typ_code(type_id, subtype))
         type_id = None
         subtype = None
 
@@ -130,6 +128,60 @@ def parse_typ_codes(path: Path) -> dict[str, set[tuple[int, int]]]:
             subtype = value
     flush()
     return dict(result)
+
+
+def duplicate_visual_groups(path: Path) -> dict[str, list[list[tuple[int, int]]]]:
+    """Group different TYP codes whose non-label visual directives are identical."""
+    text = _typ_text(path)
+    groups: dict[str, dict[tuple[str, ...], list[tuple[int, int]]]] = {
+        kind: defaultdict(list) for kind in STYLE_ENTRYPOINTS
+    }
+    section: str | None = None
+    type_id: int | None = None
+    subtype: int | None = None
+    visual_lines: list[str] = []
+
+    def flush() -> None:
+        nonlocal type_id, subtype, visual_lines
+        if section is not None and type_id is not None:
+            fingerprint = tuple(visual_lines)
+            if fingerprint:
+                groups[section][fingerprint].append(_normalize_typ_code(type_id, subtype))
+        type_id = None
+        subtype = None
+        visual_lines = []
+
+    for raw_line in text.splitlines():
+        match = SECTION_RE.match(raw_line)
+        if match:
+            flush()
+            section = match.group(1).lower()
+            continue
+        if END_RE.match(raw_line):
+            flush()
+            section = None
+            continue
+        if section is None:
+            continue
+        field = FIELD_RE.match(raw_line)
+        if field:
+            value = int(field.group(2), 16)
+            if field.group(1).lower() == "type":
+                type_id = value
+            else:
+                subtype = value
+            continue
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith(";") or STRING_RE.match(raw_line):
+            continue
+        visual_lines.append(stripped)
+    flush()
+
+    result: dict[str, list[list[tuple[int, int]]]] = {}
+    for kind, fingerprints in groups.items():
+        duplicates = [sorted(codes) for codes in fingerprints.values() if len(codes) > 1]
+        result[kind] = sorted(duplicates, key=lambda codes: codes[0])
+    return result
 
 
 def audit(repo_root: Path) -> int:
@@ -160,6 +212,14 @@ def audit(repo_root: Path) -> int:
             print("  TYP definition without active style use:")
             for code in unused:
                 print(f"    {format_code(code)}")
+
+    duplicates = duplicate_visual_groups(typ_path)
+    for kind, groups in duplicates.items():
+        if not groups:
+            continue
+        print(f"{kind}: visually identical TYP groups (review only):")
+        for codes in groups:
+            print("  " + ", ".join(format_code(code) for code in codes))
 
     return 1 if failed else 0
 
