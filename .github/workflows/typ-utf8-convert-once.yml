@@ -1,0 +1,35 @@
+name: TYP UTF-8 convert once
+
+on:
+  push:
+    paths:
+      - scripts/tools/convert_typ_to_utf8_once.py
+      - .github/workflows/typ-utf8-convert-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Convert TYP source to UTF-8
+        run: python scripts/tools/convert_typ_to_utf8_once.py
+      - name: Commit converted TYP source
+        shell: bash
+        run: |
+          if git diff --quiet -- styles/uralla.txt; then
+            echo "No TYP changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla.txt
+          git commit -m "Convert TYP source to UTF-8"
+          git push origin HEAD:main
