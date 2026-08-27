@@ -8,6 +8,9 @@ dist/
 *.egg-info/
 tools/
 
+# Generated Garmin TYP binaries. The editable source is styles/uralla.txt.
+*.typ
+
 # Local/static build inputs. Keep paths stable for config/maps.yaml, but do not version data.
 poly/
 input/
