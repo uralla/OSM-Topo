@@ -2241,19 +2241,6 @@ ContourColor=No
 
 
 [_line]
-Type=0x05
-;GRMN_TYPE: Roads/COLLECTOR/Secondary city thoroughfare/Non NT, NT
-UseOrientation=Y
-LineWidth=2
-Xpm="0 0 1 0"
-"1 c #949494"
-String1=0x19,неизвестная дорога
-String2=0x04,unknown road
-ExtendedLabels=N
-[end]
-
-
-[_line]
 Type=0x06
 ;GRMN_TYPE: Roads/RESIDENTIAL/Residential street, these are typically the most numerous roads in a detailed city map and do not show up until the user is zoomed in quite far/Non NT, NT
 UseOrientation=Y
