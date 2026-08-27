@@ -207,13 +207,18 @@ def run_doctor(
 
     if check_external_data:
         external_paths: set[str] = set()
+        source_pbf_paths: set[str] = set()
         for key in ("bounds", "sea"):
             value = defaults.get(key)
             if isinstance(value, str):
                 external_paths.add(value)
         for source in manifest.get("sources", {}).values():
             if isinstance(source, dict) and isinstance(source.get("path"), str):
-                external_paths.add(source["path"])
+                source_path = source["path"]
+                if source_path.lower().endswith(".pbf"):
+                    source_pbf_paths.add(source_path)
+                else:
+                    external_paths.add(source_path)
         for product in manifest.get("products", {}).values():
             if not isinstance(product, dict):
                 continue
@@ -224,6 +229,9 @@ def run_doctor(
         for value in sorted(external_paths):
             path = data_path(host, value)
             checks.append(_check(f"data:{value}", path.is_file(), str(path)))
+        for value in sorted(source_pbf_paths):
+            path = data_path(host, value)
+            checks.append(_check(f"data:{value}", path.is_file(), str(path), failure="warning"))
         checks.append(_check("data:dem-root", host.paths.dem_root.is_dir(), str(host.paths.dem_root)))
 
     work_anchor = _nearest_existing(host.paths.work_root)

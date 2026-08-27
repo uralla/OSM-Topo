@@ -130,6 +130,28 @@ splitter:
                 )
             )
 
+    def test_missing_source_pbf_is_a_warning(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            lock = self._prepare(root)
+            (root / "data/input/source.osm.pbf").unlink()
+            checks = run_doctor(
+                _manifest(),
+                self._host(root),
+                root,
+                lock,
+                check_commands=False,
+                check_external_data=True,
+                probe_publish=False,
+            )
+            self.assertFalse(has_errors(checks), [check for check in checks if check.status == "error"])
+            self.assertTrue(
+                any(
+                    check.name == "data:input/source.osm.pbf" and check.status == "warning"
+                    for check in checks
+                )
+            )
+
     def test_missing_external_file_is_an_error(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
