@@ -176,7 +176,10 @@ leisure=nature_reserve { name '${name}' } [0x12d1b resolution 23]
 
 # Ways that may or may not be useable
 highway=construction { add mkgmap:dead-end-check = false; }
-highway=construction | highway=* & construction=* [0x10f19 resolution 22 continue]
+# A closed construction way is its own non-routable map object.
+highway=construction [0x10f19 resolution 22]
+# construction=* on an otherwise active highway is an overlay; keep the base road too.
+highway!=construction & highway=* & construction=* [0x10f19 resolution 22 continue]
 ## Treat disused ways as highway=service, but at lower road_speed.
 highway=* & disused=yes [0x12 road_class=0 road_speed=1 resolution 22 continue]
 
