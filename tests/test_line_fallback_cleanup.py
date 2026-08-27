@@ -119,6 +119,11 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn(rule, lines)
         self.assertGreater(lines.index(rule), lines.index('highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]'))
 
+    def test_arrete_is_visible_only_at_close_zoom(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("natural=arete [0x10e01 resolution 24]", lines)
+        self.assertNotRegex(lines, r"natural=arete .*resolution (?:1[0-9]|2[0-3])")
+
     def test_ridge_lod_is_non_overlapping_and_unnamed_is_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
