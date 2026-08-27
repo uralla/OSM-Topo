@@ -233,15 +233,16 @@ highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=0 resolution 24]
 
 highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
-# [CUSTOM/АВТОРСКОЕ] Marked route members: guarantee visibility from resolution 21.
-# Emit only the missing far level; normal rules below own the closer levels.
-mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-21 continue]
-mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]
-mkgmap:trail_name=* & highway=footway & length()>100 [0x07 resolution 21-21 continue]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 21-21 continue]
-mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]
-# tracktype=grade1 already starts at resolution 21 in the normal track rule below.
-mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 21-21 continue]
+# [CUSTOM/АВТОРСКОЕ] Marked route members are shown one level farther out than
+# ordinary ways of the same class. At that extra level use the close-zoom line
+# type, making the route visually stronger without introducing new graphics.
+mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e resolution 21-21 continue]
+mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 resolution 21-21 continue]
+mkgmap:trail_name=* & highway=footway & length()>100 [0x0e resolution 21-21 continue]
+mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x2e resolution 22-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x0a resolution 21-21 continue]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a resolution 20-20 continue]
+mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]
 
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 highway=byway [0x16 road_class=0 road_speed=0 resolution 24]
