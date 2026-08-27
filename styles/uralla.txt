@@ -1,5 +1,4 @@
-
-
+; -*- coding: utf-8 -*-
 [_id]
 ProductCode=1
 FID=1002
@@ -3649,7 +3648,7 @@ ContourColor=No
 
 [_line]
 Type=0x13501
-;GRMN_TYPE: //
+;URALLA_ROLE: forest-road-good-far + pedestrian-cycleway-far
 UseOrientation=Y
 LineWidth=1
 Xpm="0 0 1 0"
@@ -3660,10 +3659,9 @@ CustomColor=No
 ContourColor=No
 [end]
 
-
 [_line]
 Type=0x13502
-;GRMN_TYPE: //
+;URALLA_ROLE: forest-road-good-near
 UseOrientation=N
 Xpm="32 2 2  1"
 "! c #000000"
@@ -3678,10 +3676,9 @@ CustomColor=No
 ContourColor=No
 [end]
 
-
 [_line]
 Type=0x13503
-;GRMN_TYPE: //
+;URALLA_ROLE: forest-road-bad-far
 UseOrientation=Y
 Xpm="32 1 2  1"
 "! c #000000"
@@ -3693,10 +3690,9 @@ String2=0x04,track
 ExtendedLabels=N
 [end]
 
-
 [_line]
 Type=0x13504
-;GRMN_TYPE: //
+;URALLA_ROLE: forest-road-bad-near
 UseOrientation=N
 Xpm="32 2 2  1"
 "! c #000000"
@@ -3711,24 +3707,9 @@ CustomColor=No
 ContourColor=No
 [end]
 
-
 [_line]
 Type=0x13505
-;GRMN_TYPE: //
-UseOrientation=Y
-LineWidth=1
-Xpm="0 0 1 0"
-"1 c #000020"
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-[end]
-
-
-[_line]
-Type=0x13506
-;GRMN_TYPE: //
+;URALLA_ROLE: pedestrian-cycleway-near
 UseOrientation=N
 LineWidth=2
 Xpm="0 0 1 0"
@@ -3739,62 +3720,26 @@ CustomColor=No
 ContourColor=No
 [end]
 
+[_line]
+Type=0x13506
+;URALLA_ROLE: foot-bicycle-trail-far
+UseOrientation=Y
+Xpm="32 1 2  1"
+"! c #000000"
+"  c none"
+"  !!!!!   !!!!!   !!!!!   !!!!! "
+;12345678901234567890123456789012
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=Day
+DaycustomColor:#101010
+ContourColor=No
+[end]
 
 [_line]
 Type=0x13507
-;GRMN_TYPE: //
+;URALLA_ROLE: foot-bicycle-trail-near
 UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #000000"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#101010
-ContourColor=No
-[end]
-
-
-[_line]
-Type=0x13508
-;GRMN_TYPE: //
-UseOrientation=Y
-Xpm="32 2 2  1"
-"! c #101010"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-[end]
-
-
-[_line]
-Type=0x13509
-;GRMN_TYPE: //
-UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #000000"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#101010
-ContourColor=No
-[end]
-
-
-[_line]
-Type=0x1350a
-;GRMN_TYPE: //
-UseOrientation=N
 Xpm="32 2 2  1"
 "! c #101010"
 "  c none"
@@ -8114,52 +8059,4 @@ DayXpm="8 25 5 1"   Colormode=16
 "   !!   "
 "   !!   "
 ;12345678
-[end]bType=0x08
-; URALLA_ROLE: foot-trail-near
-;GRMN_TYPE: Misc. Line Types/VIA_FERRATA/Via ferrata/Non NT, NT
-UseOrientation=Y
-Xpm="32 2 2  1"
-"! c #414141"
-"  c none"
-"   !!!     !!!     !!!     !!!  "
-"   !!!     !!!     !!!     !!!  "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-[end]
-[_line]
-Type=0x135
-SubType=0x09
-; URALLA_ROLE: bicycle-trail-far
-;GRMN_TYPE: Roads/MAJOR_CONNECTOR/Major highway connector/Non NT, NT
-UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #000000"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#101010
-ContourColor=No
-[end]
-[_line]
-Type=0x135
-SubType=0x0a
-; URALLA_ROLE: bicycle-trail-near
-;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
-UseOrientation=N
-Xpm="32 2 2  1"
-"! c #101010"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
 [end]
