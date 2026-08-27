@@ -270,8 +270,11 @@ highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 highway=via_ferrata [0x2e resolution 24]
 
 # parking_aisle is intentionally removed in inc/water_lines.
-highway=service & (service=alley|service=driveway) [0x07 road_class=0 road_speed=0 resolution 23]
-highway=service & oneway=yes [0x07 road_class=0 road_speed=1 resolution 23]
+# Service roads use one far/near visual hierarchy; routing speed preserves subtype semantics.
+highway=service & (service=alley|service=driveway) [0x07 resolution 23-23 continue]
+highway=service & (service=alley|service=driveway) [0x0d road_class=0 road_speed=0 resolution 24]
+highway=service & oneway=yes [0x07 resolution 23-23 continue]
+highway=service & oneway=yes [0x0d road_class=0 road_speed=1 resolution 24]
 highway=service & length()>200 [0x07 resolution 23-23 continue]
 highway=service [0x0d road_class=0 road_speed=2 resolution 24]
 

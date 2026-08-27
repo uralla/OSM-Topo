@@ -221,6 +221,26 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_service_specializations_keep_far_near_hierarchy(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        for rule in (
+            "highway=service & (service=alley|service=driveway) [0x07 resolution 23-23 continue]",
+            "highway=service & (service=alley|service=driveway) [0x0d road_class=0 road_speed=0 resolution 24]",
+            "highway=service & oneway=yes [0x07 resolution 23-23 continue]",
+            "highway=service & oneway=yes [0x0d road_class=0 road_speed=1 resolution 24]",
+            "highway=service & length()>200 [0x07 resolution 23-23 continue]",
+            "highway=service [0x0d road_class=0 road_speed=2 resolution 24]",
+        ):
+            self.assertIn(rule, lines)
+        self.assertNotIn(
+            "highway=service & (service=alley|service=driveway) [0x07 road_class=0 road_speed=0 resolution 23]",
+            lines,
+        )
+        self.assertNotIn(
+            "highway=service & oneway=yes [0x07 road_class=0 road_speed=1 resolution 23]",
+            lines,
+        )
+
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
