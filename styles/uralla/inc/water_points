@@ -22,7 +22,7 @@ natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi
 
 (man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring)
     & (intermittent=yes | (seasonal=* & seasonal!=no))
-    { name '${name} (пересых.)' | 'пересых. источник' }
+    { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' }
     [0x6512 resolution 23]
 
 amenity=water_point [0x5001 resolution 23]
