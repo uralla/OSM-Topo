@@ -107,6 +107,7 @@
 3	1012	Бирюса	Biryusa	length
 3	1012	Луара	Loire	length
 3	992	Селенга	Selenga|Сэлэнгэ	length
+3	980	Махакам	Mahakam|Mahakam River|Sungai Mahakam	length
 3	966	Тиса	Tisza|Tisa	length
 3	960	Эбро	Ebro	length
 3	953	Прут	Prut|Pruth	length
@@ -114,14 +115,21 @@
 3	933	Сава	Sava	length
 3	925	Маас	Meuse|Maas	length
 3	906	Кубань	Kuban	legacy+length
+3	900	Маханади	Mahanadi|Mahanadi River	length
 3	897	Дуэро	Douro|Duero	length
+3	890	Ченаб	Chenab|Chenab River	length
 3	857	Мезень	Mezen	length
 3	854	Одра	Oder|Odra	length
 3	829	Гвадиана	Guadiana	length
 3	824	Сакарья	Sakarya	length
+3	818	Пясина	Pyasina	length
 3	815	Рона	Rhône|Rhone	length
 3	806	Южный Буг	Southern Bug|Pivdennyi Buh|Південний Буг	length
+3	805	Кавери	Kaveri|Cauvery|Kaveri River|Cauvery River	length
 3	802	Кума	Kuma	length
+3	800	Батанг-Хари	Batang Hari|Batang Hari River|Sungai Batanghari	length
 3	795	Варта	Warta	length
+3	784	Сон	Son River|Sone River|Son	length
 3	776	Сена	Seine	length
+3	770	Раджанг	Rajang|Rajang River	length
 3	761	Муреш	Mureș|Mures|Maros	length
