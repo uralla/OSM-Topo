@@ -15,8 +15,14 @@ class WaterSourceLabelStyleTests(unittest.TestCase):
     def test_intermittent_water_sources_keep_information_name_without_map_label(self) -> None:
         text = WATER_POINTS.read_text(encoding="utf-8")
         self.assertNotIn("addlabel 'вода (пересых.)'", text)
-        self.assertIn("name '${name} (пересых.)' | 'пересых. источник'", text)
+        self.assertIn("name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник'", text)
         self.assertIn("[0x6512 resolution 23]", text)
+
+    def test_intermittent_source_label_drops_redundant_seasonal_suffix(self) -> None:
+        text = WATER_POINTS.read_text(encoding="utf-8")
+        self.assertIn("subst: (сезонный)=>", text)
+        self.assertIn("subst: (Сезонный)=>", text)
+        self.assertNotIn("${name} (пересых.)", text)
 
 
 if __name__ == "__main__":
