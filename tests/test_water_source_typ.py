@@ -29,7 +29,10 @@ class WaterSourceTypTests(unittest.TestCase):
         text = WATER_POINTS.read_text(encoding="utf-8")
         self.assertNotIn("addlabel 'вода'", text)
         self.assertNotIn("addlabel 'вода (пересых.)'", text)
-        self.assertIn("name '${name} (пересых.)' | 'пересых. источник'", text)
+        self.assertIn(
+            "name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник'",
+            text,
+        )
 
 
 if __name__ == "__main__":
