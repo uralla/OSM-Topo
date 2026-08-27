@@ -5,9 +5,6 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,14 +17,6 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-
-      - name: Apply mountain hut point patch
-        run: |
-          python scripts/hut_points_once.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add styles/uralla/points tests/test_hut_point_style.py
-          git diff --cached --quiet || (git commit -m "Render alpine and wilderness huts" && git push)
 
       - name: Install project
         run: python -m pip install -e .
