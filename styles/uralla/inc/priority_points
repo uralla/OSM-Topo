@@ -63,9 +63,11 @@ natural=shrub & name!=* { delete natural }
 natural=saddle & mountain_pass!=yes [0x11507 resolution 23]
 natural=valley [0x6617 resolution 23]
 natural=arch [0x6601 resolution 23]
-# Named caves are useful orientation landmarks and appear one level earlier.
-natural=cave_entrance & name=* { name '${name}' } [0x6608 resolution 23]
-natural=cave_entrance { name '${name}' | 'пещера' } [0x6608 resolution 24]
+# Cave entrance icons remain, but their permanent map labels are suppressed.
+# Keep the original name tag untouched for source data/details; a single-space
+# Garmin primary label prevents both the OSM name and TYP fallback text from drawing.
+natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23]
+natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]
 sport=climbing [0x6607 resolution 23]
 man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]
 
