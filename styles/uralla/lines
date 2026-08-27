@@ -121,7 +121,7 @@ highway=* & tunnel=yes & (access=private|access=no)
 
 # [CUSTOM/АВТОРСКОЕ] Add the tunnel overlay only after lifecycle/access filters,
 # so proposed, removed or hidden highway tunnels cannot leave an orphan line.
-highway=* & tunnel=yes | railway=* & tunnel=yes [0x10e04 resolution 24 continue]
+highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0) [0x10e04 resolution 24 continue]
 
 # Disable dead-end-checks for unaccessible oneways
 highway=* & oneway=yes & (access=private|access=no)
@@ -337,7 +337,7 @@ railway=rail & service=* [0x10f1f resolution 24]
 
 railway=rail & usage=main [0x10f13 resolution 19-20 continue]
 railway=rail & service!=* | railway=rail & usage=main [0x10f13 resolution 21-24 continue]
-(railway=preserved) & !(tunnel=yes) [0x10e1a resolution 24]
+railway=preserved [0x10e1a resolution 24]
 
 railway=tram & usage=main & length()>500 [0x10f14 resolution 22-23 continue]
 railway=tram [0x10f14 resolution 24]

@@ -280,6 +280,16 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(platform), lines.index(fallback))
         self.assertNotIn("highway=platform [0x16 road_class=0", lines)
 
+    def test_railway_tunnel_overlay_never_becomes_orphan(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        overlay = "highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0) [0x10e04 resolution 24 continue]"
+        preserved = "railway=preserved [0x10e1a resolution 24]"
+        self.assertIn(overlay, lines)
+        self.assertIn(preserved, lines)
+        self.assertNotIn("(railway=preserved) & !(tunnel=yes) [0x10e1a resolution 24]", lines)
+        self.assertLess(lines.index(overlay), lines.index(preserved))
+        self.assertIn("railway=light_rail & !(layer<0) [0x10f14 resolution 22-24]", lines)
+
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
