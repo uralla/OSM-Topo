@@ -68,7 +68,8 @@ natural=arch [0x6601 resolution 23]
 # Garmin primary label prevents both the OSM name and TYP fallback text from drawing.
 natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23]
 natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]
-sport=climbing [0x6607 resolution 23]
+# Climbing POI: icon only at the closest detail level; keep source name/details.
+sport=climbing { set mkgmap:label:1=' ' } [0x6607 resolution 24]
 man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]
 
 # Emergency phone legacy/current tags.
