@@ -36,6 +36,15 @@ highway=* & name=* { set mkgmap:street='${name}' }
 # платная
 highway=* & toll=yes { set name='${name} (платн.)' | 'платная' }
 
+# Remove non-existent/non-way highway classes before any active visual overlay can emit.
+(highway=proposed | highway=proposal | highway=planned | highway ~ '.*proposed.*') {delete highway;delete junction}
+(highway=razed | highway=dismantled) {deletealltags}
+highway=traffic_signals | highway=junction | highway=island | highway=centre_line | highway=traffic_island | highway=stopline {delete highway}
+highway=piste | highway=ski {delete highway}
+highway=no | highway=none {delete highway}
+# Hide inaccessible highway tunnels before tunnel/bridge/oneway overlays.
+highway=* & tunnel=yes & (access=private|access=no) & foot!=* & bicycle!=* {delete highway;delete junction}
+
 # Disused/abandoned roads are useful topo landmarks but must never enter active routing.
 # They own the object before smoothness/oneway/winter/bridge overlays can emit active visuals.
 (disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)
@@ -48,11 +57,11 @@ highway=* & (disused=yes | abandoned=yes)
 
 # [CUSTOM/АВТОРСКОЕ] Smoothness overlay is only for machine-drivable roads.
 # Foot/cycle/bridle/pedestrian ways keep their own visual language.
-highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
+highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
 & (smoothness=very_horrible | smoothness=impassable | smoothness=horrible)
 [0x1001a resolution 24 continue]
 
-highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
+highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
 & (smoothness=bad | smoothness=very_bad)
 [0x1001b resolution 24 continue]
 
@@ -78,7 +87,7 @@ highway=* & winter_road=yes & ice_road!=yes & length()>500 | highway=* & ice_roa
 highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_road!=yes [0x10 road_class=1 road_speed=2 resolution 22]
 
 # линии мостов дополнительно к дорогам
-(bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path
+highway=* & (bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path
 	& area!=yes [0x10f16 resolution 24 continue]
 
 # пешеходные мосты
@@ -101,23 +110,6 @@ highway=path & (bicycle=designated|bicycle=official) {set highway=cycleway }
 highway=path & (horse=designated|horse=official) {set highway=bridleway }
 highway=path & (foot=designated|foot=official) {set highway=footway }
 #####
-
-# Hide proposed ways
-(highway=proposed | highway=proposal | highway=planned | highway ~ '.*proposed.*') {delete highway;delete junction}
-# Hide removed ways
-(highway=razed | highway=dismantled) {deletealltags}
-# Hide abandoned ways. Abandoned highways have some evidence of their former existence but are no longer used.
-# ((abandoned:highway=* & highway!=*) | highway=abandoned) {deletealltags}
-# Hide other non-existent ways
-# (highway=unbuilt | highway=neverbuilt | highway=rejected | highway ~ 'x-.*') {delete highway;delete junction}
-# Remove highway tag from ways which are not suitable for routing
-highway=traffic_signals | highway=junction | highway=island | highway=centre_line | highway=traffic_island | highway=stopline {delete highway}
-highway=piste | highway=ski {delete highway}
-highway=no | highway=none {delete highway}
-
-# Hide unaccessible tunnels
-highway=* & tunnel=yes & (access=private|access=no)
-& foot!=* & bicycle!=* {delete highway;delete junction}
 
 # [CUSTOM/АВТОРСКОЕ] Add the tunnel overlay only after lifecycle/access filters,
 # so proposed, removed or hidden highway tunnels cannot leave an orphan line.

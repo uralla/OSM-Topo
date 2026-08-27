@@ -290,6 +290,22 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(overlay), lines.index(preserved))
         self.assertIn("railway=light_rail & !(layer<0) [0x10f14 resolution 22-24]", lines)
 
+    def test_removed_highways_cannot_leak_active_overlays(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        planned = "(highway=proposed | highway=proposal | highway=planned | highway ~ '.*proposed.*') {delete highway;delete junction}"
+        smooth = "highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian"
+        bridge = "highway=* & (bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path"
+        oneway = "highway=* & oneway=yes & highway!=construction & highway!=proposed"
+        tunnel = "highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0)"
+        self.assertIn(planned, lines)
+        self.assertIn(smooth, lines)
+        self.assertIn(bridge, lines)
+        self.assertLess(lines.index(planned), lines.index(smooth))
+        self.assertLess(lines.index(planned), lines.index(oneway))
+        self.assertLess(lines.index(planned), lines.index(bridge))
+        self.assertLess(lines.index(planned), lines.index(tunnel))
+        self.assertNotIn("(bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path", lines)
+
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
