@@ -9,8 +9,8 @@ TYP = ROOT / 'styles' / 'uralla.txt'
 class CaveWaterfallPointTests(unittest.TestCase):
     def test_cave_entrance_visibility_depends_on_name(self) -> None:
         text = PRIORITY.read_text(encoding='utf-8')
-        named = "natural=cave_entrance & name=* { name '${name}' } [0x11602 resolution 23]"
-        unnamed = "natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 24]"
+        named = "natural=cave_entrance & name=* { name '${name}' } [0x6608 resolution 23]"
+        unnamed = "natural=cave_entrance { name '${name}' | 'пещера' } [0x6608 resolution 24]"
         self.assertIn(named, text)
         self.assertIn(unnamed, text)
         self.assertLess(text.index(named), text.index(unnamed))
