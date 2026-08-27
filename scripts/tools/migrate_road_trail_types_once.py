@@ -7,8 +7,8 @@ TEST = Path('tests/test_line_fallback_cleanup.py')
 
 # --- TYP: move the one remaining custom bad-track-near design onto routable MPC 0x13 ---
 typ = TYP.read_text(encoding='utf-8')
-if re.search(r'(?m)^Type=0x13$', typ):
-    raise SystemExit('Type=0x13 already exists in TYP; refusing to overwrite')
+if re.search(r'\[_line\]\nType=0x13\n', typ, flags=re.I):
+    raise SystemExit('line Type=0x13 already exists in TYP; refusing to overwrite')
 
 m = re.search(r'\n?\[_line\]\nType=0x13504\n.*?\n\[end\]\n?', typ, flags=re.S | re.I)
 if not m:
