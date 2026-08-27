@@ -346,7 +346,7 @@ tunnel!=yes & location != underground
 [0x28 resolution 23]
 
 # трубопроводы
-man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 22]
+man_made=pipeline & tunnel!=yes & location!=underground {name '${name}' | '${operator}'} [0x28 resolution 22]
 
 # The following boundary styles are after the highway rules because ways
 # are frequently tagged with both and we want the highway to take priority.

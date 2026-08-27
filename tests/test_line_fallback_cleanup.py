@@ -51,6 +51,10 @@ class LineFallbackCleanupTests(unittest.TestCase):
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("man_made!=pipeline & man_made ~ '.*pipe.*'", lines)
         self.assertIn(
+            "man_made=pipeline & tunnel!=yes & location!=underground {name '${name}' | '${operator}'} [0x28 resolution 22]",
+            lines,
+        )
+        self.assertNotIn(
             "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 22]",
             lines,
         )
