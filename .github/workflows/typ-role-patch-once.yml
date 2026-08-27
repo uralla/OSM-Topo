@@ -1,0 +1,35 @@
+name: TYP role patch once
+
+on:
+  push:
+    paths:
+      - scripts/tools/patch_typ_roles_once.py
+      - .github/workflows/typ-role-patch-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch cp1251 TYP source byte-safely
+        run: python scripts/tools/patch_typ_roles_once.py
+      - name: Commit patched TYP source
+        shell: bash
+        run: |
+          if git diff --quiet -- styles/uralla.txt; then
+            echo "No TYP changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla.txt
+          git commit -m "Add semantic road and trail TYP roles"
+          git push origin HEAD:main
