@@ -72,7 +72,10 @@ class LineFallbackCleanupTests(unittest.TestCase):
 
     def test_disused_highways_are_non_routable_bad_track_landmarks(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
-        self.assertIn("(disused:highway=* | abandoned:highway=*)", lines)
+        self.assertIn(
+            "(disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)",
+            lines,
+        )
         self.assertIn("'плохая грунтовка/неисп'", lines)
         self.assertIn("[0x1001a resolution 24]", lines)
         self.assertIn("highway=* & (disused=yes | abandoned=yes)", lines)
