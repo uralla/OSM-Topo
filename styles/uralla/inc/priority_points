@@ -70,7 +70,8 @@ natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23]
 natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]
 # Climbing POI: icon only at the closest detail level; keep source name/details.
 sport=climbing { set mkgmap:label:1=' ' } [0x6607 resolution 24]
-man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]
+# Cairns are small local navigation markers: only at the closest detail level.
+man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]
 
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
