@@ -16,10 +16,11 @@ shop=supermarket [0x2e02 resolution 22]
 
 # Pharmacy and bicycle shop remain distinct tourist-useful POIs.
 shop=chemist [0x2e05 resolution 24]
-# 0x11504 is reserved here for the bicycle icon; redraw its TYP XPM as needed.
-shop=bicycle [0x11504 resolution 23]
+shop=bicycle [0x2f0d resolution 23]
 
-# Motor-vehicle shops/services are one class.
+# Motor-vehicle shops/services are one class. car_club is intercepted here so
+# the legacy 0x2f0d rule later in points cannot consume the bicycle-service type.
+amenity=car_club [0x2f03 resolution 24]
 (shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
 # All remaining shops use one generic shop icon.
@@ -77,8 +78,8 @@ man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
 
-# Bicycle repair station shares the dedicated bicycle icon at the closest detail level.
-amenity=bicycle_repair_station [0x11504 resolution 24]
+# Bicycle repair station shares the bicycle-service icon at the closest detail level.
+amenity=bicycle_repair_station [0x2f0d resolution 24]
 
 # Small tourist infrastructure.
 leisure=picnic_table [0x4a01 resolution 24]
