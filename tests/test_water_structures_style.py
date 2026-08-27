@@ -9,11 +9,11 @@ POLYGONS = REPO_ROOT / "styles" / "uralla" / "polygons"
 
 
 class WaterStructuresStyleTests(unittest.TestCase):
-    def test_closed_breakwater_uses_pier_polygon_class(self) -> None:
+    def test_closed_water_structures_use_pier_polygon_class(self) -> None:
         lines = WATER_LINES.read_text(encoding="utf-8")
         polygons = POLYGONS.read_text(encoding="utf-8")
         self.assertIn(
-            "(man_made=pier | man_made=breakwater | man_made=groyne) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }",
+            "(man_made=pier | man_made=breakwater | man_made=groyne | man_made=quay) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }",
             lines,
         )
         self.assertIn(
