@@ -4,8 +4,8 @@ schema_version: 1
 # config/host.yaml is intentionally not committed.
 
 paths:
-  # Shared large inputs. Manifest paths under input/ and elevation/ are
-  # resolved below this root.
+  # Shared external inputs. Manifest paths under input/, elevation/ and poly/
+  # are resolved below this root.
   data_root: /mnt/nod
 
   # Build-specific workspaces and persistent history/checkpoints.
