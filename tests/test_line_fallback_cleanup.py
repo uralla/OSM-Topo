@@ -75,7 +75,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn("(disused:highway=* | abandoned:highway=*)", lines)
         self.assertIn("'плохая грунтовка/неисп'", lines)
         self.assertIn("[0x1001a resolution 24]", lines)
-        self.assertIn("highway=* & disused=yes", lines)
+        self.assertIn("highway=* & (disused=yes | abandoned=yes)", lines)
         self.assertNotIn(
             "highway=* & disused=yes [0x12 road_class=0 road_speed=1 resolution 22 continue]",
             lines,
