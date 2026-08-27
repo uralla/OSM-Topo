@@ -5,9 +5,6 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,15 +17,6 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-
-      - name: Apply one-time topo marker patch
-        run: |
-          python scripts/topo_marker_once.py
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add styles/uralla/points styles/uralla/inc/priority_points styles/uralla/inc/landuse_points styles/uralla.txt tests/test_topo_marker_points.py
-          git commit -m 'Add cairn and survey marker symbols; remove unwanted POIs' || exit 0
-          git push
 
       - name: Install project
         run: python -m pip install -e .
