@@ -2991,8 +2991,8 @@ Xpm="32 4 2  1"
 "!   !   !   !   !   !   !   !   "
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
-String1=0x19,овраг
-String2=0x04,gully
+String1=0x19,насыпь
+String2=0x04,embankment
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
