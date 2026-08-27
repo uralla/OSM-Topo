@@ -81,6 +81,14 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_protected_area_boundaries_do_not_preempt_highways(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        water = WATER_LINES.read_text(encoding='utf-8')
+        rule = "(boundary=protected_area | boundary=national_park) { name '${name}' } [0x12d1b resolution 23]"
+        self.assertNotIn(rule, water)
+        self.assertIn(rule, lines)
+        self.assertGreater(lines.index(rule), lines.index('highway=track [0x0a road_class=0 road_speed=1 resolution 24]'))
+
     def test_unnamed_ridges_are_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
