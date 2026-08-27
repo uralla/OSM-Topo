@@ -51,6 +51,21 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_construction_highway_is_owned_by_construction_rule(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn(
+            "highway=construction [0x10f19 resolution 22]",
+            lines,
+        )
+        self.assertIn(
+            "highway!=construction & highway=* & construction=* [0x10f19 resolution 22 continue]",
+            lines,
+        )
+        self.assertNotIn(
+            "highway=construction | highway=* & construction=* [0x10f19 resolution 22 continue]",
+            lines,
+        )
+
     def test_unnamed_ridges_are_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
