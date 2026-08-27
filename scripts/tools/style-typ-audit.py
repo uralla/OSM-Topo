@@ -78,7 +78,9 @@ def collect_style_codes(style_root: Path, entrypoint: str) -> set[tuple[int, int
         for line in active.splitlines():
             match = INCLUDE_RE.match(line)
             if match:
-                visit(path.parent / match.group(1))
+                # mkgmap resolves includes from the style root, not relative to
+                # the including file. This matters for nested inc/* includes.
+                visit(style_root / match.group(1))
 
     visit(style_root / entrypoint)
     return codes
