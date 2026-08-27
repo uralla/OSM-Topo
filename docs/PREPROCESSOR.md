@@ -120,12 +120,49 @@ of every kind and would also abbreviate unrelated proper names such as towns,
 streets or organizations. Compacting must be scoped to agreed geographic
 object classes.
 
-Any implementation of this section changes preprocessor output, so testing it
-requires a full rebuild through the preprocessing stage; rebuilding only the
-style against an older intermediate PBF is insufficient.
+## Future: regional display-language fallback
+
+Add a separate render-label policy for regions where the default OSM `name=*`
+occasionally uses a local-language form that is inconvenient or unreadable on
+the target Garmin map, while a suitable Russian localized name is already
+present.
+
+This must not rewrite or delete the source `name=*`. The preferred implementation
+is to populate the same render-only tag used by the geographic-name cleanup,
+for example `uralla:label=*`.
+
+For Russian map products, including multilingual republics such as
+Bashkortostan, use the following conservative precedence when a Russian display
+label is desired:
+
+1. if `name:ru=*` exists and is non-empty, it may be used as `uralla:label`;
+2. otherwise fall back to the original `name=*` unchanged;
+3. never invent a translation, transliterate automatically, or infer a Russian
+   name from spelling alone.
+
+The raw `name=*` must remain available in object properties/search so that a
+mapper can see the original OSM value and identify questionable tagging later.
+The display-language fallback is a cartographic presentation decision, not an
+attempt to rewrite OSM data.
+
+Optionally, the preprocessor may report suspicious cases for later inspection,
+for example when a feature in a Russian product has a non-Russian `name=*` but
+also has a distinct `name:ru=*`. Such reporting should be diagnostic only and
+must not by itself trigger destructive edits.
+
+Do not implement a blanket rule such as "all names inside Russia must be
+Russian". OSM explicitly allows the default `name=*` to follow local naming
+practice, and multilingual regions can contain legitimate non-Russian default
+names. The safe signal is the presence of an explicit localized tag such as
+`name:ru=*`, not guessed language from geography alone.
+
+Any implementation of these future naming sections changes preprocessor
+output, so testing requires a full rebuild through the preprocessing stage;
+rebuilding only the style against an older intermediate PBF is insufficient.
 
 References:
 
+- [OSM names](https://wiki.openstreetmap.org/wiki/Name)
 - [OSM `office=political_party`](https://wiki.openstreetmap.org/wiki/Tag:office%3Dpolitical_party)
 - [OSM `political_party=*`](https://wiki.openstreetmap.org/wiki/Key:political_party)
 - [pyosmium writing modified objects](https://docs.osmcode.org/pyosmium/latest/user_manual/06-Writing-Data/)
