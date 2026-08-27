@@ -185,7 +185,7 @@ highway!=construction & highway=* & construction=* & maxspeed!=*
 { add mkgmap:road-speed = '-1' }
 
 # Disused/abandoned roads are useful topo landmarks but must never enter active routing.
-(disused:highway=* | abandoned:highway=*)
+(disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)
 { name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп' }
 [0x1001a resolution 24]
 # Legacy tagging: keep the object visible in the same language, but stop before normal highway rules.
