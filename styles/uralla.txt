@@ -2273,6 +2273,7 @@ ContourColor=No
 
 [_line]
 Type=0x07
+;URALLA_ROLE: forest-road-good-far + pedestrian-cycleway-far
 ;GRMN_TYPE: Roads/ALLEY, DRIVEWAY/Alleyway, private driveway to residence/Non NT, NT
 UseOrientation=Y
 LineWidth=1
@@ -2287,6 +2288,7 @@ ContourColor=No
 
 [_line]
 Type=0x0a
+;URALLA_ROLE: forest-road-good-near
 ;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
 UseOrientation=N
 Xpm="32 2 2  1"
@@ -2305,6 +2307,7 @@ ContourColor=No
 
 [_line]
 Type=0x0b
+;URALLA_ROLE: foot-bicycle-trail-far
 ;GRMN_TYPE: Roads/MAJOR_CONNECTOR/Major highway connector/Non NT, NT
 UseOrientation=Y
 Xpm="32 1 2  1"
@@ -2340,6 +2343,7 @@ ContourColor=No
 
 [_line]
 Type=0x0e
+;URALLA_ROLE: pedestrian-cycleway-near
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_2/Routable customizable line/Non NT, NT
 UseOrientation=N
 LineWidth=2
@@ -2420,6 +2424,7 @@ ContourColor=No
 
 [_line]
 Type=0x12
+;URALLA_ROLE: forest-road-bad-far
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_6/Routable customizable line/Non NT, NT
 UseOrientation=Y
 Xpm="32 1 2  1"
@@ -2435,6 +2440,7 @@ ExtendedLabels=N
 
 [_line]
 Type=0x16
+;URALLA_ROLE: foot-bicycle-trail-near
 ;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
 UseOrientation=N
 Xpm="32 2 2  1"
@@ -3646,49 +3652,8 @@ ContourColor=No
 [end]
 
 
-[_line]
-Type=0x13501
-;URALLA_ROLE: forest-road-good-far + pedestrian-cycleway-far
-UseOrientation=Y
-LineWidth=1
-Xpm="0 0 1 0"
-"1 c #000020"
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-[end]
 
-[_line]
-Type=0x13502
-;URALLA_ROLE: forest-road-good-near
-UseOrientation=N
-Xpm="32 2 2  1"
-"! c #000000"
-"# c #FFFFFF"
-"!!!!!!!!!!!#####!!!!!!!!!!!#####"
-"!!!!!!!!!!!#####!!!!!!!!!!!#####"
-;12345678901234567890123456789012
-String1=0x19,дорога
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-[end]
 
-[_line]
-Type=0x13503
-;URALLA_ROLE: forest-road-bad-far
-UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #000000"
-"# c #FFFFFF"
-"!!!!!!##!!!!!!##!!!!!!##!!!!!!##"
-;12345678901234567890123456789012
-String1=0x19,дорога
-String2=0x04,track
-ExtendedLabels=N
-[end]
 
 [_line]
 Type=0x13504
@@ -3707,50 +3672,8 @@ CustomColor=No
 ContourColor=No
 [end]
 
-[_line]
-Type=0x13505
-;URALLA_ROLE: pedestrian-cycleway-near
-UseOrientation=N
-LineWidth=2
-Xpm="0 0 1 0"
-"1 c #7B30B4"
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-[end]
 
-[_line]
-Type=0x13506
-;URALLA_ROLE: foot-bicycle-trail-far
-UseOrientation=Y
-Xpm="32 1 2  1"
-"! c #000000"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=Day
-DaycustomColor:#101010
-ContourColor=No
-[end]
 
-[_line]
-Type=0x13507
-;URALLA_ROLE: foot-bicycle-trail-near
-UseOrientation=Y
-Xpm="32 2 2  1"
-"! c #101010"
-"  c none"
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-"  !!!!!   !!!!!   !!!!!   !!!!! "
-;12345678901234567890123456789012
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-[end]
 
 
 ;====================== POINTS ==========================
