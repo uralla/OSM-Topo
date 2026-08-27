@@ -89,7 +89,10 @@ Normalization must be object-type aware. Examples:
 - `natural=peak` / `natural=volcano`: `гора Ямантау`, `Г. Ямантау`, `г Ямантау`
   -> render as `Ямантау`;
 - lake/water objects: `озеро Тургояк`, `Оз. Тургояк`, `оз Тургояк`
-  -> render as `Тургояк`.
+  -> render as `Тургояк`;
+- `natural=waterfall`: leading renderer-oriented forms such as `водопад`,
+  `Водопад`, `вод.`, `вод`, `вдп.`, `вдп` should be eligible for removal when
+  they are clearly a type token rather than part of the proper name.
 
 Only a leading type token is eligible for automatic removal. A trailing word
 that can legitimately be part of the proper name must be preserved. For
@@ -98,9 +101,10 @@ must remain unchanged. The same principle applies to names such as `Белая
 Гора`, `Черное Озеро` and `Каменный Хребет`.
 
 Support common capitalization and punctuation variants (`гора`, `Гора`, `г.`,
-`г`, `озеро`, `Озеро`, `оз.`, `оз`, `хребет`, `Хребет`, `хр.`, `хр`) only when
-they agree with the OSM object type. Do not use a global regular expression
-that strips these words from unrelated objects.
+`г`, `озеро`, `Озеро`, `оз.`, `оз`, `хребет`, `Хребет`, `хр.`, `хр`,
+`водопад`, `Водопад`, `вод.`, `вод`, `вдп.`, `вдп`) only when they agree with
+the OSM object type. Do not use a global regular expression that strips these
+words from unrelated objects.
 
 Keep the original OSM `name=*` available for object inspection/search. The
 cleaned value should be stored in a separate render-only tag (for example
