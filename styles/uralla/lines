@@ -14,9 +14,6 @@ include 'inc/name';
 include 'inc/contour_lines';
 include 'inc/water_lines';
 
-# [CUSTOM/АВТОРСКОЕ] One tunnel overlay type for all surface road/rail classes.
-highway=* & tunnel=yes | railway=* & tunnel=yes [0x10e04 resolution 24 continue]
-
 highway=escape { set highway=service }
 highway=unsurfaced { set highway=track }
 
@@ -25,7 +22,7 @@ highway=* {add taxi=no}
 
 # убираем из обработки все планируемые дороги, ж/д, мосты и т.д.
 highway=proposed | railway=proposed | bridge=proposed | proposed=*
-	{delete highway; delete rail; delete bridge}
+	{delete highway; delete railway; delete bridge}
 
 # bridge=no означает обычную дорогу, а не отсутствие дороги
 bridge=no {delete bridge}
@@ -107,6 +104,11 @@ highway=no | highway=none {delete highway}
 # Hide unaccessible tunnels
 highway=* & tunnel=yes & (access=private|access=no)
 & foot!=* & bicycle!=* {delete highway;delete junction}
+
+# [CUSTOM/АВТОРСКОЕ] Add the tunnel overlay only after lifecycle/access filters,
+# so proposed, removed or hidden highway tunnels cannot leave an orphan line.
+highway=* & tunnel=yes | railway=* & tunnel=yes [0x10e04 resolution 24 continue]
+
 # Disable dead-end-checks for unaccessible oneways
 highway=* & oneway=yes & (access=private|access=no)
 {add mkgmap:dead-end-check=false}
