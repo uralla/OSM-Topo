@@ -21,7 +21,8 @@ jobs:
           python scripts/tools/refine_footway_once.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add styles/uralla/lines tests/test_line_fallback_cleanup.py .github/workflows/ci.yml scripts/tools/refine_footway_once.py
+          git add styles/uralla/lines tests/test_line_fallback_cleanup.py .github/workflows/ci.yml
+          git add -u scripts/tools/refine_footway_once.py
           git commit -m "Refine footway sidewalk and trail semantics"
           git push
 
