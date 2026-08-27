@@ -76,8 +76,8 @@ man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
 
-# Bicycle repair infrastructure is not a bicycle shop.
-amenity=bicycle_repair_station [0x2e0d resolution 24]
+# Bicycle repair infrastructure uses the bicycle POI icon, not a generic shop/service icon.
+amenity=bicycle_repair_station [0x2f13 resolution 24]
 
 # Small tourist infrastructure.
 leisure=picnic_table [0x4a01 resolution 24]
