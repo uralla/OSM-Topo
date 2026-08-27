@@ -8,3 +8,9 @@ dist/
 *.egg-info/
 tools/
 
+# Local/static build inputs. Keep paths stable for config/maps.yaml, but do not version data.
+poly/
+input/
+elevation/
+OSM/
+dem-files.tsv
