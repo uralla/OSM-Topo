@@ -16,6 +16,9 @@ include 'inc/water_lines';
 
 highway=escape { set highway=service }
 highway=unsurfaced { set highway=track }
+# Legacy highway=byway describes a right-of-way rather than a reliable physical class.
+# Treat it as track so tracktype/surface and the normal good/bad forest-road hierarchy apply.
+highway=byway { set highway=track }
 
 ### taxi type is used for river routing
 highway=* {add taxi=no}
@@ -82,8 +85,9 @@ highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_
 (bridge=yes | bridge=true) & (highway=pedestrian | highway=footway | highway=path)
 	& area!=yes [0x10f18 resolution 24 continue]
 
-# пешеходные лестницы
+# пешеходные лестницы: stair graphic is an overlay; 0x16 below keeps the way routable.
 footway=sidewalk & highway=steps | highway=steps [0x12d1f resolution 24 continue]
+highway=steps [0x16 road_class=0 road_speed=0 resolution 24]
 
 # брод
 ford=yes & highway!=pedestrian & highway!=footway & highway!=path & area!=yes [0x11002 resolution 24 continue]
@@ -246,6 +250,7 @@ mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 res
 mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=1 resolution 23-24]
 mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-22 continue]
 mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=bridleway & length()>100 [0x0b resolution 22-22 continue]
 mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
 
 # Some countries allow, others disallow bicycling on pedestrian streets.
@@ -254,8 +259,9 @@ highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=0 resolution 24]
 
 highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
+# Bridleways use the ordinary trail visual hierarchy; explicit bicycle access is handled by access rules.
+highway=bridleway & length()>100 [0x0b resolution 23-23 continue]
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
-highway=byway [0x16 road_class=0 road_speed=0 resolution 24]
 # Via ferrata keeps its dedicated stable MPC visual and is intentionally non-routable.
 highway=via_ferrata [0x2e resolution 24]
 
