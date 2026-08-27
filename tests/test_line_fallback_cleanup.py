@@ -89,20 +89,22 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn(rule, lines)
         self.assertGreater(lines.index(rule), lines.index('highway=track [0x0a road_class=0 road_speed=1 resolution 24]'))
 
-    def test_unnamed_ridges_are_close_zoom_only(self) -> None:
+    def test_ridge_lod_is_non_overlapping_and_unnamed_is_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
-            "natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]",
+            "natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18-22 continue]",
             lines,
         )
         self.assertIn(
-            "natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]",
+            "natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23-24]",
             lines,
         )
         self.assertIn(
             "natural=ridge & name!=* [0x10e01 resolution 24]",
             lines,
         )
+        self.assertNotIn("natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]", lines)
+        self.assertNotIn("natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]", lines)
         self.assertNotIn("natural=ridge & name!=* & length()>500", lines)
         self.assertNotIn("natural=ridge & name!=* [0x10e01 resolution 23", lines)
 
