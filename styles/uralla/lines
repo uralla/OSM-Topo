@@ -296,7 +296,9 @@ highway=footway & footway!=sidewalk & footway!=crossing [0x16 road_class=0 road_
 bicycle!=yes & highway=path & length()>100 [0x0b resolution 23-23 continue]
 bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]
 
-highway=road { add mkgmap:dead-end-check = false} [0x05 road_class=0 road_speed=1 resolution 21]
+# highway=road has unknown physical/classification semantics; keep only the routing helper
+# and let the conservative generic highway fallback render it at resolution 24.
+highway=road { add mkgmap:dead-end-check = false }
 
 highway=track & tracktype!=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]
 highway=track & tracktype=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]

@@ -241,6 +241,16 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_unknown_highway_road_uses_conservative_generic_fallback(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        helper = "highway=road { add mkgmap:dead-end-check = false }"
+        fallback = "highway=* & area!=yes & highway!=path & highway!=steps & highway!=footway & highway!=track & highway!=cycleway & highway!=service [0x07 road_class=0 road_speed=0 resolution 24]"
+        self.assertIn(helper, lines)
+        self.assertIn(fallback, lines)
+        self.assertLess(lines.index(helper), lines.index(fallback))
+        self.assertNotIn("highway=road { add mkgmap:dead-end-check = false} [0x05 road_class=0 road_speed=1 resolution 21]", lines)
+        self.assertNotRegex(lines, r"highway=road .*\[0x[0-9a-fA-F]+ .*resolution")
+
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn("power=line & length()>500 [0x29 resolution 21-23 continue]", lines)
