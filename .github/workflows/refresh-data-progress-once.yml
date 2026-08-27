@@ -1,0 +1,39 @@
+name: Refresh data progress once
+
+on:
+  push:
+    paths:
+      - scripts/tools/refresh_data_progress_once.py
+      - .github/workflows/refresh-data-progress-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch refresh-data output
+        run: python scripts/tools/refresh_data_progress_once.py
+      - name: Run focused tests
+        run: |
+          python -m pip install -e .
+          python -m unittest tests.test_external_data -v
+      - name: Commit refresh-data output
+        shell: bash
+        run: |
+          if git diff --quiet -- uralla_build/external_data.py uralla_build/cli.py tests/test_external_data.py; then
+            echo "No refresh-data changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uralla_build/external_data.py uralla_build/cli.py tests/test_external_data.py
+          git commit -m "Show refresh-data progress and summary"
+          git push origin HEAD:main
