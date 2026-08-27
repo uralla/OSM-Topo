@@ -1,0 +1,31 @@
+; Custom bicycle POI for shop=bicycle and amenity=bicycle_repair_station.
+; Intended to be merged into styles/uralla.txt under the POINTS section.
+[_point]
+Type=0x115
+SubType=0x09
+; CUSTOM: bicycle shop / bicycle repair station
+String1=0x19,велосервис
+String2=0x04,bicycle service
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 3 1"   Colormode=16
+"!\tc #000000"
+"#\tc #FFFFFF"
+"  \tc none"
+"    ######   "
+"  ##!!!!!!## "
+" #!!#!!!!#!!#"
+"#!##!#!!#!##!"
+"#!##!!!#!!##!"
+"#!##!!##!!##!"
+"#!!####!####!#"
+"#!!!##!!!##!!#"
+"#!##!!!!!!###!"
+"#!##!####!###!"
+" #!!######!!# "
+"  ##!!!!!!##  "
+"    ######    "
+;1234567890123
+[end]
