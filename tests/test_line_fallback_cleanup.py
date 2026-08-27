@@ -184,6 +184,27 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines.index("# Mop up any unrecognised highway types"),
         )
 
+    def test_footway_sidewalk_and_trail_semantics_are_separate(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn(
+            "highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 22-23 continue]",
+            lines,
+        )
+        self.assertIn(
+            "highway=footway & (footway=sidewalk | footway=crossing) [0x0e road_class=0 road_speed=0 resolution 24]",
+            lines,
+        )
+        self.assertIn(
+            "highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 23-23 continue]",
+            lines,
+        )
+        self.assertIn(
+            "highway=footway & footway!=sidewalk & footway!=crossing [0x16 road_class=0 road_speed=0 resolution 24]",
+            lines,
+        )
+        self.assertNotIn("footway=sidewalk & highway=steps", lines)
+        self.assertIn("highway=steps [0x12d1f resolution 24 continue]", lines)
+
     def test_footway_is_not_duplicated_by_bicycle_path_rule(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
@@ -191,7 +212,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
         self.assertIn(
-            "highway=footway & length()>100 [0x07 resolution 22-23 continue]",
+            "highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 23-23 continue]",
             lines,
         )
         self.assertNotIn(

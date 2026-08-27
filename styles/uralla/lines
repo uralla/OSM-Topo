@@ -86,7 +86,7 @@ highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_
 	& area!=yes [0x10f18 resolution 24 continue]
 
 # пешеходные лестницы: stair graphic is an overlay; 0x16 below keeps the way routable.
-footway=sidewalk & highway=steps | highway=steps [0x12d1f resolution 24 continue]
+highway=steps [0x12d1f resolution 24 continue]
 highway=steps [0x16 road_class=0 road_speed=0 resolution 24]
 
 # брод
@@ -242,8 +242,12 @@ mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-22 con
 mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
 mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-22 continue]
 mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
-mkgmap:trail_name=* & highway=footway & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=footway & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
+# Urban sidewalk/crossing footways stay in the pedestrian visual class.
+mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x0e road_class=0 road_speed=0 resolution 23-24]
+# Other designated footways are topo trails, not pedestrian streets.
+mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
 mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]
 mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
 mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-22 continue]
@@ -280,8 +284,11 @@ highway=cycleway [0x0e road_class=0 road_speed=1 resolution 24]
 bicycle=yes & highway=path & length()>100 [0x0b resolution 22-23 continue]
 bicycle=yes & highway=path [0x16 road_class=0 road_speed=1 resolution 24]
 
-highway=footway & length()>100 [0x07 resolution 22-23 continue]
-highway=footway [0x0e road_class=0 road_speed=1 resolution 24]
+# Sidewalks/crossings use the pedestrian visual class; other footways use the trail class.
+highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 22-23 continue]
+highway=footway & (footway=sidewalk | footway=crossing) [0x0e road_class=0 road_speed=0 resolution 24]
+highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 23-23 continue]
+highway=footway & footway!=sidewalk & footway!=crossing [0x16 road_class=0 road_speed=0 resolution 24]
 
 bicycle!=yes & highway=path & length()>100 [0x0b resolution 23-23 continue]
 bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]
