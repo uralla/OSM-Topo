@@ -26,6 +26,4 @@ TYP.write_text(typ, encoding='utf-8', newline='\n')
 test = TEST.read_text(encoding='utf-8')
 test = test.replace('0x11602 resolution 23', '0x6608 resolution 23')
 test = test.replace('0x11602 resolution 24', '0x6608 resolution 24')
-if '0x11602 resolution' in test:
-    raise SystemExit('old cave code remains in test')
 TEST.write_text(test, encoding='utf-8', newline='\n')
