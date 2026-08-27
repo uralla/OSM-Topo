@@ -3310,7 +3310,7 @@ ContourColor=No
 [_line]
 Type=0x10f17
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_56/Non-routable customizable line/Non NT, NT
-UseOrientation=N
+UseOrientation=Y
 Xpm="32 6 2  1"
 "! c #BD3000"
 "  c none"
