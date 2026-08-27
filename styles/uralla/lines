@@ -186,7 +186,7 @@ highway=* & construction=* & maxspeed!=* { add mkgmap:road-speed = '-1' }
 highway=* & disused=yes & maxspeed!=* { add mkgmap:road-speed = '-2' }
 
 highway=primary_link & length()>500 | highway=primary & junction=roundabout & length()>500 [0x03 resolution 20-21 continue]
-highway=primary_link | highway=primary & junction=roundabout [0x03 road_class=3 road_speed=5 resolution 22 continue]
+highway=primary_link | highway=primary & junction=roundabout [0x03 road_class=3 road_speed=5 resolution 22]
 
 # Ways sorted roughly by descending order of class
 highway=motorway [0x01 road_class=4 road_speed=6 resolution 16]
@@ -198,12 +198,12 @@ highway=* & motorroad=yes [0x02 road_class=4 road_speed=5 resolution 14]
 highway=primary [0x03 road_class=3 road_speed=5 resolution 17]
 
 highway=secondary_link & length()>500 | highway=secondary & junction=roundabout & length()>500 [0x07 resolution 20-21 continue]
-highway=secondary_link | highway=secondary & junction=roundabout [0x04 road_class=2 road_speed=5 resolution 22 continue]
+highway=secondary_link | highway=secondary & junction=roundabout [0x04 road_class=2 road_speed=5 resolution 22]
 highway=secondary & length()>500 [0x07 resolution 18-19 continue]
 highway=secondary [0x04 road_class=2 road_speed=5 resolution 20]
 
 highway=tertiary_link & length()>500 | highway=tertiary & junction=roundabout & length()>500 [0x07 resolution 21-22 continue]
-highway=tertiary_link | highway=tertiary & junction=roundabout [0x11 road_class=2 road_speed=5 resolution 23 continue]
+highway=tertiary_link | highway=tertiary & junction=roundabout [0x11 road_class=2 road_speed=5 resolution 23]
 highway=tertiary & length()>500 [0x07 resolution 18-19 continue]
 highway=tertiary [0x11 road_class=2 road_speed=5 resolution 20]
 
