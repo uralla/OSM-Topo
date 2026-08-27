@@ -85,9 +85,9 @@ highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_
 (bridge=yes | bridge=true) & (highway=pedestrian | highway=footway | highway=path)
 	& area!=yes [0x10f18 resolution 24 continue]
 
-# пешеходные лестницы: stair graphic is an overlay; 0x16 below keeps the way routable.
+# пешеходные лестницы: stair graphic overlays a solid routable 0x07 carrier.
 highway=steps [0x12d1f resolution 24 continue]
-highway=steps [0x16 road_class=0 road_speed=0 resolution 24]
+highway=steps [0x07 road_class=0 road_speed=0 resolution 24]
 
 # брод
 ford=yes & highway!=pedestrian & highway!=footway & highway!=path & area!=yes [0x11002 resolution 24 continue]

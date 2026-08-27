@@ -168,12 +168,13 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(rule), lines.index("### taxi type is used for river routing"))
         self.assertNotIn("highway=byway [0x16 road_class=0 road_speed=0 resolution 24]", lines)
 
-    def test_steps_keep_stair_overlay_and_routable_trail_carrier(self) -> None:
+    def test_steps_keep_stair_overlay_on_solid_routable_carrier(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         overlay = "highway=steps [0x12d1f resolution 24 continue]"
-        carrier = "highway=steps [0x16 road_class=0 road_speed=0 resolution 24]"
+        carrier = "highway=steps [0x07 road_class=0 road_speed=0 resolution 24]"
         self.assertIn(overlay, lines)
         self.assertIn(carrier, lines)
+        self.assertNotIn("highway=steps [0x16 road_class=0 road_speed=0 resolution 24]", lines)
         self.assertLess(lines.index(overlay), lines.index(carrier))
 
     def test_via_ferrata_uses_its_native_mpc_type(self) -> None:
