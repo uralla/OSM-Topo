@@ -30,11 +30,10 @@ class PolygonPrecedenceStyleTests(unittest.TestCase):
 
     def test_private_nature_reserve_does_not_regain_close_zoom_fill(self) -> None:
         reserve = (
-            "leisure=nature_reserve & area_size()>50000 | "
-            "leisure=natural_reserve & area_size()>50000 | "
-            "landuse=nature_reserve & area_size()>50000 | "
-            "landuse=natural_reserve & area_size()>50000 "
-            "[0x16 resolution 19-22 continue]"
+            "(leisure=nature_reserve | leisure=natural_reserve | "
+            "landuse=nature_reserve | landuse=natural_reserve)\n"
+            "    & area_size()>50000 & boundary!=protected_area & boundary!=national_park\n"
+            "    [0x16 resolution 19-22 continue]"
         )
         private_fallback = (
             "leisure=* & access=private & leisure!=nature_reserve "
