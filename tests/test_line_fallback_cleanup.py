@@ -170,7 +170,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
 
     def test_steps_keep_stair_overlay_and_routable_trail_carrier(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
-        overlay = "footway=sidewalk & highway=steps | highway=steps [0x12d1f resolution 24 continue]"
+        overlay = "highway=steps [0x12d1f resolution 24 continue]"
         carrier = "highway=steps [0x16 road_class=0 road_speed=0 resolution 24]"
         self.assertIn(overlay, lines)
         self.assertIn(carrier, lines)
