@@ -6357,7 +6357,8 @@ SubType=0x08
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/WATERFALL/Waterfall/Non NT, NT
 String1=0x19,водопад
 String2=0x04,waterfall
-ExtendedLabels=N
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
 DayXpm="9 11 3 1"   Colormode=16
 "!	c #FFFFFF"
 "#	c #0000FF"

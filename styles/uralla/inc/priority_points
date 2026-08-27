@@ -63,7 +63,7 @@ natural=shrub & name!=* { delete natural }
 natural=saddle & mountain_pass!=yes [0x11507 resolution 23]
 natural=valley [0x6617 resolution 23]
 natural=arch [0x6601 resolution 23]
-natural=cave_entrance [0x11602 resolution 23]
+natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 22]
 sport=climbing [0x6607 resolution 23]
 man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]
 
