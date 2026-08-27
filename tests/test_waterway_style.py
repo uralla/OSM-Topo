@@ -10,6 +10,18 @@ class WaterwayStyleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.text = WATER_LINES.read_text(encoding='utf-8')
 
+    def test_ranked_river_overview_stops_before_close_zoom(self) -> None:
+        self.assertIn('uralla:river_rank=1 [0x18 resolution 16-19 continue]', self.text)
+        self.assertIn('uralla:river_rank=2 [0x18 resolution 17-19 continue]', self.text)
+        self.assertIn('uralla:river_rank=3 [0x18 resolution 18-19 continue]', self.text)
+        self.assertNotIn('uralla:river_rank=1 [0x18 resolution 16 continue]', self.text)
+        self.assertNotIn('uralla:river_rank=2 [0x18 resolution 17 continue]', self.text)
+        self.assertNotIn('uralla:river_rank=3 [0x18 resolution 18 continue]', self.text)
+
+    def test_regional_river_overview_stops_before_close_zoom(self) -> None:
+        self.assertIn("| waterway=river & name='Кожим' & length()>500 [0x18 resolution 18-19 continue]", self.text)
+        self.assertNotIn("| waterway=river & name='Кожим' & length()>500 [0x18 resolution 18 continue]", self.text)
+
     def test_river_keeps_distinct_visual_class(self) -> None:
         self.assertIn('waterway=river & length()>500 [0x01f resolution 20 continue]', self.text)
         self.assertIn('waterway=river & length()<=500 [0x01f resolution 23]', self.text)
