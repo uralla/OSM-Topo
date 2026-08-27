@@ -7839,10 +7839,10 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
 DayXpm="13 13 4 1"   Colormode=16
-"!\tc #202020"
-"#\tc #6F6F6F"
-"%\tc #B5B5B5"
-"  \tc none"
+"!	c #202020"
+"#	c #6F6F6F"
+"%	c #B5B5B5"
+"  	c none"
 "             "
 "      !!     "
 "     !%%!    "
@@ -7870,9 +7870,9 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
 DayXpm="13 13 3 1"   Colormode=16
-"!\tc #202020"
-"#\tc #FFFFFF"
-"  \tc none"
+"!	c #202020"
+"#	c #FFFFFF"
+"  	c none"
 "      !      "
 "     !#!     "
 "    !#!!     "
