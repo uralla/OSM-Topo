@@ -141,6 +141,8 @@ class LineFallbackCleanupTests(unittest.TestCase):
             "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=1 resolution 23-24]",
             "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-22 continue]",
             "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=1 resolution 23-24]",
+            "mkgmap:trail_name=* & highway=bridleway & length()>100 [0x0b resolution 22-22 continue]",
+            "mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]",
         ):
             self.assertIn(rule, lines)
         self.assertNotRegex(lines, r"mkgmap:trail_name=.*resolution 1[0-9]")
@@ -153,6 +155,26 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn("bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]", lines)
         self.assertNotIn("0x13504", lines)
         self.assertNotIn("bicycle!=yes & highway=path [0x2e", lines)
+
+    def test_bridleway_uses_ordinary_trail_far_near_hierarchy(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("highway=bridleway & length()>100 [0x0b resolution 23-23 continue]", lines)
+        self.assertIn("highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]", lines)
+
+    def test_legacy_byway_is_normalized_to_track(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        rule = "highway=byway { set highway=track }"
+        self.assertIn(rule, lines)
+        self.assertLess(lines.index(rule), lines.index("### taxi type is used for river routing"))
+        self.assertNotIn("highway=byway [0x16 road_class=0 road_speed=0 resolution 24]", lines)
+
+    def test_steps_keep_stair_overlay_and_routable_trail_carrier(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        overlay = "footway=sidewalk & highway=steps | highway=steps [0x12d1f resolution 24 continue]"
+        carrier = "highway=steps [0x16 road_class=0 road_speed=0 resolution 24]"
+        self.assertIn(overlay, lines)
+        self.assertIn(carrier, lines)
+        self.assertLess(lines.index(overlay), lines.index(carrier))
 
     def test_via_ferrata_uses_its_native_mpc_type(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
