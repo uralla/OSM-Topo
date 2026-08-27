@@ -33,6 +33,16 @@ highway=* & name=* { set mkgmap:street='${name}' }
 # платная
 highway=* & toll=yes { set name='${name} (платн.)' | 'платная' }
 
+# Disused/abandoned roads are useful topo landmarks but must never enter active routing.
+# They own the object before smoothness/oneway/winter/bridge overlays can emit active visuals.
+(disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)
+{ name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп' }
+[0x1001a resolution 24]
+# Legacy tagging: keep the object visible in the same language, but stop before normal highway rules.
+highway=* & (disused=yes | abandoned=yes)
+{ name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп'; set mkgmap:numbers=false }
+[0x1001a resolution 24]
+
 # [CUSTOM/АВТОРСКОЕ] Smoothness overlay is only for machine-drivable roads.
 # Foot/cycle/bridle/pedestrian ways keep their own visual language.
 highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
@@ -186,15 +196,6 @@ highway!=construction & highway=* & construction=* [0x10f19 resolution 22 contin
 highway!=construction & highway=* & construction=* & maxspeed!=*
 { add mkgmap:road-speed = '-1' }
 
-# Disused/abandoned roads are useful topo landmarks but must never enter active routing.
-(disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)
-{ name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп' }
-[0x1001a resolution 24]
-# Legacy tagging: keep the object visible in the same language, but stop before normal highway rules.
-highway=* & (disused=yes | abandoned=yes)
-{ name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп'; set mkgmap:numbers=false }
-[0x1001a resolution 24]
-
 highway=primary_link & length()>500 | highway=primary & junction=roundabout & length()>500 [0x03 resolution 20-21 continue]
 highway=primary_link | highway=primary & junction=roundabout [0x03 road_class=3 road_speed=5 resolution 22]
 
@@ -255,6 +256,8 @@ highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 highway=byway [0x16 road_class=0 road_speed=0 resolution 24]
+# Via ferrata keeps its dedicated stable MPC visual and is intentionally non-routable.
+highway=via_ferrata [0x2e resolution 24]
 
 # parking_aisle is intentionally removed in inc/water_lines.
 highway=service & (service=alley|service=driveway) [0x07 road_class=0 road_speed=0 resolution 23]
