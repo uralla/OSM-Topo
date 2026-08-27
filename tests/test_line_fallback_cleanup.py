@@ -88,6 +88,19 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_disused_lifecycle_precedes_active_highway_overlays(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        lifecycle = lines.index(
+            "(disused:highway=* | abandoned:highway=* | highway=disused | highway=abandoned)"
+        )
+        for active in (
+            "Smoothness overlay is only for machine-drivable roads",
+            "highway=* & oneway=yes & highway!=construction",
+            "# зимники и ледовые переправы",
+            "# линии мостов дополнительно к дорогам",
+        ):
+            self.assertLess(lifecycle, lines.index(active))
+
     def test_protected_area_boundaries_do_not_preempt_highways(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         water = WATER_LINES.read_text(encoding='utf-8')
@@ -115,27 +128,22 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertNotIn("natural=ridge & name!=* & length()>500", lines)
         self.assertNotIn("natural=ridge & name!=* [0x10e01 resolution 23", lines)
 
-    def test_marked_trails_use_close_zoom_type_one_level_farther(self) -> None:
+    def test_marked_trails_shift_far_and_near_one_level(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         for rule in (
-            "mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e resolution 21-21 continue]",
-            "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e resolution 21-21 continue]",
-            "mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 resolution 21-21 continue]",
-            "mkgmap:trail_name=* & highway=footway & length()>100 [0x0e resolution 21-21 continue]",
-            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 resolution 22-22 continue]",
-            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 resolution 21-21 continue]",
-            "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a resolution 20-20 continue]",
-            "mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 resolution 23-23 continue]",
+            "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-22 continue]",
+            "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]",
+            "mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-22 continue]",
+            "mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]",
+            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]",
+            "mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]",
+            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-22 continue]",
+            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=1 resolution 23-24]",
+            "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-22 continue]",
+            "mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=1 resolution 23-24]",
         ):
             self.assertIn(rule, lines)
-        self.assertNotIn(
-            "mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-21 continue]",
-            lines,
-        )
-        self.assertNotIn(
-            "mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-21 continue]",
-            lines,
-        )
+        self.assertNotRegex(lines, r"mkgmap:trail_name=.*resolution 1[0-9]")
 
     def test_canonical_road_and_trail_near_types_are_routable(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
@@ -145,6 +153,14 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertIn("bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]", lines)
         self.assertNotIn("0x13504", lines)
         self.assertNotIn("bicycle!=yes & highway=path [0x2e", lines)
+
+    def test_via_ferrata_uses_its_native_mpc_type(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("highway=via_ferrata [0x2e resolution 24]", lines)
+        self.assertLess(
+            lines.index("highway=via_ferrata [0x2e resolution 24]"),
+            lines.index("# Mop up any unrecognised highway types"),
+        )
 
     def test_footway_is_not_duplicated_by_bicycle_path_rule(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
