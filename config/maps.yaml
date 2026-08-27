@@ -79,7 +79,7 @@ products:
     source: belarus
     polygon: poly/belarus.poly
     elevation: null
-    geonames: input/allCountries.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1055
       product_id: 1
@@ -99,7 +99,7 @@ products:
     source: russia
     polygon: poly/RU-BU_RU-ZAB_RU-AMU.poly
     elevation: elevation/RU-BU_RU-ZAB_RU-AMU.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1023
       product_id: 1
@@ -120,7 +120,7 @@ products:
     source: russia
     polygon: poly/central-fed-district.poly
     elevation: null
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1006
       product_id: 1
@@ -140,7 +140,7 @@ products:
     source: russia
     polygon: poly/RU-CHU_RU-KAM.poly
     elevation: elevation/RU-CHU_RU-KAM.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1024
       product_id: 1
@@ -161,7 +161,7 @@ products:
     extract: false
     polygon: poly/crimean-fed-district.poly
     elevation: elevation/ele_10_ru_crimean-fed-district.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1021
       product_id: 1
@@ -201,7 +201,7 @@ products:
     source: russia
     polygon: poly/RU-IRK.poly
     elevation: elevation/RU-IRK.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1010
       product_id: 1
@@ -221,7 +221,7 @@ products:
     source: kyrgyzstan
     polygon: poly/KG.poly
     elevation: elevation/kg.osm.pbf
-    geonames: input/allCountries.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1051
       product_id: 1
@@ -241,7 +241,7 @@ products:
     source: russia
     polygon: poly/RU-KYA-N.poly
     elevation: elevation/RU-KYA-N.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1016
       product_id: 1
@@ -261,7 +261,7 @@ products:
     source: russia
     polygon: poly/RU-KYA-S.poly
     elevation: elevation/RU-KYA-S.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1015
       product_id: 1
@@ -281,7 +281,7 @@ products:
     source: kazakhstan
     polygon: poly/KZ.poly
     elevation: elevation/kz.osm.pbf
-    geonames: input/allCountries.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1050
       product_id: 1
@@ -303,7 +303,7 @@ products:
     source: russia
     polygon: poly/RU-MAG.poly
     elevation: elevation/RU-MAG.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1014
       product_id: 1
@@ -323,7 +323,7 @@ products:
     source: mongolia
     polygon: poly/mongolia.poly
     elevation: null
-    geonames: input/allCountries.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1056
       product_id: 1
@@ -343,7 +343,7 @@ products:
     source: russia
     polygon: poly/north-caucasus-fed-district.poly
     elevation: elevation/ele_10_ru_north-caucasus-fed-district.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1004
       product_id: 1
@@ -364,7 +364,7 @@ products:
     extract: false
     polygon: poly/northwestern-fed-district.poly
     elevation: elevation/ele_10_ru_northwestern-fed-district.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1007
       product_id: 1
@@ -387,7 +387,7 @@ products:
     source: russia
     polygon: poly/RU-PRI_RU-KHA_RU-YEV.poly
     elevation: elevation/pri-kha-yev.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1025
       product_id: 1
@@ -409,7 +409,7 @@ products:
     source: russia
     polygon: poly/RU-SA-E.poly
     elevation: elevation/RU-SA-E.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1012
       product_id: 1
@@ -429,7 +429,7 @@ products:
     source: russia
     polygon: poly/RU-SA-W.poly
     elevation: elevation/RU-SA-W.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1013
       product_id: 1
@@ -449,7 +449,7 @@ products:
     source: russia
     polygon: poly/RU-SAK.poly
     elevation: elevation/RU-SAK.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1017
       product_id: 1
@@ -469,7 +469,7 @@ products:
     source: russia
     polygon: poly/south-fed-district.poly
     elevation: null
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1003
       product_id: 1
@@ -489,7 +489,7 @@ products:
     source: turkey
     polygon: poly/turkey.poly
     elevation: elevation/turkey.osm.pbf
-    geonames: input/allCountries.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1054
       product_id: 1
@@ -509,7 +509,7 @@ products:
     source: russia
     polygon: poly/ural-fed-district.poly
     elevation: elevation/ele_10_ru_ural-fed-district.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1026
       product_id: 1
@@ -529,7 +529,7 @@ products:
     source: russia
     polygon: poly/ru_ural_polar.poly
     elevation: elevation/ural_n.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1018
       product_id: 1
@@ -574,7 +574,7 @@ products:
     source: russia
     polygon: poly/volga-fed-district.poly
     elevation: elevation/ele_10_ru_volga-fed-district.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1001
       product_id: 1
@@ -594,7 +594,7 @@ products:
     source: russia
     polygon: poly/zap-sib.poly
     elevation: elevation/zap-sib.osm.pbf
-    geonames: input/ru.zip
+    geonames: input/cities15000.zip
     identity:
       family_id: 1011
       product_id: 1

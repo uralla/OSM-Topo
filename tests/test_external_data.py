@@ -47,11 +47,13 @@ class ExternalDataRefreshTests(unittest.TestCase):
             for name in ("bounds-latest.zip", "sea-latest.zip"):
                 with zipfile.ZipFile(root / "data/input" / name) as archive:
                     self.assertIn("https://www.thkukuk.de/", archive.read("payload.txt").decode("utf-8"))
+            with zipfile.ZipFile(root / "data/input/cities15000.zip") as archive:
+                self.assertIn("https://download.geonames.org/", archive.read("payload.txt").decode("utf-8"))
 
     def test_failed_refresh_keeps_existing_archives_as_warning(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            for name in ("bounds-latest.zip", "sea-latest.zip"):
+            for name in ("bounds-latest.zip", "sea-latest.zip", "cities15000.zip"):
                 self._zip(root / "data/input" / name, "old")
 
             def downloader(url: str, target: Path) -> None:
@@ -60,7 +62,7 @@ class ExternalDataRefreshTests(unittest.TestCase):
             results = refresh_supplemental_data(self._manifest(), self._host(root), downloader=downloader)
             self.assertFalse(has_refresh_errors(results))
             self.assertTrue(all(result.status == "warning" for result in results))
-            for name in ("bounds-latest.zip", "sea-latest.zip"):
+            for name in ("bounds-latest.zip", "sea-latest.zip", "cities15000.zip"):
                 with zipfile.ZipFile(root / "data/input" / name) as archive:
                     self.assertEqual(archive.read("payload.txt"), b"old")
 

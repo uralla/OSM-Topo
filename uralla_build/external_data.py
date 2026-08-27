@@ -20,6 +20,7 @@ from .host import HostConfig, data_path
 SUPPLEMENTAL_URLS = {
     "bounds": "https://www.thkukuk.de/osm/data/bounds-latest.zip",
     "sea": "https://www.thkukuk.de/osm/data/sea-latest.zip",
+    "geonames": "https://download.geonames.org/export/dump/cities15000.zip",
 }
 
 
@@ -64,10 +65,14 @@ def refresh_supplemental_data(
         return [RefreshResult("supplemental", "error", "", "manifest defaults are missing")]
 
     results: list[RefreshResult] = []
-    for name in ("bounds", "sea"):
-        value = defaults.get(name)
+    resources = {
+        "bounds": defaults.get("bounds"),
+        "sea": defaults.get("sea"),
+        "geonames": "input/cities15000.zip",
+    }
+    for name, value in resources.items():
         if not isinstance(value, str) or not value:
-            results.append(RefreshResult(name, "error", "", f"defaults.{name} is not configured"))
+            results.append(RefreshResult(name, "error", "", f"supplemental {name} path is not configured"))
             continue
         target = data_path(host, value)
         target.parent.mkdir(parents=True, exist_ok=True)
