@@ -26,7 +26,7 @@ jobs:
           python scripts/topo_marker_once.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add styles/uralla/points styles/uralla.txt tests/test_topo_marker_points.py
+          git add styles/uralla/points styles/uralla/inc/priority_points styles/uralla/inc/landuse_points styles/uralla.txt tests/test_topo_marker_points.py
           git commit -m 'Add cairn and survey marker symbols; remove unwanted POIs' || exit 0
           git push
 
