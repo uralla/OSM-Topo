@@ -13,6 +13,12 @@ surface=ice { add ice_road=yes }
 # Nordic ski routes use the same visual class as skitour.
 piste:type=nordic & is_closed()=false & area!=yes [0x10101 resolution 22]
 
+# Active railway bridges use the same structural overlay as road bridges.
+# Keep lifecycle/hidden-rail filters here because this include runs before the main railway ownership rules.
+railway=* & bridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & area!=yes & tunnel!=yes
+& railway!=proposed & railway!=abandoned & railway!=disused & proposed!=* & disused!=yes & abandoned!=yes
+& !(railway=light_rail & layer<0) [0x10f16 resolution 24 continue]
+
 # [CUSTOM/АВТОРСКОЕ] Railway classes agreed in the completed tag audit.
 # Narrow gauge shares the tram visual class. Disused/abandoned railways continue
 # to the dedicated legacy railway rules below instead of being consumed here.
