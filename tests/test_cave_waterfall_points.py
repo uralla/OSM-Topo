@@ -7,14 +7,15 @@ PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
 TYP = ROOT / 'styles' / 'uralla.txt'
 
 class CaveWaterfallPointTests(unittest.TestCase):
-    def test_cave_entrance_visibility_depends_on_name(self) -> None:
+    def test_cave_entrance_visibility_depends_on_name_but_label_is_hidden(self) -> None:
         text = PRIORITY.read_text(encoding='utf-8')
-        named = "natural=cave_entrance & name=* { name '${name}' } [0x6608 resolution 23]"
-        unnamed = "natural=cave_entrance { name '${name}' | 'пещера' } [0x6608 resolution 24]"
+        named = "natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23]"
+        unnamed = "natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]"
         self.assertIn(named, text)
         self.assertIn(unnamed, text)
         self.assertLess(text.index(named), text.index(unnamed))
-        self.assertNotIn("natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 22]", text)
+        self.assertNotIn("natural=cave_entrance & name=* { name '${name}' } [0x6608 resolution 23]", text)
+        self.assertNotIn("natural=cave_entrance { name '${name}' | 'пещера' } [0x6608 resolution 24]", text)
 
     def test_waterfall_keeps_icon_but_hides_permanent_label(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
