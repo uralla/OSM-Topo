@@ -5,25 +5,12 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply one-time 0x2c04 NoLabel patch
-        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
-        run: |
-          python scripts/typ_2c04_nolabel_once.py
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add styles/uralla.txt tests/test_typ_landmark_label.py
-          git commit -m 'Hide 0x2c04 permanent label' || exit 0
-          git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
