@@ -5288,36 +5288,6 @@ DayXpm="16 13 3 1"   Colormode=16
 [end]
 
 
-[_point]
-Type=0x02f
-SubType=0x14
-;GRMN_TYPE: Business - Services/SOCIAL_SERVICES/Social services/Non NT
-String1=0x19,дом престарелых
-String2=0x04,nursing home
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="10 14 3 1"   Colormode=0
-"!	c #000000"
-"#	c #949494"
-"%	c #FBFBFB"
-"%%%%%%%%%%"
-"%!!!!!!!!%"
-"%!######!%"
-"%!#%##%#!%"
-"%!#%##%#!%"
-"%!######!%"
-"%!######!%"
-"%!#%##%#!%"
-"%!#%##%#!%"
-"%!######!%"
-"%!######!%"
-"%!######!%"
-"%!!!!!!!!%"
-"%%%%%%%%%%"
-;1234567890
-[end]
 
 
 [_point]
@@ -5388,33 +5358,6 @@ DayXpm="18 21 3 1"   Colormode=16
 [end]
 
 
-[_point]
-Type=0x02f
-SubType=0x18
-;GRMN_TYPE: //
-String1=0x19,интернет
-String2=0x04,internet
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="16 12 2 1"   Colormode=16
-"!	c #000000"
-"  	c none"
-"     !!!!!!     "
-"  !!!!!!!!!!!   "
-" !!!!      !!!! "
-"!!!   !!!!   !!!"
-"!!  !!!!!!!!  !!"
-"   !!!    !!!   "
-"  !!   !!   !!  "
-"     !!!!!!     "
-"    !!!  !!!    "
-"                "
-"       !!       "
-"       !!       "
-;1234567890123456
-[end]
 
 
 [_point]
