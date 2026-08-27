@@ -344,8 +344,8 @@ piste:type=skitour & is_closed()=false & area!=yes [0x10101 resolution 22]
 # nordic is consumed in inc/water_lines with the same 0x10101 type.
 
 # Named ridges keep their overview hierarchy. Unnamed ridges are close-zoom only.
-natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18 continue]
-natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23 continue]
+natural=ridge & name=* & length()>500 { name 'хр. ${name}' } [0x10e02 resolution 18-22 continue]
+natural=ridge & name=* { name 'хр. ${name}' } [0x10e01 resolution 23-24]
 natural=ridge & name!=* [0x10e01 resolution 24]
 natural=cliff [0x10f17 resolution 23 continue]
 
