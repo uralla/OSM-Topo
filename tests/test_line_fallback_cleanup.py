@@ -304,7 +304,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
         lines = LINES.read_text(encoding='utf-8')
         planned = "(highway=proposed | highway=proposal | highway=planned | highway ~ '.*proposed.*') {delete highway;delete junction}"
         smooth = "highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian"
-        bridge = "highway=* & (bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path"
+        bridge = "highway=* & bridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & highway!=pedestrian & highway!=footway & highway!=path"
         oneway = "highway=* & oneway=yes & highway!=construction & highway!=proposed"
         tunnel = "highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0)"
         self.assertIn(planned, lines)
@@ -314,7 +314,8 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(planned), lines.index(oneway))
         self.assertLess(lines.index(planned), lines.index(bridge))
         self.assertLess(lines.index(planned), lines.index(tunnel))
-        self.assertNotIn("\n(bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path", lines)
+        self.assertIn("bridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & (highway=pedestrian | highway=footway | highway=path)", lines)
+        self.assertNotIn("\nbridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & highway!=pedestrian & highway!=footway & highway!=path", lines)
 
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')

@@ -87,11 +87,11 @@ highway=* & winter_road=yes & ice_road!=yes & length()>500 | highway=* & ice_roa
 highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_road!=yes [0x10 road_class=1 road_speed=2 resolution 22]
 
 # линии мостов дополнительно к дорогам
-highway=* & (bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path
+highway=* & bridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & highway!=pedestrian & highway!=footway & highway!=path
 	& area!=yes [0x10f16 resolution 24 continue]
 
 # пешеходные мосты
-(bridge=yes | bridge=true) & (highway=pedestrian | highway=footway | highway=path)
+bridge=* & bridge!=no & bridge!=proposed & bridge!=abandoned & (highway=pedestrian | highway=footway | highway=path)
 	& area!=yes [0x10f18 resolution 24 continue]
 
 # пешеходные лестницы: stair graphic overlays a solid routable 0x07 carrier.
