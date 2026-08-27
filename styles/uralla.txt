@@ -7881,3 +7881,67 @@ DayXpm="8 25 5 1"   Colormode=16
 "   !!   "
 ;12345678
 [end]
+
+;===================== TOPO MARKERS =====================
+
+[_point]
+Type=0x115
+SubType=0x06
+; CUSTOM: cairn / stone navigation marker
+String1=0x19,тура
+String2=0x04,cairn
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 4 1"   Colormode=16
+"!\tc #202020"
+"#\tc #6F6F6F"
+"%\tc #B5B5B5"
+"  \tc none"
+"             "
+"      !!     "
+"     !%%!    "
+"    !%%%%!   "
+"     !!!!    "
+"    !####!   "
+"   !######!  "
+"    !!!!!!   "
+"   !%%%%%%!  "
+"  !%%%%%%%%! "
+" !!!!!!!!!!! "
+"             "
+"             "
+;1234567890123
+[end]
+
+[_point]
+Type=0x115
+SubType=0x08
+; CUSTOM: survey / triangulation point
+String1=0x19,геодезический пункт
+String2=0x04,survey point
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 3 1"   Colormode=16
+"!\tc #202020"
+"#\tc #FFFFFF"
+"  \tc none"
+"      !      "
+"     !#!     "
+"    !#!!     "
+"    !#!#!    "
+"   !#! !#!   "
+"  !#!   !#!  "
+" !!!!!!!!!!! "
+"     !!!     "
+"     !#!     "
+"   !!!#!!!   "
+"     !#!     "
+"     !!!     "
+"             "
+;1234567890123
+[end]
+

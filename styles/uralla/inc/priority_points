@@ -19,7 +19,7 @@ shop=chemist [0x2e05 resolution 24]
 shop=bicycle [0x2f13 resolution 23]
 
 # Motor-vehicle shops/services are one class.
-(shop=car | shop=car_dealer | shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
+(shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
@@ -65,7 +65,7 @@ natural=valley [0x6617 resolution 23]
 natural=arch [0x6601 resolution 23]
 natural=cave_entrance [0x11602 resolution 23]
 sport=climbing [0x6607 resolution 23]
-man_made=cairn [0x2f18 resolution 23]
+man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]
 
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]

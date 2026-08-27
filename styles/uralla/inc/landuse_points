@@ -14,7 +14,7 @@ landuse=retail & name=* [0x2e00 resolution 21]
 
 
 
-man_made=survey_point {name "${name} (${ele})"} [0x6617 resolution 24]
+man_made=survey_point {name "${name} (${ele})" | "${name}" | "${ref}" | "геодезический пункт"} [0x11508 resolution 24]
 ele=* & natural!=* & mountain_pass!=yes {name "${ele} м"} [0x6405 resolution 24]
 
 natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
