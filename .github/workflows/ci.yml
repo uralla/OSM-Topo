@@ -5,24 +5,12 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply one-time piste difficulty coverage
-        run: |
-          python scripts/piste_difficulty_once.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add styles/uralla/lines tests/test_piste_line_style.py
-          git commit -m "Cover expert freeride and extreme pistes"
-          git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
