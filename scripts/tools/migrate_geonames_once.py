@@ -31,14 +31,24 @@ new_error = '            results.append(RefreshResult(name, "error", "", f"suppl
 external = external.replace(old_error, new_error, 1)
 EXTERNAL.write_text(external, encoding='utf-8', newline='\n')
 
-# Extend existing refresh tests without coupling them to network access.
+# Extend existing refresh tests without real network access.
 test = TEST.read_text(encoding='utf-8')
-test = test.replace("self.assertEqual(len(results), 2)", "self.assertEqual(len(results), 3)")
-test = test.replace("self.assertEqual({result.name for result in results}, {'bounds', 'sea'})", "self.assertEqual({result.name for result in results}, {'bounds', 'sea', 'geonames'})")
-if 'cities15000.zip' not in test:
-    marker = "            self.assertTrue((host.paths.data_root / 'input/sea-latest.zip').is_file())\n"
-    if marker in test:
-        test = test.replace(marker, marker + "            self.assertTrue((host.paths.data_root / 'input/cities15000.zip').is_file())\n", 1)
+failed_setup = '''            for name in ("bounds-latest.zip", "sea-latest.zip"):\n                self._zip(root / "data/input" / name, "old")\n\n            def downloader(url: str, target: Path) -> None:\n                raise OSError("offline")\n'''
+failed_setup_new = '''            for name in ("bounds-latest.zip", "sea-latest.zip", "cities15000.zip"):\n                self._zip(root / "data/input" / name, "old")\n\n            def downloader(url: str, target: Path) -> None:\n                raise OSError("offline")\n'''
+if failed_setup not in test:
+    raise SystemExit('fallback test setup not found')
+test = test.replace(failed_setup, failed_setup_new, 1)
+failed_verify = '''            for name in ("bounds-latest.zip", "sea-latest.zip"):\n                with zipfile.ZipFile(root / "data/input" / name) as archive:\n                    self.assertEqual(archive.read("payload.txt"), b"old")\n'''
+failed_verify_new = '''            for name in ("bounds-latest.zip", "sea-latest.zip", "cities15000.zip"):\n                with zipfile.ZipFile(root / "data/input" / name) as archive:\n                    self.assertEqual(archive.read("payload.txt"), b"old")\n'''
+if failed_verify not in test:
+    raise SystemExit('fallback test verification not found')
+test = test.replace(failed_verify, failed_verify_new, 1)
+# Successful refresh should include the third archive and preserve source provenance.
+success_anchor = '''            for name in ("bounds-latest.zip", "sea-latest.zip"):\n                with zipfile.ZipFile(root / "data/input" / name) as archive:\n                    self.assertIn("https://www.thkukuk.de/", archive.read("payload.txt").decode("utf-8"))\n'''
+success_new = success_anchor + '''            with zipfile.ZipFile(root / "data/input/cities15000.zip") as archive:\n                self.assertIn("https://download.geonames.org/", archive.read("payload.txt").decode("utf-8"))\n'''
+if success_anchor not in test:
+    raise SystemExit('successful refresh test anchor not found')
+test = test.replace(success_anchor, success_new, 1)
 TEST.write_text(test, encoding='utf-8', newline='\n')
 
 print(f'migrated GeoNames: {count_ru} ru.zip + {count_all} allCountries.zip -> cities15000.zip')
