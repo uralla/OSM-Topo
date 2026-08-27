@@ -42,6 +42,12 @@ def format_code(code: tuple[int, int]) -> str:
     return f"0x{type_id:x}"
 
 
+def is_extended_custom(code: tuple[int, int]) -> bool:
+    """Return true for custom/extended Garmin types that require TYP support."""
+    type_id, _ = code
+    return type_id > 0xFF
+
+
 def _active_text(text: str) -> str:
     """Drop comments while preserving multiline style expressions."""
     active: list[str] = []
@@ -49,7 +55,7 @@ def _active_text(text: str) -> str:
         stripped = line.lstrip()
         if stripped.startswith("#"):
             continue
-        # Style comments are line comments in this project.  Keep '#' inside
+        # Style comments are line comments in this project. Keep '#' inside
         # quoted labels untouched rather than trying to implement a full lexer.
         active.append(line)
     return "\n".join(active)
@@ -134,16 +140,22 @@ def audit(repo_root: Path) -> int:
         style_codes = collect_style_codes(style_root, entrypoint)
         defined = typ_codes.get(kind, set())
         missing = sorted(style_codes - defined)
+        missing_custom = [code for code in missing if is_extended_custom(code)]
+        native_without_override = [code for code in missing if not is_extended_custom(code)]
         unused = sorted(defined - style_codes)
 
         print(f"{kind}: style={len(style_codes)} typ={len(defined)}")
-        if missing:
+        if missing_custom:
             failed = True
-            print("  style without TYP:")
-            for code in missing:
+            print("  ERROR custom style type without TYP definition:")
+            for code in missing_custom:
+                print(f"    {format_code(code)}")
+        if native_without_override:
+            print("  native style type without custom TYP override:")
+            for code in native_without_override:
                 print(f"    {format_code(code)}")
         if unused:
-            print("  TYP without active style use:")
+            print("  TYP definition without active style use:")
             for code in unused:
                 print(f"    {format_code(code)}")
 
