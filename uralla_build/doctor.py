@@ -201,9 +201,6 @@ def run_doctor(
     preprocessor = defaults.get("preprocessor")
     if isinstance(preprocessor, dict) and isinstance(preprocessor.get("blacklist"), str):
         project_paths.add(preprocessor["blacklist"])
-    for product in manifest.get("products", {}).values():
-        if isinstance(product, dict) and isinstance(product.get("polygon"), str):
-            project_paths.add(product["polygon"])
     for value in sorted(project_paths):
         path = repo_path(root, value)
         checks.append(_check(f"project:{value}", path.exists(), str(path)))
@@ -220,7 +217,7 @@ def run_doctor(
         for product in manifest.get("products", {}).values():
             if not isinstance(product, dict):
                 continue
-            for key in ("elevation", "geonames"):
+            for key in ("polygon", "elevation", "geonames"):
                 value = product.get(key)
                 if isinstance(value, str):
                     external_paths.add(value)
