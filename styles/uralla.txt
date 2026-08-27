@@ -3483,7 +3483,7 @@ ContourColor=No
 Type=0x12d01
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_994/Non-routable customizable line/Non NT, NT
 UseOrientation=Y
-Xpm="32 12 2  1"
+Xpm="32 7 2  1"
 "! c #101010"
 "  c none"
 "!   !   !   !   !   !   !   !   "
@@ -3493,11 +3493,6 @@ Xpm="32 12 2  1"
 "                                "
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-"                                "
-"!   !   !   !   !   !   !   !   "
-"!   !   !   !   !   !   !   !   "
-"!   !   !   !   !   !   !   !   "
-"!   !   !   !   !   !   !   !   "
 ;12345678901234567890123456789012
 String1=0x04,dam
 String2=0x19,дамба
