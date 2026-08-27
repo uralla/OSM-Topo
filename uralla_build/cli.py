@@ -14,6 +14,7 @@ import sys
 from .bootstrap import apply_bootstrap, build_bootstrap_plan, load_tools_lock
 from .build_plan import ProductBuildPlan, plan_product_build
 from .errors import ManifestError, StageError, ValidationIssue
+from .external_data import has_refresh_errors, refresh_supplemental_data
 from .doctor import has_errors, run_doctor
 from .dem import select_dem_files, write_selection
 from .history import HistoryStore
@@ -162,6 +163,30 @@ def _bootstrap(args: argparse.Namespace) -> int:
         for tool in report:
             print(f"- {tool['name']}: {tool['install_dir']} sha256={tool['sha256']}")
     return 0
+
+
+def _refresh_data(args: argparse.Namespace) -> int:
+    try:
+        manifest = load_manifest(args.manifest)
+        host = load_host_config(args.host, args.repo_root)
+        results = refresh_supplemental_data(manifest, host)
+    except (ManifestError, OSError) as exc:
+        return _emit([ValidationIssue("refresh-data", str(exc))], None, args.json)
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "ok": not has_refresh_errors(results),
+                    "results": [result.to_dict() for result in results],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+    else:
+        for result in results:
+            print(f"{result.status.upper():7} {result.name}: {result.target} — {result.detail}")
+    return 1 if has_refresh_errors(results) else 0
 
 
 def _run_stage(args: argparse.Namespace) -> int:
@@ -458,6 +483,10 @@ def build_parser() -> argparse.ArgumentParser:
     bootstrap_parser.add_argument("--skip-system", action="store_true")
     bootstrap_parser.add_argument("--skip-pinned-tools", action="store_true")
     bootstrap_parser.set_defaults(handler=_bootstrap)
+
+    refresh_parser = subparsers.add_parser("refresh-data")
+    refresh_parser.add_argument("--repo-root", default=Path("."), type=Path)
+    refresh_parser.set_defaults(handler=_refresh_data)
 
     stage_parser = subparsers.add_parser("run-stage")
     stage_parser.add_argument("product")
