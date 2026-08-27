@@ -3623,7 +3623,7 @@ SubType=0x00
 String1=0x19,
 String2=0x04,
 ExtendedLabels=Y
-FontStyle=NormalFont
+FontStyle=LargeFont
 CustomColor=No
 ContourColor=No
 DayXpm="8 8 8 1"   Colormode=16
@@ -3680,21 +3680,21 @@ SubType=0x00
 String1=0x19,урочище
 String2=0x04,locality
 ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#FF0000
+FontStyle=NormalFont
+CustomColor=No
 ContourColor=No
-DayXpm="6 6 4 1"   Colormode=16
+DayXpm="6 6 5 1"   Colormode=16
 "!	c #000000"
-"#	c #00958B"
-"%	c #FFFFFF"
+"#	c #00A000"
+"%	c #00C800"
+"?	c #F8FCF8"
 "  	c none"
-"!    !"
-" !  ! "
-"  #%  "
-"  %#  "
-" !  ! "
-"!    !"
+"  ??  "
+" ?!!? "
+"?!%%!?"
+"?!%#!?"
+" ?!!? "
+"  ??  "
 ;123456
 [end]
 
