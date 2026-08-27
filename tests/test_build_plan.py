@@ -74,7 +74,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertIn("--overview-mapnumber=01018000", mkgmap.command)
             self.assertIn("--dem-dists=9942", mkgmap.command)
             self.assertIn(
-                f"--dem-poly={(root / 'repo/poly/ru_ural_polar.poly').resolve()}",
+                f"--dem-poly={(root / 'data/poly/ru_ural_polar.poly').resolve()}",
                 mkgmap.command,
             )
             self.assertIn(f"--dem={root / 'dem'}", mkgmap.command)
@@ -162,9 +162,11 @@ class ProductBuildPlanTests(unittest.TestCase):
 
             plan = self._plan(Path(directory), "competition-area", manifest)
             preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
+            extract = next(stage for stage in plan.stages if stage.name == "extract")
 
             self.assertIn("landmarks", preprocess.command)
             self.assertIn("ru-political-parties", preprocess.command)
+            self.assertIn("/data/poly/competition-area.poly", " ".join(extract.command))
 
     def test_blacklist_scope_includes_crimea_and_excludes_foreign_sources(self) -> None:
         with TemporaryDirectory() as directory:
