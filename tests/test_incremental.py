@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-
-import pytest
+from tempfile import TemporaryDirectory
+import unittest
 
 from uralla_build.errors import StageError
 from uralla_build.history import HistoryStore
@@ -31,62 +31,72 @@ def _make_splitter_checkpoint(builds_root: Path, build_id: str) -> Path:
     return tiles
 
 
-def test_latest_successful_splitter_build_skips_newer_fast_success(tmp_path: Path) -> None:
-    """A later mkgmap-only SUCCESS must not hide the last reusable full build."""
+class IncrementalBuildTests(unittest.TestCase):
+    def test_latest_successful_splitter_build_skips_newer_fast_success(self) -> None:
+        """A later mkgmap-only SUCCESS must not hide the last reusable full build."""
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            history = HistoryStore(root / "state" / "history.sqlite3")
+            builds_root = root / "builds"
 
-    history = HistoryStore(tmp_path / "state" / "history.sqlite3")
-    builds_root = tmp_path / "builds"
+            history.create_build("crimea", build_id="full-success")
+            reusable_tiles = _make_splitter_checkpoint(builds_root, "full-success")
+            _set_terminal_build(
+                history,
+                "full-success",
+                status="success",
+                finished_at="2026-08-26T10:00:00+00:00",
+            )
 
-    history.create_build("crimea", build_id="full-success")
-    reusable_tiles = _make_splitter_checkpoint(builds_root, "full-success")
-    _set_terminal_build(
-        history,
-        "full-success",
-        status="success",
-        finished_at="2026-08-26T10:00:00+00:00",
-    )
+            # A newer --from-stage mkgmap build can be successful without a
+            # splitter directory, so it must not hide the reusable full build.
+            history.create_build("crimea", build_id="fast-success")
+            _set_terminal_build(
+                history,
+                "fast-success",
+                status="success",
+                finished_at="2026-08-26T11:00:00+00:00",
+            )
 
-    # This represents a newer --from-stage mkgmap build. It is successful but has
-    # no splitter directory of its own, so it must be skipped during reuse lookup.
-    history.create_build("crimea", build_id="fast-success")
-    _set_terminal_build(
-        history,
-        "fast-success",
-        status="success",
-        finished_at="2026-08-26T11:00:00+00:00",
-    )
+            # A reusable build for another product must also be ignored.
+            history.create_build("ural", build_id="other-product")
+            _make_splitter_checkpoint(builds_root, "other-product")
+            _set_terminal_build(
+                history,
+                "other-product",
+                status="success",
+                finished_at="2026-08-26T12:00:00+00:00",
+            )
 
-    # Even a newer reusable build for another product must not be considered.
-    history.create_build("ural", build_id="other-product")
-    _make_splitter_checkpoint(builds_root, "other-product")
-    _set_terminal_build(
-        history,
-        "other-product",
-        status="success",
-        finished_at="2026-08-26T12:00:00+00:00",
-    )
+            build_id, tiles = _latest_successful_splitter_build(
+                history,
+                builds_root,
+                "crimea",
+            )
 
-    build_id, tiles = _latest_successful_splitter_build(
-        history,
-        builds_root,
-        "crimea",
-    )
+            self.assertEqual(build_id, "full-success")
+            self.assertEqual(tiles, reusable_tiles)
 
-    assert build_id == "full-success"
-    assert tiles == reusable_tiles
+    def test_latest_successful_splitter_build_requires_real_checkpoint(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            history = HistoryStore(root / "state" / "history.sqlite3")
+            builds_root = root / "builds"
+
+            history.create_build("crimea", build_id="success-without-splitter")
+            _set_terminal_build(
+                history,
+                "success-without-splitter",
+                status="success",
+                finished_at="2026-08-26T11:00:00+00:00",
+            )
+
+            with self.assertRaisesRegex(
+                StageError,
+                "no successful build with reusable splitter output",
+            ):
+                _latest_successful_splitter_build(history, builds_root, "crimea")
 
 
-def test_latest_successful_splitter_build_requires_real_checkpoint(tmp_path: Path) -> None:
-    history = HistoryStore(tmp_path / "state" / "history.sqlite3")
-    builds_root = tmp_path / "builds"
-
-    history.create_build("crimea", build_id="success-without-splitter")
-    _set_terminal_build(
-        history,
-        "success-without-splitter",
-        status="success",
-        finished_at="2026-08-26T11:00:00+00:00",
-    )
-
-    with pytest.raises(StageError, match="no successful build with reusable splitter output"):
-        _latest_successful_splitter_build(history, builds_root, "crimea")
+if __name__ == "__main__":
+    unittest.main()
