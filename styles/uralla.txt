@@ -7954,3 +7954,166 @@ DayXpm="8 25 5 1"   Colormode=16
 "   !!   "
 ;12345678
 [end]
+
+; === URALLA ROAD/TRAIL ROLE TYPES 0x135 ===
+[_line]
+Type=0x135
+SubType=0x01
+; URALLA_ROLE: forest-road-good-far
+;GRMN_TYPE: Roads/ALLEY, DRIVEWAY/Alleyway, private driveway to residence/Non NT, NT
+UseOrientation=Y
+LineWidth=1
+Xpm="0 0 1 0"
+"1 c #000020"
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x02
+; URALLA_ROLE: forest-road-good-near
+;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
+UseOrientation=N
+Xpm="32 2 2  1"
+"! c #000000"
+"# c #FFFFFF"
+"!!!!!!!!!!!#####!!!!!!!!!!!#####"
+"!!!!!!!!!!!#####!!!!!!!!!!!#####"
+;12345678901234567890123456789012
+String1=0x19,дорога
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x03
+; URALLA_ROLE: forest-road-bad-far
+;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_6/Routable customizable line/Non NT, NT
+UseOrientation=Y
+Xpm="32 1 2  1"
+"! c #000000"
+"# c #FFFFFF"
+"!!!!!!##!!!!!!##!!!!!!##!!!!!!##"
+;12345678901234567890123456789012
+String1=0x19,дорога
+String2=0x04,track
+ExtendedLabels=N
+[end]
+[_line]
+Type=0x135
+SubType=0x04
+; URALLA_ROLE: forest-road-bad-near
+;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
+UseOrientation=N
+Xpm="32 2 2  1"
+"! c #000000"
+"# c #FFFFFF"
+"!!!!!!!!!!!#####!!!!!!!!!!!#####"
+"!!!!!!!!!!!#####!!!!!!!!!!!#####"
+;12345678901234567890123456789012
+String1=0x19,дорога
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x05
+; URALLA_ROLE: pedestrian-cycleway-far
+;GRMN_TYPE: Roads/ALLEY, DRIVEWAY/Alleyway, private driveway to residence/Non NT, NT
+UseOrientation=Y
+LineWidth=1
+Xpm="0 0 1 0"
+"1 c #000020"
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x06
+; URALLA_ROLE: pedestrian-cycleway-near
+;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_2/Routable customizable line/Non NT, NT
+UseOrientation=N
+LineWidth=2
+Xpm="0 0 1 0"
+"1 c #7B30B4"
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x07
+; URALLA_ROLE: foot-trail-far
+;GRMN_TYPE: Roads/MAJOR_CONNECTOR/Major highway connector/Non NT, NT
+UseOrientation=Y
+Xpm="32 1 2  1"
+"! c #000000"
+"  c none"
+"  !!!!!   !!!!!   !!!!!   !!!!! "
+;12345678901234567890123456789012
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=Day
+DaycustomColor:#101010
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x08
+; URALLA_ROLE: foot-trail-near
+;GRMN_TYPE: Misc. Line Types/VIA_FERRATA/Via ferrata/Non NT, NT
+UseOrientation=Y
+Xpm="32 2 2  1"
+"! c #414141"
+"  c none"
+"   !!!     !!!     !!!     !!!  "
+"   !!!     !!!     !!!     !!!  "
+;12345678901234567890123456789012
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x09
+; URALLA_ROLE: bicycle-trail-far
+;GRMN_TYPE: Roads/MAJOR_CONNECTOR/Major highway connector/Non NT, NT
+UseOrientation=Y
+Xpm="32 1 2  1"
+"! c #000000"
+"  c none"
+"  !!!!!   !!!!!   !!!!!   !!!!! "
+;12345678901234567890123456789012
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=Day
+DaycustomColor:#101010
+ContourColor=No
+[end]
+[_line]
+Type=0x135
+SubType=0x0a
+; URALLA_ROLE: bicycle-trail-near
+;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
+UseOrientation=N
+Xpm="32 2 2  1"
+"! c #101010"
+"  c none"
+"  !!!!!   !!!!!   !!!!!   !!!!! "
+"  !!!!!   !!!!!   !!!!!   !!!!! "
+;12345678901234567890123456789012
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+[end]
