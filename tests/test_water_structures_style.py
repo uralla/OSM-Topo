@@ -13,7 +13,7 @@ class WaterStructuresStyleTests(unittest.TestCase):
         lines = WATER_LINES.read_text(encoding="utf-8")
         polygons = POLYGONS.read_text(encoding="utf-8")
         self.assertIn(
-            "(man_made=pier | man_made=breakwater) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }",
+            "(man_made=pier | man_made=breakwater | man_made=groyne) & is_closed()=true { set uralla:pier_polygon=yes; delete man_made }",
             lines,
         )
         self.assertIn(
