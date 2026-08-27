@@ -20,6 +20,25 @@ class MountainPassStyleTests(unittest.TestCase):
         self.assertIn("${pass:category}", text)
         self.assertIn("[0x11507 resolution 23]", text)
 
+    def test_elevation_fallback_does_not_consume_mountain_pass(self) -> None:
+        text = RELIEF.read_text(encoding="utf-8")
+        self.assertIn(
+            'ele=* & natural!=* & mountain_pass!=yes {name "${ele} м"} [0x6405 resolution 24]',
+            text,
+        )
+        self.assertNotIn(
+            'ele=* & natural!=* {name "${ele} м"} [0x6405 resolution 24]',
+            text,
+        )
+
+    def test_generic_building_is_final_point_fallback(self) -> None:
+        priority = PRIORITY.read_text(encoding="utf-8")
+        relief = RELIEF.read_text(encoding="utf-8")
+        building = "(building=yes | building=true) & mkgmap:area2poi!=true [0x6402 resolution 24]"
+        self.assertNotIn(building, priority)
+        self.assertIn(building, relief)
+        self.assertGreater(relief.index(building), relief.index("mountain_pass=yes {name"))
+
 
 if __name__ == "__main__":
     unittest.main()
