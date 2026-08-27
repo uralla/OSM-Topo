@@ -20,7 +20,7 @@ class StyleTypAuditTests(unittest.TestCase):
         self.assertEqual(AUDIT.split_style_code("0x1615"), (0x16, 0x15))
         self.assertEqual(AUDIT.split_style_code("0x1f"), (0x1F, 0))
 
-    def test_style_collection_follows_includes(self) -> None:
+    def test_style_collection_follows_root_relative_nested_includes(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "inc").mkdir()
@@ -29,12 +29,16 @@ class StyleTypAuditTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (root / "inc/priority").write_text(
-                "natural=spring [0x6511 resolution 22]\n",
+                "include 'inc/shared';\nnatural=spring [0x6511 resolution 22]\n",
+                encoding="utf-8",
+            )
+            (root / "inc/shared").write_text(
+                "railway=signal [0x1341f resolution 24]\n",
                 encoding="utf-8",
             )
             self.assertEqual(
                 AUDIT.collect_style_codes(root, "points"),
-                {(0x2C, 0x05), (0x65, 0x11)},
+                {(0x2C, 0x05), (0x65, 0x11), (0x134, 0x1F)},
             )
 
     def test_typ_parser_understands_split_extended_codes(self) -> None:
