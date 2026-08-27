@@ -66,6 +66,21 @@ class LineFallbackCleanupTests(unittest.TestCase):
             lines,
         )
 
+    def test_disused_highways_are_non_routable_bad_track_landmarks(self) -> None:
+        lines = LINES.read_text(encoding='utf-8')
+        self.assertIn("(disused:highway=* | abandoned:highway=*)", lines)
+        self.assertIn("'плохая грунтовка/неисп'", lines)
+        self.assertIn("[0x1001a resolution 24]", lines)
+        self.assertIn("highway=* & disused=yes", lines)
+        self.assertNotIn(
+            "highway=* & disused=yes [0x12 road_class=0 road_speed=1 resolution 22 continue]",
+            lines,
+        )
+        self.assertNotIn(
+            "highway=* & disused=yes & maxspeed!=* { add mkgmap:road-speed = '-2' }",
+            lines,
+        )
+
     def test_unnamed_ridges_are_close_zoom_only(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         self.assertIn(
