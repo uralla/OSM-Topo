@@ -180,6 +180,9 @@ highway=construction { add mkgmap:dead-end-check = false; }
 highway=construction [0x10f19 resolution 22]
 # construction=* on an otherwise active highway is an overlay; keep the base road too.
 highway!=construction & highway=* & construction=* [0x10f19 resolution 22 continue]
+# Active roads under construction remain routable, but should be less attractive to routing.
+highway!=construction & highway=* & construction=* & maxspeed!=*
+{ add mkgmap:road-speed = '-1' }
 
 # Disused/abandoned roads are useful topo landmarks but must never enter active routing.
 (disused:highway=* | abandoned:highway=*)
