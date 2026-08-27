@@ -161,6 +161,8 @@ amenity=school [0x2c05 resolution 24]
 # amenity=supermarket is superceded by shop=supermarket
 amenity=supermarket [0x2e02 resolution 23]
 amenity=taxi [0x2f11 resolution 24]
+# Emergency-only phones are more important on a topo map than ordinary public telephones.
+emergency=phone [0x2f12 resolution 23]
 amenity=telephone [0x2f12 resolution 24]
 amenity=theatre [0x2d01 resolution 24]
 amenity=toilets & highway=rest_area [0x2f0c resolution 24]
