@@ -1,0 +1,38 @@
+name: Fix marked route sandwich once
+
+on:
+  push:
+    paths:
+      - scripts/tools/fix_marked_route_sandwich_once.py
+      - tests/test_marked_route_line_hierarchy.py
+      - .github/workflows/fix-marked-route-sandwich-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch marked route hierarchy
+        run: python scripts/tools/fix_marked_route_sandwich_once.py
+      - name: Run focused regression
+        run: python -m unittest tests.test_marked_route_line_hierarchy -v
+      - name: Commit style change
+        shell: bash
+        run: |
+          if git diff --quiet -- styles/uralla/lines; then
+            echo "No style changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/lines
+          git commit -m "Remove marked route line sandwich"
+          git push origin HEAD:main
