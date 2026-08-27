@@ -9,7 +9,7 @@ LINES = ROOT / 'styles' / 'uralla' / 'lines'
 class TunnelOverlayOrderTests(unittest.TestCase):
     def test_tunnel_overlay_runs_after_filters(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
-        overlay = "highway=* & tunnel=yes | railway=* & tunnel=yes [0x10e04 resolution 24 continue]"
+        overlay = "highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0) [0x10e04 resolution 24 continue]"
         proposed = "highway=proposed | railway=proposed | bridge=proposed | proposed=*"
         removed = "(highway=razed | highway=dismantled) {deletealltags}"
         inaccessible = "highway=* & tunnel=yes & (access=private|access=no)"

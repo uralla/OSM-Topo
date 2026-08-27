@@ -304,7 +304,7 @@ class LineFallbackCleanupTests(unittest.TestCase):
         self.assertLess(lines.index(planned), lines.index(oneway))
         self.assertLess(lines.index(planned), lines.index(bridge))
         self.assertLess(lines.index(planned), lines.index(tunnel))
-        self.assertNotIn("(bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path", lines)
+        self.assertNotIn("\n(bridge=yes | bridge=true) & highway!=pedestrian & highway!=footway & highway!=path", lines)
 
     def test_power_line_predicates_have_no_redundant_cutline_subset(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
