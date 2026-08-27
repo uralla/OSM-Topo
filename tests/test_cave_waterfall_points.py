@@ -7,9 +7,14 @@ PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
 TYP = ROOT / 'styles' / 'uralla.txt'
 
 class CaveWaterfallPointTests(unittest.TestCase):
-    def test_cave_entrance_uses_custom_cave_symbol_at_topo_zoom(self) -> None:
+    def test_cave_entrance_visibility_depends_on_name(self) -> None:
         text = PRIORITY.read_text(encoding='utf-8')
-        self.assertIn("natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 22]", text)
+        named = "natural=cave_entrance & name=* { name '${name}' } [0x11602 resolution 23]"
+        unnamed = "natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 24]"
+        self.assertIn(named, text)
+        self.assertIn(unnamed, text)
+        self.assertLess(text.index(named), text.index(unnamed))
+        self.assertNotIn("natural=cave_entrance { name '${name}' | 'пещера' } [0x11602 resolution 22]", text)
 
     def test_waterfall_keeps_icon_but_hides_permanent_label(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
