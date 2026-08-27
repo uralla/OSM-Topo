@@ -5,12 +5,25 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Apply one-time highway road order and TYP cleanup
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          python scripts/highway_road_order_typ_once.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/lines styles/uralla.txt
+          git commit -m "Fix highway road fallback order and remove orphan type"
+          git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
