@@ -13,7 +13,7 @@ The authoritative sources are:
 
 1. `config/maps.yaml` for map products and their stable identities;
 2. this document for pipeline behaviour and invariants;
-3. `03-REVIEW_URALLA_MASTER.md` for cartographic and audit decisions;
+3. `docs/reviews/STYLE_REVIEW_MASTER.md` for cartographic and audit decisions;
 4. Git history for versions of style, TYP, preprocessor and build code.
 
 Previously supplied ZIP archives are not build inputs or reference sources.
@@ -296,8 +296,9 @@ Doctor never downloads the large DEM/elevation datasets.
 
 Machine-specific roots are stored in ignored `config/host.yaml`, created from
 `config/host.example.yaml`. Manifest paths under `input/` and `elevation/` are
-resolved below `data_root`; repository-owned `poly/`, `styles/` and `scripts/`
-paths remain relative to the checkout. This replaces hard-coded DEM paths.
+resolved below `data_root`; local `poly/` data and repository-owned `styles/`
+and `scripts/` paths remain relative to the checkout. This replaces hard-coded
+DEM paths.
 
 ## Migration acceptance
 
