@@ -373,7 +373,7 @@ aerialway=* {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f15 resolutio
 piste:type=downhill & piste:difficulty=novice & is_closed()=false & area!=yes [0x10105 resolution 22]
 piste:type=downhill & piste:difficulty=easy & is_closed()=false & area!=yes [0x10102 resolution 22]
 piste:type=downhill & piste:difficulty=intermediate & is_closed()=false & area!=yes [0x10103 resolution 22]
-piste:type=downhill & piste:difficulty=advanced & is_closed()=false & area!=yes [0x10104 resolution 22]
+(piste:type=downhill & piste:difficulty=advanced | piste:type=downhill & piste:difficulty=expert | piste:type=downhill & piste:difficulty=freeride | piste:type=downhill & piste:difficulty=extreme) & is_closed()=false & area!=yes [0x10104 resolution 22]
 piste:type=skitour & is_closed()=false & area!=yes [0x10101 resolution 22]
 # nordic is consumed in inc/water_lines with the same 0x10101 type.
 
