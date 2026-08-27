@@ -169,7 +169,15 @@ def _refresh_data(args: argparse.Namespace) -> int:
     try:
         manifest = load_manifest(args.manifest)
         host = load_host_config(args.host, args.repo_root)
-        results = refresh_supplemental_data(manifest, host)
+        if not args.json:
+            print("Refreshing supplemental map data...")
+            print(f"Data root: {host.paths.data_root}")
+            print()
+        results = refresh_supplemental_data(
+            manifest,
+            host,
+            reporter=None if args.json else print,
+        )
     except (ManifestError, OSError) as exc:
         return _emit([ValidationIssue("refresh-data", str(exc))], None, args.json)
     if args.json:
@@ -184,8 +192,19 @@ def _refresh_data(args: argparse.Namespace) -> int:
             )
         )
     else:
+        print()
+        print("Refresh summary")
+        print("-" * 72)
         for result in results:
-            print(f"{result.status.upper():7} {result.name}: {result.target} — {result.detail}")
+            size = f" ({result.size} bytes)" if result.size is not None else ""
+            print(f"{result.status.upper():7} {result.name:<10} {result.target}{size}")
+            if result.status != "updated":
+                print(f"        {result.detail}")
+        print("-" * 72)
+        updated = sum(result.status == "updated" for result in results)
+        warnings = sum(result.status == "warning" for result in results)
+        errors = sum(result.status == "error" for result in results)
+        print(f"Updated: {updated}  Warnings: {warnings}  Errors: {errors}")
     return 1 if has_refresh_errors(results) else 0
 
 

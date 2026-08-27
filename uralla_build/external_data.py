@@ -59,6 +59,7 @@ def refresh_supplemental_data(
     host: HostConfig,
     *,
     downloader: Callable[[str, Path], None] = _download,
+    reporter: Callable[[str], None] | None = None,
 ) -> list[RefreshResult]:
     defaults = manifest.get("defaults")
     if not isinstance(defaults, dict):
@@ -77,10 +78,18 @@ def refresh_supplemental_data(
         target = data_path(host, value)
         target.parent.mkdir(parents=True, exist_ok=True)
         url = SUPPLEMENTAL_URLS[name]
+        if reporter is not None:
+            if target.is_file():
+                reporter(f"[{name}] local: {target} ({target.stat().st_size} bytes)")
+            else:
+                reporter(f"[{name}] local: missing ({target})")
+            reporter(f"[{name}] download: {url}")
         try:
             with tempfile.TemporaryDirectory(prefix=f".uralla-{name}-", dir=target.parent) as temp_dir:
                 staged = Path(temp_dir) / target.name
                 downloader(url, staged)
+                if reporter is not None:
+                    reporter(f"[{name}] downloaded: {staged.stat().st_size} bytes; validating ZIP")
                 _validate_zip(staged)
                 size = staged.stat().st_size
                 if size <= 0:
@@ -90,9 +99,13 @@ def refresh_supplemental_data(
                     replacement.unlink()
                 staged.replace(replacement)
                 os.replace(replacement, target)
+            if reporter is not None:
+                reporter(f"[{name}] updated: {target} ({size} bytes)")
             results.append(RefreshResult(name, "updated", str(target), url, size))
         except Exception as exc:  # network, filesystem and invalid ZIP all use the same fallback policy
             if target.is_file():
+                if reporter is not None:
+                    reporter(f"[{name}] WARN: refresh failed; keeping existing archive: {exc}")
                 results.append(
                     RefreshResult(
                         name,
@@ -103,6 +116,8 @@ def refresh_supplemental_data(
                     )
                 )
             else:
+                if reporter is not None:
+                    reporter(f"[{name}] ERROR: refresh failed and no local fallback exists: {exc}")
                 results.append(
                     RefreshResult(
                         name,

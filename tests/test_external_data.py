@@ -66,6 +66,27 @@ class ExternalDataRefreshTests(unittest.TestCase):
                 with zipfile.ZipFile(root / "data/input" / name) as archive:
                     self.assertEqual(archive.read("payload.txt"), b"old")
 
+    def test_reporter_receives_progress_messages(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            messages: list[str] = []
+
+            def downloader(url: str, target: Path) -> None:
+                self._zip(target, url)
+
+            results = refresh_supplemental_data(
+                self._manifest(),
+                self._host(root),
+                downloader=downloader,
+                reporter=messages.append,
+            )
+            self.assertFalse(has_refresh_errors(results))
+            joined = "\n".join(messages)
+            self.assertIn("[bounds] local: missing", joined)
+            self.assertIn("[bounds] download:", joined)
+            self.assertIn("validating ZIP", joined)
+            self.assertIn("[geonames] updated:", joined)
+
     def test_failed_refresh_without_fallback_is_error(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
