@@ -61,6 +61,10 @@ class LineFallbackCleanupTests(unittest.TestCase):
             "highway!=construction & highway=* & construction=* [0x10f19 resolution 22 continue]",
             lines,
         )
+        self.assertIn(
+            "highway!=construction & highway=* & construction=* & maxspeed!=*\n{ add mkgmap:road-speed = '-1' }",
+            lines,
+        )
         self.assertNotIn(
             "highway=construction | highway=* & construction=* [0x10f19 resolution 22 continue]",
             lines,
