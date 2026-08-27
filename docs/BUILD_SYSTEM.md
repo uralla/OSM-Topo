@@ -295,10 +295,10 @@ changes and fail clearly when package installation needs user authority.
 Doctor never downloads the large DEM/elevation datasets.
 
 Machine-specific roots are stored in ignored `config/host.yaml`, created from
-`config/host.example.yaml`. Manifest paths under `input/` and `elevation/` are
-resolved below `data_root`; local `poly/` data and repository-owned `styles/`
-and `scripts/` paths remain relative to the checkout. This replaces hard-coded
-DEM paths.
+`config/host.example.yaml`. Manifest paths under `input/`, `elevation/` and
+`poly/` are resolved below `data_root`; repository-owned `styles/` and
+`scripts/` paths remain relative to the checkout. This replaces hard-coded
+machine-specific input paths.
 
 ## Migration acceptance
 
