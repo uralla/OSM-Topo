@@ -189,7 +189,7 @@ highway!=construction & highway=* & construction=* & maxspeed!=*
 { name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп' }
 [0x1001a resolution 24]
 # Legacy tagging: keep the object visible in the same language, but stop before normal highway rules.
-highway=* & disused=yes
+highway=* & (disused=yes | abandoned=yes)
 { name '${name} (плохая грунтовка/неисп)' | 'плохая грунтовка/неисп'; set mkgmap:numbers=false }
 [0x1001a resolution 24]
 
