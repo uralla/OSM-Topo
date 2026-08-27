@@ -267,6 +267,9 @@ tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
 tourism=alpine_hut [0x2b02 resolution 21]
 tourism=chalet [0x2b02 resolution 21]
 tourism=wilderness_hut [0x2b05 resolution 23]
+# Route guideposts are strong navigation anchors; simple route markers stay close-zoom only.
+tourism=information & information=guidepost {name '${name}' | '${ref}' | 'указатель'} [0x4c00 resolution 23]
+tourism=information & information=route_marker {name '${name}' | '${ref}' | 'маркер'} [0x4c00 resolution 24]
 tourism=information {name '${name}' | 'информация'} [0x4c00 resolution 24]
 # Standard shelter plus legacy lean_to fallback share the existing shelter icon.
 amenity=shelter | tourism=lean_to [0x2b05 resolution 24]
