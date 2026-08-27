@@ -36,12 +36,16 @@ class LineFallbackCleanupTests(unittest.TestCase):
         )
         self.assertIn("railway=* & abandoned=yes [0x1011a resolution 23-24]", lines)
 
-    def test_cable_car_comment_matches_actual_type(self) -> None:
+    def test_all_aerialways_share_single_visual_type(self) -> None:
         lines = LINES.read_text(encoding='utf-8')
         water = WATER_LINES.read_text(encoding='utf-8')
-        self.assertIn('uses the non-routable aerialway type 0x10f15', lines)
-        self.assertIn('aerialway=cable_car', water)
-        self.assertIn('[0x10f15 resolution 22]', water)
+        typ = (ROOT / 'styles' / 'uralla.txt').read_text(encoding='utf-8')
+        generic = "aerialway=* {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f15 resolution 22]"
+        self.assertIn(generic, lines)
+        self.assertNotIn('aerialway=cable_car', water)
+        for code in ('0x10f01', '0x10f02', '0x10f03', '0x10f04'):
+            self.assertNotIn(f'Type={code}', typ)
+            self.assertNotIn(code, lines)
 
     def test_pipeline_reaches_its_dedicated_farther_lod_rule(self) -> None:
         lines = LINES.read_text(encoding='utf-8')

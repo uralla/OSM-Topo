@@ -13,12 +13,11 @@ surface=ice { add ice_road=yes }
 # Nordic ski routes use the same visual class as skitour.
 piste:type=nordic & is_closed()=false & area!=yes [0x10101 resolution 22]
 
-# [CUSTOM/АВТОРСКОЕ] Railway/aerialway classes agreed in the completed tag audit.
+# [CUSTOM/АВТОРСКОЕ] Railway classes agreed in the completed tag audit.
 # Narrow gauge shares the tram visual class. Disused/abandoned railways continue
 # to the dedicated legacy railway rules below instead of being consumed here.
 railway=narrow_gauge & disused!=yes & abandoned!=yes { name '${name} (ужд)' | 'ужд' } [0x10f14 resolution 22-24]
 railway=funicular & disused!=yes & abandoned!=yes { name '${name}' | 'фуникулер' } [0x10f00 resolution 22]
-aerialway=cable_car { name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f15 resolution 22]
 
 # Underground subway is intentionally hidden; above-ground subway remains visible.
 railway=subway & tunnel=yes { delete railway }

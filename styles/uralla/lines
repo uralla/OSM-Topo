@@ -366,12 +366,8 @@ barrier=retaining_wall [0x10d02 resolution 24]
 barrier=fence | barrier=hedge | barrier=wall [0x12d1a resolution 24 continue]
 
 ## Канатная дорога
-# cable_car is consumed in inc/water_lines and uses the non-routable aerialway type 0x10f15.
-aerialway=gondola    {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f01 resolution 22]
-aerialway=mixed_lift {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f02 resolution 22]
-aerialway=chair_lift {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f03 resolution 22]
-aerialway=drag_lift  {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f04 resolution 22]
-aerialway=* [0x10f15 resolution 22]
+# All aerialways share one non-routable visual type; subtype detail stays in OSM tags, not TYP.
+aerialway=* {name '${name} (${ref})' | '${name}' | '${ref}' } [0x10f15 resolution 22]
 
 ## Горнолыжные трассы
 piste:type=downhill & piste:difficulty=novice & is_closed()=false & area!=yes [0x10105 resolution 22]
