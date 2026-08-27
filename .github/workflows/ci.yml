@@ -5,12 +5,25 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Apply one-time special highway fallback cleanup
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          python scripts/special_highway_fallback_once.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/lines tests/test_line_fallback_cleanup.py
+          git commit -m "Keep special-purpose highways out of generic routing"
+          git push
 
       - name: Set up Python
         uses: actions/setup-python@v5
