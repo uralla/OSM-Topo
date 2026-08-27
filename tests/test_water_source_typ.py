@@ -20,10 +20,10 @@ def _point_section(text: str, type_code: str, subtype_code: str) -> str:
 
 class WaterSourceTypTests(unittest.TestCase):
     def test_water_source_icons_have_no_persistent_map_label(self) -> None:
-        text = TYP.read_text(encoding="cp1251")
+        text = TYP.read_text(encoding="utf-8")
         for subtype_code in ("0x11", "0x12"):
             section = _point_section(text, "0x065", subtype_code)
-            self.assertRegex(section, r"(?mi)^FontStyle=NoLabel$")
+            self.assertRegex(section, r"(?mi)^FontStyle=NoLabel(?: \(invisible\))?$")
 
     def test_style_keeps_only_information_labels(self) -> None:
         text = WATER_POINTS.read_text(encoding="utf-8")
