@@ -72,7 +72,6 @@ class DoctorTests(unittest.TestCase):
             "styles/uralla.typ",
             "styles/uralla.args",
             "scripts/transform_places.xml",
-            "poly/test.poly",
         ):
             _touch(root / path)
         for path in (
@@ -81,6 +80,7 @@ class DoctorTests(unittest.TestCase):
             "data/input/source.osm.pbf",
             "data/input/geonames.zip",
             "data/elevation/test.osm.pbf",
+            "data/poly/test.poly",
         ):
             _touch(root / path)
         (root / "data/dem").mkdir(parents=True)
@@ -123,6 +123,12 @@ splitter:
             )
             self.assertFalse(has_errors(checks), [check for check in checks if check.status == "error"])
             self.assertTrue(any(check.status == "warning" for check in checks))
+            self.assertTrue(
+                any(
+                    check.name == "data:poly/test.poly" and check.status == "ok"
+                    for check in checks
+                )
+            )
 
     def test_missing_external_file_is_an_error(self) -> None:
         with TemporaryDirectory() as directory:
