@@ -95,7 +95,11 @@ leisure=common [0x18 resolution 23]
 leisure=garden [0x17 resolution 23]
 leisure=golf_course [0x21 resolution 23]
 leisure=ice_rink [0x19 resolution 24]
-leisure=nature_reserve & area_size()>50000 | leisure=natural_reserve & area_size()>50000 | landuse=nature_reserve & area_size()>50000 | landuse=natural_reserve & area_size()>50000 [0x16 resolution 19-22 continue]
+# Legacy nature-reserve tags are a fallback only. Modern boundary tagging above
+# already owns the same overview fill and must not be emitted twice.
+(leisure=nature_reserve | leisure=natural_reserve | landuse=nature_reserve | landuse=natural_reserve)
+    & area_size()>50000 & boundary!=protected_area & boundary!=national_park
+    [0x16 resolution 19-22 continue]
 leisure=park & mkgmap:area2poi!=true [0x17 resolution 23]
 leisure=pitch | leisure=horse_riding  [0x19 resolution 24]
 leisure=playground | leisure=recreation_ground [0x17 resolution 23]
