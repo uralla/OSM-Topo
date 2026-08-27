@@ -186,13 +186,8 @@ def duplicate_visual_groups(path: Path) -> dict[str, list[list[tuple[int, int]]]
 
 def audit(repo_root: Path) -> int:
     style_root = repo_root / "styles" / "uralla"
-    typ_paths = [repo_root / "styles" / "uralla.txt"]
-    typ_paths.extend(sorted((repo_root / "styles").glob("uralla-custom-*.txt")))
-
-    typ_codes: dict[str, set[tuple[int, int]]] = defaultdict(set)
-    for typ_path in typ_paths:
-        for kind, codes in parse_typ_codes(typ_path).items():
-            typ_codes[kind].update(codes)
+    typ_path = repo_root / "styles" / "uralla.txt"
+    typ_codes = parse_typ_codes(typ_path)
 
     failed = False
     for kind, entrypoint in STYLE_ENTRYPOINTS.items():
@@ -218,7 +213,7 @@ def audit(repo_root: Path) -> int:
             for code in unused:
                 print(f"    {format_code(code)}")
 
-    duplicates = duplicate_visual_groups(repo_root / "styles" / "uralla.txt")
+    duplicates = duplicate_visual_groups(typ_path)
     for kind, groups in duplicates.items():
         if not groups:
             continue
