@@ -51,6 +51,16 @@ class StyleTypAuditTests(unittest.TestCase):
             self.assertEqual(parsed["point"], {(0x65, 0x11)})
             self.assertEqual(parsed["line"], {(0x134, 0x1F)})
 
+    def test_duplicate_visual_groups_ignore_labels_but_keep_visual_directives(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "test.txt"
+            path.write_bytes(
+                """[_point]\nType=0x065\nSubType=0x11\nString1=0x19,источник\nFontStyle=NoLabel (invisible)\nXpm=\"0 0 1 0\"\n\"1 c #FFFFFF\"\n[End]\n\n[_point]\nType=0x065\nSubType=0x12\nString1=0x19,пересыхающий источник\nFontStyle=NoLabel (invisible)\nXpm=\"0 0 1 0\"\n\"1 c #FFFFFF\"\n[End]\n\n[_point]\nType=0x065\nSubType=0x13\nFontStyle=NormalFont\nXpm=\"0 0 1 0\"\n\"1 c #FFFFFF\"\n[End]\n""".encode("cp1251")
+            )
+            groups = AUDIT.duplicate_visual_groups(path)
+            self.assertIn([(0x65, 0x11), (0x65, 0x12)], groups["point"])
+            self.assertFalse(any((0x65, 0x13) in group for group in groups["point"]))
+
 
 if __name__ == "__main__":
     unittest.main()
