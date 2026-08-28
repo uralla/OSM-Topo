@@ -18,6 +18,10 @@ shop=supermarket [0x2e02 resolution 22]
 shop=chemist [0x2e05 resolution 24]
 shop=bicycle [0x2f0d resolution 23]
 
+# Parcel pickup points: current OSM tags plus the deprecated vending-machine form.
+# Keep labels simple: use the real name, otherwise a generic designation.
+(amenity=parcel_locker | post_office=post_partner | shop=outpost | amenity=vending_machine & vending~'.*parcel_pickup.*') { name '${name}' | 'пункт выдачи' } [0x2f05 resolution 24]
+
 # Motor-vehicle shops/services are one class.
 (shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
