@@ -1,0 +1,37 @@
+name: Remove dead recycling comment
+
+"on":
+  push:
+    paths:
+      - '.github/workflows/remove-dead-recycling-comment.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove dead recycling comment
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = '#amenity=recycling [0x2f15 resolution 24]\n'
+          if old not in s:
+              raise SystemExit('target line not found')
+          p.write_text(s.replace(old, '', 1), encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -- .github/workflows/remove-dead-recycling-comment.yml
+          git add -- styles/uralla/points
+          git commit -m "Remove dead recycling comment"
+          git pull --rebase origin main
+          git push origin HEAD:main
