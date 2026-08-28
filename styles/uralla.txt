@@ -6501,6 +6501,43 @@ DayXpm="12 19 4 1"   Colormode=16
 ;123456789012
 [end]
 
+[_point]
+Type=0x137
+SubType=0x03
+; Historical custom POI for natural=hot_spring.
+String1=0x19,горячий источник
+String2=0x04,hot spring
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="12 19 4 1"   Colormode=16
+"!	c #FFFFFF"
+"#	c #0000B4"
+"%	c #0065FF"
+"  	c none"
+"   !!!!!!   "
+"  !!####!!  "
+" !!######!! "
+"!!###%%%%#!!"
+"!##########!"
+"!#%%%%%####!"
+"!##########!"
+"!!###%%%##!!"
+" !!######!! "
+"  !!####!!  "
+"  !!###!!   "
+"  !###!!    "
+"  !###!     "
+"  !!##!!    "
+"   !!##!    "
+"   !!##!    "
+"   !##!!    "
+"   !#!!     "
+"   !!!      "
+;123456789012
+[end]
+
 
 [_point]
 Type=0x065
