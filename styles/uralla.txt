@@ -4043,6 +4043,7 @@ DayXpm="14 14 3 1"   Colormode=16
 ;12345678901234
 [end]
 
+
 [_point]
 Type=0x115
 SubType=0x09
@@ -4069,6 +4070,7 @@ DayXpm="14 11 2 1"   Colormode=0
 "!!!!!!!!!!!!!!"
 ;12345678901234
 [end]
+
 
 [_point]
 Type=0x02b
