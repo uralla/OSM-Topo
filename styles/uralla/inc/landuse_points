@@ -14,7 +14,7 @@ landuse=retail & name=* [0x2e00 resolution 21]
 
 
 
-man_made=survey_point {name "${name} (${ele})" | "${name}" | "${ref}" | "геодезический пункт"} [0x11508 resolution 24]
+man_made=survey_point {name "${name} (${ele})" | "${name}" | "${ref}" | "геодезический пункт"} [0x6617 resolution 24]
 ele=* & natural!=* & mountain_pass!=yes {name "${ele} м"} [0x6405 resolution 24]
 
 natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
@@ -84,8 +84,6 @@ natural=volcano & note!=great-peak & ele!=* {name "${name}"} [0x2c0c resolution 
 # | natural=hill & ele=* & name=*
 # | natural=volcano & ele=* & name=*
 # {name "${name} (${ele})"} [0x6616 resolution 23]
-
-natural=hot_spring [0x6511 resolution 22]
 
 
 natural=tree & leaf_type=broadleaved | natural=tree & leaf_type=mixed {name '${name}'} [0x2c08 resolution 24]
