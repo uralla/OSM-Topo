@@ -71,8 +71,14 @@ highway=* & amenity=fuel | amenity=fuel & area=yes
 # аэропорты
 # Abandoned/disused paved runways, taxiways and taxilanes are useful real-world roads.
 # Treat them like a good paved unclassified road; active airfield ways remain non-routable.
-((abandoned:aeroway=runway | abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=runway | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
-((aeroway=runway | aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
+# [CUSTOM/АВТОРСКОЕ] Abandoned/disused paved airfield ways keep their aviation visuals,
+# but become routable like a good paved unclassified road.
+((abandoned:aeroway=runway | disused:aeroway=runway) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x27 resolution 20 continue]
+((abandoned:aeroway=runway | disused:aeroway=runway) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1b road_class=1 road_speed=4 resolution 22]
+(aeroway=runway & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x27 resolution 20 continue]
+(aeroway=runway & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1b road_class=1 road_speed=4 resolution 22]
+((abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1a road_class=1 road_speed=4 resolution 23]
+((aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1a road_class=1 road_speed=4 resolution 23]
 aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]
 (aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]
 
