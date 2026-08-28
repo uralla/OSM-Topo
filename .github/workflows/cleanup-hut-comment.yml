@@ -1,0 +1,31 @@
+name: Remove stale hut comment
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-hut-comment.yml'
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove stale comment
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = '# Mountain huts: staffed alpine huts use lodging visual; unstaffed wilderness huts use shelter visual.\n'
+          if old not in s:
+              raise SystemExit('stale hut comment not found')
+          p.write_text(s.replace(old, ''), encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          rm .github/workflows/cleanup-hut-comment.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/points .github/workflows/cleanup-hut-comment.yml
+          git commit -m "Remove stale hut comment"
+          git push
