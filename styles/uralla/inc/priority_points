@@ -21,10 +21,6 @@ shop=bicycle [0x2f0d resolution 23]
 # Motor-vehicle shops/services are one class.
 (shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
-# Car club / former auto-dealer POI is intentionally removed from the map.
-# Delete the tag here so the legacy 0x2f0d rule later in points cannot render it.
-amenity=car_club { delete amenity }
-
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 
