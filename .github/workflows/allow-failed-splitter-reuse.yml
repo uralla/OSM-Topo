@@ -1,0 +1,57 @@
+name: Allow failed splitter reuse
+
+"on":
+  push:
+    paths:
+      - .github/workflows/allow-failed-splitter-reuse.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch incremental splitter reuse
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('uralla_build/incremental.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              '"""Fast rebuild paths that reuse validated outputs from a previous successful build."""',
+              '"""Fast rebuild paths that reuse existing splitter outputs."""',
+          )
+          text = text.replace(
+              'def _latest_successful_splitter_build(',
+              'def _latest_reusable_splitter_build(',
+          )
+          text = text.replace(
+              '"""SELECT build_id FROM builds\n               WHERE product = ? AND status = \'success\'\n               ORDER BY finished_at DESC"""',
+              '"""SELECT build_id FROM builds\n               WHERE product = ?\n               ORDER BY COALESCE(finished_at, created_at) DESC"""',
+          )
+          text = text.replace(
+              'f"no successful build with reusable splitter output exists for {product!r}; "\n        "run one full build first"',
+              'f"no build with reusable splitter output exists for {product!r}; "\n        "run one full build first"',
+          )
+          text = text.replace(
+              '"""Run only mkgmap and publication using splitter output from latest full success."""',
+              '"""Run only mkgmap and publication using latest reusable splitter output."""',
+          )
+          text = text.replace(
+              'previous_id, previous_tiles = _latest_successful_splitter_build(',
+              'previous_id, previous_tiles = _latest_reusable_splitter_build(',
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/allow-failed-splitter-reuse.yml
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/incremental.py .github/workflows/allow-failed-splitter-reuse.yml
+          git commit -m "Temporarily allow reuse of failed splitter build"
+          git pull --rebase origin main
+          git push
