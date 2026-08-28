@@ -16,8 +16,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: Restore exact 0x13703 TYP block
-        shell: python
         run: |
+          python3 - <<'PY'
           from pathlib import Path
           import re
 
@@ -28,33 +28,36 @@ jobs:
           if len(matches) != 1:
               raise SystemExit(f"expected exactly one 0x13703 point block, found {len(matches)}")
 
-          block = '''[_point]
-Type=0x137
-SubType=0x03
-;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
-String1=0x19,горячий источник
-String2=0x04,hot spring
-ExtendedLabels=N
-DayXpm="12 12 3 1"   Colormode=16
-"!\tc #FF0000"
-"#\tc #FFFFFF"
-"  \tc none"
-"  ########  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  ###!!###  "
-"   #!!##    "
-"   ##!!##   "
-"    ##!!#   "
-"   ##!!##   "
-"   #!!##    "
-"   ####     "
-;123456789012
-[end]
-'''
-          text = pattern.sub(block, text, count=1)
+          lines = [
+              "[_point]",
+              "Type=0x137",
+              "SubType=0x03",
+              ";GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT",
+              "String1=0x19,горячий источник",
+              "String2=0x04,hot spring",
+              "ExtendedLabels=N",
+              'DayXpm="12 12 3 1"   Colormode=16',
+              '"!\tc #FF0000"',
+              '"#\tc #FFFFFF"',
+              '"  \tc none"',
+              '"  ########  "',
+              '"  #!!!!!!#  "',
+              '"  #!!!!!!#  "',
+              '"  #!!!!!!#  "',
+              '"  #!!!!!!#  "',
+              '"  ###!!###  "',
+              '"   #!!##    "',
+              '"   ##!!##   "',
+              '"    ##!!#   "',
+              '"   ##!!##   "',
+              '"   #!!##    "',
+              '"   ####     "',
+              ";123456789012",
+              "[end]",
+              "",
+          ]
+          block = "\n".join(lines)
+          text = pattern.sub(lambda _m: block, text, count=1)
           path.write_text(text, encoding="utf-8")
 
           check = path.read_text(encoding="utf-8")
@@ -71,6 +74,7 @@ DayXpm="12 12 3 1"   Colormode=16
                   raise SystemExit(f"missing expected content: {item!r}")
 
           Path(".github/workflows/restore-original-hot-spring-typ.yml").unlink()
+          PY
       - name: Commit restored block
         run: |
           git config user.name github-actions[bot]
