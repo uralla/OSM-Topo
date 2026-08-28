@@ -122,6 +122,7 @@ def plan_product_build(
     mkgmap_args = repo_path(
         repo, _text(defaults.get("mkgmap_args"), "defaults.mkgmap_args")
     )
+    mkgmap_logging = repo / "config" / "mkgmap-logging.properties"
     identity = _mapping(product.get("identity"), f"products.{product_key}.identity")
     names = _mapping(product.get("names"), f"products.{product_key}.names")
     splitter = _mapping(product.get("splitter"), f"products.{product_key}.splitter")
@@ -319,6 +320,7 @@ def plan_product_build(
     garmin = build_root / "mkgmap" / "garmin"
     mkgmap_command = [
         "java",
+        f"-Dlog.config={mkgmap_logging}",
         "-jar",
         str(_tool_jar(tools_lock, host, "mkgmap")),
         "-c",
