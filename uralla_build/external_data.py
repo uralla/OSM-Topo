@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 import os
 from pathlib import Path
 import tempfile
+import time
 from typing import Callable
 from urllib.request import urlopen
 import zipfile
@@ -22,6 +23,9 @@ SUPPLEMENTAL_URLS = {
     "sea": "https://www.thkukuk.de/osm/data/sea-latest.zip",
     "geonames": "https://download.geonames.org/export/dump/cities15000.zip",
 }
+
+_DOWNLOAD_BLOCK = 1024 * 1024
+_PROGRESS_STEP = 8 * 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,13 +40,41 @@ class RefreshResult:
         return asdict(self)
 
 
-def _download(url: str, target: Path) -> None:
+def _format_mib(value: int) -> str:
+    return f"{value / (1024 * 1024):.1f} MiB"
+
+
+def _download(
+    url: str,
+    target: Path,
+    *,
+    progress: Callable[[int, int | None, float], None] | None = None,
+) -> None:
     with urlopen(url, timeout=180) as response, target.open("wb") as output:
+        header = response.headers.get("Content-Length")
+        try:
+            total = int(header) if header is not None else None
+        except ValueError:
+            total = None
+
+        started = time.monotonic()
+        downloaded = 0
+        next_report = _PROGRESS_STEP
+        if progress is not None:
+            progress(0, total, 0.0)
+
         while True:
-            block = response.read(1024 * 1024)
+            block = response.read(_DOWNLOAD_BLOCK)
             if not block:
                 break
             output.write(block)
+            downloaded += len(block)
+            if progress is not None and downloaded >= next_report:
+                progress(downloaded, total, max(time.monotonic() - started, 1e-9))
+                next_report = downloaded + _PROGRESS_STEP
+
+        if progress is not None and downloaded > 0:
+            progress(downloaded, total, max(time.monotonic() - started, 1e-9))
 
 
 def _validate_zip(path: Path) -> None:
@@ -58,7 +90,7 @@ def refresh_supplemental_data(
     manifest: dict[str, object],
     host: HostConfig,
     *,
-    downloader: Callable[[str, Path], None] = _download,
+    downloader: Callable[[str, Path], None] | None = None,
     reporter: Callable[[str], None] | None = None,
 ) -> list[RefreshResult]:
     defaults = manifest.get("defaults")
@@ -87,7 +119,32 @@ def refresh_supplemental_data(
         try:
             with tempfile.TemporaryDirectory(prefix=f".uralla-{name}-", dir=target.parent) as temp_dir:
                 staged = Path(temp_dir) / target.name
-                downloader(url, staged)
+                if downloader is None:
+                    def report_download(downloaded: int, total: int | None, elapsed: float) -> None:
+                        if reporter is None:
+                            return
+                        if downloaded == 0:
+                            if total is None:
+                                reporter(f"[{name}] receiving: size unknown")
+                            else:
+                                reporter(f"[{name}] receiving: 0.0 / {_format_mib(total)}")
+                            return
+                        speed = downloaded / max(elapsed, 1e-9)
+                        if total:
+                            percent = min(100.0, downloaded * 100 / total)
+                            reporter(
+                                f"[{name}] received: {_format_mib(downloaded)} / {_format_mib(total)} "
+                                f"({percent:.1f}%) at {_format_mib(int(speed))}/s"
+                            )
+                        else:
+                            reporter(
+                                f"[{name}] received: {_format_mib(downloaded)} "
+                                f"at {_format_mib(int(speed))}/s"
+                            )
+
+                    _download(url, staged, progress=report_download)
+                else:
+                    downloader(url, staged)
                 if reporter is not None:
                     reporter(f"[{name}] downloaded: {staged.stat().st_size} bytes; validating ZIP")
                 _validate_zip(staged)
