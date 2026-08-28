@@ -1,0 +1,35 @@
+name: Cleanup historic attraction fallback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-historic-attraction.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove historic attraction museum fallback
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old = "tourism=attraction & historic=* [0x2c02 resolution 24]\n"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, '', 1))
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-historic-attraction.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-historic-attraction.yml
+          git commit -m "Remove historic attraction museum fallback"
+          git push
