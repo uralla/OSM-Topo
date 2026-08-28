@@ -1,0 +1,33 @@
+name: Cleanup emergency phone duplicate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-emergency-phone.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove duplicate emergency phone rule
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old = "# Emergency-only phones are more important on a topo map than ordinary public telephones.\nemergency=phone [0x2f12 resolution 23]\n"
+          assert s.count(old) == 1, s.count(old)
+          p.write_text(s.replace(old, '', 1))
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-emergency-phone.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-emergency-phone.yml
+          git commit -m "Remove duplicate emergency phone rule"
+          git push
