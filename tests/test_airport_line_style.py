@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,10 +25,9 @@ class AirportLineStyleTests(unittest.TestCase):
 
     def test_taxiway_typ_type_exists_with_correct_labels(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
-        self.assertEqual(typ.count('Type=0x1a'), 1)
-        start = typ.index('Type=0x1a')
-        end = typ.index('[end]', start)
-        block = typ[start:end]
+        matches = re.findall(r'(?ms)^\[_line\]\nType=0x1a\n.*?^\[end\]', typ)
+        self.assertEqual(len(matches), 1)
+        block = matches[0]
         self.assertIn('String1=0x19,рулёжная дорожка', block)
         self.assertIn('String2=0x04,taxiway', block)
         self.assertNotIn('Type=0x10f1c', typ)
