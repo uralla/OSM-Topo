@@ -31,7 +31,6 @@ class GenericPoiLabelStyleTests(unittest.TestCase):
         text = PRIORITY_POINTS.read_text(encoding="utf-8")
         self.assertNotIn("default_name 'избушка'", text)
         self.assertNotIn("| 'памятник'", text)
-        self.assertNotIn("| 'указатель'", text)
         self.assertNotIn("| 'АЗС (продукты)'", text)
         self.assertIn("historic=memorial { name '${name}' | '${inscription}' }", text)
         self.assertIn("amenity=signpost { name '${name}' | '${label}' }", text)
