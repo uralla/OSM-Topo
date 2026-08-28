@@ -23,6 +23,8 @@ _MIB = 1024 * 1024
 _GIB = 1024 * 1024 * 1024
 _DOWNLOAD_ATTEMPTS = 4
 _DOWNLOAD_BACKOFF_SECONDS = (5, 15, 30)
+_DOWNLOAD_TIMEOUT_SECONDS = 300
+_DOWNLOAD_READ_BLOCK = 1 * _MIB
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,36 +84,42 @@ def _progress_interval(expected: int | None) -> int:
 
     if expected is None:
         return 64 * _MIB
-    return min(256 * _MIB, max(8 * _MIB, expected // 20))
+    return min(256 * _MIB, max(4 * _MIB, expected // 20))
 
 
 def _download_once(url: str, target: Path) -> None:
-    with urlopen(url, timeout=300) as response, target.open("wb") as output:
+    connect_started = time.monotonic()
+    _log(f"connecting; server-response timeout {_DOWNLOAD_TIMEOUT_SECONDS} s")
+    with urlopen(url, timeout=_DOWNLOAD_TIMEOUT_SECONDS) as response, target.open("wb") as output:
+        connected_after = time.monotonic() - connect_started
         raw_length = response.headers.get("Content-Length")
         expected = int(raw_length) if raw_length and raw_length.isdigit() else None
         if expected is not None:
-            _log(f"remote size: {_format_size(expected)}")
+            _log(f"connected in {connected_after:.1f} s; remote size: {_format_size(expected)}")
         else:
-            _log("remote size: unknown")
+            _log(f"connected in {connected_after:.1f} s; remote size: unknown")
 
         copied = 0
+        download_started = time.monotonic()
         interval = _progress_interval(expected)
         next_report = interval
         while True:
-            block = response.read(8 * _MIB)
+            block = response.read(_DOWNLOAD_READ_BLOCK)
             if not block:
                 break
             output.write(block)
             copied += len(block)
             if copied >= next_report:
+                elapsed = max(time.monotonic() - download_started, 0.001)
+                rate = copied / elapsed
                 if expected:
                     percent = min(100.0, copied * 100.0 / expected)
                     _log(
                         f"downloaded {_format_size(copied)} / {_format_size(expected)} "
-                        f"({percent:.1f}%)"
+                        f"({percent:.1f}%); {_format_size(int(rate))}/s"
                     )
                 else:
-                    _log(f"downloaded {_format_size(copied)}")
+                    _log(f"downloaded {_format_size(copied)}; {_format_size(int(rate))}/s")
                 while next_report <= copied:
                     next_report += interval
         output.flush()
@@ -123,7 +131,12 @@ def _download_once(url: str, target: Path) -> None:
         )
     if copied == 0:
         raise StageError("source download is empty")
-    _log(f"download complete: {_format_size(copied)}")
+    elapsed = max(time.monotonic() - download_started, 0.001)
+    rate = copied / elapsed
+    _log(
+        f"download complete: {_format_size(copied)} in {elapsed:.1f} s; "
+        f"avg {_format_size(int(rate))}/s"
+    )
 
 
 def _is_retryable_download_error(exc: BaseException) -> bool:
