@@ -163,8 +163,6 @@ amenity=toilets & highway=rest_area [0x2f0c resolution 24]
 amenity=toilets [0x4e00 resolution 24]
 amenity=townhall [0x3003 resolution 24]
 amenity=university [0x2c05 resolution 24]
-# amenity=zoo is superceded by tourism=zoo
-amenity=zoo [0x2c07 resolution 24]
 
 amenity=dentist [0x3010 resolution 24]
 healthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]
@@ -269,7 +267,7 @@ amenity=bench [0x4a01 resolution 24]
 tourism=theme_park [0x2c01 resolution 24]
 tourism=viewpoint {name '${name}' | 'видовая точка'} [0x2c04 resolution 23]
 tourism=wine_cellar [0x2c0a resolution 24]
-tourism=zoo [0x2c07 resolution 24]
+(amenity=zoo | tourism=zoo) [0x2c07 resolution 24]
 
 highway=traffic_signals | crossing=traffic_signals [0x1616 resolution 24]
 railway=level_crossing [0x1615 resolution 24]
