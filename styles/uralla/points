@@ -172,7 +172,6 @@ highway=motorway_junction [0x2100 resolution 24]
 
 highway=services & mkgmap:area2poi!=true [0x210f resolution 24]
 
-historic=museum [0x2c02 resolution 24]
 historic=archaeological_site [0x2c04 resolution 24]
 historic=ruins [0x11605 resolution 24]
 historic=monument [0x2c04 resolution 24]
@@ -257,7 +256,7 @@ tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
 tourism=chalet [0x2b02 resolution 21]
 # Standard shelter plus legacy lean_to fallback share the existing shelter icon.
 tourism=lean_to [0x2b05 resolution 24]
-tourism=museum [0x2c02 resolution 24]
+(historic=museum | tourism=museum) [0x2c02 resolution 24]
 
 tourism=picnic_site & shelter=yes [0x2b05 resolution 24]
 tourism=picnic_site & shelter!=yes [0x4a00 resolution 24]
