@@ -137,7 +137,6 @@ amenity=post_office [0x2f05 resolution 24]
 amenity=prison [0x3009 resolution 24]
 amenity=pub [0x2d02 resolution 24]
 amenity=public_building [0x3007 resolution 24]
-#amenity=recycling [0x2f15 resolution 24]
 amenity=recycling { name '${name}' | 'переработка' }
 amenity=waste_disposal { name '${name}' | 'утилизация' }
 amenity=recycling | amenity=waste_disposal | amenity=waste_basket [0x2f15 resolution 24]
