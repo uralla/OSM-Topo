@@ -1,0 +1,30 @@
+name: Apply source progress
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-source-progress.yml'
+      - '.github/source_progress_patch.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Apply patch
+        run: python .github/source_progress_patch.py
+      - name: Validate targeted tests
+        run: python -m pytest tests/test_source.py -q
+      - name: Remove one-shot files
+        run: rm .github/source_progress_patch.py .github/workflows/apply-source-progress.yml
+      - name: Commit and push
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m 'Improve source download progress logging'
+          git push origin main
