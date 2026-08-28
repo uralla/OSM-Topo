@@ -41,9 +41,10 @@ class BicyclePoiStyleTests(unittest.TestCase):
         self.assertIn('ExtendedLabels=Y', section)
         self.assertIn('FontStyle=SmallFont', section)
         self.assertNotIn('NoLabel', section)
-        self.assertIn('"!\\tc #000000"', section)
-        self.assertIn('"#\\tc #FFFFFF"', section)
-        self.assertIn('" \\tc none"', section)
+        self.assertIn('"!\tc #000000"', section)
+        self.assertIn('"#\tc #FFFFFF"', section)
+        self.assertIn('" \tc none"', section)
+        self.assertNotIn(r'\tc ', section)
         self.assertIn('"   !!!!!   "', section)
         self.assertIn('"!#########!"', section)
 
