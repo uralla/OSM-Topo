@@ -4,21 +4,23 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
+POINTS = ROOT / 'styles' / 'uralla' / 'points'
 PLACE_POINTS = ROOT / 'styles' / 'uralla' / 'inc' / 'place_points'
 TYP = ROOT / 'styles' / 'uralla.txt'
 
 
 class BicyclePoiStyleTests(unittest.TestCase):
     def test_bicycle_shop_and_repair_station_reuse_2f0d(self) -> None:
-        style = PRIORITY.read_text(encoding='utf-8')
-        self.assertIn('shop=bicycle [0x2f0d resolution 23]', style)
-        self.assertIn('amenity=bicycle_repair_station [0x2f0d resolution 24]', style)
-        self.assertIn('amenity=car_club { delete amenity }', style)
-        self.assertNotIn('amenity=car_club [', style)
-        self.assertNotIn('shop=bicycle [0x11504', style)
-        self.assertNotIn('amenity=bicycle_repair_station [0x11504', style)
-        self.assertNotIn('0x2f13', style)
-        self.assertNotIn('0x11509', style)
+        priority = PRIORITY.read_text(encoding='utf-8')
+        points = POINTS.read_text(encoding='utf-8')
+        self.assertIn('shop=bicycle [0x2f0d resolution 23]', priority)
+        self.assertIn('amenity=bicycle_repair_station [0x2f0d resolution 24]', priority)
+        self.assertNotIn('amenity=car_club', priority)
+        self.assertNotIn('amenity=car_club', points)
+        self.assertNotIn('shop=bicycle [0x11504', priority)
+        self.assertNotIn('amenity=bicycle_repair_station [0x11504', priority)
+        self.assertNotIn('0x2f13', priority)
+        self.assertNotIn('0x11509', priority)
 
     def test_locality_keeps_urrochische_type_11504(self) -> None:
         place_style = PLACE_POINTS.read_text(encoding='utf-8')
