@@ -3405,12 +3405,13 @@ ExtendedLabels=N
 
 [_line]
 Type=0x1b
-; Invisible routable carrier for abandoned/disused paved runways.
+;GRMN_TYPE: Roads/FERRY/Water or rail ferry/Non NT, NT
 UseOrientation=N
+LineWidth=1
 Xpm="0 0 1 0"
-"1 c none"
-String1=0x19,заброшенная ВПП
-String2=0x04,abandoned runway routing
+"1 c #E6E6E6"
+String1=0x19,dummy line
+String2=0x04,dummy line
 ExtendedLabels=N
 [end]
 
