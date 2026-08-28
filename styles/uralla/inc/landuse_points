@@ -1,5 +1,5 @@
 # 
-landuse=cemetery|landuse=cemetary|amenity=grave_yard [0x6403 resolution 24]
+landuse=cemetery|landuse=cematary|amenity=grave_yard [0x6403 resolution 24]
 landuse=village_green & name=* [0x2c06 resolution 24]
 
 (landuse=wood | landuse=forest | natural=wood | natural=forest) 
@@ -19,7 +19,7 @@ ele=* & natural!=* & mountain_pass!=yes {name "${ele} м"} [0x6405 resolution 24
 
 natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
 
-# cave_entrance is handled earlier in inc/priority_points as 0x11602.
+# cave_entrance is handled earlier in inc/priority_points as 0x6608.
 natural=cliff {name "${name}"} [0x6607 resolution 24]
 
 
