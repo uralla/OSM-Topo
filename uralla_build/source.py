@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 from typing import Any, Callable, Mapping
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 import yaml
@@ -20,6 +21,8 @@ from .host import HostConfig, data_path
 DEFAULT_SOURCE_DOWNLOADS = Path("config/source-downloads.yaml")
 _MIB = 1024 * 1024
 _GIB = 1024 * 1024 * 1024
+_DOWNLOAD_ATTEMPTS = 4
+_DOWNLOAD_BACKOFF_SECONDS = (5, 15, 30)
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,7 +85,7 @@ def _progress_interval(expected: int | None) -> int:
     return min(256 * _MIB, max(8 * _MIB, expected // 20))
 
 
-def _download(url: str, target: Path) -> None:
+def _download_once(url: str, target: Path) -> None:
     with urlopen(url, timeout=300) as response, target.open("wb") as output:
         raw_length = response.headers.get("Content-Length")
         expected = int(raw_length) if raw_length and raw_length.isdigit() else None
@@ -121,6 +124,34 @@ def _download(url: str, target: Path) -> None:
     if copied == 0:
         raise StageError("source download is empty")
     _log(f"download complete: {_format_size(copied)}")
+
+
+def _is_retryable_download_error(exc: BaseException) -> bool:
+    if isinstance(exc, HTTPError):
+        return exc.code == 429 or 500 <= exc.code <= 599
+    return isinstance(exc, (URLError, TimeoutError, ConnectionError))
+
+
+def _download(url: str, target: Path) -> None:
+    for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
+        _log(f"download attempt {attempt}/{_DOWNLOAD_ATTEMPTS}")
+        try:
+            _download_once(url, target)
+            return
+        except BaseException as exc:
+            target.unlink(missing_ok=True)
+            retryable = _is_retryable_download_error(exc)
+            if not retryable or attempt >= _DOWNLOAD_ATTEMPTS:
+                raise
+            delay = _DOWNLOAD_BACKOFF_SECONDS[attempt - 1]
+            if isinstance(exc, HTTPError):
+                detail = f"HTTP {exc.code}"
+            else:
+                detail = str(exc) or exc.__class__.__name__
+            _log(f"{detail}; retrying in {delay} s")
+            time.sleep(delay)
+
+    raise AssertionError("unreachable")
 
 
 def _validate_pbf(path: Path) -> None:
