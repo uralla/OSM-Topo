@@ -248,7 +248,6 @@ sport=skiing [0x2d06 resolution 24]
 sport=swimming [0x2d09 resolution 24]
 
 
-# tourism=alpine_hut [0x2b02 resolution 24]
 # обходим появление точек на всех полигонах building=yes с опцией --add-pois-to-areas
 # теперь отдельные точки с building=yes не тянут за собой порождение тучи 
 # аналогичных на всех полигональных зданиях! Волшебное слово - "& mkgmap:area2poi!=true"
