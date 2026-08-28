@@ -39,6 +39,12 @@ amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
 historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]
 amenity=signpost { name '${name}' | '${label}' } [0x5a00 resolution 24]
 
+# Information POIs: only the real name or a generic designation may become the label.
+# operator/ref remain source/details data and are intentionally excluded from fallbacks.
+tourism=information & information=guidepost { name '${name}' | 'указатель' } [0x4c00 resolution 23]
+tourism=information & (information=route_marker | information=trail_blaze) { name '${name}' | 'маркер' } [0x4c00 resolution 24]
+tourism=information { name '${name}' | 'информация' } [0x4c00 resolution 24]
+
 # Agreed removals from point display. Polygon/line representations are unaffected.
 tourism=caravan_site { delete tourism }
 (highway=speed_bump | traffic_calming=bump | traffic_calming=hump) { delete highway; delete traffic_calming }
