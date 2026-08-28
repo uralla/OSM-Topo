@@ -1,0 +1,34 @@
+name: Cleanup legacy hut shelter rules
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-hut-shelter.yml'
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clean legacy hut and shelter rules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = s
+          s = s.replace("tourism=alpine_hut [0x2b02 resolution 21]\n", "")
+          s = s.replace("tourism=wilderness_hut [0x2b05 resolution 23]\n", "")
+          s = s.replace("amenity=shelter | tourism=lean_to [0x2b05 resolution 24]\n", "tourism=lean_to [0x2b05 resolution 24]\n")
+          if s == old:
+              raise SystemExit('no expected legacy hut/shelter rules found')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          rm .github/workflows/cleanup-hut-shelter.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla/points .github/workflows/cleanup-hut-shelter.yml
+          git commit -m "Remove legacy hut shelter rules"
+          git push
