@@ -7936,33 +7936,4 @@ DayXpm="13 13 4 1"   Colormode=16
 ;1234567890123
 [end]
 
-[_point]
-Type=0x115
-SubType=0x08
-; CUSTOM: survey / triangulation point
-String1=0x19,геодезический пункт
-String2=0x04,survey point
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="13 13 3 1"   Colormode=16
-"!	c #202020"
-"#	c #FFFFFF"
-"  	c none"
-"      !      "
-"     !#!     "
-"    !#!!     "
-"    !#!#!    "
-"   !#! !#!   "
-"  !#!   !#!  "
-" !!!!!!!!!!! "
-"     !!!     "
-"     !#!     "
-"   !!!#!!!   "
-"     !#!     "
-"     !!!     "
-"             "
-;1234567890123
-[end]
 
