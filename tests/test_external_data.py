@@ -3,9 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 import zipfile
 
-from uralla_build.external_data import has_refresh_errors, refresh_supplemental_data
+from uralla_build.external_data import _download, has_refresh_errors, refresh_supplemental_data
 from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
 
 
@@ -86,6 +87,43 @@ class ExternalDataRefreshTests(unittest.TestCase):
             self.assertIn("[bounds] download:", joined)
             self.assertIn("validating ZIP", joined)
             self.assertIn("[geonames] updated:", joined)
+
+    def test_builtin_downloader_reports_live_byte_progress(self) -> None:
+        payload = b"x" * (10 * 1024 * 1024)
+        events: list[tuple[int, int | None, float]] = []
+
+        class FakeResponse:
+            def __init__(self) -> None:
+                self.headers = {"Content-Length": str(len(payload))}
+                self.offset = 0
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb) -> bool:
+                return False
+
+            def read(self, size: int) -> bytes:
+                chunk = payload[self.offset : self.offset + size]
+                self.offset += len(chunk)
+                return chunk
+
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "payload.zip"
+            with patch("uralla_build.external_data.urlopen", return_value=FakeResponse()):
+                _download(
+                    "https://example.invalid/payload.zip",
+                    target,
+                    progress=lambda downloaded, total, elapsed: events.append(
+                        (downloaded, total, elapsed)
+                    ),
+                )
+
+            self.assertEqual(target.stat().st_size, len(payload))
+            self.assertEqual(events[0][:2], (0, len(payload)))
+            self.assertTrue(any(downloaded >= 8 * 1024 * 1024 for downloaded, _, _ in events))
+            self.assertEqual(events[-1][0], len(payload))
+            self.assertTrue(all(total == len(payload) for _, total, _ in events))
 
     def test_failed_refresh_without_fallback_is_error(self) -> None:
         with TemporaryDirectory() as directory:
