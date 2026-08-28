@@ -3456,6 +3456,18 @@ CustomColor=No
 ContourColor=No
 [end]
 
+[_line]
+Type=0x11000
+; temporary diagnostic runway line type
+UseOrientation=N
+LineWidth=8
+Xpm="0 0 1 0"
+"1 c #000000"
+String1=0x19,взлётно-посадочная полоса
+String2=0x04,runway
+ExtendedLabels=N
+[end]
+
 
 [_line]
 Type=0x11002

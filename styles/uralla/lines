@@ -69,7 +69,7 @@ highway=* & amenity=fuel | amenity=fuel & area=yes
 	{delete highway; set highway=rest_area; set area=yes}
 
 # аэропорты
-aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]
+aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x11000 resolution 20]
 (aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x10f1c resolution 23]
 
 # Mark highways with the toll flag
