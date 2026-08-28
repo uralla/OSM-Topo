@@ -4854,37 +4854,6 @@ DayXpm="14 14 3 1"   Colormode=0
 [end]
 
 
-[_point]
-Type=0x02e
-SubType=0x0d
-;GRMN_TYPE: //
-String1=0x19,магазин
-String2=0x04,shop
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="13 13 4 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #0000FF"
-"%	c #000000"
-"  	c none"
-"             "
-"         !!  "
-"  !!!!!!!##! "
-" !#########! "
-" !#!#!#!#!!  "
-" !#!#!#!#!   "
-" !#!#!#!#!   "
-" !#######!   "
-" !!!!!!!#!   "
-" !%%%%%%%%!  "
-" !%%!!!!%%!  "
-"  !!    !!   "
-"             "
-;1234567890123
-[end]
-
 
 [_point]
 Type=0x02f
