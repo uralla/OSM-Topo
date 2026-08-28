@@ -7550,8 +7550,7 @@ SubType=0x02
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_3/User customizable point type/Non NT, NT
 String1=0x19,фонтан
 String2=0x04,fountain
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+ExtendedLabels=N
 CustomColor=No
 ContourColor=No
 DayXpm="13 12 3 1"   Colormode=16
