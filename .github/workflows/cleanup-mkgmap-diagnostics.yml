@@ -1,0 +1,70 @@
+name: Cleanup mkgmap diagnostics
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/cleanup-mkgmap-diagnostics.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove temporary diagnostics
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Restore normal mkgmap launch without temporary JUL config.
+          p = Path('uralla_build/build_plan.py')
+          s = p.read_text(encoding='utf-8')
+          old = '    mkgmap_logging = repo / "config" / "mkgmap-logging.properties"\n'
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, '', 1)
+          old = '        f"-Dlog.config={mkgmap_logging}",\n'
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, '', 1)
+          p.write_text(s, encoding='utf-8')
+
+          # Restore incremental rebuild policy: reuse splitter only from a successful build.
+          p = Path('uralla_build/incremental.py')
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+              ('"""Fast rebuild paths that reuse existing splitter outputs."""',
+               '"""Fast rebuild paths that reuse validated outputs from a previous successful build."""'),
+              ('def _latest_reusable_splitter_build(', 'def _latest_successful_splitter_build('),
+              ('"""SELECT build_id FROM builds\n               WHERE product = ?\n               ORDER BY COALESCE(finished_at, created_at) DESC"""',
+               '"""SELECT build_id FROM builds\n               WHERE product = ? AND status = \'success\'\n               ORDER BY finished_at DESC"""'),
+              ('f"no build with reusable splitter output exists for {product!r}; "\n        "run one full build first"',
+               'f"no successful build with reusable splitter output exists for {product!r}; "\n        "run one full build first"'),
+              ('"""Run only mkgmap and publication using latest reusable splitter output."""',
+               '"""Run only mkgmap and publication using splitter output from latest full success."""'),
+              ('previous_id, previous_tiles = _latest_reusable_splitter_build(',
+               'previous_id, previous_tiles = _latest_successful_splitter_build('),
+          ]
+          for old, new in replacements:
+              assert s.count(old) == 1, (old, s.count(old))
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          rm config/mkgmap-logging.properties
+      - name: Run tests
+        run: python3 -m pytest -q
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/cleanup-mkgmap-diagnostics.yml
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Remove temporary mkgmap diagnostics"
+          git pull --rebase origin main
+          git push
