@@ -10,8 +10,8 @@ uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete 
 # Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
 (amenity=restaurant | amenity=cafe | amenity=fast_food | amenity=food_court) [0x2a00 resolution 24]
 
-# Grocery group. Supermarkets keep their established farther visibility.
-shop=supermarket [0x2e02 resolution 22]
+# Grocery group. Current and legacy supermarket tags share one close-zoom POI rule.
+(shop=supermarket | amenity=supermarket) [0x2e02 resolution 23]
 (shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=organic) [0x2e02 resolution 24]
 
 # Pharmacy and bicycle shop remain distinct tourist-useful POIs.
