@@ -1,18 +1,20 @@
 """Best-effort refresh of supplemental mkgmap datasets.
 
 Downloads are staged and ZIP-validated before atomically replacing an existing
-local archive. A failed refresh keeps the previous archive usable.
+local archive. A failed refresh keeps the previous archive usable. Existing
+archives are skipped when remote HTTP metadata confirms they are current.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from email.utils import parsedate_to_datetime
 import os
 from pathlib import Path
 import tempfile
 import time
 from typing import Callable
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 import zipfile
 
 from .host import HostConfig, data_path
@@ -40,8 +42,44 @@ class RefreshResult:
         return asdict(self)
 
 
+@dataclass(frozen=True, slots=True)
+class RemoteMetadata:
+    size: int | None
+    modified_at: float | None
+
+
 def _format_mib(value: int) -> str:
     return f"{value / (1024 * 1024):.1f} MiB"
+
+
+def _remote_metadata(url: str) -> RemoteMetadata:
+    request = Request(url, method="HEAD")
+    with urlopen(request, timeout=60) as response:
+        size_header = response.headers.get("Content-Length")
+        try:
+            size = int(size_header) if size_header is not None else None
+        except ValueError:
+            size = None
+
+        modified_header = response.headers.get("Last-Modified")
+        modified_at: float | None = None
+        if modified_header:
+            try:
+                modified_at = parsedate_to_datetime(modified_header).timestamp()
+            except (TypeError, ValueError, OverflowError):
+                modified_at = None
+        return RemoteMetadata(size=size, modified_at=modified_at)
+
+
+def _is_current(target: Path, metadata: RemoteMetadata) -> bool:
+    if not target.is_file() or metadata.size is None:
+        return False
+    stat = target.stat()
+    if stat.st_size != metadata.size:
+        return False
+    if metadata.modified_at is None:
+        return True
+    return stat.st_mtime + 1.0 >= metadata.modified_at
 
 
 def _download(
@@ -115,6 +153,24 @@ def refresh_supplemental_data(
                 reporter(f"[{name}] local: {target} ({target.stat().st_size} bytes)")
             else:
                 reporter(f"[{name}] local: missing ({target})")
+
+        remote_metadata: RemoteMetadata | None = None
+        if downloader is None and target.is_file():
+            try:
+                if reporter is not None:
+                    reporter(f"[{name}] checking remote metadata: {url}")
+                remote_metadata = _remote_metadata(url)
+                if _is_current(target, remote_metadata):
+                    size = target.stat().st_size
+                    if reporter is not None:
+                        reporter(f"[{name}] up to date: {_format_mib(size)}; skipping download")
+                    results.append(RefreshResult(name, "unchanged", str(target), "remote file is not newer", size))
+                    continue
+            except Exception as exc:
+                if reporter is not None:
+                    reporter(f"[{name}] metadata check unavailable: {exc}; downloading normally")
+
+        if reporter is not None:
             reporter(f"[{name}] download: {url}")
         try:
             with tempfile.TemporaryDirectory(prefix=f".uralla-{name}-", dir=target.parent) as temp_dir:
@@ -156,6 +212,8 @@ def refresh_supplemental_data(
                     replacement.unlink()
                 staged.replace(replacement)
                 os.replace(replacement, target)
+                if remote_metadata is not None and remote_metadata.modified_at is not None:
+                    os.utime(target, (remote_metadata.modified_at, remote_metadata.modified_at))
             if reporter is not None:
                 reporter(f"[{name}] updated: {target} ({size} bytes)")
             results.append(RefreshResult(name, "updated", str(target), url, size))
