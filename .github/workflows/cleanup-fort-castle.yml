@@ -1,0 +1,36 @@
+name: Cleanup fort and castle rules
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-fort-castle.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Merge fort and castle rules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old = "historic=fort [0x11604 resolution 21]\nhistoric=castle [0x11604 resolution 21]\n"
+          new = "(historic=fort | historic=castle) [0x11604 resolution 22]\n"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-fort-castle.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-fort-castle.yml
+          git commit -m "Unify fort and castle POI at resolution 22"
+          git push
