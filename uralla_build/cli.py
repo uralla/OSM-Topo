@@ -202,9 +202,10 @@ def _refresh_data(args: argparse.Namespace) -> int:
                 print(f"        {result.detail}")
         print("-" * 72)
         updated = sum(result.status == "updated" for result in results)
+        unchanged = sum(result.status == "unchanged" for result in results)
         warnings = sum(result.status == "warning" for result in results)
         errors = sum(result.status == "error" for result in results)
-        print(f"Updated: {updated}  Warnings: {warnings}  Errors: {errors}")
+        print(f"Updated: {updated}  Unchanged: {unchanged}  Warnings: {warnings}  Errors: {errors}")
     return 1 if has_refresh_errors(results) else 0
 
 
