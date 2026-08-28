@@ -1,0 +1,39 @@
+name: Cleanup museum compatibility rules
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-museum.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Merge museum compatibility rules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old_historic = "historic=museum [0x2c02 resolution 24]\n"
+          old_tourism = "tourism=museum [0x2c02 resolution 24]\n"
+          assert s.count(old_historic) == 1
+          assert s.count(old_tourism) == 1
+          s = s.replace(old_historic, '', 1)
+          s = s.replace(old_tourism, '(historic=museum | tourism=museum) [0x2c02 resolution 24]\n', 1)
+          p.write_text(s)
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-museum.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-museum.yml
+          git commit -m "Unify museum compatibility POI rule"
+          git push
