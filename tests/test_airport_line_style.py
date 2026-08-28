@@ -14,7 +14,7 @@ class AirportLineStyleTests(unittest.TestCase):
             lines,
         )
         self.assertIn(
-            "(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x10f1c resolution 23]",
+            "(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]",
             lines,
         )
         self.assertNotIn(
@@ -24,8 +24,8 @@ class AirportLineStyleTests(unittest.TestCase):
 
     def test_taxiway_typ_type_exists_with_correct_labels(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
-        self.assertEqual(typ.count('Type=0x10f1c'), 1)
-        start = typ.index('Type=0x10f1c')
+        self.assertEqual(typ.count('Type=0x1a'), 1)
+        start = typ.index('Type=0x1a')
         end = typ.index('[end]', start)
         block = typ[start:end]
         self.assertIn('String1=0x19,рулёжная дорожка', block)
