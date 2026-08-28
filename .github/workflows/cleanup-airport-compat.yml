@@ -1,0 +1,43 @@
+name: Cleanup airport compatibility rules
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-airport-compat.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Merge airport compatibility rules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old_aeroway_airport = "aeroway=airport [0x2f04 resolution 19]\n"
+          old_aerodrome = "aeroway=aerodrome [0x2f04 resolution 19]\n"
+          old_amenity_airport = "amenity=airport [0x2f04 resolution 19]\n"
+          unified = "(aeroway=aerodrome | aeroway=airport | amenity=airport) [0x2f04 resolution 19]\n"
+          assert s.count(old_aeroway_airport) == 1
+          assert s.count(old_aerodrome) == 1
+          assert s.count(old_amenity_airport) == 1
+          s = s.replace(old_aeroway_airport, '', 1)
+          s = s.replace(old_aerodrome, unified, 1)
+          s = s.replace(old_amenity_airport, '', 1)
+          p.write_text(s)
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-airport-compat.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-airport-compat.yml
+          git commit -m "Unify airport compatibility POI rule"
+          git push
