@@ -29,10 +29,12 @@ jobs:
           assert len(matches) == 1, f'expected one 0x1150a block, found {len(matches)}'
           m = matches[0]
           block = m.group(0)
-          assert block.count('\\\\tc ') == 3, repr(block)
-          fixed = block.replace('\\\\tc ', '\tc ')
-          assert '\\\\tc ' not in fixed
-          assert fixed.count('\tc ') == 3
+          literal_backslash_t = r'\tc '
+          real_tab = '\tc '
+          assert block.count(literal_backslash_t) == 3, repr(block)
+          fixed = block.replace(literal_backslash_t, real_tab)
+          assert literal_backslash_t not in fixed
+          assert fixed.count(real_tab) == 3
           p.write_text(s[:m.start()] + fixed + s[m.end():], encoding='utf-8')
           PY
       - name: Commit and remove workflow
