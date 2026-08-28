@@ -99,7 +99,6 @@ amenity=fountain [0x11502 resolution 23]
 
 craft=beekeeper [0x11505 resolution 24]
 
-#aeroway=airport [0x5900 resolution 18]
 (aeroway=aerodrome | aeroway=airport | amenity=airport) [0x2f04 resolution 19]
 aeroway=helipad [0x11803 resolution 23]
 aeroway=terminal [0x2f04 resolution 22]
