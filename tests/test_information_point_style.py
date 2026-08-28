@@ -2,6 +2,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+POINTS = ROOT / 'styles' / 'uralla' / 'points'
 PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
 
 
@@ -21,6 +22,10 @@ class InformationPointStyleTests(unittest.TestCase):
         information_block = points[points.index(guidepost):points.index(generic) + len(generic)]
         self.assertNotIn("${operator}", information_block)
         self.assertNotIn("${ref}", information_block)
+
+    def test_main_points_has_no_legacy_information_rules(self) -> None:
+        points = POINTS.read_text(encoding='utf-8')
+        self.assertNotIn('tourism=information', points)
 
 
 if __name__ == '__main__':
