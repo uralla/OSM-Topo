@@ -14,8 +14,7 @@ uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete 
 (shop=supermarket | amenity=supermarket) [0x2e02 resolution 23]
 (shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=organic) [0x2e02 resolution 24]
 
-# Pharmacy and bicycle shop remain distinct tourist-useful POIs.
-shop=chemist [0x2e05 resolution 24]
+# Bicycle shop remains a distinct tourist-useful POI.
 # [CUSTOM/АВТОРСКОЕ] Bicycle services use a dedicated visible-label POI.
 shop=bicycle { name '${name}' | 'велосипеды' } [0x1150a resolution 23]
 
