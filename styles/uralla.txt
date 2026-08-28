@@ -4014,6 +4014,34 @@ DayXpm="14 11 3 1"   Colormode=16
 
 [_point]
 Type=0x115
+SubType=0x0a
+;GRMN_TYPE: Custom POI/BICYCLE_SERVICE/Shop or repair station
+String1=0x19,велосипеды
+String2=0x04,bicycle
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="11 11 3 1"   Colormode=16
+"!\tc #000000"
+"#\tc #FFFFFF"
+" \tc none"
+"   !!!!!   "
+"  !#####!  "
+" !#######! "
+"!#########!"
+"!#########!"
+"!#########!"
+"!#########!"
+"!#########!"
+" !#######! "
+"  !#####!  "
+"   !!!!!   "
+;12345678901
+[end]
+
+[_point]
+Type=0x115
 SubType=0x09
 ;GRMN_TYPE: Custom POI/CHALET/Detached holiday cottage
 String1=0x19,коттедж
