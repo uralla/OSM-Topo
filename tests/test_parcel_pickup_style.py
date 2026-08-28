@@ -4,6 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
+POINTS = ROOT / 'styles' / 'uralla' / 'points'
 TYP = ROOT / 'styles' / 'uralla.txt'
 
 
@@ -15,6 +16,10 @@ class ParcelPickupStyleTests(unittest.TestCase):
         self.assertNotIn("'${brand}'", rule)
         self.assertNotIn("'${operator}'", rule)
         self.assertNotIn("'${ref}'", rule)
+
+    def test_existing_post_office_keeps_same_type(self) -> None:
+        points = POINTS.read_text(encoding='utf-8')
+        self.assertIn('amenity=post_office [0x2f05 resolution 24]', points)
 
     def test_post_office_type_uses_visible_small_font(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
