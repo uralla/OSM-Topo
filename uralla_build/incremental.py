@@ -1,4 +1,4 @@
-"""Fast rebuild paths that reuse validated outputs from a previous successful build."""
+"""Fast rebuild paths that reuse existing splitter outputs."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from .publish import publish_product
 from .runner import StageRunner
 
 
-def _latest_successful_splitter_build(
+def _latest_reusable_splitter_build(
     history: HistoryStore,
     builds_root: Path,
     product: str,
@@ -24,8 +24,8 @@ def _latest_successful_splitter_build(
     with history.connect() as connection:
         rows = connection.execute(
             """SELECT build_id FROM builds
-               WHERE product = ? AND status = 'success'
-               ORDER BY finished_at DESC""",
+               WHERE product = ?
+               ORDER BY COALESCE(finished_at, created_at) DESC""",
             (product,),
         ).fetchall()
 
@@ -36,7 +36,7 @@ def _latest_successful_splitter_build(
             return build_id, tiles
 
     raise StageError(
-        f"no successful build with reusable splitter output exists for {product!r}; "
+        f"no build with reusable splitter output exists for {product!r}; "
         "run one full build first"
     )
 
@@ -51,7 +51,7 @@ def rebuild_from_mkgmap(
     tools_lock_path: str | Path,
     build_id: str | None = None,
 ) -> dict[str, object]:
-    """Run only mkgmap and publication using splitter output from latest full success."""
+    """Run only mkgmap and publication using latest reusable splitter output."""
 
     products = manifest.get("products")
     product = products.get(product_key) if isinstance(products, Mapping) else None
@@ -59,7 +59,7 @@ def rebuild_from_mkgmap(
         raise StageError(f"unknown product: {product_key}")
 
     runner = StageRunner(host.paths.work_root)
-    previous_id, previous_tiles = _latest_successful_splitter_build(
+    previous_id, previous_tiles = _latest_reusable_splitter_build(
         runner.history,
         runner.builds_root,
         product_key,
