@@ -1,0 +1,38 @@
+name: Remove dead bus station comment
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/remove-dead-bus-station-comment.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove dead bus station comment
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("styles/uralla/points")
+          text = path.read_text(encoding="utf-8")
+          target = "# amenity=bus_station [0x2f08 resolution 21]\n"
+          count = text.count(target)
+          if count != 1:
+              raise SystemExit(f"expected exactly one dead bus station comment, found {count}")
+          path.write_text(text.replace(target, "", 1), encoding="utf-8")
+          Path(".github/workflows/remove-dead-bus-station-comment.yml").unlink()
+      - name: Commit cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/remove-dead-bus-station-comment.yml
+          git commit -m "Remove dead bus station comment"
+          git pull --rebase origin main
+          git push
