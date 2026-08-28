@@ -4404,6 +4404,38 @@ DayXpm="12 13 19 2"   Colormode=16
 
 [_point]
 Type=0x02c
+SubType=0x07
+;GRMN_TYPE: Business - Attractions/ZOO/Zoo/Non NT
+String1=0x19,зоопарк
+String2=0x04,zoo
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="14 14 3 1"   Colormode=16
+"!	c #000000"
+"#	c #FFFFFF"
+" 	c none"
+"    !!!!      "
+"   !####!     "
+"  !######!    "
+" !##!##!##!   "
+" !########!   "
+"  !######!    "
+"   !####!     "
+"    !!!!      "
+"   !!  !!     "
+"  !!    !!    "
+" !!      !!   "
+"!!        !!  "
+"            ! "
+"              "
+;12345678901234
+[end]
+
+
+[_point]
+Type=0x02c
 SubType=0x08
 ;GRMN_TYPE: Business - Attractions/ARENA/Arena or track/Non NT
 String1=0x01,
