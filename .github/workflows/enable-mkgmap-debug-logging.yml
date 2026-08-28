@@ -1,0 +1,49 @@
+name: Enable temporary mkgmap debug logging
+
+"on":
+  push:
+    paths:
+      - '.github/workflows/enable-mkgmap-debug-logging.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch build plan
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('uralla_build/build_plan.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''    mkgmap_args = repo_path(\n        repo, _text(defaults.get("mkgmap_args"), "defaults.mkgmap_args")\n    )\n'''
+          new = old + '''    mkgmap_logging = repo / "config" / "mkgmap-logging.properties"\n'''
+          if 'mkgmap_logging = repo / "config" / "mkgmap-logging.properties"' not in text:
+              if old not in text:
+                  raise SystemExit('mkgmap_args anchor not found')
+              text = text.replace(old, new, 1)
+          old2 = '''    mkgmap_command = [\n        "java",\n        "-jar",\n'''
+          new2 = '''    mkgmap_command = [\n        "java",\n        f"-Dlog.config={mkgmap_logging}",\n        "-jar",\n'''
+          if 'f"-Dlog.config={mkgmap_logging}"' not in text:
+              if old2 not in text:
+                  raise SystemExit('mkgmap command anchor not found')
+              text = text.replace(old2, new2, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm '.github/workflows/enable-mkgmap-debug-logging.yml'
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/build_plan.py .github/workflows/enable-mkgmap-debug-logging.yml
+          git commit -m 'Enable temporary mkgmap debug logging'
+          git pull --rebase origin main
+          git push origin main
