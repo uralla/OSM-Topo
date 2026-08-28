@@ -100,12 +100,10 @@ amenity=fountain [0x11502 resolution 23]
 craft=beekeeper [0x11505 resolution 24]
 
 #aeroway=airport [0x5900 resolution 18]
-aeroway=airport [0x2f04 resolution 19]
-aeroway=aerodrome [0x2f04 resolution 19]
+(aeroway=aerodrome | aeroway=airport | amenity=airport) [0x2f04 resolution 19]
 aeroway=helipad [0x11803 resolution 23]
 aeroway=terminal [0x2f04 resolution 22]
 
-amenity=airport [0x2f04 resolution 19]
 amenity=atm [0x2f06 resolution 24]
 amenity=arts_centre [0x3005 resolution 24]
 amenity=bank [0x2f06 resolution 24]
