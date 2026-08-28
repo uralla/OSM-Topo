@@ -1,0 +1,42 @@
+name: Update lean-to comment
+
+"on":
+  push:
+    paths:
+      - '.github/workflows/update-lean-to-comment.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update lean-to comment
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = '# Standard shelter plus legacy lean_to fallback share the existing shelter icon.\ntourism=lean_to [0x2b05 resolution 24]'
+          new = '# Legacy tourism=lean_to fallback; amenity=shelter is handled in inc/priority_points.\ntourism=lean_to [0x2b05 resolution 24]'
+          if old not in s:
+              raise SystemExit('target lean-to comment not found')
+          if s.count(old) != 1:
+              raise SystemExit(f'target lean-to comment found {s.count(old)} times')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/update-lean-to-comment.yml
+          git add styles/uralla/points
+          git commit -m "Clarify legacy lean-to comment"
+          git pull --rebase origin main
+          git push origin HEAD:main
