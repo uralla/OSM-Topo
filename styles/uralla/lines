@@ -85,10 +85,6 @@ aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution
 # Mark highways with the toll flag
 highway=* & (toll=yes|toll=true) { set mkgmap:toll=yes }
 
-#####
-# дополнительный тип односторонних дорог со стрелками
-highway=* & oneway=yes & highway!=construction & highway!=proposed [0x10f11 resolution 24 continue]
-
 # Добавляем запреты проезда для машин
 highway=* & motorcar=no | highway=* & vehicle=no | highway=* & motorcar=private | highway=* & motor_vehicle=no | highway=* & access=private {add motorcar=no; add taxi=no; add hgv=no}
 

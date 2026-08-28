@@ -60,24 +60,6 @@ barrier=kissing_gate | barrier=stile | barrier=block
   set ref='${ref|def:}-';
 }
 
-# ### Точки зданий с адресом для поиска
-# man_made=* & area=yes & addr:housenumber=* 
-# 	{name '${addr:street} ${addr:housenumber} ${mkgmap:admin_level7}'  | '${addr:housenumber} ${mkgmap:admin_level7}' 
-# 	    | '${addr:street} ${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level8}'} [0x6405 resolution 24 continue]
-# (building=* | bridge=yes & area=yes) & addr:housenumber=* 
-# 	{name '${addr:street} ${addr:housenumber} ${mkgmap:admin_level7}'  | '${addr:housenumber} ${mkgmap:admin_level7}' 
-# 	    | '${addr:street} ${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level8}'} [0x6405 resolution 24 continue]
-# man_made=* & area!=no & (man_made!=door & man_made!=embankment & man_made!=breakwater
-#    & man_made!=cable_line & man_made!=cutline & man_made!=cutting
-#    & man_made!=levee & man_made!=trench
-#    & man_made!=groyne & man_made!=reinforced_slope) & addr:housenumber=*
-# 	{name '${addr:street} ${addr:housenumber} ${mkgmap:admin_level7}'  | '${addr:housenumber} ${mkgmap:admin_level7}' 
-# 	    | '${addr:street} ${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level8}'} [0x6405 resolution 24 continue]
-# historic=ruins & building=yes & addr:housenumber=*
-# 	{name '${addr:street} ${addr:housenumber} ${mkgmap:admin_level7}'  | '${addr:housenumber} ${mkgmap:admin_level7}' 
-# 	    | '${addr:street} ${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level11}' | '${addr:housenumber} ${mkgmap:admin_level8}'} [0x6405 resolution 24 continue]
-# ###
-
 ### Убираем лишние теги из точек населенных пунктов
 place=* {delete admin_level delete boundary}
 ###
