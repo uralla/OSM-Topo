@@ -12,6 +12,7 @@ class MuseumPointStyleTests(unittest.TestCase):
             line for line in points.splitlines() if not line.lstrip().startswith('#')
         )
 
+        # Current and legacy museum tags must render identically through one rule.
         unified = '(historic=museum | tourism=museum) [0x2c02 resolution 24]'
         self.assertIn(unified, active_points)
         self.assertNotIn('historic=museum [0x2c02 resolution 24]', active_points.replace(unified, ''))
