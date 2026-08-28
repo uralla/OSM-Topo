@@ -24,27 +24,26 @@ jobs:
           lines = Path('styles/uralla/lines')
           s = lines.read_text()
           old = "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]"
-          new = "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x10f1e resolution 20]"
+          new = "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x11000 resolution 20]"
           assert s.count(old) == 1
           lines.write_text(s.replace(old, new, 1))
 
           typ = Path('styles/uralla.txt')
           t = typ.read_text()
-          assert 'Type=0x10f1e' not in t
-          m = re.search(r'(\[_line\]\nType=0x10f1c\n.*?\n\[end\])', t, re.S)
-          assert m, 'reference taxiway type 0x10f1c not found'
-          block = m.group(1)
-          block = block.replace('Type=0x10f1c', 'Type=0x10f1e', 1)
-          block = block.replace('String1=0x19,рулёжная дорожка', 'String1=0x19,взлётно-посадочная полоса', 1)
-          block = block.replace('String2=0x04,taxiway', 'String2=0x04,runway', 1)
-          # Make the diagnostic runway visually solid and distinct from the dashed taxiway.
-          block = re.sub(
-              r'Xpm="32 2 2  1"\n"! c #[0-9A-Fa-f]{6}"\n"  c none"\n".*?"\n".*?"',
-              'Xpm="32 4 2  1"\n"! c #000000"\n"  c none"\n"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"\n"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"\n"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"\n"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"',
-              block,
-              count=1,
-              flags=re.S,
-          )
+          assert 'Type=0x11000' not in t
+          m = re.search(r'(\[_line\]\nType=0x10f1f\n.*?\n\[end\])', t, re.S)
+          assert m, 'reference line type 0x10f1f not found'
+          block = '''[_line]
+Type=0x11000
+; temporary diagnostic runway line type
+UseOrientation=N
+LineWidth=8
+Xpm="0 0 1 0"
+"1 c #000000"
+String1=0x19,взлётно-посадочная полоса
+String2=0x04,runway
+ExtendedLabels=N
+[end]'''
           t = t[:m.end()] + '\n\n' + block + t[m.end():]
           typ.write_text(t)
           PY
