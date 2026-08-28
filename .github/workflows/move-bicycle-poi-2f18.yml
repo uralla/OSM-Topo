@@ -22,7 +22,6 @@ jobs:
           from pathlib import Path
           import re
 
-          # Style: only bicycle shop / repair station type changes.
           p = Path('styles/uralla/inc/priority_points')
           s = p.read_text(encoding='utf-8')
           old1 = "shop=bicycle { name '${name}' | 'велосипеды' } [0x2f0d resolution 23]"
@@ -31,48 +30,47 @@ jobs:
           new2 = "amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]"
           assert s.count(old1) == 1, s.count(old1)
           assert s.count(old2) == 1, s.count(old2)
-          s = s.replace(old1, new1, 1).replace(old2, new2, 1)
-          p.write_text(s, encoding='utf-8')
+          p.write_text(s.replace(old1, new1, 1).replace(old2, new2, 1), encoding='utf-8')
 
-          # TYP: repurpose the existing dedicated bicycle block only.
           p = Path('styles/uralla.txt')
           s = p.read_text(encoding='utf-8')
           m = re.search(r'(?ms)^\[_point\]\nType=0x115\nSubType=0x0a\n.*?^\[end\]\n?', s)
           assert m, 'bicycle TYP block 0x115/0x0a not found'
-
-          block = '''[_point]
-Type=0x02f
-SubType=0x18
-;GRMN_TYPE: Business - Services/Custom bicycle service POI
-String1=0x19,велосипеды
-String2=0x04,bicycle
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-DayXpm="14 14 3 1"   Colormode=16
-"!\tc #0000FF"
-"#\tc #FFFFFF"
-" \tc none"
-"   ########   "
-" ############ "
-" ############ "
-"###!!!##!!####"
-"####!###!!####"
-"####!!!!!#####"
-"#####!#!!!####"
-"###!!!!##!!###"
-"##!#!!##!!#!##"
-"##!##!##!##!##"
-"###!!####!!###"
-" ############ "
-" ############ "
-"   ########   "
-;12345678901234
-[end]
-'''
-          s = s[:m.start()] + block + s[m.end():]
-          p.write_text(s, encoding='utf-8')
+          lines = [
+              '[_point]',
+              'Type=0x02f',
+              'SubType=0x18',
+              ';GRMN_TYPE: Business - Services/Custom bicycle service POI',
+              'String1=0x19,велосипеды',
+              'String2=0x04,bicycle',
+              'ExtendedLabels=Y',
+              'FontStyle=SmallFont',
+              'CustomColor=No',
+              'ContourColor=No',
+              'DayXpm="14 14 3 1"   Colormode=16',
+              '"!\tc #0000FF"',
+              '"#\tc #FFFFFF"',
+              '" \tc none"',
+              '"   ########   "',
+              '" ############ "',
+              '" ############ "',
+              '"###!!!##!!####"',
+              '"####!###!!####"',
+              '"####!!!!!#####"',
+              '"#####!#!!!####"',
+              '"###!!!!##!!###"',
+              '"##!#!!##!!#!##"',
+              '"##!##!##!##!##"',
+              '"###!!####!!###"',
+              '" ############ "',
+              '" ############ "',
+              '"   ########   "',
+              ';12345678901234',
+              '[end]',
+              '',
+          ]
+          block = '\n'.join(lines)
+          p.write_text(s[:m.start()] + block + s[m.end():], encoding='utf-8')
           PY
       - name: Remove one-shot workflow
         run: rm .github/workflows/move-bicycle-poi-2f18.yml
