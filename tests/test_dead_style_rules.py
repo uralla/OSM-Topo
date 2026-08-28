@@ -25,7 +25,9 @@ class DeadStyleRuleTests(unittest.TestCase):
     def test_cave_entrance_has_only_priority_rule(self) -> None:
         priority = (STYLE / "inc" / "priority_points").read_text(encoding="utf-8")
         landuse = (STYLE / "inc" / "landuse_points").read_text(encoding="utf-8")
-        self.assertIn("natural=cave_entrance [0x11602 resolution 23]", priority)
+        self.assertIn("natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23]", priority)
+        self.assertIn("natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]", priority)
+        self.assertNotIn("natural=cave_entrance [0x11602", priority)
         self.assertNotIn("natural=cave_entrance [0x6601", landuse)
 
     def test_residential_polygon_has_no_unreachable_duplicate(self) -> None:
