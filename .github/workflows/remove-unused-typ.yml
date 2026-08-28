@@ -1,0 +1,46 @@
+name: Remove unused TYP point
+
+on:
+  push:
+    paths:
+      - .github/workflows/remove-unused-typ.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Remove unused 0x2e0d point and self-delete
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('styles/uralla.txt')
+          text = path.read_text(encoding='utf-8')
+          pattern = re.compile(
+              r'\n\n\[_point\]\n'
+              r'Type=0x02e\n'
+              r'SubType=0x0d\n'
+              r'.*?\n\[end\]\n',
+              re.S,
+          )
+          updated, count = pattern.subn('\n', text)
+          if count != 1:
+              raise SystemExit(f'expected exactly one 0x2e0d point section, found {count}')
+          path.write_text(updated, encoding='utf-8')
+          PY
+
+          rm .github/workflows/remove-unused-typ.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla.txt .github/workflows/remove-unused-typ.yml
+          git commit -m 'Remove unused 0x2e0d TYP point'
+          git push
