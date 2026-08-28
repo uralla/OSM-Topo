@@ -12,7 +12,7 @@ class TopoMarkerPointTests(unittest.TestCase):
     def test_cairn_and_survey_point_have_dedicated_types(self) -> None:
         priority = PRIORITY.read_text(encoding='utf-8')
         landuse = LANDUSE.read_text(encoding='utf-8')
-        self.assertIn("man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 23]", priority)
+        self.assertIn("man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]", priority)
         self.assertIn('man_made=survey_point {name "${name} (${ele})" | "${name}" | "${ref}" | "геодезический пункт"} [0x11508 resolution 24]', landuse)
         self.assertNotIn('man_made=cairn [0x2f18 resolution 23]', priority)
         self.assertNotIn('man_made=survey_point {name "${name} (${ele})"} [0x6617 resolution 24]', landuse)
