@@ -1,0 +1,52 @@
+name: Restore hot spring TYP
+
+"on":
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/restore-hot-spring-typ.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add 0x13703 point and remove workflow
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('styles/uralla.txt')
+          text = path.read_text(encoding='utf-8')
+          if re.search(r'(?mi)^Type=0x137\s*$.*?^SubType=0x03\s*$', text, re.S):
+              raise SystemExit('0x137/0x03 already exists')
+
+          pattern = re.compile(
+              r'(?ms)^\[_point\]\nType=0x065\nSubType=0x11\n.*?^\[end\]\n'
+          )
+          match = pattern.search(text)
+          if not match:
+              raise SystemExit('source 0x065/0x11 spring TYP block not found')
+          block = match.group(0)
+          hot = block.replace('Type=0x065', 'Type=0x137', 1)
+          hot = hot.replace('SubType=0x11', 'SubType=0x03', 1)
+          hot = re.sub(r'^;GRMN_TYPE:.*$', '; Historical custom POI for natural=hot_spring.', hot, count=1, flags=re.M)
+          hot = re.sub(r'^String1=.*$', 'String1=0x19,горячий источник', hot, count=1, flags=re.M)
+          hot = re.sub(r'^String2=.*$', 'String2=0x04,hot spring', hot, count=1, flags=re.M)
+          text = text[:match.end()] + '\n' + hot + text[match.end():]
+          path.write_text(text, encoding='utf-8')
+          PY
+          rm .github/workflows/restore-hot-spring-typ.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla.txt .github/workflows/restore-hot-spring-typ.yml
+          git commit -m "Restore hot spring TYP 0x13703"
+          git pull --rebase origin main
+          git push origin main
