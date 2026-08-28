@@ -4305,8 +4305,7 @@ SubType=0x04
 ;GRMN_TYPE: Business - Attractions/LANDMARK/Landmark/Non NT
 String1=0x19,достопримечательность
 String2=0x04,landmark
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+ExtendedLabels=N
 DayXpm="14 10 3 1"   Colormode=16
 "!	c #FFFFFF"
 "#	c #000000"
