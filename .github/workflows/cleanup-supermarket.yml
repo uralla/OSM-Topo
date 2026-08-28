@@ -1,0 +1,33 @@
+name: Cleanup supermarket legacy rule
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-supermarket.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove legacy supermarket fallback
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old = "# amenity=supermarket is superceded by shop=supermarket\namenity=supermarket [0x2e02 resolution 23]\n"
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, '', 1))
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-supermarket.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-supermarket.yml
+          git commit -m "Remove legacy supermarket fallback"
+          git push
