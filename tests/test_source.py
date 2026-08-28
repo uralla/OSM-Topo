@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib.error import HTTPError
 import unittest
+from unittest.mock import patch
 
 from uralla_build.errors import StageError
 from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
-from uralla_build.source import ensure_source, load_source_downloads
+from uralla_build.source import _download, ensure_source, load_source_downloads
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +42,21 @@ def _config() -> dict[str, object]:
     }
 
 
+class _Response:
+    def __init__(self, payload: bytes) -> None:
+        self._stream = BytesIO(payload)
+        self.headers = {"Content-Length": str(len(payload))}
+
+    def __enter__(self) -> "_Response":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        self._stream.close()
+
+    def read(self, size: int = -1) -> bytes:
+        return self._stream.read(size)
+
+
 class SourceDownloadTests(unittest.TestCase):
     def test_managed_download_config_includes_crimea(self) -> None:
         config = load_source_downloads(PROJECT_ROOT / "config/source-downloads.yaml")
@@ -49,6 +67,43 @@ class SourceDownloadTests(unittest.TestCase):
             "https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf",
         )
         self.assertEqual(crimea["refresh_days"], 1)
+
+    def test_transient_503_is_retried_then_download_succeeds(self) -> None:
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "source.osm.pbf"
+            error = HTTPError(
+                "https://example.invalid/source.osm.pbf",
+                503,
+                "Service Unavailable",
+                hdrs=None,
+                fp=None,
+            )
+            with patch("uralla_build.source.urlopen", side_effect=[error, _Response(b"pbf-data")]) as opener:
+                with patch("uralla_build.source.time.sleep") as sleeper:
+                    _download("https://example.invalid/source.osm.pbf", target)
+
+            self.assertEqual(target.read_bytes(), b"pbf-data")
+            self.assertEqual(opener.call_count, 2)
+            sleeper.assert_called_once_with(5)
+
+    def test_permanent_404_is_not_retried(self) -> None:
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "source.osm.pbf"
+            error = HTTPError(
+                "https://example.invalid/source.osm.pbf",
+                404,
+                "Not Found",
+                hdrs=None,
+                fp=None,
+            )
+            with patch("uralla_build.source.urlopen", side_effect=error) as opener:
+                with patch("uralla_build.source.time.sleep") as sleeper:
+                    with self.assertRaises(HTTPError):
+                        _download("https://example.invalid/source.osm.pbf", target)
+
+            self.assertEqual(opener.call_count, 1)
+            sleeper.assert_not_called()
+            self.assertFalse(target.exists())
 
     def test_missing_source_is_downloaded_and_validated(self) -> None:
         with TemporaryDirectory() as directory:
