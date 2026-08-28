@@ -1,0 +1,76 @@
+name: Fix abandoned airfield visual routing
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-abandoned-airfield-visual-routing.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Apply visual-preserving routing rules
+        shell: bash
+        run: |
+          cat > /tmp/update.py <<'PY'
+          from pathlib import Path
+          import re
+
+          lines_path = Path('styles/uralla/lines')
+          s = lines_path.read_text()
+          old = """# аэропорты
+# Abandoned/disused paved runways, taxiways and taxilanes are useful real-world roads.
+# Treat them like a good paved unclassified road; active airfield ways remain non-routable.
+((abandoned:aeroway=runway | abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=runway | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
+((aeroway=runway | aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
+aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]
+(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]"""
+          new = """# аэропорты
+# [CUSTOM/АВТОРСКОЕ] Abandoned/disused paved airfield ways keep their aviation visuals,
+# but become routable like a good paved unclassified road.
+((abandoned:aeroway=runway | disused:aeroway=runway) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x27 resolution 20 continue]
+((abandoned:aeroway=runway | disused:aeroway=runway) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1b road_class=1 road_speed=4 resolution 22]
+(aeroway=runway & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x27 resolution 20 continue]
+(aeroway=runway & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1b road_class=1 road_speed=4 resolution 22]
+((abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1a road_class=1 road_speed=4 resolution 23]
+((aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x1a road_class=1 road_speed=4 resolution 23]
+aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]
+(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]"""
+          assert s.count(old) == 1
+          lines_path.write_text(s.replace(old, new, 1))
+
+          typ_path = Path('styles/uralla.txt')
+          t = typ_path.read_text()
+          assert not re.search(r'\[_line\]\nType=0x0?1b\n', t, re.I)
+          ref = re.search(r'(\[_line\]\nType=0x1a\n.*?\n\[end\])', t, re.S)
+          assert ref, '0x1a taxiway line block not found'
+          carrier = "\n".join([
+              '[_line]',
+              'Type=0x1b',
+              '; Invisible routable carrier for abandoned/disused paved runways.',
+              'UseOrientation=N',
+              'Xpm="0 0 1 0"',
+              '"1 c none"',
+              'String1=0x19,заброшенная ВПП',
+              'String2=0x04,abandoned runway routing',
+              'ExtendedLabels=N',
+              '[end]',
+          ])
+          typ_path.write_text(t[:ref.end()] + '\n\n' + carrier + t[ref.end():])
+          PY
+          python /tmp/update.py
+      - name: Commit update and remove workflow
+        shell: bash
+        run: |
+          rm .github/workflows/fix-abandoned-airfield-visual-routing.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/lines styles/uralla.txt .github/workflows/fix-abandoned-airfield-visual-routing.yml
+          git commit -m "Preserve airfield visuals for abandoned routing"
+          git push
