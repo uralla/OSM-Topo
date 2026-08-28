@@ -22,8 +22,11 @@ shop=bicycle [0x2f0d resolution 23]
 # Keep labels simple: use the real name, otherwise a generic designation.
 (amenity=parcel_locker | post_office=post_partner | shop=outpost | amenity=vending_machine & vending~'.*parcel_pickup.*') { name '${name}' | 'пункт выдачи' } [0x2f05 resolution 24]
 
-# Motor-vehicle shops/services are one class.
-(shop=car_parts | shop=car_rental | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
+# Car rental and car sharing are one transport-service POI.
+(amenity=car_rental | amenity=car_sharing | shop=car_rental) [0x2f0d resolution 24]
+
+# Motor-vehicle shops/services are one class; rental is handled above.
+(shop=car_parts | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
