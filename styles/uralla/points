@@ -19,9 +19,6 @@ barrier=* & emergency=*  { set mkgmap:emergency='${emergency|subst:private=>no}'
 barrier=* & delivery=*   { set mkgmap:delivery='${delivery|subst:private=>no}' }                  
 barrier=* & access=*     { addaccess '${access|subst:private=>no}' }
 
-# часы работы добавляем в почтовый индекс
-opening_hours=* {set addr:postcode = '${addr:postcode} open ${opening_hours}' | 'open ${opening_hours}'}
-
 barrier=bollard | barrier=cycle_barrier 
     { add mkgmap:bicycle=yes; 
       add mkgmap:foot=yes; 
@@ -42,9 +39,6 @@ barrier=kissing_gate | barrier=stile | barrier=block
     { add mkgmap:foot=yes; 
       addaccess no;
       set mkgmap:road-speed=0; }
-
-#internet_access=yes { name 'Internet ${name}' | 'Internet' } [0x2f18 resolution 24 continue]
-#internet_access=* & internet_access!=no & internet_access!=yes { name 'Internet(${internet_access}) ${name|def:}' } [0x2f18 resolution 24 continue]
 
 (public_transport=platform | highway=bus_stop | railway=tram_stop | railway=halt | railway=station)
 & (ref=* | route_ref=*) {
