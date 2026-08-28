@@ -6504,37 +6504,26 @@ DayXpm="12 19 4 1"   Colormode=16
 [_point]
 Type=0x137
 SubType=0x03
-; Historical custom POI for natural=hot_spring.
+;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
 String1=0x19,горячий источник
 String2=0x04,hot spring
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="12 19 4 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #0000B4"
-"%	c #0065FF"
+ExtendedLabels=N
+DayXpm="12 12 3 1"   Colormode=16
+"!	c #FF0000"
+"#	c #FFFFFF"
 "  	c none"
-"   !!!!!!   "
-"  !!####!!  "
-" !!######!! "
-"!!###%%%%#!!"
-"!##########!"
-"!#%%%%%####!"
-"!##########!"
-"!!###%%%##!!"
-" !!######!! "
-"  !!####!!  "
-"  !!###!!   "
-"  !###!!    "
-"  !###!     "
-"  !!##!!    "
-"   !!##!    "
-"   !!##!    "
-"   !##!!    "
-"   !#!!     "
-"   !!!      "
+"  ########  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  ###!!###  "
+"   #!!##    "
+"   ##!!##   "
+"    ##!!#   "
+"   ##!!##   "
+"   #!!##    "
+"   ####     "
 ;123456789012
 [end]
 
