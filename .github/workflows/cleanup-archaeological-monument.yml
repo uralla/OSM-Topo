@@ -21,10 +21,14 @@ jobs:
           from pathlib import Path
           p = Path('styles/uralla/points')
           s = p.read_text()
-          old = "historic=archaeological_site [0x2c04 resolution 24]\nhistoric=monument [0x2c04 resolution 24]\n"
-          new = "(historic=archaeological_site | historic=monument) [0x2c04 resolution 24]\n"
-          assert s.count(old) == 1
-          p.write_text(s.replace(old, new, 1))
+          archaeological = "historic=archaeological_site [0x2c04 resolution 24]\n"
+          monument = "historic=monument [0x2c04 resolution 24]\n"
+          unified = "(historic=archaeological_site | historic=monument) [0x2c04 resolution 24]\n"
+          assert s.count(archaeological) == 1
+          assert s.count(monument) == 1
+          s = s.replace(archaeological, unified, 1)
+          s = s.replace(monument, '', 1)
+          p.write_text(s)
           PY
       - name: Commit cleanup and remove workflow
         run: |
