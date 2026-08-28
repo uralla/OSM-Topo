@@ -234,7 +234,7 @@ tourism=aquarium [0x2c07 resolution 24]
 tourism=camp_site {name '${name}' | 'кемпинг'} [0x4a01 resolution 23-23 continue]
 tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
 tourism=chalet [0x11509 resolution 21]
-# Standard shelter plus legacy lean_to fallback share the existing shelter icon.
+# Legacy tourism=lean_to fallback; amenity=shelter is handled in inc/priority_points.
 tourism=lean_to [0x2b05 resolution 24]
 (historic=museum | tourism=museum) [0x2c02 resolution 24]
 
