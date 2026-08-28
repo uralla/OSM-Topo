@@ -244,7 +244,6 @@ sport=swimming [0x2d09 resolution 24]
 # аналогичных на всех полигональных зданиях! Волшебное слово - "& mkgmap:area2poi!=true"
 man_made=geoglyph [0x2c02 resolution 24]
 
-tourism=attraction & historic=* [0x2c02 resolution 24]
 tourism=attraction [0x2c04 resolution 24 continue]
 tourism=artwork [0x2c04 resolution 24]
 tourism=aquarium [0x2c07 resolution 24]
