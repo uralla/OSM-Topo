@@ -4024,6 +4024,33 @@ DayXpm="14 11 3 1"   Colormode=16
 
 
 [_point]
+Type=0x115
+SubType=0x09
+;GRMN_TYPE: Custom POI/CHALET/Detached holiday cottage
+String1=0x19,коттедж
+String2=0x04,chalet
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="14 11 2 1"   Colormode=0
+"!	c #000000"
+"#	c #FFFFFF"
+"!!!!!!!!!!!!!!"
+"!############!"
+"!#!##########!"
+"!#!########!#!"
+"!#!!!!#####!#!"
+"!#!!!!!!!!!!#!"
+"!#!!!!!!!!!!#!"
+"!#!!######!!#!"
+"!#!!######!!#!"
+"!############!"
+"!!!!!!!!!!!!!!"
+;12345678901234
+[end]
+
+[_point]
 Type=0x02b
 SubType=0x02
 ;GRMN_TYPE: Business - Lodging/BED_AND_BREAKFAST/Bed and breakfast inn/Non NT
