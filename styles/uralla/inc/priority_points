@@ -17,6 +17,9 @@ uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete 
 # Bicycle shop remains a distinct tourist-useful POI.
 # [CUSTOM/АВТОРСКОЕ] Bicycle services use a dedicated visible-label POI.
 shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 23]
+amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' } [0x2f18 resolution 24]
+# Bicycle parking is intentionally not rendered for now.
+# amenity=bicycle_parking { name '${name}' | 'велопарковка' } [0x2f18 resolution 24]
 
 # Parcel pickup points: current OSM tags plus the deprecated vending-machine form.
 # Keep labels simple: use the real name, otherwise a generic designation.
@@ -88,6 +91,8 @@ man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]
 
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
+(emergency=defibrillator | amenity=defibrillator) { name '${name}' | 'дефибриллятор' } [0x3002 resolution 24]
+emergency=first_aid_kit { name '${name}' | 'аптечка' } [0x3002 resolution 24]
 
 # Bicycle repair station shares the dedicated bicycle-service POI at the closest detail level.
 amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]

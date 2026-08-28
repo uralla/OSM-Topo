@@ -71,7 +71,7 @@ include 'inc/priority_points';
 # Settlement rendering is defined entirely in inc/place_points.
 
 # Фонтан
-amenity=fountain [0x11502 resolution 23]
+amenity=fountain [0x2f19 resolution 23]
 
 craft=beekeeper [0x11505 resolution 24]
 
