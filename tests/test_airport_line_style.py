@@ -30,6 +30,7 @@ class AirportLineStyleTests(unittest.TestCase):
         block = typ[start:end]
         self.assertIn('String1=0x19,рулёжная дорожка', block)
         self.assertIn('String2=0x04,taxiway', block)
+        self.assertNotIn('Type=0x10f1c', typ)
 
 
 if __name__ == '__main__':
