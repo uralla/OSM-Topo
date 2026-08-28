@@ -22,8 +22,8 @@ jobs:
           from pathlib import Path
           p = Path('styles/uralla.txt')
           s = p.read_text(encoding='utf-8')
-          old = '"  \\tc none"'
-          new = '" \\tc none"'
+          old = '"  \tc none"'
+          new = '" \tc none"'
           if old not in s:
               raise SystemExit('target line not found')
           if s.count(old) != 1:
