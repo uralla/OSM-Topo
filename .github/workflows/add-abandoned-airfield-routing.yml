@@ -3,7 +3,7 @@ name: Add abandoned airfield routing
 on:
   push:
     paths:
-      - '.github/workflows/add-abandoned-airfield-routing.yml'
+      - .github/workflows/add-abandoned-airfield-routing.yml
 
 permissions:
   contents: write
@@ -15,48 +15,53 @@ jobs:
       - uses: actions/checkout@v4
       - name: Sync latest main
         run: git pull --rebase origin main
-      - name: Add abandoned airfield routing and taxiway TYP
+      - name: Apply airfield changes
+        shell: bash
         run: |
-          python - <<'PY'
+          cat > /tmp/update.py <<'PY'
           from pathlib import Path
           import re
 
-          lines_path = Path('styles/uralla/lines')
+          lines_path = Path("styles/uralla/lines")
           s = lines_path.read_text()
           anchor = "# аэропорты\naeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]\n(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]"
           assert s.count(anchor) == 1
-          routing = """# аэропорты
-# Abandoned/disused paved runways and taxiways are useful real-world roads.
-# Treat them like a good paved unclassified road; active airfield ways remain non-routable.
-((abandoned:aeroway=runway | abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=runway | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
-((aeroway=runway | aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]
-aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]
-(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]"""
+          routing = "\n".join([
+              "# аэропорты",
+              "# Abandoned/disused paved runways, taxiways and taxilanes are useful real-world roads.",
+              "# Treat them like a good paved unclassified road; active airfield ways remain non-routable.",
+              "((abandoned:aeroway=runway | abandoned:aeroway=taxiway | abandoned:aeroway=taxilane | disused:aeroway=runway | disused:aeroway=taxiway | disused:aeroway=taxilane) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]",
+              "((aeroway=runway | aeroway=taxiway | aeroway=taxilane) & (abandoned=yes | disused=yes) & (surface=asphalt | surface=concrete | surface=concrete:lanes | surface=concrete:plates | surface=paved)) [0x06 road_class=1 road_speed=4 resolution 22]",
+              "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]",
+              "(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]",
+          ])
           lines_path.write_text(s.replace(anchor, routing, 1))
 
-          typ_path = Path('styles/uralla.txt')
+          typ_path = Path("styles/uralla.txt")
           t = typ_path.read_text()
-          # There is a polygon draw-order 0x01a, but no line definition for 0x1a yet.
-          assert not re.search(r'\[_line\]\nType=0x0?1a\n', t, re.I)
-          ref = re.search(r'(\[_line\]\nType=0x10f1c\n.*?\n\[end\])', t, re.S)
-          assert ref, 'reference taxiway design 0x10f1c not found'
-          block = """[_line]
-Type=0x1a
-;GRMN_TYPE: Road/AIRPORT_TAXIWAY/Taxiway
-UseOrientation=N
-LineWidth=6
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #FFFFFF"
-"2 c #000000"
-String1=0x19,рулёжная дорожка
-String2=0x04,taxiway
-ExtendedLabels=N
-[end]"""
-          t = t[:ref.start()] + block + '\n\n' + t[ref.start():]
-          typ_path.write_text(t)
+          assert not re.search(r"\[_line\]\nType=0x0?1a\n", t, re.I)
+          ref = re.search(r"(\[_line\]\nType=0x10f1c\n.*?\n\[end\])", t, re.S)
+          assert ref, "reference taxiway design 0x10f1c not found"
+          block = "\n".join([
+              "[_line]",
+              "Type=0x1a",
+              ";GRMN_TYPE: Road/AIRPORT_TAXIWAY/Taxiway",
+              "UseOrientation=N",
+              "LineWidth=6",
+              "BorderWidth=1",
+              "Xpm=\"0 0 2 0\"",
+              "\"1 c #FFFFFF\"",
+              "\"2 c #000000\"",
+              "String1=0x19,рулёжная дорожка",
+              "String2=0x04,taxiway",
+              "ExtendedLabels=N",
+              "[end]",
+          ])
+          typ_path.write_text(t[:ref.start()] + block + "\n\n" + t[ref.start():])
           PY
+          python /tmp/update.py
       - name: Commit update and remove workflow
+        shell: bash
         run: |
           rm .github/workflows/add-abandoned-airfield-routing.yml
           git config user.name github-actions[bot]
