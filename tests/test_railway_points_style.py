@@ -52,6 +52,22 @@ class RailwayPointsStyleTests(unittest.TestCase):
         self.assertIn("ExtendedLabels=Y", section)
         self.assertIn("FontStyle=NoLabel (invisible)", section)
 
+    def test_signal_and_buffer_stop_are_close_zoom_and_unlabelled(self) -> None:
+        self.assertIn("railway=buffer_stop [0x1341d resolution 24]", self.text)
+        self.assertIn("railway=signal [0x1341f resolution 24]", self.text)
+
+        typ = TYP.read_text(encoding="utf-8")
+        for subtype, designation in (("1d", "тупик"), ("1f", "семафор")):
+            match = re.search(
+                rf"(?ms)^\[_point\]\nType=0x134\nSubType=0x{subtype}\n.*?^\[end\]",
+                typ,
+            )
+            self.assertIsNotNone(match)
+            section = match.group(0)
+            self.assertIn(f"String1=0x19,{designation}", section)
+            self.assertIn("ExtendedLabels=Y", section)
+            self.assertIn("FontStyle=NoLabel (invisible)", section)
+
 
 if __name__ == "__main__":
     unittest.main()
