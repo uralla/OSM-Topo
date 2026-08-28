@@ -1,9 +1,9 @@
 name: Add zoo TYP block
 
-"on":
+on:
   push:
     paths:
-      - ".github/workflows/add-zoo-typ.yml"
+      - .github/workflows/add-zoo-typ.yml
 
 permissions:
   contents: write
@@ -13,19 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Sync latest main
-        run: git pull --rebase origin main
-      - name: Add 0x2c07 zoo point block
-        shell: bash
+      - name: Patch zoo type
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('styles/uralla.txt')
-          s = p.read_text(encoding='utf-8')
-          assert 'Type=0x02c\nSubType=0x07\n' not in s
-          anchor = '[_point]\nType=0x02c\nSubType=0x08\n'
-          assert s.count(anchor) == 1, s.count(anchor)
-          block = '''[_point]
+          p = Path("styles/uralla.txt")
+          s = p.read_text(encoding="utf-8")
+          anchor = "[_point]\nType=0x02c\nSubType=0x08\n"
+          assert "Type=0x02c\nSubType=0x07\n" not in s
+          assert s.count(anchor) == 1
+          block = """[_point]
 Type=0x02c
 SubType=0x07
 ;GRMN_TYPE: Business - Attractions/ZOO/Zoo/Non NT
@@ -35,36 +32,34 @@ ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
 ContourColor=No
-DayXpm="14 14 3 1"   Colormode=16
-"!\tc #000000"
-"#\tc #FFFFFF"
-" \tc none"
-"    !!!!      "
-"   !####!     "
-"  !######!    "
-" !##!##!##!   "
-" !########!   "
-"  !######!    "
-"   !####!     "
-"    !!!!      "
-"   !!  !!     "
-"  !!    !!    "
-" !!      !!   "
-"!!        !!  "
-"            ! "
-"              "
+DayXpm=\"14 14 3 1\"   Colormode=16
+\"!\\tc #000000\"
+\"#\\tc #FFFFFF\"
+\" \\tc none\"
+\"    !!!!      \"
+\"   !####!     \"
+\"  !######!    \"
+\" !##!##!##!   \"
+\" !########!   \"
+\"  !######!    \"
+\"   !####!     \"
+\"    !!!!      \"
+\"   !!  !!     \"
+\"  !!    !!    \"
+\" !!      !!   \"
+\"!!        !!  \"
+\"            ! \"
+\"              \"
 ;12345678901234
 [end]
 
 
-'''
-          s = s.replace(anchor, block + anchor, 1)
-          p.write_text(s, encoding='utf-8')
+"""
+          p.write_text(s.replace(anchor, block + anchor, 1), encoding="utf-8")
           PY
-      - name: Remove one-shot workflow
+      - name: Remove workflow
         run: rm .github/workflows/add-zoo-typ.yml
-      - name: Commit and push
-        shell: bash
+      - name: Commit
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
