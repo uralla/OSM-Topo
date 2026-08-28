@@ -1,0 +1,81 @@
+name: Restore original hot spring TYP
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/restore-original-hot-spring-typ.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore exact 0x13703 TYP block
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path("styles/uralla.txt")
+          text = path.read_text(encoding="utf-8")
+          pattern = re.compile(r"(?ms)^\[_point\]\nType=0x137\nSubType=0x03\n.*?^\[end\]\n?")
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f"expected exactly one 0x13703 point block, found {len(matches)}")
+
+          block = '''[_point]
+Type=0x137
+SubType=0x03
+;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
+String1=0x19,горячий источник
+String2=0x04,hot spring
+ExtendedLabels=N
+DayXpm="12 12 3 1"   Colormode=16
+"!\tc #FF0000"
+"#\tc #FFFFFF"
+"  \tc none"
+"  ########  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  ###!!###  "
+"   #!!##    "
+"   ##!!##   "
+"    ##!!#   "
+"   ##!!##   "
+"   #!!##    "
+"   ####     "
+;123456789012
+[end]
+'''
+          text = pattern.sub(block, text, count=1)
+          path.write_text(text, encoding="utf-8")
+
+          check = path.read_text(encoding="utf-8")
+          required = [
+              "Type=0x137\nSubType=0x03",
+              "ExtendedLabels=N",
+              'DayXpm="12 12 3 1"   Colormode=16',
+              '"!\tc #FF0000"',
+              '"#\tc #FFFFFF"',
+              '"  \tc none"',
+          ]
+          for item in required:
+              if item not in check:
+                  raise SystemExit(f"missing expected content: {item!r}")
+
+          Path(".github/workflows/restore-original-hot-spring-typ.yml").unlink()
+      - name: Commit restored block
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla.txt .github/workflows/restore-original-hot-spring-typ.yml
+          git commit -m "Restore original hot spring TYP design"
+          git pull --rebase origin main
+          git push
