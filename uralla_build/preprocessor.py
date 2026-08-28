@@ -33,6 +33,8 @@ STRONG_WIKIDATA_KEYS = {
 POLITICAL_OFFICES = {"political party", "politician"}
 WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
 PEAK_LANDMARK_TAG = "uralla:peak_landmark"
+LONG_NAME_TAG = "uralla:long_name"
+LONG_NAME_LIMIT = 30
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
 DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
 PROGRESS_EVERY_OBJECTS = 1_000_000
@@ -186,6 +188,22 @@ def load_peak_landmarks(path: str | Path = DEFAULT_PEAK_CATALOG) -> frozenset[st
     return frozenset(qids)
 
 
+def enrich_long_name_tags(
+    tags: Mapping[str, str] | object,
+    limit: int = LONG_NAME_LIMIT,
+) -> tuple[dict[str, str], bool]:
+    """Mark objects whose original OSM name is too long for compact Garmin labels."""
+
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    name = result.get("name")
+    if name is None or len(name) <= limit:
+        return result, False
+    changed = result.get(LONG_NAME_TAG) != "yes"
+    result[LONG_NAME_TAG] = "yes"
+    return result, changed
+
+
 def enrich_peak_landmark_tags(
     tags: Mapping[str, str] | object,
     landmarks: frozenset[str],
@@ -337,8 +355,9 @@ def preprocess_pbf(
                             }
                         )
 
+                final_tags, _long_name_added = enrich_long_name_tags(decision.tags)
                 final_tags, peak_added = enrich_peak_landmark_tags(
-                    decision.tags, peak_landmarks
+                    final_tags, peak_landmarks
                 )
                 if peak_added:
                     counters["peak_landmarks_enriched"] += 1

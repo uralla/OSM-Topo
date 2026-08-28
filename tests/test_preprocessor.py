@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from uralla_build.preprocessor import (
+    enrich_long_name_tags,
     enrich_peak_landmark_tags,
     filter_tags,
     load_blacklist_rules,
@@ -29,6 +30,19 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         rules = {rule.rule_id: rule for rule in self.rules}
         self.assertEqual(rules["united-russia"].wikidata, frozenset({"Q151469"}))
         self.assertEqual(rules["cprf"].wikidata, frozenset({"Q192187"}))
+
+    def test_long_name_marker_uses_strict_30_character_limit(self) -> None:
+        exact = "А" * 30
+        tags, changed = enrich_long_name_tags({"name": exact, "historic": "monument"})
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:long_name", tags)
+        self.assertEqual(tags["name"], exact)
+
+        long_name = "А" * 31
+        tags, changed = enrich_long_name_tags({"name": long_name, "historic": "monument"})
+        self.assertTrue(changed)
+        self.assertEqual(tags["uralla:long_name"], "yes")
+        self.assertEqual(tags["name"], long_name)
 
     def test_peak_catalog_loads_confirmed_landmarks(self) -> None:
         self.assertIn("Q43105", self.landmarks)  # Elbrus

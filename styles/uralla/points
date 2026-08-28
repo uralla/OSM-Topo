@@ -133,6 +133,8 @@ highway=motorway_junction [0x2100 resolution 24]
 
 highway=services & mkgmap:area2poi!=true [0x210f resolution 24]
 
+# Long OSM names remain in source tags; only the Garmin map label becomes generic.
+historic=monument & uralla:long_name=yes { name 'памятник' } [0x2c04 resolution 24]
 (historic=archaeological_site | historic=monument) [0x2c04 resolution 24]
 historic=ruins [0x11605 resolution 24]
 (historic=fort | historic=castle) [0x11604 resolution 22]

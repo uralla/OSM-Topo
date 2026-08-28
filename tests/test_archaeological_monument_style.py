@@ -6,6 +6,12 @@ POINTS = ROOT / 'styles' / 'uralla' / 'points'
 
 
 class ArchaeologicalMonumentStyleTests(unittest.TestCase):
+    def test_long_monument_name_uses_generic_garmin_label(self) -> None:
+        points = POINTS.read_text(encoding='utf-8')
+        rule = "historic=monument & uralla:long_name=yes { name 'памятник' } [0x2c04 resolution 24]"
+        self.assertIn(rule, points)
+        self.assertLess(points.index(rule), points.index('(historic=archaeological_site | historic=monument) [0x2c04 resolution 24]'))
+
     def test_archaeological_site_and_monument_share_one_rule(self) -> None:
         points = POINTS.read_text(encoding='utf-8')
         active_points = '\n'.join(
