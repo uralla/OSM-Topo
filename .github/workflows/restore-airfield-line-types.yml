@@ -1,0 +1,49 @@
+name: Restore airfield line types
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-airfield-line-types.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Restore original runway and taxiway line types
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          lines = Path('styles/uralla/lines')
+          s = lines.read_text()
+          old_runway = "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x11000 resolution 20]"
+          old_taxi = "(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x10f1c resolution 23]"
+          new_runway = "aeroway=runway & highway!=* & is_closed()=false {name '${ref}'} [0x27 resolution 20]"
+          new_taxi = "(aeroway=taxiway | aeroway=taxilane) & highway!=* & is_closed()=false {name '${ref}'} [0x1a resolution 23]"
+          assert s.count(old_runway) == 1
+          assert s.count(old_taxi) == 1
+          s = s.replace(old_runway, new_runway, 1).replace(old_taxi, new_taxi, 1)
+          lines.write_text(s)
+
+          typ = Path('styles/uralla.txt')
+          t = typ.read_text()
+          pattern = re.compile(r'\n\[_line\]\nType=0x11000\n; temporary diagnostic runway line type\n.*?\n\[end\]\n', re.S)
+          t2, n = pattern.subn('\n', t, count=1)
+          assert n == 1, f'diagnostic 0x11000 block count={n}'
+          typ.write_text(t2)
+          PY
+      - name: Commit restore and remove workflow
+        run: |
+          rm .github/workflows/restore-airfield-line-types.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/lines styles/uralla.txt .github/workflows/restore-airfield-line-types.yml
+          git commit -m "Restore original non-routing airfield line types"
+          git push
