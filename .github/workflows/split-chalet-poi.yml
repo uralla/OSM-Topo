@@ -23,25 +23,34 @@ jobs:
           import re
 
           points = Path('styles/uralla/points')
+          typ = Path('styles/uralla.txt')
           s = points.read_text()
+          t = typ.read_text()
+
           old = 'tourism=chalet [0x2b02 resolution 21]'
-          new = 'tourism=chalet [0x11507 resolution 21]'
           assert s.count(old) == 1
-          assert '0x11507' not in s
+
+          used = {
+              int(m.group(1), 16)
+              for m in re.finditer(r'\[_point\]\nType=0x115\nSubType=0x([0-9a-f]{2})\n', t, re.I)
+          }
+          subtype = next((x for x in range(0x07, 0x20) if x not in used), None)
+          assert subtype is not None, 'no free 0x115xx POI subtype'
+          code = f'0x115{subtype:02x}'
+          new = f'tourism=chalet [{code} resolution 21]'
+          assert code not in s
           points.write_text(s.replace(old, new, 1))
 
-          typ = Path('styles/uralla.txt')
-          t = typ.read_text()
-          assert not re.search(r'\[_point\]\nType=0x115\nSubType=0x07\n', t, re.I)
           src = re.search(r'(\[_point\]\nType=0x02b\nSubType=0x02\n.*?\n\[end\])', t, re.S)
           assert src, '0x2b02 source point block not found'
           block = src.group(1)
           block = block.replace('Type=0x02b', 'Type=0x115', 1)
-          block = block.replace('SubType=0x02', 'SubType=0x07', 1)
+          block = block.replace('SubType=0x02', f'SubType=0x{subtype:02x}', 1)
           block = re.sub(r';GRMN_TYPE:.*\n', ';GRMN_TYPE: Custom POI/CHALET/Detached holiday cottage\n', block, count=1)
           block = re.sub(r'String1=0x19,.*\n', 'String1=0x19,коттедж\n', block, count=1)
           block = re.sub(r'String2=0x04,.*\n', 'String2=0x04,chalet\n', block, count=1)
           typ.write_text(t[:src.start()] + block + '\n\n' + t[src.start():])
+          print(f'chalet type: {code}')
           PY
       - name: Commit update and remove workflow
         shell: bash
