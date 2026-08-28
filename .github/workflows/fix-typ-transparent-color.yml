@@ -1,0 +1,41 @@
+name: Fix TYP transparent color
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-typ-transparent-color.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fix transparent color definition
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('styles/uralla.txt')
+          s = p.read_text(encoding='utf-8')
+          old = '"  \\tc none"'
+          new = '" \\tc none"'
+          if old not in s:
+              raise SystemExit('target line not found')
+          if s.count(old) != 1:
+              raise SystemExit(f'expected exactly one target, found {s.count(old)}')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/fix-typ-transparent-color.yml
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla.txt .github/workflows/fix-typ-transparent-color.yml
+          git commit -m "Fix TYP transparent color definition"
+          git pull --rebase origin main
+          git push origin HEAD:main
