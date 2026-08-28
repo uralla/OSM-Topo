@@ -1,0 +1,40 @@
+name: Remove unused 0x10f1c
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/remove-unused-10f1c.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove unused TYP line block
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('styles/uralla.txt')
+          s = p.read_text()
+          matches = list(re.finditer(r'\[_line\]\nType=0x10f1c\n.*?\n\[end\]\n?', s, re.S | re.I))
+          assert len(matches) == 1, f'expected one 0x10f1c line block, found {len(matches)}'
+          m = matches[0]
+          p.write_text(s[:m.start()] + s[m.end():])
+          PY
+      - name: Commit cleanup and remove workflow
+        shell: bash
+        run: |
+          rm .github/workflows/remove-unused-10f1c.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla.txt .github/workflows/remove-unused-10f1c.yml
+          git commit -m "Remove unused 0x10f1c TYP line"
+          git push
