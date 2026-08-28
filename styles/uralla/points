@@ -190,14 +190,12 @@ man_made=wastewater_plant [0x11501 resolution 24]
 # станция метро
 (railway=station & station=subway & mkgmap:area2poi!=true) | (railway=station & subway=yes & mkgmap:area2poi!=true) [0x1613 resolution 19]
 
-#railway=station [0x2f08 resolution 22]
 railway=station & !(layer<0) [0x2f17 resolution 24 continue]
 railway=station & !(layer<0) [0x11601 resolution 21-23]
 ( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x2f17 resolution 24 continue]
 ( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19-23]
 ( public_transport=platform & railway=platform & mkgmap:area2poi!=true) & !(layer<0) [0x2f17 resolution 24]
 
-#( public_transport=platform & rail=yes ) | railway=halt [0x2f08 resolution 23]
 public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
 	| highway=bus_stop & mkgmap:area2poi!=true
 	| amenity=bus_station & mkgmap:area2poi!=true
