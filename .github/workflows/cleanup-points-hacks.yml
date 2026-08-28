@@ -1,0 +1,44 @@
+name: Cleanup obsolete point hacks
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/cleanup-points-hacks.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove obsolete point rules
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          targets = [
+              "# часы работы добавляем в почтовый индекс\nopening_hours=* {set addr:postcode = '${addr:postcode} open ${opening_hours}' | 'open ${opening_hours}'}\n\n",
+              "#internet_access=yes { name 'Internet ${name}' | 'Internet' } [0x2f18 resolution 24 continue]\n#internet_access=* & internet_access!=no & internet_access!=yes { name 'Internet(${internet_access}) ${name|def:}' } [0x2f18 resolution 24 continue]\n\n",
+          ]
+          for target in targets:
+              assert s.count(target) == 1, (target, s.count(target))
+              s = s.replace(target, '', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/cleanup-points-hacks.yml
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-points-hacks.yml
+          git commit -m "Remove obsolete point metadata hacks"
+          git pull --rebase origin main
+          git push
