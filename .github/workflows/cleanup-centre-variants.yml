@@ -1,0 +1,42 @@
+name: Cleanup centre spelling variants
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-centre-variants.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Merge equivalent centre spelling rules
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          replacements = {
+              "amenity=conference_centre [0x2c09 resolution 24]\namenity=convention_center [0x2c09 resolution 24]\n":
+              "(amenity=conference_centre | amenity=convention_center) [0x2c09 resolution 24]\n",
+              "amenity=community_centre [0x3005 resolution 24]\namenity=community_center [0x3005 resolution 24]\n":
+              "(amenity=community_centre | amenity=community_center) [0x3005 resolution 24]\n",
+          }
+          for old, new in replacements.items():
+              assert s.count(old) == 1
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Commit cleanup and remove workflow
+        run: |
+          rm .github/workflows/cleanup-centre-variants.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/cleanup-centre-variants.yml
+          git commit -m "Unify equivalent centre spelling POI rules"
+          git push
