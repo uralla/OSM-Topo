@@ -1,0 +1,50 @@
+name: Fix fountain TYP block
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-fountain-typ.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Fix 0x11502 header only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('styles/uralla.txt')
+          s = p.read_text(encoding='utf-8')
+          pat = re.compile(r'(?ms)(^\[_point\]\nType=0x115\nSubType=0x02\n.*?^\[end\])')
+          m = pat.search(s)
+          if not m:
+              raise SystemExit('0x115/0x02 block not found')
+          block = m.group(1)
+          if 'ExtendedLabels=Y' not in block or 'FontStyle=NoLabel (invisible)' not in block:
+              raise SystemExit('unexpected 0x11502 header')
+          new = block.replace('ExtendedLabels=Y\nFontStyle=NoLabel (invisible)\n', 'ExtendedLabels=N\n', 1)
+          if new == block:
+              raise SystemExit('no change made')
+          s = s[:m.start(1)] + new + s[m.end(1):]
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/fix-fountain-typ.yml
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla.txt .github/workflows/fix-fountain-typ.yml
+          git commit -m "Restore fountain TYP visibility"
+          git pull --rebase origin main
+          git push
