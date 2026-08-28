@@ -1,9 +1,11 @@
 from pathlib import Path
+import re
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 POINTS = ROOT / "styles" / "uralla" / "points"
+TYP = ROOT / "styles" / "uralla.txt"
 
 
 class RailwayPointsStyleTests(unittest.TestCase):
@@ -33,6 +35,22 @@ class RailwayPointsStyleTests(unittest.TestCase):
             "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19]",
             self.text,
         )
+
+    def test_milestone_keeps_details_but_hides_permanent_label(self) -> None:
+        self.assertRegex(
+            self.text,
+            r"railway=milestone\s+\{name '\$\{distance\} \(\$\{ref\}\)' \| '\$\{distance\}'\} \[0x1341e resolution 24\]",
+        )
+
+        typ = TYP.read_text(encoding="utf-8")
+        match = re.search(
+            r"(?ms)^\[_point\]\nType=0x134\nSubType=0x1e\n.*?^\[end\]",
+            typ,
+        )
+        self.assertIsNotNone(match)
+        section = match.group(0)
+        self.assertIn("ExtendedLabels=Y", section)
+        self.assertIn("FontStyle=NoLabel (invisible)", section)
 
 
 if __name__ == "__main__":
