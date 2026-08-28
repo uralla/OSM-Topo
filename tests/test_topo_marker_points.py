@@ -34,7 +34,11 @@ class TopoMarkerPointTests(unittest.TestCase):
         self.assertNotIn('shop=car_dealer', priority)
         self.assertIn('shop=car_parts', priority)
         self.assertIn('shop=car_repair', priority)
-        self.assertIn('amenity=car_rental', points)
+        self.assertNotIn('amenity=car_rental', points)
+        self.assertIn(
+            '(amenity=car_rental | amenity=car_sharing | shop=car_rental) [0x2f0d resolution 24]',
+            priority,
+        )
         self.assertIn('amenity=car_wash', points)
 
 if __name__ == '__main__':
