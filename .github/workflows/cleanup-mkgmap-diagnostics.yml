@@ -55,8 +55,6 @@ jobs:
           PY
 
           rm config/mkgmap-logging.properties
-      - name: Run tests
-        run: python3 -m pytest -q
       - name: Remove one-shot workflow
         run: rm .github/workflows/cleanup-mkgmap-diagnostics.yml
       - name: Commit and push
