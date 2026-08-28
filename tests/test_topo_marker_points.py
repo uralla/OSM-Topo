@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POINTS = ROOT / 'styles' / 'uralla' / 'points'
 PRIORITY = ROOT / 'styles' / 'uralla' / 'inc' / 'priority_points'
 LANDUSE = ROOT / 'styles' / 'uralla' / 'inc' / 'landuse_points'
+WATER_POINTS = ROOT / 'styles' / 'uralla' / 'inc' / 'water_points'
 TYP = ROOT / 'styles' / 'uralla.txt'
 
 class TopoMarkerPointTests(unittest.TestCase):
@@ -26,9 +27,14 @@ class TopoMarkerPointTests(unittest.TestCase):
         survey_custom = re.search(r"\[_point\]\s*\nType=0x115\s*\nSubType=0x08\b[\s\S]*?\[end\]", typ)
         self.assertIsNone(survey_custom)
 
-    def test_stale_hot_spring_rule_is_not_in_landuse_points(self) -> None:
+    def test_hot_spring_has_only_the_dedicated_rule(self) -> None:
         landuse = LANDUSE.read_text(encoding='utf-8')
+        water = WATER_POINTS.read_text(encoding='utf-8')
         self.assertNotIn('natural=hot_spring [0x6511 resolution 22]', landuse)
+        self.assertIn(
+            'natural=hot_spring & mkgmap:area2poi!=true [0x13703 resolution 22]',
+            water,
+        )
 
     def test_car_dealer_and_nursing_home_are_not_rendered(self) -> None:
         points = POINTS.read_text(encoding='utf-8')
