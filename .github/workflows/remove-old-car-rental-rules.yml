@@ -1,0 +1,42 @@
+name: Remove old car rental POI rules
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/remove-old-car-rental-rules.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove obsolete 0x2f02 car rental rules
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          olds = [
+              'amenity=car_rental [0x2f02 resolution 24]\n',
+              'amenity=car_sharing [0x2f02 resolution 24]\n',
+          ]
+          for old in olds:
+              assert s.count(old) == 1, (old, s.count(old))
+              s = s.replace(old, '', 1)
+          p.write_text(s)
+          PY
+      - name: Commit cleanup and remove workflow
+        shell: bash
+        run: |
+          rm .github/workflows/remove-old-car-rental-rules.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points .github/workflows/remove-old-car-rental-rules.yml
+          git commit -m "Remove obsolete 0x2f02 car rental rules"
+          git push
