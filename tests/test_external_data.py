@@ -6,7 +6,12 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-from uralla_build.external_data import _download, has_refresh_errors, refresh_supplemental_data
+from uralla_build.external_data import (
+    RemoteMetadata,
+    _download,
+    has_refresh_errors,
+    refresh_supplemental_data,
+)
 from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
 
 
@@ -87,6 +92,35 @@ class ExternalDataRefreshTests(unittest.TestCase):
             self.assertIn("[bounds] download:", joined)
             self.assertIn("validating ZIP", joined)
             self.assertIn("[geonames] updated:", joined)
+
+    def test_builtin_refresh_skips_current_archives_without_downloading(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            host = self._host(root)
+            targets = [
+                root / "data/input/bounds-latest.zip",
+                root / "data/input/sea-latest.zip",
+                root / "data/input/cities15000.zip",
+            ]
+            for target in targets:
+                self._zip(target, "current")
+
+            sizes = iter(target.stat().st_size for target in targets)
+            messages: list[str] = []
+            with patch(
+                "uralla_build.external_data._remote_metadata",
+                side_effect=lambda _url: RemoteMetadata(size=next(sizes), modified_at=None),
+            ), patch("uralla_build.external_data._download") as download:
+                results = refresh_supplemental_data(
+                    self._manifest(), host, reporter=messages.append
+                )
+
+            self.assertFalse(has_refresh_errors(results))
+            self.assertTrue(all(result.status == "unchanged" for result in results))
+            download.assert_not_called()
+            joined = "\n".join(messages)
+            self.assertIn("[bounds] up to date:", joined)
+            self.assertIn("skipping download", joined)
 
     def test_builtin_downloader_reports_live_byte_progress(self) -> None:
         payload = b"x" * (10 * 1024 * 1024)
