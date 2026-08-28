@@ -118,7 +118,6 @@ amenity=concert_hall [0x2c09 resolution 24]
 (amenity=community_centre | amenity=community_center) [0x3005 resolution 24]
 amenity=courthouse [0x3004 resolution 24]
 
-#amenity=embassy & country=* { set name='${country} ${name|def:}' } [0x3003 resolution 24]
 amenity=embassy & country=* { set name='${name|def:} (${country})' } [0x3003 resolution 24]
 amenity=embassy & country!=* [0x3003 resolution 24]
 amenity=ferry_terminal [0x4300 resolution 22]
