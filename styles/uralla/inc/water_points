@@ -13,6 +13,9 @@ natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi
 (natural=wetland | natural=marsh | natural=swamp | natural=mud | natural=bog)
     & name=* & mkgmap:area2poi!=true [0x6513 resolution 21]
 
+# [CUSTOM/АВТОРСКОЕ] Hot springs keep their historical dedicated Garmin POI type.
+natural=hot_spring & mkgmap:area2poi!=true [0x13703 resolution 22]
+
 # [CUSTOM/АВТОРСКОЕ] Water sources: seasonal=* except seasonal=no is treated
 # as intermittent. Source labels are kept in the POI data but the corresponding
 # TYP points use FontStyle=NoLabel so icons stay uncluttered on the map.
