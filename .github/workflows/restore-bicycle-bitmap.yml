@@ -1,0 +1,69 @@
+name: Restore bicycle bitmap
+
+"on":
+  push:
+    paths:
+      - ".github/workflows/restore-bicycle-bitmap.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Restore old bicycle bitmap
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('styles/uralla.txt')
+          s = p.read_text(encoding='utf-8')
+
+          m = re.search(r'(?ms)^\[_point\]\nType=0x115\nSubType=0x0a\n.*?^\[end\]\n?', s)
+          assert m, 'bicycle block 0x115/0x0a not found'
+          block = m.group(0)
+
+          old_bitmap = '''DayXpm="11 11 3 1"   Colormode=16
+"!\tc #000000"
+"#\tc #FFFFFF"
+" \tc none"
+"   !!!!!   "
+"  !#####!  "
+" !#######! "
+"!#########!"
+"!#########!"
+"!#########!"
+"!#########!"
+"!#########!"
+" !#######! "
+"  !#####!  "
+"   !!!!!   "
+;12345678901'''
+
+          new_block, n = re.subn(
+              r'(?ms)^DayXpm=.*?^;12345678901234$',
+              old_bitmap,
+              block,
+              count=1,
+          )
+          assert n == 1, f'expected one current bitmap in bicycle block, found {n}'
+          assert new_block != block
+
+          p.write_text(s[:m.start()] + new_block + s[m.end():], encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/restore-bicycle-bitmap.yml
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla.txt .github/workflows/restore-bicycle-bitmap.yml
+          git commit -m "Restore previous bicycle POI bitmap"
+          git push
