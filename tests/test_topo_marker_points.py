@@ -13,7 +13,7 @@ class TopoMarkerPointTests(unittest.TestCase):
     def test_cairn_is_custom_but_survey_point_reuses_0x6617(self) -> None:
         priority = PRIORITY.read_text(encoding='utf-8')
         landuse = LANDUSE.read_text(encoding='utf-8')
-        self.assertIn("man_made=cairn { name '${name}' | 'тура' } [0x660b resolution 24]", priority)
+        self.assertIn("man_made=cairn { name '${name}' | 'тура' } [0x6409 resolution 24]", priority)
         self.assertIn('man_made=survey_point {name "${name} (${ele})" | "${name}" | "${ref}" | "геодезический пункт"} [0x6617 resolution 24]', landuse)
         self.assertNotIn('0x11508', landuse)
         self.assertNotIn('natural=valley', priority)

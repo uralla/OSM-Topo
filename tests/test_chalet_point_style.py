@@ -8,7 +8,7 @@ TYP = Path("styles/uralla.txt")
 
 def test_chalet_uses_dedicated_custom_poi_type():
     text = POINTS.read_text()
-    assert "tourism=chalet [0x2b08 resolution 21]" in text
+    assert "tourism=chalet [0x640d resolution 21]" in text
     assert "tourism=chalet [0x2b02 resolution 21]" not in text
 
 

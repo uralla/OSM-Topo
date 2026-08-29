@@ -4061,8 +4061,8 @@ DayXpm="14 14 3 1"   Colormode=16
 
 
 [_point]
-Type=0x02b
-SubType=0x08
+Type=0x064
+SubType=0x0d
 ;GRMN_TYPE: Business - Lodging/CHALET/Detached holiday cottage
 String1=0x19,коттедж
 String2=0x04,chalet
@@ -7520,8 +7520,8 @@ DayXpm="8 7 3 1"   Colormode=16
 
 
 [_point]
-Type=0x066
-SubType=0x09
+Type=0x064
+SubType=0x04
 ;GRMN_TYPE: Geographic/BOUNDARY_STONE/Boundary stone
 String1=0x19,пограничный камень
 String2=0x04,boundary stone
@@ -7552,7 +7552,7 @@ DayXpm="13 14 5 1"   Colormode=16
 
 [_point]
 Type=0x064
-SubType=0x1e
+SubType=0x07
 ;GRMN_TYPE: Man-made/WASTEWATER_PLANT/Wastewater treatment plant
 String1=0x01,
 ExtendedLabels=Y
@@ -7642,8 +7642,8 @@ DayXpm="6 16 5 1"   Colormode=16
 
 
 [_point]
-Type=0x066
-SubType=0x0a
+Type=0x064
+SubType=0x08
 ;GRMN_TYPE: Geographic/LOCALITY/Named locality
 String1=0x19,урочище
 ExtendedLabels=Y
@@ -7706,8 +7706,8 @@ DayXpm="13 14 5 1"   Colormode=16
 
 
 [_point]
-Type=0x066
-SubType=0x0c
+Type=0x064
+SubType=0x0a
 ;GRMN_TYPE: Geographic/SADDLE_MOUNTAIN_PASS/Saddle or mountain pass
 String1=0x19,перевал
 ExtendedLabels=Y
@@ -7979,8 +7979,8 @@ DayXpm="8 25 5 1"   Colormode=16
 ;===================== TOPO MARKERS =====================
 
 [_point]
-Type=0x066
-SubType=0x0b
+Type=0x064
+SubType=0x09
 ; CUSTOM: cairn / stone navigation marker
 String1=0x19,тура
 String2=0x04,cairn
