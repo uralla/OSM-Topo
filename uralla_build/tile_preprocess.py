@@ -32,7 +32,9 @@ def _process_one(
         payload = preprocess_pbf(src, dst, Path(config), profiles, rpt)
         return src.name, payload, False
 
-    temporary = dst.with_suffix(dst.suffix + ".preprocessed")
+    # Keep a real .osm.pbf suffix so osmium can infer the input format.
+    tile_id = dst.name.removesuffix(".osm.pbf")
+    temporary = dst.parent / f".{tile_id}.preprocessed.osm.pbf"
     try:
         payload = preprocess_pbf(src, temporary, Path(config), profiles, rpt)
         completed = subprocess.run(
