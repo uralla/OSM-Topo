@@ -153,9 +153,9 @@ def plan_product_build(
                 ("source.osm.pbf",),
             )
         )
-        splitter_input = extract_output
+        preprocess_input = extract_output
     else:
-        splitter_input = source_path
+        preprocess_input = source_path
 
     warnings: list[str] = []
     preprocessor = _mapping(defaults.get("preprocessor", {}), "defaults.preprocessor")
@@ -180,7 +180,63 @@ def plan_product_build(
         repo,
         _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
     )
+    semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"
+    preprocess_command = [
+        sys.executable,
+        "-m",
+        "uralla_build",
+        "preprocess",
+        "--input",
+        str(preprocess_input),
+        "--output",
+        "preprocessed.osm.pbf",
+        "--config",
+        str(blacklist),
+        "--report",
+        "report.json",
+    ]
+    for profile in profiles:
+        preprocess_command.extend(("--profile", profile))
+    stages.append(
+        PipelineStage(
+            "preprocess",
+            tuple(preprocess_command),
+            ("preprocessed.osm.pbf", "report.json"),
+            environment=(("PYTHONPATH", str(repo)),),
+        )
+    )
+    if "ru-political-parties" in profiles:
+        warnings.append(
+            "semantic preprocessing: landmarks + Russian political blacklist"
+        )
+    else:
+        warnings.append("semantic preprocessing: static peak + river landmarks")
+
     elevation_value = product.get("elevation")
+    if elevation_value is not None:
+        elevation = data_path(
+            host,
+            _text(elevation_value, f"products.{product_key}.elevation"),
+        )
+        splitter_input = build_root / "merge" / "enriched.osm.pbf"
+        stages.append(
+            PipelineStage(
+                "merge",
+                (
+                    "osmium",
+                    "merge",
+                    "-O",
+                    "--progress",
+                    str(semantic_input),
+                    str(elevation),
+                    "-o",
+                    "enriched.osm.pbf",
+                ),
+                ("enriched.osm.pbf",),
+            )
+        )
+    else:
+        splitter_input = semantic_input
 
     areas_root = repo_path(repo, _text(areas.get("root"), "defaults.areas.root"))
     stable_areas = areas_root / product_key / "areas.list"
@@ -237,72 +293,6 @@ def plan_product_build(
             environment=(("PYTHONPATH", str(repo)),),
         )
     )
-
-    elevation_tiles: Path | None = None
-    if elevation_value is not None:
-        elevation = data_path(
-            host,
-            _text(elevation_value, f"products.{product_key}.elevation"),
-        )
-        elevation_tiles = build_root / "splitter-elevation" / "tiles"
-        stages.append(
-            PipelineStage(
-                "splitter-elevation",
-                (
-                    "java",
-                    "-jar",
-                    str(_tool_jar(tools_lock, host, "splitter")),
-                    str(elevation),
-                    f"--split-file={tiles / 'areas.list'}",
-                    f"--output={_text(defaults_splitter.get('output'), 'defaults.splitter.output')}",
-                    "--output-dir=tiles",
-                ),
-                ("tiles",),
-                ("tiles",),
-            )
-        )
-
-    prepared_tiles = build_root / "prepare-tiles" / "tiles"
-    prepare_command = [
-        sys.executable,
-        "-m",
-        "uralla_build.tile_preprocess",
-        "--input-dir",
-        str(tiles),
-        "--template",
-        str(tiles / "template.args"),
-        "--output-dir",
-        "tiles",
-        "--config",
-        str(blacklist),
-        "--report",
-        "report.json",
-    ]
-    for profile in profiles:
-        prepare_command.extend(("--profile", profile))
-    preprocess_workers = splitter.get("max_threads")
-    if preprocess_workers is not None:
-        prepare_command.extend(("--workers", str(preprocess_workers)))
-    if elevation_tiles is not None:
-        prepare_command.extend(("--elevation-dir", str(elevation_tiles)))
-    stages.append(
-        PipelineStage(
-            "prepare-tiles",
-            tuple(prepare_command),
-            ("tiles", "report.json"),
-            ("tiles",),
-            environment=(("PYTHONPATH", str(repo)),),
-        )
-    )
-
-    if "ru-political-parties" in profiles:
-        warnings.append(
-            "parallel tile preprocessing: landmarks + Russian political blacklist"
-        )
-    else:
-        warnings.append("parallel tile preprocessing: static peak + river landmarks")
-
-    tiles = prepared_tiles
 
     garmin = build_root / "mkgmap" / "garmin"
     mkgmap_command = [
