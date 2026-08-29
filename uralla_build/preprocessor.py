@@ -358,6 +358,18 @@ def _progress(objects_seen: int, started: float) -> None:
     _emit_progress(f"[preprocess] {objects_seen:,} objects; {rate:,.0f} obj/s")
 
 
+def _emit_geographic_label_change(item: object, tags: Mapping[str, str]) -> None:
+    name = tags.get("name")
+    label = tags.get(DISPLAY_LABEL_TAG)
+    if not name or not label:
+        return
+    feature = tags.get("natural") or (f"water={tags['water']}" if tags.get("water") else "geo")
+    _emit_progress(
+        f"[preprocess] label {feature} {_object_kind(item)}{int(item.id)}: "
+        f"{name!r} -> {label!r}"
+    )
+
+
 def preprocess_pbf(
     input_path: str | Path,
     output_path: str | Path,
@@ -422,6 +434,7 @@ def preprocess_pbf(
                 final_tags, label_added = enrich_geographic_label_tags(final_tags)
                 if label_added:
                     counters["geographic_labels_enriched"] += 1
+                    _emit_geographic_label_change(item, final_tags)
                     if len(geographic_label_samples) < 100:
                         geographic_label_samples.append(
                             {
