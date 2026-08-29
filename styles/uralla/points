@@ -88,6 +88,7 @@ amenity=border_control | barrier=border_control [0x3006 resolution 24]
 amenity=car_wash [0x2f0e resolution 24]
 amenity=casino [0x2d04 resolution 24]
 amenity=cinema [0x2d03 resolution 24]
+amenity=college & uralla:long_name=yes { name 'колледж' } [0x2c05 resolution 24]
 amenity=college [0x2c05 resolution 24]
 amenity=concert_hall [0x2c09 resolution 24]
 (amenity=conference_centre | amenity=convention_center) [0x2c09 resolution 24]
@@ -101,6 +102,7 @@ amenity=fire_station [0x3008 resolution 24]
 
 
 amenity=grave_yard [0x6403 resolution 24]
+amenity=kindergarten & uralla:long_name=yes { name 'детский сад' } [0x2c05 resolution 24]
 amenity=kindergarten [0x2c05 resolution 24]
 amenity=library [0x2c03 resolution 24]
 amenity=nightclub [0x2d02 resolution 24]
@@ -116,6 +118,7 @@ amenity=recycling { name '${name}' | 'переработка' }
 amenity=waste_disposal { name '${name}' | 'утилизация' }
 amenity=recycling | amenity=waste_disposal | amenity=waste_basket [0x2f15 resolution 24]
 
+amenity=school & uralla:long_name=yes { name 'школа' } [0x2c05 resolution 24]
 amenity=school [0x2c05 resolution 24]
 amenity=taxi [0x2f11 resolution 24]
 amenity=telephone [0x2f12 resolution 24]
@@ -123,6 +126,7 @@ amenity=theatre [0x2d01 resolution 24]
 amenity=toilets & highway=rest_area [0x2f0c resolution 24]
 amenity=toilets [0x4e00 resolution 24]
 amenity=townhall [0x3003 resolution 24]
+amenity=university & uralla:long_name=yes { name 'университет' } [0x2c05 resolution 24]
 amenity=university [0x2c05 resolution 24]
 
 amenity=dentist [0x3010 resolution 24]
