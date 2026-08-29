@@ -42,6 +42,15 @@ tourism=hostel [0x2b02 resolution 24]
 amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
 (tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23]
 
+# Long memorial names use the explicit memorial subtype when it is precise enough.
+historic=memorial & memorial=plaque & uralla:long_name=yes { name 'памятная табличка' } [0x6403 resolution 24]
+historic=memorial & memorial=stele & uralla:long_name=yes { name 'стела' } [0x6403 resolution 24]
+historic=memorial & memorial=stone & uralla:long_name=yes { name 'памятный камень' } [0x6403 resolution 24]
+historic=memorial & memorial=statue & uralla:long_name=yes { name 'памятник' } [0x6403 resolution 24]
+historic=memorial & memorial=obelisk & uralla:long_name=yes { name 'обелиск' } [0x6403 resolution 24]
+historic=memorial & memorial=bust & uralla:long_name=yes { name 'бюст' } [0x6403 resolution 24]
+historic=memorial & memorial=sculpture & uralla:long_name=yes { name 'скульптура' } [0x6403 resolution 24]
+historic=memorial & memorial=cross & uralla:long_name=yes { name 'памятный крест' } [0x6403 resolution 24]
 # Real names win; data-derived text is only a fallback.
 historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]
 amenity=signpost { name '${name}' | '${label}' } [0x5a00 resolution 24]
