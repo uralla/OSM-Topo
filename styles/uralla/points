@@ -271,6 +271,7 @@ highway=* & bridge=yes | bridge=yes [0x6401 resolution 24 continue]
 man_made=lighthouse [0x1600 resolution 19]
 
 # госучереждения
+office=government & uralla:long_name=yes { name 'учреждение' } [0x3003 resolution 24]
 office=government [0x3003 resolution 24]
 
 # точки из Whitewater 
