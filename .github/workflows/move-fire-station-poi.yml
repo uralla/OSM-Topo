@@ -1,0 +1,51 @@
+name: Move fire station POI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/move-fire-station-poi.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Migrate fire station POI type
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          points = Path('styles/uralla/points')
+          text = points.read_text(encoding='utf-8')
+          old = 'amenity=fire_station [0x11503 resolution 24]'
+          new = 'amenity=fire_station [0x3008 resolution 24]'
+          assert old in text, 'old fire-station rule not found'
+          assert new not in text, 'new fire-station rule already present'
+          points.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          typ = Path('styles/uralla.txt')
+          t = typ.read_text(encoding='utf-8')
+          old_header = 'Type=0x115\nSubType=0x03'
+          new_header = 'Type=0x030\nSubType=0x08'
+          assert old_header in t, 'old 0x11503 TYP block not found'
+          assert new_header not in t, '0x3008 TYP block already exists'
+          typ.write_text(t.replace(old_header, new_header, 1), encoding='utf-8')
+
+          test = Path('tests/test_fire_station_poi_type.py')
+          test.write_text("""from pathlib import Path\n\n\ndef test_fire_station_uses_safe_poi_type():\n    points = Path('styles/uralla/points').read_text(encoding='utf-8')\n    typ = Path('styles/uralla.txt').read_text(encoding='utf-8')\n\n    assert 'amenity=fire_station [0x3008 resolution 24]' in points\n    assert 'amenity=fire_station [0x11503 resolution 24]' not in points\n    assert 'Type=0x030\\nSubType=0x08' in typ\n    assert 'Type=0x115\\nSubType=0x03' not in typ\n""", encoding='utf-8')
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/move-fire-station-poi.yml
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/points styles/uralla.txt tests/test_fire_station_poi_type.py .github/workflows/move-fire-station-poi.yml
+          git commit -m 'Move fire station POI to 0x3008'
+          git pull --rebase origin main
+          git push origin HEAD:main
