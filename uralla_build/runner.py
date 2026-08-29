@@ -23,7 +23,7 @@ from .history import HistoryStore
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HEARTBEAT_SECONDS = 30.0
 POLL_SECONDS = 1.0
-LIVE_OUTPUT_STAGES = frozenset({"mkgmap"})
+LIVE_OUTPUT_STAGES = frozenset({"preprocess", "mkgmap"})
 
 
 @dataclass(frozen=True, slots=True)
