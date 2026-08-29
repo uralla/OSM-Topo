@@ -34,10 +34,32 @@ POLITICAL_OFFICES = {"political party", "politician"}
 WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
 PEAK_LANDMARK_TAG = "uralla:peak_landmark"
 LONG_NAME_TAG = "uralla:long_name"
+DISPLAY_LABEL_TAG = "uralla:label"
 LONG_NAME_LIMIT = 30
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
 DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
 PROGRESS_EVERY_OBJECTS = 1_000_000
+
+
+_GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
+    "mountain": (
+        re.compile(r"^\s*гора\s+(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*г(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+    ),
+    "ridge": (
+        re.compile(r"^\s*хребет\s+(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*хр(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+    ),
+    "lake": (
+        re.compile(r"^\s*озеро\s+(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*оз(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+    ),
+    "waterfall": (
+        re.compile(r"^\s*водопад\s+(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*вод(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*вдп(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+    ),
+}
 
 
 def normalize_text(value: str) -> str:
@@ -204,6 +226,45 @@ def enrich_long_name_tags(
     return result, changed
 
 
+def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
+    natural = tags.get("natural")
+    if natural in PEAK_NATURAL_TYPES:
+        return "mountain"
+    if natural == "ridge":
+        return "ridge"
+    if natural == "waterfall":
+        return "waterfall"
+    if tags.get("water") == "lake" or natural == "lake":
+        return "lake"
+    return None
+
+
+def enrich_geographic_label_tags(
+    tags: Mapping[str, str] | object,
+) -> tuple[dict[str, str], bool]:
+    """Add a render-only label after stripping a redundant leading feature type."""
+
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    name = result.get("name")
+    if not name:
+        return result, False
+    label_class = _geographic_label_class(result)
+    if label_class is None:
+        return result, False
+    for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:
+        match = pattern.fullmatch(name)
+        if not match:
+            continue
+        label = match.group(1).strip()
+        if not label or label == name:
+            return result, False
+        changed = result.get(DISPLAY_LABEL_TAG) != label
+        result[DISPLAY_LABEL_TAG] = label
+        return result, changed
+    return result, False
+
+
 def enrich_peak_landmark_tags(
     tags: Mapping[str, str] | object,
     landmarks: frozenset[str],
@@ -326,6 +387,7 @@ def preprocess_pbf(
     counters: Counter[str] = Counter()
     rule_hits: Counter[str] = Counter()
     samples: list[dict[str, object]] = []
+    geographic_label_samples: list[dict[str, object]] = []
     peak_samples: list[dict[str, object]] = []
     river_samples: list[dict[str, object]] = []
     started = time.monotonic()
@@ -356,6 +418,24 @@ def preprocess_pbf(
                         )
 
                 final_tags, _long_name_added = enrich_long_name_tags(decision.tags)
+                before_label = final_tags.get(DISPLAY_LABEL_TAG)
+                final_tags, label_added = enrich_geographic_label_tags(final_tags)
+                if label_added:
+                    counters["geographic_labels_enriched"] += 1
+                    if len(geographic_label_samples) < 100:
+                        geographic_label_samples.append(
+                            {
+                                "type": _object_kind(item),
+                                "id": int(item.id),
+                                "name": final_tags.get("name"),
+                                "label": final_tags.get(DISPLAY_LABEL_TAG),
+                                "natural": final_tags.get("natural"),
+                                "water": final_tags.get("water"),
+                            }
+                        )
+                elif before_label != final_tags.get(DISPLAY_LABEL_TAG):
+                    counters["geographic_labels_enriched"] += 1
+
                 final_tags, peak_added = enrich_peak_landmark_tags(
                     final_tags, peak_landmarks
                 )
@@ -394,7 +474,7 @@ def preprocess_pbf(
 
         _progress(counters["objects_seen"], started)
         report: dict[str, object] = {
-            "schema_version": 5,
+            "schema_version": 6,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
@@ -407,11 +487,13 @@ def preprocess_pbf(
             "neutralized_objects": counters["neutralize_objects"],
             "scrubbed_objects": counters["scrub_objects"],
             "tags_removed": counters["tags_removed"],
+            "geographic_labels_enriched": counters["geographic_labels_enriched"],
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "river_landmarks_enriched": counters["river_landmarks_enriched"],
             "rule_hits": dict(sorted(rule_hits.items())),
             "verification_mode": "disabled",
             "samples": samples,
+            "geographic_label_samples": geographic_label_samples,
             "peak_landmark_samples": peak_samples,
             "river_landmark_samples": river_samples,
         }
