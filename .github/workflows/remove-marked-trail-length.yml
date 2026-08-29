@@ -1,0 +1,46 @@
+name: Remove marked trail length filter
+'on':
+  push:
+    paths:
+      - '.github/workflows/remove-marked-trail-length.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove length filters only from marked route block
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('styles/uralla/lines')
+          s = p.read_text(encoding='utf-8')
+          start = s.index('# [CUSTOM/АВТОРСКОЕ] Marked route members')
+          end = s.index('# Some countries allow, others disallow bicycling on pedestrian streets.', start)
+          block = s[start:end]
+          before = block.count('length()>100')
+          assert before == 16, f'unexpected marked-route length filter count: {before}'
+          block = block.replace(' & length()>100', '')
+          assert 'length()' not in block
+          s = s[:start] + block + s[end:]
+          p.write_text(s, encoding='utf-8')
+          print(f'removed {before} marked-route length filters')
+          PY
+      - name: Verify ordinary length filters remain
+        run: |
+          grep -F "highway=bridleway & length()>100" styles/uralla/lines
+          grep -F "bicycle!=yes & highway=path & length()>100" styles/uralla/lines
+          grep -F "highway=track & tracktype!=grade1 & length()>100" styles/uralla/lines
+          ! sed -n '/Marked route members/,/Some countries allow/p' styles/uralla/lines | grep -F 'length()'
+      - name: Commit
+        run: |
+          rm .github/workflows/remove-marked-trail-length.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Keep marked trails continuous at far zoom"
+          git push
