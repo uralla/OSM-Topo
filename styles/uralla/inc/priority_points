@@ -54,6 +54,8 @@ historic=memorial & memorial=cross & uralla:long_name=yes { name 'памятны
 # war_memorial describes purpose rather than physical form, but is still precise enough
 # to replace an overlong label with a useful designation.
 historic=memorial & memorial=war_memorial & uralla:long_name=yes { name 'воинский мемориал' } [0x6403 resolution 24]
+# Remaining overlong memorial names get one generic designation; no deeper subtype audit.
+historic=memorial & uralla:long_name=yes { name 'мемориал' } [0x6403 resolution 24]
 # Real names win; data-derived text is only a fallback.
 historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]
 amenity=signpost { name '${name}' | '${label}' } [0x5a00 resolution 24]
