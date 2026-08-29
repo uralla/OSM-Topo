@@ -138,6 +138,7 @@ amenity=fuel & area=yes [0x10f0c resolution 24]
 
 # squares and plazas
 highway=pedestrian & (area=yes | mkgmap:mp_created=true)
+	| highway=footway & (area=yes | mkgmap:mp_created=true)
 	| highway=rest_area & (area=yes | mkgmap:mp_created=true)
 	| highway=living_street & (area=yes | mkgmap:mp_created=true)
 	| highway=residential & (area=yes | mkgmap:mp_created=true)
@@ -145,9 +146,6 @@ highway=pedestrian & (area=yes | mkgmap:mp_created=true)
 
 # ж/д платформы как площади
 (public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x0d resolution 21]
-
-# other highways that have area=yes set must be parking lots
-highway=* & (area=yes | mkgmap:mp_created=true) [0x05 resolution 21]
 
 historic=museum | historic=memorial [0x1e resolution 21]
 historic=archaeological_site | historic=ruins [0x1e resolution 21]
