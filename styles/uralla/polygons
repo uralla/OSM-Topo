@@ -39,10 +39,10 @@ tourism=attraction & natural=water {delete tourism}
 
 man_made=* & area=yes 			{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
 (building=* | bridge=yes & area=yes) 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
-tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x0d resolution 22]
+tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
 # Theme parks have an intentional earlier overview polygon than the generic tourism fallback.
-tourism=theme_park [0x0d resolution 21]
-tourism=* & building!=* & leisure!=* {name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x0d resolution 22]
+tourism=theme_park [0x10f13 resolution 21]
+tourism=* & building!=* & leisure!=* {name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
 
 # man_made can be used on areas or lines
 man_made=* & area!=no
@@ -144,7 +144,7 @@ highway=pedestrian & (area=yes | mkgmap:mp_created=true)
 	| highway=unclassified & (area=yes | mkgmap:mp_created=true) [0x10f12 resolution 21]
 
 # ж/д платформы как площади
-(public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x0d resolution 21]
+(public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x10f14 resolution 21]
 
 historic=museum | historic=memorial [0x1e resolution 21]
 historic=archaeological_site | historic=ruins [0x1e resolution 21]
