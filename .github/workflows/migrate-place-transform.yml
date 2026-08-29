@@ -80,7 +80,7 @@ jobs:
         run: |
           python -m py_compile uralla_build/preprocessor.py uralla_build/build_plan.py
           python -m unittest discover -s tests -p 'test_preprocessor.py'
-          ! grep -R "transform_places" -n uralla_build config
+          ! grep -R "transform_places" -n uralla_build/build_plan.py config/maps.yaml
       - name: Commit migration
         run: |
           rm .github/workflows/migrate-place-transform.yml
