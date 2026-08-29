@@ -1,0 +1,44 @@
+name: Add government long-name fallback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-government-long-name-fallback.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch style and tests
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          points = Path('styles/uralla/points')
+          text = points.read_text(encoding='utf-8')
+          old = "office=government [0x3003 resolution 24]"
+          new = "office=government & uralla:long_name=yes { name 'учреждение' } [0x3003 resolution 24]\noffice=government [0x3003 resolution 24]"
+          if new not in text:
+              if old not in text:
+                  raise SystemExit('office=government rule not found')
+              text = text.replace(old, new, 1)
+              points.write_text(text, encoding='utf-8')
+
+          test = Path('tests/test_government_long_name_style.py')
+          test.write_text('''from pathlib import Path\n\n\ndef test_government_long_name_fallback_precedes_normal_rule():\n    text = Path("styles/uralla/points").read_text(encoding="utf-8")\n    fallback = "office=government & uralla:long_name=yes { name \'учреждение\' } [0x3003 resolution 24]"\n    normal = "office=government [0x3003 resolution 24]"\n    assert fallback in text\n    assert normal in text\n    assert text.index(fallback) < text.index(normal)\n''', encoding='utf-8')
+          PY
+      - name: Commit result and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/add-government-long-name-fallback.yml
+          git add styles/uralla/points tests/test_government_long_name_style.py
+          git commit -m "Add government long-name fallback"
+          git pull --rebase origin main
+          git push origin HEAD:main
