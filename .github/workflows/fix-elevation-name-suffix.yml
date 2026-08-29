@@ -1,0 +1,58 @@
+name: Fix elevation suffix in geographic labels
+'on':
+  push:
+    paths:
+      - '.github/workflows/fix-elevation-name-suffix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Patch preprocessor and tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('uralla_build/preprocessor.py')
+          s = p.read_text()
+          anchor = '''_GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {\n'''
+          addition = '''_ELEVATION_NAME_SUFFIX_RE = re.compile(\n    r"^(.*?)\\s*\\(\\s*[+-]?\\d+(?:[.,]\\d+)?\\s*[мm]\\s*\\)\\s*$",\n    re.IGNORECASE,\n)\n\n\n'''
+          assert anchor in s
+          s = s.replace(anchor, addition + anchor, 1)
+
+          old = '''    label_class = _geographic_label_class(result)\n    if label_class is None:\n        return result, False\n    for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n        match = pattern.fullmatch(name)\n        if not match:\n            continue\n        label = match.group(1).strip()\n        if not label or label == name:\n            return result, False\n        changed = result.get(DISPLAY_LABEL_TAG) != label\n        result[DISPLAY_LABEL_TAG] = label\n        return result, changed\n    return result, False\n'''
+          new = '''    label_class = _geographic_label_class(result)\n    if label_class is None:\n        return result, False\n\n    label = name\n    if result.get("ele"):\n        elevation_match = _ELEVATION_NAME_SUFFIX_RE.fullmatch(label)\n        if elevation_match:\n            stripped = elevation_match.group(1).strip()\n            if stripped:\n                label = stripped\n\n    for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n        match = pattern.fullmatch(label)\n        if not match:\n            continue\n        stripped = match.group(1).strip()\n        if stripped:\n            label = stripped\n        break\n\n    if label == name:\n        return result, False\n    changed = result.get(DISPLAY_LABEL_TAG) != label\n    result[DISPLAY_LABEL_TAG] = label\n    return result, changed\n'''
+          assert old in s
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('tests/test_preprocessor.py')
+          s = p.read_text()
+          s = s.replace('    enrich_long_name_tags,\n', '    enrich_geographic_label_tags,\n    enrich_long_name_tags,\n', 1)
+          anchor = '''    def test_peak_catalog_loads_confirmed_landmarks(self) -> None:\n'''
+          test = '''    def test_geographic_label_strips_duplicate_elevation_suffix_only_with_ele(self) -> None:\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "peak", "name": "Скалогора (754м)", "ele": "754"}\n        )\n        self.assertTrue(changed)\n        self.assertEqual(tags["uralla:label"], "Скалогора")\n        self.assertEqual(tags["name"], "Скалогора (754м)")\n\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "peak", "name": "гора Скалогора (754 м)", "ele": "754"}\n        )\n        self.assertTrue(changed)\n        self.assertEqual(tags["uralla:label"], "Скалогора")\n\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "peak", "name": "Скалогора (754м)"}\n        )\n        self.assertFalse(changed)\n        self.assertNotIn("uralla:label", tags)\n\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "peak", "name": "Скалогора (северная)", "ele": "754"}\n        )\n        self.assertFalse(changed)\n        self.assertNotIn("uralla:label", tags)\n\n'''
+          assert anchor in s
+          s = s.replace(anchor, test + anchor, 1)
+          p.write_text(s)
+          PY
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/preprocessor.py
+          python -m unittest discover -s tests -p 'test_preprocessor.py'
+      - name: Commit fix
+        run: |
+          rm .github/workflows/fix-elevation-name-suffix.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Strip duplicate elevation suffix from geographic labels"
+          git push
