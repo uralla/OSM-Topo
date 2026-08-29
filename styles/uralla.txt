@@ -35,6 +35,7 @@ Type=0x10f05,5
 Type=0x10f06,5
 Type=0x10f0b,5
 Type=0x10f10,5
+Type=0x10f12,4
 Type=0x007,6
 Type=0x01a,6
 Type=0x10612,6
@@ -281,6 +282,19 @@ Type=0x0d
 ;GRMN_TYPE: Large Manmade Areas/RESERVATION/Reservation/Non NT
 String1=0x19,площадь
 String2=0x04,flat
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+Xpm="0 0 1 0"
+"1 c #FFCA8B"
+[end]
+
+[_polygon]
+Type=0x10f12
+;GRMN_TYPE: Customizable Areas/PEDESTRIAN_SQUARE/Pedestrian or road area
+String1=0x19,пешеходная зона
+String2=0x04,pedestrian area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No

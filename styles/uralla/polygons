@@ -116,13 +116,13 @@ leisure=* & access=private & leisure!=nature_reserve & leisure!=natural_reserve 
 leisure=dog_park { name '${name}' | 'площадка для собак' } [0x20 resolution 24]
 leisure=bleachers [0x1331a resolution 24]
 
-place=town [0x01 resolution 19]
-place=city [0x02 resolution 18]
-place=suburb [0x02 resolution 22]
-place=village [0x03 resolution 21]
-place=hamlet [0x03 resolution 21]
-place=locality [0x03 resolution 21]
-place=isolated_dwelling [0x03 resolution 21]
+place=town & building!=* [0x01 resolution 19]
+place=city & building!=* [0x02 resolution 18]
+place=suburb & building!=* [0x02 resolution 22]
+place=village & building!=* [0x03 resolution 21]
+place=hamlet & building!=* [0x03 resolution 21]
+place=locality & building!=* [0x03 resolution 21]
+place=isolated_dwelling & building!=* [0x03 resolution 21]
 
 # Fuel is the primary area classification. A convenience shop on the same OSM
 # polygon must not turn the whole filling-station area into a retail polygon.
@@ -141,7 +141,7 @@ highway=pedestrian & (area=yes | mkgmap:mp_created=true)
 	| highway=rest_area & (area=yes | mkgmap:mp_created=true)
 	| highway=living_street & (area=yes | mkgmap:mp_created=true)
 	| highway=residential & (area=yes | mkgmap:mp_created=true)
-	| highway=unclassified & (area=yes | mkgmap:mp_created=true) [0x0d resolution 21]
+	| highway=unclassified & (area=yes | mkgmap:mp_created=true) [0x10f12 resolution 21]
 
 # ж/д платформы как площади
 (public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x0d resolution 21]
