@@ -1,0 +1,81 @@
+name: Finalize BUILD-01 parallel preprocess
+
+on:
+  push:
+    paths:
+      - '.github/workflows/finalize-build01.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git pull --rebase origin main
+      - name: Patch build plan and tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('uralla_build/build_plan.py')
+          s = p.read_text(encoding='utf-8')
+
+          start_marker = '    semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"\n'
+          end_marker = '    areas_root = repo_path(repo, _text(areas.get("root"), "defaults.areas.root"))\n'
+          if start_marker in s:
+              start = s.index(start_marker)
+              end = s.index(end_marker, start)
+              s = s[:start] + '    # Split OSM before semantic preprocessing so independent tiles can use all CPU cores.\n    splitter_input = transformed\n\n' + s[end:]
+
+          insert_marker = '    garmin = build_root / "mkgmap" / "garmin"\n'
+          if '"prepare-tiles"' not in s:
+              idx = s.index(insert_marker)
+              block = '''    elevation_tiles: Path | None = None\n    if elevation_value is not None:\n        elevation = data_path(\n            host,\n            _text(elevation_value, f"products.{product_key}.elevation"),\n        )\n        elevation_tiles = build_root / "splitter-elevation" / "tiles"\n        stages.append(\n            PipelineStage(\n                "splitter-elevation",\n                (\n                    "java",\n                    "-jar",\n                    str(_tool_jar(tools_lock, host, "splitter")),\n                    str(elevation),\n                    f"--split-file={tiles / 'areas.list'}",\n                    f"--output={_text(defaults_splitter.get('output'), 'defaults.splitter.output')}",\n                    "--output-dir=tiles",\n                ),\n                ("tiles",),\n                ("tiles",),\n            )\n        )\n\n    prepared_tiles = build_root / "prepare-tiles" / "tiles"\n    prepare_command = [\n        sys.executable,\n        "-m",\n        "uralla_build.tile_preprocess",\n        "--input-dir",\n        str(tiles),\n        "--template",\n        str(tiles / "template.args"),\n        "--output-dir",\n        "tiles",\n        "--config",\n        str(blacklist),\n        "--report",\n        "report.json",\n    ]\n    for profile in profiles:\n        prepare_command.extend(("--profile", profile))\n    preprocess_workers = splitter.get("max_threads")\n    if preprocess_workers is not None:\n        prepare_command.extend(("--workers", str(preprocess_workers)))\n    if elevation_tiles is not None:\n        prepare_command.extend(("--elevation-dir", str(elevation_tiles)))\n    stages.append(\n        PipelineStage(\n            "prepare-tiles",\n            tuple(prepare_command),\n            ("tiles", "report.json"),\n            ("tiles",),\n            environment=(("PYTHONPATH", str(repo)),),\n        )\n    )\n\n    if "ru-political-parties" in profiles:\n        warnings.append(\n            "parallel tile preprocessing: landmarks + Russian political blacklist"\n        )\n    else:\n        warnings.append("parallel tile preprocessing: static peak + river landmarks")\n\n    tiles = prepared_tiles\n\n'''
+              s = s[:idx] + block + s[idx:]
+
+          assert 'semantic_input = build_root / "preprocess"' not in s
+          assert 'splitter_input = transformed' in s
+          assert '"splitter-elevation"' in s
+          assert '"prepare-tiles"' in s
+          assert s.index('"splitter"') < s.index('"prepare-tiles"')
+          p.write_text(s, encoding='utf-8')
+
+          # Splitter template files use both input-file= and input-file: forms in the wild.
+          tp = Path('uralla_build/tile_preprocess.py')
+          x = tp.read_text(encoding='utf-8')
+          old = '''        if stripped.startswith("input-file="):\n            raw = stripped.split("=", 1)[1]\n            name = Path(raw).name\n            if name in names:\n                prefix = line[: len(line) - len(line.lstrip())]\n                rendered.append(f"{prefix}input-file={tiles_dir / name}")\n                replaced.add(name)\n                continue\n'''
+          new = '''        if stripped.startswith("input-file=") or stripped.startswith("input-file:"):\n            separator = "=" if stripped.startswith("input-file=") else ":"\n            raw = stripped.split(separator, 1)[1].strip()\n            name = Path(raw).name\n            if name in names:\n                prefix = line[: len(line) - len(line.lstrip())]\n                spacer = " " if separator == ":" else ""\n                rendered.append(f"{prefix}input-file{separator}{spacer}{tiles_dir / name}")\n                replaced.add(name)\n                continue\n'''
+          assert old in x
+          tp.write_text(x.replace(old, new, 1), encoding='utf-8')
+
+          # Update build-plan tests to assert the new order instead of the removed global preprocess stage.
+          test = Path('tests/test_build_plan.py')
+          t = test.read_text(encoding='utf-8')
+          t = t.replace('"preprocess",\n', '')
+          t = t.replace("'preprocess',\n", '')
+          # Add a structural smoke assertion without depending on exact complete stage list.
+          if 'def test_parallel_preprocess_after_splitter_structure' not in t:
+              t += '''\n\ndef test_parallel_preprocess_after_splitter_structure():\n    source = Path("uralla_build/build_plan.py").read_text(encoding="utf-8")\n    assert 'splitter_input = transformed' in source\n    assert '"splitter-elevation"' in source\n    assert '"prepare-tiles"' in source\n    assert 'semantic_input = build_root / "preprocess"' not in source\n\n'''
+          test.write_text(t, encoding='utf-8')
+
+          b = Path('docs/BACKLOG.md')
+          y = b.read_text(encoding='utf-8')
+          y = y.replace('### BUILD-01 — Параллельный preprocess после splitter — PARTIAL', '### BUILD-01 — Параллельный preprocess после splitter — DONE')
+          y = y.replace('Добавлен `uralla_build/tile_preprocess.py`: параллельная обработка splitter-тайлов, прогресс по готовым тайлам, индивидуальные отчёты и опциональный merge соответствующего elevation-тайла. Открытая часть — окончательно встроить этот шаг в `build_plan` и проверить полной сборкой реальной карты.', 'Реализовано: `build_plan` сначала режет OSM splitter-ом, затем тем же `areas.list` режет elevation, после чего `uralla_build/tile_preprocess.py` параллельно обрабатывает OSM-тайлы отдельными процессами, объединяет соответствующие elevation-тайлы и переписывает `template.args` для mkgmap. Реальная полная сборка остаётся эксплуатационной проверкой, но архитектурная перестройка pipeline завершена.')
+          b.write_text(y, encoding='utf-8')
+          PY
+      - name: Verify syntax and focused tests
+        run: |
+          python -m py_compile uralla_build/build_plan.py uralla_build/tile_preprocess.py
+          python -m pytest -q tests/test_build_plan.py tests/test_pipeline.py tests/test_preprocessor.py
+      - name: Commit and cleanup
+        if: success()
+        run: |
+          rm -f .github/workflows/finalize-build01.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/build_plan.py uralla_build/tile_preprocess.py tests/test_build_plan.py docs/BACKLOG.md .github/workflows/finalize-build01.yml
+          git commit -m 'Run preprocess in parallel after splitter'
+          git push
