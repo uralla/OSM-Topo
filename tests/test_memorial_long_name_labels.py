@@ -21,7 +21,7 @@ class MemorialLongNameLabelsTests(unittest.TestCase):
             "sculpture": "скульптура",
             "cross": "памятный крест",
         }
-        generic = "historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]"
+        generic = "historic=memorial & uralla:long_name=yes { name 'мемориал' } [0x6403 resolution 24]"
         generic_index = text.index(generic)
         for subtype, label in expected.items():
             rule = (
@@ -37,13 +37,16 @@ class MemorialLongNameLabelsTests(unittest.TestCase):
             "historic=memorial & memorial=war_memorial & uralla:long_name=yes "
             "{ name 'воинский мемориал' } [0x6403 resolution 24]"
         )
-        generic = "historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]"
+        generic = "historic=memorial & uralla:long_name=yes { name 'мемориал' } [0x6403 resolution 24]"
         self.assertIn(rule, text)
         self.assertLess(text.index(rule), text.index(generic))
 
-    def test_unapproved_broad_memorial_fallback_is_absent(self) -> None:
+    def test_remaining_long_memorials_use_generic_memorial_label(self) -> None:
         text = PRIORITY_POINTS.read_text(encoding="utf-8")
-        self.assertNotIn("historic=memorial & uralla:long_name=yes { name 'памятник' }", text)
+        generic = "historic=memorial & uralla:long_name=yes { name 'мемориал' } [0x6403 resolution 24]"
+        normal = "historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]"
+        self.assertIn(generic, text)
+        self.assertLess(text.index(generic), text.index(normal))
 
 
 if __name__ == "__main__":
