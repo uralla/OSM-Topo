@@ -93,6 +93,11 @@ natural=shrub & name!=* { delete natural }
 # rule in inc/landuse_points instead of being consumed as a generic saddle.
 natural=saddle & mountain_pass!=yes [0x11507 resolution 23]
 natural=arch [0x6601 resolution 23]
+# Viewpoints: no synthetic permanent map text. Named viewpoints keep their real name.
+# Unnamed viewpoints keep an empty primary Garmin label and a secondary explanatory
+# label for object information/hover, so the icon stays clean but remains understandable.
+tourism=viewpoint & name=* { name '${name}' } [0x2c04 resolution 23]
+tourism=viewpoint & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='видовая точка' } [0x2c04 resolution 23]
 # Cave entrance icons remain, but their permanent map labels are suppressed.
 # Keep the original name tag untouched for source data/details; a single-space
 # Garmin primary label prevents both the OSM name and TYP fallback text from drawing.
