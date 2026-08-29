@@ -1,0 +1,51 @@
+name: Move beekeeper POI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/move-beekeeper-poi.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  move:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Move beekeeper POI to 0x2f1a
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          points = Path('styles/uralla/points')
+          text = points.read_text()
+          old = 'craft=beekeeper [0x11505 resolution 24]'
+          new = 'craft=beekeeper [0x2f1a resolution 24]'
+          assert text.count(old) == 1, text.count(old)
+          assert 'craft=beekeeper [0x2f1a resolution 24]' not in text
+          points.write_text(text.replace(old, new, 1))
+
+          typ = Path('styles/uralla.txt')
+          text = typ.read_text()
+          old_header = '[_point]\nType=0x115\nSubType=0x05\n'
+          new_header = '[_point]\nType=0x02f\nSubType=0x1a\n'
+          assert text.count(old_header) == 1, text.count(old_header)
+          assert text.count(new_header) == 0, text.count(new_header)
+          typ.write_text(text.replace(old_header, new_header, 1))
+
+          test = Path('tests/test_beekeeper_point_style.py')
+          test.write_text("""from pathlib import Path\n\n\ndef test_beekeeper_uses_safe_poi_type():\n    points = Path('styles/uralla/points').read_text()\n    assert 'craft=beekeeper [0x2f1a resolution 24]' in points\n    assert 'craft=beekeeper [0x11505 resolution 24]' not in points\n\n\ndef test_beekeeper_typ_moved_from_extended_type():\n    typ = Path('styles/uralla.txt').read_text()\n    assert '[_point]\\nType=0x02f\\nSubType=0x1a\\n' in typ\n    assert '[_point]\\nType=0x115\\nSubType=0x05\\n' not in typ\n""")
+          PY
+      - name: Remove one-shot workflow
+        run: rm .github/workflows/move-beekeeper-poi.yml
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/points styles/uralla.txt tests/test_beekeeper_point_style.py .github/workflows/move-beekeeper-poi.yml
+          git commit -m 'Move beekeeper POI to safe type 0x2f1a'
+          git pull --rebase origin main
+          git push origin HEAD:main
