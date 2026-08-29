@@ -15,6 +15,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install project
+        run: python -m pip install -e .
       - name: Patch implementation
         run: |
           python - <<'PY'
@@ -78,7 +80,7 @@ jobs:
         run: |
           python -m py_compile uralla_build/preprocessor.py uralla_build/build_plan.py
           python -m unittest tests.test_preprocessor
-          ! grep -R "transform_places" -n uralla_build config || false
+          ! grep -R "transform_places" -n uralla_build config
       - name: Commit migration
         run: |
           rm .github/workflows/migrate-place-transform.yml
