@@ -58,12 +58,14 @@ def _rewrite_template(template: Path, output: Path, tile_names: Iterable[str], t
     rendered: list[str] = []
     for line in lines:
         stripped = line.strip()
-        if stripped.startswith("input-file="):
-            raw = stripped.split("=", 1)[1]
+        if stripped.startswith("input-file=") or stripped.startswith("input-file:"):
+            separator = "=" if stripped.startswith("input-file=") else ":"
+            raw = stripped.split(separator, 1)[1].strip()
             name = Path(raw).name
             if name in names:
                 prefix = line[: len(line) - len(line.lstrip())]
-                rendered.append(f"{prefix}input-file={tiles_dir / name}")
+                spacer = " " if separator == ":" else ""
+                rendered.append(f"{prefix}input-file{separator}{spacer}{tiles_dir / name}")
                 replaced.add(name)
                 continue
         rendered.append(line)
