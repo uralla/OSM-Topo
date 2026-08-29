@@ -51,6 +51,9 @@ historic=memorial & memorial=obelisk & uralla:long_name=yes { name 'обелис
 historic=memorial & memorial=bust & uralla:long_name=yes { name 'бюст' } [0x6403 resolution 24]
 historic=memorial & memorial=sculpture & uralla:long_name=yes { name 'скульптура' } [0x6403 resolution 24]
 historic=memorial & memorial=cross & uralla:long_name=yes { name 'памятный крест' } [0x6403 resolution 24]
+# war_memorial describes purpose rather than physical form, but is still precise enough
+# to replace an overlong label with a useful designation.
+historic=memorial & memorial=war_memorial & uralla:long_name=yes { name 'воинский мемориал' } [0x6403 resolution 24]
 # Real names win; data-derived text is only a fallback.
 historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]
 amenity=signpost { name '${name}' | '${label}' } [0x5a00 resolution 24]
