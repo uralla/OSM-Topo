@@ -129,8 +129,12 @@ amenity=townhall [0x3003 resolution 24]
 amenity=university & uralla:long_name=yes { name 'университет' } [0x2c05 resolution 24]
 amenity=university [0x2c05 resolution 24]
 
+amenity=dentist & uralla:long_name=yes { name 'стоматология' } [0x3010 resolution 24]
 amenity=dentist [0x3010 resolution 24]
+amenity=hospital & uralla:long_name=yes { name 'больница' } [0x3002 resolution 24]
+amenity=clinic & uralla:long_name=yes { name 'клиника' } [0x3002 resolution 24]
 healthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]
+amenity=doctors & uralla:long_name=yes { name 'поликлиника' } [0x3002 resolution 24]
 healthcare=* | amenity=doctors [0x3002 resolution 24]
 
 highway=motorway_junction [0x2100 resolution 24]
