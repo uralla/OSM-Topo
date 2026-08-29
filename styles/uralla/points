@@ -252,8 +252,6 @@ railway=subway_entrance [0x1614 resolution 24]
 landuse=quarry [0x640c resolution 24]
 # бункер, дот
 military=bunker & mkgmap:area2poi!=true [0x640b resolution 24]
-# мосты. пока не работает?
-# bridge=yes [0x6401 resolution 24 continue]
 highway=* & bridge=yes | bridge=yes [0x6401 resolution 24 continue]
 
 # маяки
