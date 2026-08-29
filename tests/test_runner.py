@@ -107,6 +107,31 @@ class StageRunnerTests(unittest.TestCase):
                 Path(result.stderr_log).read_text(encoding="utf-8"),
             )
 
+    def test_preprocess_output_is_streamed_live_and_kept_in_logs(self) -> None:
+        with TemporaryDirectory() as directory:
+            runner = StageRunner(Path(directory) / "work")
+            code = (
+                "from pathlib import Path; import sys; "
+                "print(\"label peak n123: 'Гора Иремель' -> 'Иремель'\", file=sys.stderr); "
+                "Path('map.osm.pbf').write_text('ok', encoding='utf-8')"
+            )
+            terminal = io.StringIO()
+            with redirect_stderr(terminal):
+                result = runner.run(
+                    product="ural",
+                    stage="preprocess",
+                    command=[sys.executable, "-c", code],
+                    expected_outputs=["map.osm.pbf"],
+                )
+
+            self.assertEqual(result.status, "success")
+            shown = terminal.getvalue()
+            self.assertIn("[preprocess] label peak n123: 'Гора Иремель' -> 'Иремель'", shown)
+            self.assertIn(
+                "label peak n123: 'Гора Иремель' -> 'Иремель'",
+                Path(result.stderr_log).read_text(encoding="utf-8"),
+            )
+
     def test_matching_checkpoint_is_reused_within_same_build(self) -> None:
         with TemporaryDirectory() as directory:
             runner = StageRunner(Path(directory) / "work")
