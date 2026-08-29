@@ -1,0 +1,49 @@
+name: Add admin service long-name fallbacks
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-admin-service-long-name-fallbacks.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply fallbacks
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('styles/uralla/points')
+          text = path.read_text(encoding='utf-8')
+          replacements = {
+              "amenity=library [0x2c03 resolution 24]": "amenity=library & uralla:long_name=yes { name 'библиотека' } [0x2c03 resolution 24]\namenity=library [0x2c03 resolution 24]",
+              "amenity=police [0x3001 resolution 23]": "amenity=police & uralla:long_name=yes { name 'полиция' } [0x3001 resolution 23]\namenity=police [0x3001 resolution 23]",
+              "amenity=post_office [0x2f05 resolution 24]": "amenity=post_office & uralla:long_name=yes { name 'почта' } [0x2f05 resolution 24]\namenity=post_office [0x2f05 resolution 24]",
+              "amenity=fire_station [0x3008 resolution 24]": "amenity=fire_station & uralla:long_name=yes { name 'пожарная часть' } [0x3008 resolution 24]\namenity=fire_station [0x3008 resolution 24]",
+              "amenity=townhall [0x3003 resolution 24]": "amenity=townhall & uralla:long_name=yes { name 'администрация' } [0x3003 resolution 24]\namenity=townhall [0x3003 resolution 24]",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing expected rule: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+
+          test = Path('tests/test_admin_service_long_names.py')
+          test.write_text('''from pathlib import Path\n\n\ndef test_admin_service_long_name_fallbacks():\n    points = Path("styles/uralla/points").read_text(encoding="utf-8")\n    expected = [\n        "amenity=townhall & uralla:long_name=yes { name 'администрация' } [0x3003 resolution 24]",\n        "amenity=library & uralla:long_name=yes { name 'библиотека' } [0x2c03 resolution 24]",\n        "amenity=police & uralla:long_name=yes { name 'полиция' } [0x3001 resolution 23]",\n        "amenity=post_office & uralla:long_name=yes { name 'почта' } [0x2f05 resolution 24]",\n        "amenity=fire_station & uralla:long_name=yes { name 'пожарная часть' } [0x3008 resolution 24]",\n    ]\n    for rule in expected:\n        assert rule in points\n''', encoding='utf-8')
+      - name: Remove workflow
+        run: rm .github/workflows/add-admin-service-long-name-fallbacks.yml
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points tests/test_admin_service_long_names.py .github/workflows/add-admin-service-long-name-fallbacks.yml
+          git commit -m "Add admin service long-name fallbacks"
+          git pull --rebase origin main
+          git push origin HEAD:main
