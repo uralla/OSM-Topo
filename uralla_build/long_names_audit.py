@@ -116,6 +116,10 @@ class AuditState:
     by_length: Counter[str] = field(default_factory=Counter)
     linear_by_tag: Counter[str] = field(default_factory=Counter)
     examples_by_tag: dict[str, list[dict[str, object]]] = field(default_factory=lambda: defaultdict(list))
+    memorial_by_type: Counter[str] = field(default_factory=Counter)
+    place_of_worship_by_religion: Counter[str] = field(default_factory=Counter)
+    examples_by_memorial_type: dict[str, list[dict[str, object]]] = field(default_factory=lambda: defaultdict(list))
+    examples_by_religion: dict[str, list[dict[str, object]]] = field(default_factory=lambda: defaultdict(list))
     words: TermStats = field(default_factory=TermStats)
     bigrams: TermStats = field(default_factory=TermStats)
     trigrams: TermStats = field(default_factory=TermStats)
@@ -149,9 +153,24 @@ def add_name_to_state(
     if key in LINEAR_KEYS:
         state.linear_by_tag[tag] += 1
 
+    example = {"type": kind, "id": object_id, "length": len(name), "name": name}
     examples = state.examples_by_tag[tag]
     if len(examples) < example_limit:
-        examples.append({"type": kind, "id": object_id, "length": len(name), "name": name})
+        examples.append(example)
+
+    if tags.get("historic") == "memorial":
+        memorial_type = tags.get("memorial") or "<missing>"
+        state.memorial_by_type[memorial_type] += 1
+        subtype_examples = state.examples_by_memorial_type[memorial_type]
+        if len(subtype_examples) < example_limit:
+            subtype_examples.append(example)
+
+    if tags.get("amenity") == "place_of_worship":
+        religion = tags.get("religion") or "<missing>"
+        state.place_of_worship_by_religion[religion] += 1
+        religion_examples = state.examples_by_religion[religion]
+        if len(religion_examples) < example_limit:
+            religion_examples.append(example)
 
     words = significant_words(name)
     state.words.add(words, name, example_limit)
@@ -195,6 +214,10 @@ def build_report(state: AuditState, source: Path, limit: int, top: int) -> dict[
         "by_length": dict(state.by_length),
         "by_primary_tag": dict(state.by_primary_tag.most_common()),
         "linear_by_tag": dict(state.linear_by_tag.most_common()),
+        "memorial_by_type": dict(state.memorial_by_type.most_common()),
+        "place_of_worship_by_religion": dict(state.place_of_worship_by_religion.most_common()),
+        "examples_by_memorial_type": dict(state.examples_by_memorial_type),
+        "examples_by_religion": dict(state.examples_by_religion),
         "top_words": _term_rows(state.words, top),
         "top_bigrams": _term_rows(state.bigrams, top),
         "top_trigrams": _term_rows(state.trigrams, top),
@@ -205,7 +228,10 @@ def build_report(state: AuditState, source: Path, limit: int, top: int) -> dict[
 
 def _write_summary_tsv(report: Mapping[str, object], path: Path) -> None:
     lines = ["section\tkey\tcount"]
-    sections = ("by_kind", "by_geometry", "by_length", "by_primary_tag", "linear_by_tag")
+    sections = (
+        "by_kind", "by_geometry", "by_length", "by_primary_tag", "linear_by_tag",
+        "memorial_by_type", "place_of_worship_by_religion",
+    )
     for section in sections:
         values = report.get(section, {})
         if isinstance(values, Mapping):

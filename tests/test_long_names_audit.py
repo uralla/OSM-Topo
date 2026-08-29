@@ -64,6 +64,43 @@ class LongNamesAuditTests(unittest.TestCase):
         self.assertEqual(state.highway_words.objects["исследователя"], 1)
         self.assertEqual(state.examples_by_tag["highway=path"][0]["id"], 42)
 
+    def test_tracks_memorial_subtype_and_religion_breakdowns(self) -> None:
+        state = AuditState()
+        memorial_name = "Мемориальный комплекс защитникам города в годы Великой Отечественной войны"
+        worship_name = "Храм во имя святого благоверного великого князя Александра Невского"
+        missing_name = "Очень длинное наименование памятного объекта без указанного подтипа"
+
+        add_name_to_state(
+            state,
+            name=memorial_name,
+            tags={"historic": "memorial", "memorial": "war_memorial", "name": memorial_name},
+            kind="node",
+            geometry="-",
+            object_id=10,
+        )
+        add_name_to_state(
+            state,
+            name=worship_name,
+            tags={"amenity": "place_of_worship", "religion": "christian", "name": worship_name},
+            kind="node",
+            geometry="-",
+            object_id=11,
+        )
+        add_name_to_state(
+            state,
+            name=missing_name,
+            tags={"historic": "memorial", "name": missing_name},
+            kind="node",
+            geometry="-",
+            object_id=12,
+        )
+
+        self.assertEqual(state.memorial_by_type["war_memorial"], 1)
+        self.assertEqual(state.memorial_by_type["<missing>"], 1)
+        self.assertEqual(state.place_of_worship_by_religion["christian"], 1)
+        self.assertEqual(state.examples_by_memorial_type["war_memorial"][0]["id"], 10)
+        self.assertEqual(state.examples_by_religion["christian"][0]["id"], 11)
+
     def test_short_name_is_ignored(self) -> None:
         state = AuditState()
         self.assertFalse(
