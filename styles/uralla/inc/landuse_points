@@ -23,6 +23,10 @@ natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
 natural=cliff {name "${name}"} [0x6607 resolution 24]
 
 
+# Minor relief below 200 m: peak/hill is only a close-zoom terrain marker.
+# No name/elevation label is drawn for these low summits.
+(natural=peak | natural=hill) & ele < 200 [0x6615 resolution 24]
+
 # Static catalogue enrichment from the semantic preprocessor.
 uralla:peak_landmark=yes {add note=great-peak}
 
@@ -106,7 +110,7 @@ mountain_pass=yes {name
 	| '${ele}'
 	| '${rtsa_scale}'
 	| '${name} (${alt_name})'
-	| '${name}' } [0x11507 resolution 23] 	
+	| '${name}' } [0x660c resolution 23] 	
 
 # Generic point buildings are a final fallback only. Specialized POIs above win.
 (building=yes | building=true) & mkgmap:area2poi!=true [0x6402 resolution 24]

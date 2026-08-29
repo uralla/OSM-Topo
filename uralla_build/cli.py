@@ -463,7 +463,7 @@ def _preprocess(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps({"ok": True, "report": report}, ensure_ascii=False, indent=2))
     else:
-        print(json.dumps(report, ensure_ascii=False, indent=2))
+        print(f"[preprocess] done; report: {args.report}")
     return 0
 
 

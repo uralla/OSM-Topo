@@ -64,12 +64,12 @@ class BicyclePoiStyleTests(unittest.TestCase):
     def test_locality_keeps_urrochische_type_11504_until_group_migration(self) -> None:
         place_style = PLACE_POINTS.read_text(encoding='utf-8')
         self.assertIn(
-            'place=locality & mkgmap:area2poi!=true          [0x11504 resolution 24]',
+            'place=locality & mkgmap:area2poi!=true          [0x660a resolution 24]',
             place_style,
         )
 
         typ = TYP.read_text(encoding='utf-8')
-        match = re.search(r'(?ms)^\[_point\]\nType=0x115\nSubType=0x04\n.*?^\[end\]', typ)
+        match = re.search(r'(?ms)^\[_point\]\nType=0x066\nSubType=0x0a\n.*?^\[end\]', typ)
         self.assertIsNotNone(match)
         section = match.group(0)
         self.assertIn('String1=0x19,урочище', section)

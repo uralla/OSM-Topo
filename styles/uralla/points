@@ -151,7 +151,7 @@ historic=monument & uralla:long_name=yes { name 'памятник' } [0x2c04 res
 (historic=archaeological_site | historic=monument) [0x2c04 resolution 24]
 historic=ruins [0x11605 resolution 24]
 (historic=fort | historic=castle) [0x11604 resolution 22]
-historic=boundary_stone [0x11500 resolution 24]
+historic=boundary_stone [0x6609 resolution 24]
 
 leisure=common & name=* [0x2c06 resolution 24]
 leisure=garden & name=* [0x2c06 resolution 24]
@@ -172,7 +172,7 @@ man_made=water_tower [0x641d resolution 23]
 
 power=generator & generator:source=wind [0x641a resolution 22]
 man_made=windmill [0x641b resolution 22]
-man_made=wastewater_plant [0x11501 resolution 24]
+man_made=wastewater_plant [0x641e resolution 24]
 
 
 
@@ -224,7 +224,7 @@ tourism=aquarium [0x2c07 resolution 24]
 
 tourism=camp_site {name '${name}' | 'кемпинг'} [0x4a01 resolution 23-23 continue]
 tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
-tourism=chalet [0x11509 resolution 21]
+tourism=chalet [0x2b08 resolution 21]
 # Legacy tourism=lean_to fallback; amenity=shelter is handled in inc/priority_points.
 tourism=lean_to [0x2b05 resolution 24]
 (historic=museum | tourism=museum) [0x2c02 resolution 24]

@@ -30,7 +30,7 @@ class PlacePointsStyleTests(unittest.TestCase):
         text = PLACE_POINTS.read_text(encoding="utf-8")
         self.assertIn("place=hamlet & mkgmap:area2poi!=true            [0x0b00 resolution 22]", text)
         self.assertIn("place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]", text)
-        self.assertIn("place=locality & mkgmap:area2poi!=true          [0x11504 resolution 24]", text)
+        self.assertIn("place=locality & mkgmap:area2poi!=true          [0x660a resolution 24]", text)
 
 
 if __name__ == "__main__":

@@ -91,7 +91,7 @@ natural=shrub & name!=* { delete natural }
 
 # Agreed terrain / tourist POIs. A real mountain_pass must continue to the richer
 # rule in inc/landuse_points instead of being consumed as a generic saddle.
-natural=saddle & mountain_pass!=yes [0x11507 resolution 23]
+natural=saddle & mountain_pass!=yes [0x660c resolution 23]
 natural=arch [0x6601 resolution 23]
 # Viewpoints: no synthetic permanent map text. Named viewpoints keep their real name.
 # Unnamed viewpoints keep an empty primary Garmin label and a secondary explanatory
@@ -106,7 +106,7 @@ natural=cave_entrance { set mkgmap:label:1=' ' } [0x6608 resolution 24]
 # Climbing POI: icon only at the closest detail level; keep source name/details.
 sport=climbing { set mkgmap:label:1=' ' } [0x6607 resolution 24]
 # Cairns are small local navigation markers: only at the closest detail level.
-man_made=cairn { name '${name}' | 'тура' } [0x11506 resolution 24]
+man_made=cairn { name '${name}' | 'тура' } [0x660b resolution 24]
 
 # Emergency phone legacy/current tags.
 (amenity=emergency_phone | emergency=phone) [0x2f12 resolution 23]
