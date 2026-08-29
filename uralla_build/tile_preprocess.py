@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import json
@@ -135,3 +136,35 @@ def prepare_tiles(
     }
     report.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return summary
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="python -m uralla_build.tile_preprocess")
+    parser.add_argument("--input-dir", required=True, type=Path)
+    parser.add_argument("--template", required=True, type=Path)
+    parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--config", required=True, type=Path)
+    parser.add_argument("--profile", required=True, action="append")
+    parser.add_argument("--report", required=True, type=Path)
+    parser.add_argument("--workers", type=int)
+    parser.add_argument("--elevation-dir", type=Path)
+    args = parser.parse_args(argv)
+    try:
+        prepare_tiles(
+            input_dir=args.input_dir,
+            template=args.template,
+            output_dir=args.output_dir,
+            config=args.config,
+            profiles=tuple(args.profile),
+            report=args.report,
+            workers=args.workers,
+            elevation_dir=args.elevation_dir,
+        )
+    except (StageError, OSError, ValueError) as exc:
+        print(f"ERROR preprocess-tiles: {exc}")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
