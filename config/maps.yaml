@@ -12,7 +12,6 @@ defaults:
   style: styles/uralla
   typ: styles/uralla.txt
   mkgmap_args: styles/uralla.args
-  transform_places: scripts/transform_places.xml
   preprocessor:
     blacklist: config/preprocessor-blacklist.yaml
     source_profiles:

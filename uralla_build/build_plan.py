@@ -110,10 +110,6 @@ def plan_product_build(
     polygon = data_path(
         host, _text(product.get("polygon"), f"products.{product_key}.polygon")
     )
-    transform = repo_path(
-        repo,
-        _text(defaults.get("transform_places"), "defaults.transform_places"),
-    )
     sea = data_path(host, _text(defaults.get("sea"), "defaults.sea"))
     bounds = data_path(host, _text(defaults.get("bounds"), "defaults.bounds"))
     style = repo_path(repo, _text(defaults.get("style"), "defaults.style"))
@@ -157,27 +153,9 @@ def plan_product_build(
                 ("source.osm.pbf",),
             )
         )
-        transform_input = extract_output
+        splitter_input = extract_output
     else:
-        transform_input = source_path
-
-    transformed = build_root / "transform" / "transformed.osm.pbf"
-    stages.append(
-        PipelineStage(
-            "transform",
-            (
-                "osmosis",
-                "--read-pbf-fast",
-                f"file={transform_input}",
-                "--tag-transform",
-                f"file={transform}",
-                "--write-pbf",
-                "file=transformed.osm.pbf",
-                "omitmetadata=true",
-            ),
-            ("transformed.osm.pbf",),
-        )
-    )
+        splitter_input = source_path
 
     warnings: list[str] = []
     preprocessor = _mapping(defaults.get("preprocessor", {}), "defaults.preprocessor")
@@ -203,9 +181,6 @@ def plan_product_build(
         _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
     )
     elevation_value = product.get("elevation")
-
-    # Split OSM before semantic preprocessing so independent tiles can use all CPU cores.
-    splitter_input = transformed
 
     areas_root = repo_path(repo, _text(areas.get("root"), "defaults.areas.root"))
     stable_areas = areas_root / product_key / "areas.list"

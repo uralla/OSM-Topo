@@ -39,6 +39,14 @@ LONG_NAME_LIMIT = 30
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
 DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
 PROGRESS_EVERY_OBJECTS = 1_000_000
+PLACE_ADMIN_LEVELS = {
+    "city": "7",
+    "town": "7",
+    "village": "10",
+    "hamlet": "10",
+    "isolated_dwelling": "11",
+    "allotments": "11",
+}
 
 
 _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
@@ -208,6 +216,26 @@ def load_peak_landmarks(path: str | Path = DEFAULT_PEAK_CATALOG) -> frozenset[st
             )
         qids.add(qid)
     return frozenset(qids)
+
+
+def enrich_place_admin_tags(
+    tags: Mapping[str, str] | object,
+) -> tuple[dict[str, str], bool]:
+    """Reproduce the former transform_places.xml search enrichment."""
+
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    admin_level = PLACE_ADMIN_LEVELS.get(result.get("place", ""))
+    if admin_level is None:
+        return result, False
+    desired = {
+        "admin_level": admin_level,
+        "boundary": "administrative",
+        "type": "boundary",
+    }
+    changed = any(result.get(key) != value for key, value in desired.items())
+    result.update(desired)
+    return result, changed
 
 
 def enrich_long_name_tags(
@@ -429,7 +457,10 @@ def preprocess_pbf(
                             }
                         )
 
-                final_tags, _long_name_added = enrich_long_name_tags(decision.tags)
+                final_tags, place_admin_added = enrich_place_admin_tags(decision.tags)
+                if place_admin_added:
+                    counters["place_admin_enriched"] += 1
+                final_tags, _long_name_added = enrich_long_name_tags(final_tags)
                 before_label = final_tags.get(DISPLAY_LABEL_TAG)
                 final_tags, label_added = enrich_geographic_label_tags(final_tags)
                 if label_added:
@@ -487,7 +518,7 @@ def preprocess_pbf(
 
         _progress(counters["objects_seen"], started)
         report: dict[str, object] = {
-            "schema_version": 6,
+            "schema_version": 7,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
@@ -500,6 +531,7 @@ def preprocess_pbf(
             "neutralized_objects": counters["neutralize_objects"],
             "scrubbed_objects": counters["scrub_objects"],
             "tags_removed": counters["tags_removed"],
+            "place_admin_enriched": counters["place_admin_enriched"],
             "geographic_labels_enriched": counters["geographic_labels_enriched"],
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "river_landmarks_enriched": counters["river_landmarks_enriched"],

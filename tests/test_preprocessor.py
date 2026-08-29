@@ -6,6 +6,7 @@ import unittest
 
 from uralla_build.preprocessor import (
     enrich_long_name_tags,
+    enrich_place_admin_tags,
     enrich_peak_landmark_tags,
     filter_tags,
     load_blacklist_rules,
@@ -30,6 +31,28 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         rules = {rule.rule_id: rule for rule in self.rules}
         self.assertEqual(rules["united-russia"].wikidata, frozenset({"Q151469"}))
         self.assertEqual(rules["cprf"].wikidata, frozenset({"Q192187"}))
+
+    def test_place_admin_enrichment_replaces_transform_places_xml(self) -> None:
+        cases = {
+            "city": "7",
+            "town": "7",
+            "village": "10",
+            "hamlet": "10",
+            "isolated_dwelling": "11",
+            "allotments": "11",
+        }
+        for place, level in cases.items():
+            with self.subTest(place=place):
+                tags, changed = enrich_place_admin_tags({"place": place, "name": "Test"})
+                self.assertTrue(changed)
+                self.assertEqual(tags["admin_level"], level)
+                self.assertEqual(tags["boundary"], "administrative")
+                self.assertEqual(tags["type"], "boundary")
+                self.assertEqual(tags["name"], "Test")
+
+        tags, changed = enrich_place_admin_tags({"place": "suburb", "name": "Test"})
+        self.assertFalse(changed)
+        self.assertNotIn("admin_level", tags)
 
     def test_long_name_marker_uses_strict_30_character_limit(self) -> None:
         exact = "А" * 30
