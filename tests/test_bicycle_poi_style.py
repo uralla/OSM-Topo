@@ -15,22 +15,23 @@ class BicyclePoiStyleTests(unittest.TestCase):
         points = POINTS.read_text(encoding='utf-8')
 
         self.assertIn(
-            "shop=bicycle { name '${name}' | 'велосипеды' } [0x1150a resolution 23]",
+            "shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 23]",
             priority,
         )
         self.assertIn(
-            "amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x1150a resolution 24]",
+            "amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]",
             priority,
         )
+        self.assertNotIn('0x1150a', priority)
         self.assertNotRegex(priority, r'shop=bicycle[^\n]*0x2f0d')
         self.assertNotRegex(priority, r'amenity=bicycle_repair_station[^\n]*0x2f0d')
         self.assertNotIn('amenity=car_club', priority)
         self.assertNotIn('amenity=car_club', points)
 
-    def test_bicycle_typ_is_visible_small_white_circle(self) -> None:
+    def test_bicycle_typ_is_visible_dedicated_business_type(self) -> None:
         typ = TYP.read_text(encoding='utf-8')
         match = re.search(
-            r'(?ms)^\[_point\]\nType=0x115\nSubType=0x0a\n.*?^\[end\]',
+            r'(?ms)^\[_point\]\nType=0x02f\nSubType=0x18\n.*?^\[end\]',
             typ,
         )
         self.assertIsNotNone(match)
@@ -41,12 +42,10 @@ class BicyclePoiStyleTests(unittest.TestCase):
         self.assertIn('ExtendedLabels=Y', section)
         self.assertIn('FontStyle=SmallFont', section)
         self.assertNotIn('NoLabel', section)
-        self.assertIn('"!\tc #000000"', section)
-        self.assertIn('"#\tc #FFFFFF"', section)
-        self.assertIn('" \tc none"', section)
-        self.assertNotIn(r'\tc ', section)
-        self.assertIn('"   !!!!!   "', section)
-        self.assertIn('"!#########!"', section)
+        self.assertNotRegex(
+            typ,
+            r'(?ms)^\[_point\]\nType=0x115\nSubType=0x0a\n.*?^\[end\]',
+        )
 
     def test_car_rental_and_sharing_keep_2f0d(self) -> None:
         priority = PRIORITY.read_text(encoding='utf-8')
@@ -62,7 +61,7 @@ class BicyclePoiStyleTests(unittest.TestCase):
         )
         self.assertIsNotNone(match)
 
-    def test_locality_keeps_urrochische_type_11504(self) -> None:
+    def test_locality_keeps_urrochische_type_11504_until_group_migration(self) -> None:
         place_style = PLACE_POINTS.read_text(encoding='utf-8')
         self.assertIn(
             'place=locality & mkgmap:area2poi!=true          [0x11504 resolution 24]',
