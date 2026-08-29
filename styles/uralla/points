@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------
 # This is the default mkgmap style file for converting OSM nodes
 # into Garmin POIs.
-# Any line prefaced with # is a comment and will not be applied.
+# Any line prefaced with # will not be applied.
 # Each line is a rule, of the generalised format:
 #  OSM_tag(s)_to_match  [Garmin_type_code resolution]
 # See http://wiki.openstreetmap.org/wiki/Mkgmap/help/style_rules
@@ -235,7 +235,10 @@ tourism=picnic_site & shelter!=yes [0x4a00 resolution 24]
 leisure=firepit | amenity=firepit | amenity=bbq | tourism=picnic_site & fireplace=yes {name '${name}'} [0x2b06 resolution 24]
 amenity=bench [0x4a01 resolution 24]
 tourism=theme_park [0x2c01 resolution 24]
-tourism=viewpoint {name '${name}' | 'видовая точка'} [0x2c04 resolution 23]
+# Viewpoint icon stays visible. Named viewpoints keep their real name; unnamed ones
+# get a blank Garmin primary label so the TYP fallback text cannot clutter the map.
+tourism=viewpoint & name=* { name '${name}' } [0x2c04 resolution 23]
+tourism=viewpoint & name!=* { set mkgmap:label:1=' ' } [0x2c04 resolution 23]
 tourism=wine_cellar [0x2c0a resolution 24]
 (amenity=zoo | tourism=zoo) [0x2c07 resolution 24]
 
