@@ -1,0 +1,45 @@
+name: Add medical long-name fallbacks
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-medical-long-name-fallbacks.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply medical long-name fallbacks
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          points = Path('styles/uralla/points')
+          text = points.read_text(encoding='utf-8')
+          replacements = {
+              "amenity=dentist [0x3010 resolution 24]": "amenity=dentist & uralla:long_name=yes { name 'стоматология' } [0x3010 resolution 24]\namenity=dentist [0x3010 resolution 24]",
+              "healthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]": "amenity=hospital & uralla:long_name=yes { name 'больница' } [0x3002 resolution 24]\namenity=clinic & uralla:long_name=yes { name 'клиника' } [0x3002 resolution 24]\nhealthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]",
+              "healthcare=* | amenity=doctors [0x3002 resolution 24]": "amenity=doctors & uralla:long_name=yes { name 'поликлиника' } [0x3002 resolution 24]\nhealthcare=* | amenity=doctors [0x3002 resolution 24]",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing expected rule: {old}')
+              text = text.replace(old, new, 1)
+          points.write_text(text, encoding='utf-8')
+
+          test = Path('tests/test_medical_long_name_style.py')
+          test.write_text("""from pathlib import Path\n\n\ndef test_medical_long_name_fallbacks_precede_generic_rules():\n    text = Path('styles/uralla/points').read_text(encoding='utf-8')\n    pairs = [\n        (\"amenity=hospital & uralla:long_name=yes { name 'больница' } [0x3002 resolution 24]\", \"healthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]\"),\n        (\"amenity=clinic & uralla:long_name=yes { name 'клиника' } [0x3002 resolution 24]\", \"healthcare=hospital | amenity=hospital | amenity=clinic [0x3002 resolution 24]\"),\n        (\"amenity=doctors & uralla:long_name=yes { name 'поликлиника' } [0x3002 resolution 24]\", \"healthcare=* | amenity=doctors [0x3002 resolution 24]\"),\n        (\"amenity=dentist & uralla:long_name=yes { name 'стоматология' } [0x3010 resolution 24]\", \"amenity=dentist [0x3010 resolution 24]\"),\n    ]\n    for specific, generic in pairs:\n        assert specific in text\n        assert generic in text\n        assert text.index(specific) < text.index(generic)\n\n\ndef test_healthcare_catchall_has_no_long_name_fallback():\n    text = Path('styles/uralla/points').read_text(encoding='utf-8')\n    assert \"healthcare=* & uralla:long_name=yes\" not in text\n""", encoding='utf-8')
+          PY
+          rm .github/workflows/add-medical-long-name-fallbacks.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points tests/test_medical_long_name_style.py .github/workflows/add-medical-long-name-fallbacks.yml
+          git commit -m 'Add medical long-name fallbacks'
+          git pull --rebase origin main
+          git push origin HEAD:main
