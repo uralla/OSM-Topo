@@ -6576,8 +6576,8 @@ DayXpm="12 19 4 1"   Colormode=16
 [end]
 
 [_point]
-Type=0x137
-SubType=0x03
+Type=0x064
+SubType=0x16
 ;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
 String1=0x19,горячий источник
 String2=0x04,hot spring
@@ -7731,8 +7731,8 @@ DayXpm="8 8 3 1"   Colormode=16
 
 
 [_point]
-Type=0x116
-SubType=0x01
+Type=0x064
+SubType=0x00
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_34/User customizable point type/Non NT, NT
 String1=0x19,ж/д станция
 String2=0x04,railroad station
@@ -7781,8 +7781,8 @@ DayXpm="16 7 3 1"   Colormode=16
 
 
 [_point]
-Type=0x116
-SubType=0x04
+Type=0x064
+SubType=0x0e
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_37/User customizable point type/Non NT, NT
 String1=0x19,замок
 String2=0x04,castle
@@ -7816,8 +7816,8 @@ DayXpm="16 13 7 1"   Colormode=16
 
 
 [_point]
-Type=0x116
-SubType=0x05
+Type=0x064
+SubType=0x0f
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_38/User customizable point type/Non NT, NT
 String1=0x19,руины
 String2=0x04,ruins
@@ -7851,8 +7851,8 @@ DayXpm="16 16 4 1"   Colormode=16
 
 
 [_point]
-Type=0x118
-SubType=0x03
+Type=0x064
+SubType=0x12
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_100/User customizable point type/Non NT, NT
 String1=0x19,helipad
 String2=0x04,helipad
@@ -7882,8 +7882,8 @@ DayXpm="13 13 3 1"   Colormode=16
 
 
 [_point]
-Type=0x134
-SubType=0x1d
+Type=0x064
+SubType=0x13
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1022/User customizable point type/Non NT, NT
 String1=0x19,тупик
 String2=0x04,dead end
@@ -7904,8 +7904,8 @@ DayXpm="5 5 2 1"   Colormode=16
 
 
 [_point]
-Type=0x134
-SubType=0x1e
+Type=0x064
+SubType=0x14
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1023/User customizable point type/Non NT, NT
 String1=0x19,пикет
 String2=0x04,picket
@@ -7933,8 +7933,8 @@ DayXpm="6 11 3 1"   Colormode=16
 
 
 [_point]
-Type=0x134
-SubType=0x1f
+Type=0x064
+SubType=0x15
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1024/User customizable point type/Non NT, NT
 String1=0x19,семафор
 String2=0x04,semaphore

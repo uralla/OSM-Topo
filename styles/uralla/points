@@ -76,7 +76,7 @@ amenity=fountain [0x2f19 resolution 23]
 craft=beekeeper [0x2f1a resolution 24]
 
 (aeroway=aerodrome | aeroway=airport | amenity=airport) [0x2f04 resolution 19]
-aeroway=helipad [0x11803 resolution 23]
+aeroway=helipad [0x6412 resolution 23]
 aeroway=terminal [0x2f04 resolution 22]
 
 amenity=atm [0x2f06 resolution 24]
@@ -149,8 +149,8 @@ highway=services & mkgmap:area2poi!=true [0x210f resolution 24]
 # Long OSM names remain in source tags; only the Garmin map label becomes generic.
 historic=monument & uralla:long_name=yes { name 'памятник' } [0x2c04 resolution 24]
 (historic=archaeological_site | historic=monument) [0x2c04 resolution 24]
-historic=ruins [0x11605 resolution 24]
-(historic=fort | historic=castle) [0x11604 resolution 22]
+historic=ruins [0x640f resolution 24]
+(historic=fort | historic=castle) [0x640e resolution 22]
 historic=boundary_stone [0x6404 resolution 24]
 
 leisure=common & name=* [0x2c06 resolution 24]
@@ -182,9 +182,9 @@ man_made=wastewater_plant [0x6407 resolution 24]
 (railway=station & station=subway & mkgmap:area2poi!=true) | (railway=station & subway=yes & mkgmap:area2poi!=true) [0x1613 resolution 19]
 
 railway=station & !(layer<0) [0x2f17 resolution 24 continue]
-railway=station & !(layer<0) [0x11601 resolution 21-23]
+railway=station & !(layer<0) [0x6400 resolution 21-23]
 ( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x2f17 resolution 24 continue]
-( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19-23]
+( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x6400 resolution 19-23]
 ( public_transport=platform & railway=platform & mkgmap:area2poi!=true) & !(layer<0) [0x2f17 resolution 24]
 
 public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
@@ -196,9 +196,9 @@ public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
 	
 # жд штучки
 
-railway=signal [0x1341f resolution 24]
-railway=buffer_stop [0x1341d resolution 24]
-railway=milestone 	{name '${distance} (${ref})' | '${distance}'} [0x1341e resolution 24]
+railway=signal [0x6415 resolution 24]
+railway=buffer_stop [0x6413 resolution 24]
+railway=milestone 	{name '${distance} (${ref})' | '${distance}'} [0x6414 resolution 24]
 
 	
 	
