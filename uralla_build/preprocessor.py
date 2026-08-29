@@ -49,6 +49,12 @@ PLACE_ADMIN_LEVELS = {
 }
 
 
+_ELEVATION_NAME_SUFFIX_RE = re.compile(
+    r"^(.*?)\s*\(\s*[+-]?\d+(?:[.,]\d+)?\s*[мm]\s*\)\s*$",
+    re.IGNORECASE,
+)
+
+
 _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
     "mountain": (
         re.compile(r"^\s*гора\s+(.+?)\s*$", re.IGNORECASE),
@@ -280,17 +286,29 @@ def enrich_geographic_label_tags(
     label_class = _geographic_label_class(result)
     if label_class is None:
         return result, False
+
+    label = name
+    if result.get("ele"):
+        elevation_match = _ELEVATION_NAME_SUFFIX_RE.fullmatch(label)
+        if elevation_match:
+            stripped = elevation_match.group(1).strip()
+            if stripped:
+                label = stripped
+
     for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:
-        match = pattern.fullmatch(name)
+        match = pattern.fullmatch(label)
         if not match:
             continue
-        label = match.group(1).strip()
-        if not label or label == name:
-            return result, False
-        changed = result.get(DISPLAY_LABEL_TAG) != label
-        result[DISPLAY_LABEL_TAG] = label
-        return result, changed
-    return result, False
+        stripped = match.group(1).strip()
+        if stripped:
+            label = stripped
+        break
+
+    if label == name:
+        return result, False
+    changed = result.get(DISPLAY_LABEL_TAG) != label
+    result[DISPLAY_LABEL_TAG] = label
+    return result, changed
 
 
 def enrich_peak_landmark_tags(

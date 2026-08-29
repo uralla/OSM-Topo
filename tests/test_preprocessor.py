@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from uralla_build.preprocessor import (
+    enrich_geographic_label_tags,
     enrich_long_name_tags,
     enrich_place_admin_tags,
     enrich_peak_landmark_tags,
@@ -66,6 +67,32 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         self.assertTrue(changed)
         self.assertEqual(tags["uralla:long_name"], "yes")
         self.assertEqual(tags["name"], long_name)
+
+    def test_geographic_label_strips_duplicate_elevation_suffix_only_with_ele(self) -> None:
+        tags, changed = enrich_geographic_label_tags(
+            {"natural": "peak", "name": "Скалогора (754м)", "ele": "754"}
+        )
+        self.assertTrue(changed)
+        self.assertEqual(tags["uralla:label"], "Скалогора")
+        self.assertEqual(tags["name"], "Скалогора (754м)")
+
+        tags, changed = enrich_geographic_label_tags(
+            {"natural": "peak", "name": "гора Скалогора (754 м)", "ele": "754"}
+        )
+        self.assertTrue(changed)
+        self.assertEqual(tags["uralla:label"], "Скалогора")
+
+        tags, changed = enrich_geographic_label_tags(
+            {"natural": "peak", "name": "Скалогора (754м)"}
+        )
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:label", tags)
+
+        tags, changed = enrich_geographic_label_tags(
+            {"natural": "peak", "name": "Скалогора (северная)", "ele": "754"}
+        )
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:label", tags)
 
     def test_peak_catalog_loads_confirmed_landmarks(self) -> None:
         self.assertIn("Q43105", self.landmarks)  # Elbrus
