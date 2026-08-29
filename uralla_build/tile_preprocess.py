@@ -21,7 +21,7 @@ def _process_one(
     config: str,
     profiles: tuple[str, ...],
     elevation: str | None,
-) -> tuple[str, dict[str, object]]:
+) -> tuple[str, dict[str, object], bool]:
     src = Path(source)
     dst = Path(destination)
     rpt = Path(report)
@@ -30,7 +30,7 @@ def _process_one(
 
     if elevation is None:
         payload = preprocess_pbf(src, dst, Path(config), profiles, rpt)
-        return src.name, payload
+        return src.name, payload, False
 
     temporary = dst.with_suffix(dst.suffix + ".preprocessed")
     try:
@@ -44,7 +44,7 @@ def _process_one(
             raise StageError(f"osmium merge failed for {src.name}: exit {completed.returncode}")
     finally:
         temporary.unlink(missing_ok=True)
-    return src.name, payload
+    return src.name, payload, True
 
 
 def _tile_files(root: Path) -> list[Path]:
@@ -86,7 +86,12 @@ def prepare_tiles(
     workers: int | None = None,
     elevation_dir: Path | None = None,
 ) -> dict[str, object]:
-    """Preprocess splitter output in parallel and optionally merge matching DEM tiles."""
+    """Preprocess splitter output in parallel and merge elevation where present.
+
+    Splitter omits empty output tiles. Therefore an OSM tile does not require a
+    matching elevation tile: if no elevation data falls into that area, the
+    preprocessed OSM tile is passed through unchanged after semantic processing.
+    """
 
     sources = _tile_files(input_dir)
     if not sources:
@@ -98,13 +103,17 @@ def prepare_tiles(
     max_workers = max(1, min(max_workers, len(sources)))
 
     jobs: list[tuple[str, str, str, str, tuple[str, ...], str | None]] = []
+    elevation_matches = 0
+    elevation_missing = 0
     for source in sources:
         elevation: str | None = None
         if elevation_dir is not None:
             match = elevation_dir / source.name
-            if not match.is_file():
-                raise StageError(f"missing matching elevation tile for {source.name}: {match}")
-            elevation = str(match)
+            if match.is_file():
+                elevation = str(match)
+                elevation_matches += 1
+            else:
+                elevation_missing += 1
         jobs.append(
             (
                 str(source),
@@ -117,23 +126,33 @@ def prepare_tiles(
         )
 
     results: dict[str, dict[str, object]] = {}
+    merged_tiles = 0
     with ProcessPoolExecutor(max_workers=max_workers) as pool:
         futures = {pool.submit(_process_one, *job): Path(job[0]).name for job in jobs}
         for future in as_completed(futures):
             name = futures[future]
             try:
-                tile_name, payload = future.result()
+                tile_name, payload, merged = future.result()
             except Exception as exc:
                 raise StageError(f"tile preprocess failed for {name}: {exc}") from exc
             results[tile_name] = payload
-            print(f"[preprocess-tiles] {len(results)}/{len(sources)} {tile_name}", flush=True)
+            if merged:
+                merged_tiles += 1
+            suffix = " + elevation" if merged else ""
+            print(
+                f"[preprocess-tiles] {len(results)}/{len(sources)} {tile_name}{suffix}",
+                flush=True,
+            )
 
     template_out = output_dir / "template.args"
     _rewrite_template(template, template_out, results, output_dir.resolve())
     summary: dict[str, object] = {
         "tiles": len(results),
         "workers": max_workers,
-        "elevation_merged": elevation_dir is not None,
+        "elevation_enabled": elevation_dir is not None,
+        "elevation_tiles_found": elevation_matches,
+        "elevation_tiles_missing": elevation_missing,
+        "elevation_tiles_merged": merged_tiles,
         "tile_reports": results,
     }
     report.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
