@@ -15,7 +15,11 @@ brand=${name}     { delete brand; }
 
 # [CUSTOM/АВТОРСКОЕ] Global compact labels for points, lines and polygons.
 # This include is intentionally used by all three production style entry files.
-name=* { set name='${name|subst:улица=> ул.
+name=* { set name='${name|subst:Великая Отечественная война=>ВОВ
+                     |subst:Великой Отечественной войны=>ВОВ
+                     |subst:Великую Отечественную войну=>ВОВ
+                     |subst:Великой Отечественной войне=>ВОВ
+                     |subst:улица=> ул.
                      |subst:переулок=> пер.
                      |subst:проспект=> пр-т
                      |subst:проезд=> пр-д
