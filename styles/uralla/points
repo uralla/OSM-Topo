@@ -73,7 +73,7 @@ include 'inc/priority_points';
 # Фонтан
 amenity=fountain [0x2f19 resolution 23]
 
-craft=beekeeper [0x11505 resolution 24]
+craft=beekeeper [0x2f1a resolution 24]
 
 (aeroway=aerodrome | aeroway=airport | amenity=airport) [0x2f04 resolution 19]
 aeroway=helipad [0x11803 resolution 23]

@@ -7659,8 +7659,8 @@ DayXpm="15 15 2 1"   Colormode=16
 
 
 [_point]
-Type=0x115
-SubType=0x05
+Type=0x02f
+SubType=0x1a
 ;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_6/User customizable point type/Non NT, NT
 String1=0x19,пасека
 ExtendedLabels=Y
