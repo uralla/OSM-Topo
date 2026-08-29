@@ -75,7 +75,6 @@ amenity=supermarket & building!=* [0x08 resolution 22]
 amenity=university & building!=* [0x0a resolution 22 continue]
 
 amenity=fountain [0x13 resolution 24]
-amenity=bus_station [0x05 resolution 22]
 
 (healthcare=* | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x0b resolution 22-23 continue]
 (healthcare=* | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x10908 resolution 24]
