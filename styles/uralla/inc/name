@@ -13,6 +13,9 @@ operator=${brand} { delete operator; }
 operator=${name}  { delete operator; }
 brand=${name}     { delete brand; }
 
+# Semantic preprocessor keeps raw OSM name=* and puts the cartographic label here.
+uralla:label=* { set name='${uralla:label}' }
+
 # [CUSTOM/АВТОРСКОЕ] Global compact labels for points, lines and polygons.
 # This include is intentionally used by all three production style entry files.
 name=* { set name='${name|subst:Великая Отечественная война=>ВОВ
@@ -104,7 +107,7 @@ amenity=fuel & fuel:diesel=no
 #      '${ref} (${operator})' |
 #      '${operator}'
 #}
-
+#
 #operator=* & brand!=* {
 # name '${name} (${operator}) ${ref}' |
 #      '${name} (${operator})' |
