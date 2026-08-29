@@ -45,12 +45,14 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s = Path('uralla_build/build_plan.py').read_text()
-          assert '"preprocess"' in s
-          assert '"merge"' in s
+          preprocess_stage = 'PipelineStage(\n            "preprocess",'
+          splitter_stage = 'PipelineStage(\n            "splitter",'
+          assert preprocess_stage in s
+          assert 'PipelineStage(\n                "merge",' in s
           assert '"splitter-elevation"' not in s
           assert '"prepare-tiles"' not in s
           assert 'uralla_build.tile_preprocess' not in s
-          assert s.index('"preprocess"') < s.index('"splitter"')
+          assert s.index(preprocess_stage) < s.index(splitter_stage)
           print('single-splitter structure OK')
           PY
       - name: Commit restore
