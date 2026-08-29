@@ -259,19 +259,19 @@ class StageRunner:
                 ) + 1
                 stdout_log = stage_root / f"stdout.attempt-{attempt_no}.log"
                 stderr_log = stage_root / f"stderr.attempt-{attempt_no}.log"
-                stdout_log.write_bytes(b"")
+                stdout_log.write_text("checkpoint reused\n", encoding="utf-8")
                 stderr_log.write_bytes(b"")
-                attempt_id = self.history.record_attempt(
-                    identifier,
-                    stage,
-                    "skipped",
-                    0,
-                    0.0,
-                    str(stdout_log),
-                    str(stderr_log),
-                    key,
-                    saved,
-                    reused_attempt_id=int(reusable["id"]),
+                reused_attempt_id = int(reusable["attempt_id"])
+                attempt_id = self.history.record_skip(
+                    build_id=identifier,
+                    stage_name=stage,
+                    command=argv,
+                    cwd=stage_root,
+                    stdout_log=stdout_log,
+                    stderr_log=stderr_log,
+                    resume_key=key,
+                    reused_attempt_id=reused_attempt_id,
+                    checkpoint=saved,
                 )
                 return StageResult(
                     identifier,
@@ -284,7 +284,7 @@ class StageRunner:
                     str(stdout_log),
                     str(stderr_log),
                     saved,
-                    int(reusable["id"]),
+                    reused_attempt_id,
                 )
 
         attempt_no = len(
@@ -297,78 +297,97 @@ class StageRunner:
         stdout_log = stage_root / f"stdout.attempt-{attempt_no}.log"
         stderr_log = stage_root / f"stderr.attempt-{attempt_no}.log"
         started = time.monotonic()
+        attempt_id = self.history.begin_attempt(
+            build_id=identifier,
+            stage_name=stage,
+            command=argv,
+            cwd=stage_root,
+            stdout_log=stdout_log,
+            stderr_log=stderr_log,
+            resume_key=key,
+        )
         env = os.environ.copy()
         env.update(env_overlay)
-        process = subprocess.Popen(
-            argv,
-            cwd=stage_root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-            start_new_session=True,
-        )
         live = stage in LIVE_OUTPUT_STAGES
         threads: list[threading.Thread] = []
-        with stdout_log.open("wb") as stdout_handle, stderr_log.open("wb") as stderr_handle:
-            if live:
-                assert process.stdout is not None and process.stderr is not None
-                for pipe, log_handle in (
-                    (process.stdout, stdout_handle),
-                    (process.stderr, stderr_handle),
-                ):
-                    thread = threading.Thread(
-                        target=_tee_live_output,
-                        args=(pipe, log_handle, stage),
-                        daemon=True,
-                    )
-                    thread.start()
-                    threads.append(thread)
-            try:
-                raw_status, usage = _wait_with_heartbeat(process, stage, started)
-            except KeyboardInterrupt:
-                _terminate_group(process)
-                process.wait()
-                for thread in threads:
-                    thread.join(timeout=2.0)
-                duration = time.monotonic() - started
-                self.history.record_attempt(
-                    identifier,
-                    stage,
-                    "interrupted",
-                    130,
-                    duration,
-                    str(stdout_log),
-                    str(stderr_log),
-                    key,
-                    None,
+
+        try:
+            with stdout_log.open("wb") as stdout_handle, stderr_log.open("wb") as stderr_handle:
+                process = subprocess.Popen(
+                    argv,
+                    cwd=stage_root,
+                    stdout=subprocess.PIPE if live else stdout_handle,
+                    stderr=subprocess.PIPE if live else stderr_handle,
+                    env=env,
+                    start_new_session=True,
                 )
-                raise
-            finally:
-                for thread in threads:
-                    thread.join(timeout=2.0)
+                self.history.update_attempt_pid(attempt_id, process.pid)
+                if live:
+                    assert process.stdout is not None and process.stderr is not None
+                    for pipe, log_handle in (
+                        (process.stdout, stdout_handle),
+                        (process.stderr, stderr_handle),
+                    ):
+                        thread = threading.Thread(
+                            target=_tee_live_output,
+                            args=(pipe, log_handle, stage),
+                            daemon=True,
+                        )
+                        thread.start()
+                        threads.append(thread)
+                try:
+                    raw_status, usage = _wait_with_heartbeat(process, stage, started)
+                except KeyboardInterrupt:
+                    _terminate_group(process)
+                    process.wait()
+                    for thread in threads:
+                        thread.join(timeout=2.0)
+                    duration = time.monotonic() - started
+                    self.history.finish_attempt(
+                        attempt_id,
+                        status="interrupted",
+                        duration_seconds=duration,
+                        exit_code=130,
+                        error="interrupted by user",
+                    )
+                    raise
+                finally:
+                    for thread in threads:
+                        thread.join(timeout=2.0)
+        except KeyboardInterrupt:
+            raise
+        except OSError as exc:
+            duration = time.monotonic() - started
+            self.history.finish_attempt(
+                attempt_id,
+                status="failed",
+                duration_seconds=duration,
+                exit_code=1,
+                error=str(exc),
+            )
+            raise StageError(f"cannot run stage {stage!r}: {exc}") from exc
 
         exit_code = os.waitstatus_to_exitcode(raw_status)
         duration = time.monotonic() - started
         checkpoint = None
+        error: str | None = None
         status = "success" if exit_code == 0 else "failed"
         if status == "success" and outputs:
             try:
                 checkpoint = snapshot_outputs(stage_root, outputs)
-            except StageError:
+            except StageError as exc:
                 status = "failed"
                 exit_code = 1
+                error = str(exc)
 
-        attempt_id = self.history.record_attempt(
-            identifier,
-            stage,
-            status,
-            exit_code,
-            duration,
-            str(stdout_log),
-            str(stderr_log),
-            key,
-            checkpoint,
-            usage=_usage_metrics(usage),
+        self.history.finish_attempt(
+            attempt_id,
+            status=status,
+            duration_seconds=duration,
+            exit_code=exit_code,
+            metrics=_usage_metrics(usage),
+            checkpoint=checkpoint,
+            error=error,
         )
         return StageResult(
             identifier,
