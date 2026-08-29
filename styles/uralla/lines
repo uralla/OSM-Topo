@@ -42,6 +42,11 @@ highway=* & toll=yes { set name='${name} (платн.)' | 'платная' }
 highway=traffic_signals | highway=junction | highway=island | highway=centre_line | highway=traffic_island | highway=stopline {delete highway}
 highway=piste | highway=ski {delete highway}
 highway=no | highway=none {delete highway}
+# A real motor-road classification wins over seasonal piste tagging.
+# Keep piste semantics for path/footway/cycleway/bridleway/pedestrian ways,
+# but do not let piste:type=nordic replace roads such as unclassified/track/service.
+highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=pedestrian & highway!=steps & piste:type=*
+{ delete piste:type; delete piste:grooming }
 # Hide inaccessible highway tunnels before tunnel/bridge/oneway overlays.
 highway=* & tunnel=yes & (access=private|access=no) & foot!=* & bicycle!=* {delete highway;delete junction}
 
