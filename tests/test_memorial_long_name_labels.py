@@ -31,9 +31,18 @@ class MemorialLongNameLabelsTests(unittest.TestCase):
             self.assertIn(rule, text)
             self.assertLess(text.index(rule), generic_index)
 
-    def test_unapproved_broad_memorial_fallbacks_are_absent(self) -> None:
+    def test_war_memorial_long_name_uses_purpose_fallback(self) -> None:
         text = PRIORITY_POINTS.read_text(encoding="utf-8")
-        self.assertNotIn("memorial=war_memorial & uralla:long_name=yes", text)
+        rule = (
+            "historic=memorial & memorial=war_memorial & uralla:long_name=yes "
+            "{ name 'воинский мемориал' } [0x6403 resolution 24]"
+        )
+        generic = "historic=memorial { name '${name}' | '${inscription}' } [0x6403 resolution 24]"
+        self.assertIn(rule, text)
+        self.assertLess(text.index(rule), text.index(generic))
+
+    def test_unapproved_broad_memorial_fallback_is_absent(self) -> None:
+        text = PRIORITY_POINTS.read_text(encoding="utf-8")
         self.assertNotIn("historic=memorial & uralla:long_name=yes { name 'памятник' }", text)
 
 
