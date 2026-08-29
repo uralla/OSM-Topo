@@ -97,7 +97,7 @@ amenity=courthouse [0x3004 resolution 24]
 amenity=embassy & country=* { set name='${name|def:} (${country})' } [0x3003 resolution 24]
 amenity=embassy & country!=* [0x3003 resolution 24]
 amenity=ferry_terminal [0x4300 resolution 22]
-amenity=fire_station [0x11503 resolution 24]
+amenity=fire_station [0x3008 resolution 24]
 
 
 amenity=grave_yard [0x6403 resolution 24]
