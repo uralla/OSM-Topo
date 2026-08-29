@@ -202,6 +202,8 @@ def plan_product_build(
         repo,
         _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
     )
+    elevation_value = product.get("elevation")
+
     # Split OSM before semantic preprocessing so independent tiles can use all CPU cores.
     splitter_input = transformed
 
