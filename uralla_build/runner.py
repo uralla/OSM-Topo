@@ -23,7 +23,7 @@ from .history import HistoryStore
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HEARTBEAT_SECONDS = 30.0
 POLL_SECONDS = 1.0
-LIVE_OUTPUT_STAGES = frozenset({"preprocess", "mkgmap"})
+LIVE_OUTPUT_STAGES = frozenset({"preprocess", "prepare-tiles", "mkgmap"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,26 +259,19 @@ class StageRunner:
                 ) + 1
                 stdout_log = stage_root / f"stdout.attempt-{attempt_no}.log"
                 stderr_log = stage_root / f"stderr.attempt-{attempt_no}.log"
-                stdout_log.write_text(
-                    f"checkpoint reused from attempt {reusable['attempt_id']}\n",
-                    encoding="utf-8",
-                )
-                stderr_log.touch()
-                attempt_id = self.history.record_skip(
-                    build_id=identifier,
-                    stage_name=stage,
-                    command=argv,
-                    cwd=stage_root,
-                    stdout_log=stdout_log,
-                    stderr_log=stderr_log,
-                    resume_key=key,
-                    reused_attempt_id=int(reusable["attempt_id"]),
-                    checkpoint=current,
-                )
-                print(
-                    f"[{stage}] reused checkpoint from attempt {reusable['attempt_id']}",
-                    file=sys.stderr,
-                    flush=True,
+                stdout_log.write_bytes(b"")
+                stderr_log.write_bytes(b"")
+                attempt_id = self.history.record_attempt(
+                    identifier,
+                    stage,
+                    "skipped",
+                    0,
+                    0.0,
+                    str(stdout_log),
+                    str(stderr_log),
+                    key,
+                    saved,
+                    reused_attempt_id=int(reusable["id"]),
                 )
                 return StageResult(
                     identifier,
@@ -290,133 +283,102 @@ class StageRunner:
                     0.0,
                     str(stdout_log),
                     str(stderr_log),
-                    current,
-                    int(reusable["attempt_id"]),
+                    saved,
+                    int(reusable["id"]),
                 )
 
         attempt_no = len(
-            [item for item in self.history.attempts(identifier) if item["stage_name"] == stage]
+            [
+                item
+                for item in self.history.attempts(identifier)
+                if item["stage_name"] == stage
+            ]
         ) + 1
         stdout_log = stage_root / f"stdout.attempt-{attempt_no}.log"
         stderr_log = stage_root / f"stderr.attempt-{attempt_no}.log"
-        attempt_id = self.history.begin_attempt(
-            build_id=identifier,
-            stage_name=stage,
-            command=argv,
-            cwd=stage_root,
-            stdout_log=stdout_log,
-            stderr_log=stderr_log,
-            resume_key=key,
-        )
-        print(f"[{stage}] start", file=sys.stderr, flush=True)
         started = time.monotonic()
-        process: subprocess.Popen[bytes] | None = None
-        metrics: dict[str, int | float] = {}
-        exit_code: int | None = None
-        terminal_status = "failed"
-        checkpoint: list[dict[str, object]] | None = None
-        error: str | None = None
-        live_output = stage in LIVE_OUTPUT_STAGES
-        try:
-            with stdout_log.open("wb") as stdout, stderr_log.open("wb") as stderr:
-                if live_output:
-                    process = subprocess.Popen(
-                        argv,
-                        cwd=stage_root,
-                        env={**os.environ, **env_overlay},
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        start_new_session=True,
+        env = os.environ.copy()
+        env.update(env_overlay)
+        process = subprocess.Popen(
+            argv,
+            cwd=stage_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+            start_new_session=True,
+        )
+        live = stage in LIVE_OUTPUT_STAGES
+        threads: list[threading.Thread] = []
+        with stdout_log.open("wb") as stdout_handle, stderr_log.open("wb") as stderr_handle:
+            if live:
+                assert process.stdout is not None and process.stderr is not None
+                for pipe, log_handle in (
+                    (process.stdout, stdout_handle),
+                    (process.stderr, stderr_handle),
+                ):
+                    thread = threading.Thread(
+                        target=_tee_live_output,
+                        args=(pipe, log_handle, stage),
+                        daemon=True,
                     )
-                    assert process.stdout is not None
-                    assert process.stderr is not None
-                    threads = [
-                        threading.Thread(
-                            target=_tee_live_output,
-                            args=(process.stdout, stdout, stage),
-                            daemon=True,
-                        ),
-                        threading.Thread(
-                            target=_tee_live_output,
-                            args=(process.stderr, stderr, stage),
-                            daemon=True,
-                        ),
-                    ]
-                    for thread in threads:
-                        thread.start()
-                else:
-                    process = subprocess.Popen(
-                        argv,
-                        cwd=stage_root,
-                        env={**os.environ, **env_overlay},
-                        stdout=stdout,
-                        stderr=stderr,
-                        start_new_session=True,
-                    )
-                    threads = []
-                self.history.update_attempt_pid(attempt_id, process.pid)
-                try:
-                    status, usage = _wait_with_heartbeat(process, stage, started)
-                finally:
-                    for thread in threads:
-                        thread.join(timeout=5.0)
-                exit_code = os.waitstatus_to_exitcode(status)
-                process.returncode = exit_code
-                metrics = _usage_metrics(usage)
-            if exit_code != 0:
-                error = f"command exited with code {exit_code}"
-            else:
-                checkpoint = snapshot_outputs(stage_root, outputs)
-                terminal_status = "success"
-        except KeyboardInterrupt:
-            terminal_status = "interrupted"
-            error = "stage interrupted"
-            if process is not None:
+                    thread.start()
+                    threads.append(thread)
+            try:
+                raw_status, usage = _wait_with_heartbeat(process, stage, started)
+            except KeyboardInterrupt:
                 _terminate_group(process)
-                try:
-                    _, status, usage = os.wait4(process.pid, 0)
-                    exit_code = os.waitstatus_to_exitcode(status)
-                    process.returncode = exit_code
-                    metrics = _usage_metrics(usage)
-                except ChildProcessError:
-                    exit_code = process.returncode
-        except (OSError, StageError) as exc:
-            error = str(exc)
+                process.wait()
+                for thread in threads:
+                    thread.join(timeout=2.0)
+                duration = time.monotonic() - started
+                self.history.record_attempt(
+                    identifier,
+                    stage,
+                    "interrupted",
+                    130,
+                    duration,
+                    str(stdout_log),
+                    str(stderr_log),
+                    key,
+                    None,
+                )
+                raise
+            finally:
+                for thread in threads:
+                    thread.join(timeout=2.0)
+
+        exit_code = os.waitstatus_to_exitcode(raw_status)
         duration = time.monotonic() - started
-        self.history.finish_attempt(
-            attempt_id,
-            status=terminal_status,
-            duration_seconds=duration,
-            exit_code=exit_code,
-            metrics=metrics,
-            checkpoint=checkpoint,
-            error=error,
+        checkpoint = None
+        status = "success" if exit_code == 0 else "failed"
+        if status == "success" and outputs:
+            try:
+                checkpoint = snapshot_outputs(stage_root, outputs)
+            except StageError:
+                status = "failed"
+                exit_code = 1
+
+        attempt_id = self.history.record_attempt(
+            identifier,
+            stage,
+            status,
+            exit_code,
+            duration,
+            str(stdout_log),
+            str(stderr_log),
+            key,
+            checkpoint,
+            usage=_usage_metrics(usage),
         )
-        elapsed = _format_elapsed(duration)
-        if terminal_status == "success":
-            print(f"[{stage}] done {elapsed}", file=sys.stderr, flush=True)
-        elif terminal_status != "interrupted":
-            detail = f": {error}" if error else ""
-            print(
-                f"[{stage}] FAILED {elapsed}{detail}; stderr: {stderr_log}",
-                file=sys.stderr,
-                flush=True,
-            )
-        result_exit_code = exit_code if exit_code not in {None, 0} else (
-            0 if terminal_status == "success" else 1
-        )
-        result = StageResult(
+        return StageResult(
             identifier,
             attempt_id,
             product,
             stage,
-            terminal_status,
-            result_exit_code,
+            status,
+            exit_code,
             duration,
             str(stdout_log),
             str(stderr_log),
             checkpoint,
         )
-        if terminal_status == "interrupted":
-            raise KeyboardInterrupt
-        return result
