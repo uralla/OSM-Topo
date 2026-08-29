@@ -1,0 +1,44 @@
+name: Finalize parallel preprocessing
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/wire-parallel-preprocess-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git pull --rebase origin main
+      - name: Apply and verify new stage order
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('uralla_build/build_plan.py')
+          s=p.read_text()
+          if 'semantic_input = build_root / "preprocess"' in s:
+              start=s.index('    semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"')
+              end=s.index('    areas_root = repo_path', start)
+              s=s[:start] + '''    # Split OSM before semantic preprocessing so independent tiles can use all CPU cores.\n    splitter_input = transformed\n\n''' + s[end:]
+          marker='''    stages.append(\n        PipelineStage(\n            "validate-areas",\n            (\n                sys.executable,\n                "-m",\n                "uralla_build",\n                "--manifest",\n                str(Path(manifest_path).resolve()),\n                "validate-areas",\n                product_key,\n                str(tiles / "areas.list"),\n                "--template",\n                str(tiles / "template.args"),\n            ),\n            environment=(("PYTHONPATH", str(repo)),),\n        )\n    )\n\n    garmin = build_root / "mkgmap" / "garmin"\n'''
+          if '"prepare-tiles"' not in s:
+              replacement=marker[:-len('    garmin = build_root / "mkgmap" / "garmin"\n')] + '''    elevation_tiles: Path | None = None\n    if elevation_value is not None:\n        elevation = data_path(host, _text(elevation_value, f"products.{product_key}.elevation"))\n        elevation_tiles = build_root / "splitter-elevation" / "tiles"\n        stages.append(\n            PipelineStage(\n                "splitter-elevation",\n                (\n                    "java", "-jar", str(_tool_jar(tools_lock, host, "splitter")),\n                    str(elevation),\n                    f"--split-file={tiles / 'areas.list'}",\n                    f"--output={_text(defaults_splitter.get('output'), 'defaults.splitter.output')}",\n                    "--output-dir=tiles",\n                ),\n                ("tiles",), ("tiles",),\n            )\n        )\n\n    prepared_tiles = build_root / "prepare-tiles" / "tiles"\n    prepare_command = [\n        sys.executable, "-m", "uralla_build.tile_preprocess",\n        "--input-dir", str(tiles),\n        "--template", str(tiles / "template.args"),\n        "--output-dir", "tiles",\n        "--config", str(blacklist),\n        "--report", "report.json",\n    ]\n    for profile in profiles:\n        prepare_command.extend(("--profile", profile))\n    preprocess_workers = splitter.get("max_threads")\n    if preprocess_workers is not None:\n        prepare_command.extend(("--workers", str(preprocess_workers)))\n    if elevation_tiles is not None:\n        prepare_command.extend(("--elevation-dir", str(elevation_tiles)))\n    stages.append(\n        PipelineStage(\n            "prepare-tiles", tuple(prepare_command),\n            ("tiles", "report.json"), ("tiles",),\n            environment=(("PYTHONPATH", str(repo)),),\n        )\n    )\n    warnings.append("semantic preprocessing runs in parallel after splitter")\n    tiles = prepared_tiles\n\n    garmin = build_root / "mkgmap" / "garmin"\n'''
+              assert marker in s
+              s=s.replace(marker,replacement,1)
+          p.write_text(s)
+          assert s.index('"splitter"') < s.index('"prepare-tiles"') < s.index('"mkgmap"')
+          assert 'semantic_input = build_root / "preprocess"' not in s
+          PY
+          python -m py_compile uralla_build/build_plan.py uralla_build/tile_preprocess.py
+      - name: Commit
+        run: |
+          rm -f .github/workflows/wire-parallel-preprocess.yml .github/workflows/wire-parallel-preprocess-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/build_plan.py uralla_build/tile_preprocess.py .github/workflows
+          git commit -m 'Run semantic preprocess in parallel after splitter'
+          git push
