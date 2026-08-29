@@ -1,0 +1,109 @@
+name: Finalize former 0x115 POI remap to 0x064
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remap-former-115-to-064-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  remap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Apply and verify remap
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          mapping = {
+              '0x6609': '0x6404',
+              '0x641e': '0x6407',
+              '0x660a': '0x6408',
+              '0x660b': '0x6409',
+              '0x660c': '0x640a',
+              '0x2b08': '0x640d',
+          }
+          expected_counts = {'0x6609':1,'0x641e':1,'0x660a':1,'0x660b':1,'0x660c':2,'0x2b08':1}
+          style_root = Path('styles/uralla')
+          style_files = [p for p in style_root.rglob('*') if p.is_file()]
+          typ_path = Path('styles/uralla.txt')
+          typ = typ_path.read_text(encoding='utf-8')
+          production = '\n'.join(p.read_text(encoding='utf-8') for p in style_files)
+
+          for new in mapping.values():
+              assert new not in production, f'destination used in style: {new}'
+              t=int(new[2:4],16); s=int(new[4:6],16)
+              assert not re.search(rf'(?ms)^\[_point\]\s*\nType=0x0?{t:02x}\s*\nSubType=0x{s:02x}\b.*?^\[end\]', typ, re.I), new
+
+          counts={k:0 for k in mapping}
+          for path in style_files:
+              text=path.read_text(encoding='utf-8'); original=text
+              for old,new in mapping.items():
+                  counts[old]+=text.count(old)
+                  text=text.replace(old,new)
+              if text!=original: path.write_text(text,encoding='utf-8')
+          assert counts==expected_counts,(counts,expected_counts)
+
+          for old,new in mapping.items():
+              ot=int(old[2:4],16); os=int(old[4:6],16)
+              nt=int(new[2:4],16); ns=int(new[4:6],16)
+              pat=re.compile(rf'(?ms)^\[_point\]\nType=0x0?{ot:02x}\nSubType=0x{os:02x}\n.*?^\[end\]')
+              matches=list(pat.finditer(typ)); assert len(matches)==1,(old,len(matches))
+              m=matches[0]; block=m.group(0)
+              block=re.sub(r'^Type=.*$',f'Type=0x{nt:03x}',block,count=1,flags=re.M)
+              block=re.sub(r'^SubType=.*$',f'SubType=0x{ns:02x}',block,count=1,flags=re.M)
+              typ=typ[:m.start()]+block+typ[m.end():]
+          typ_path.write_text(typ,encoding='utf-8')
+
+          # Update current-address assertions in tests. Historical old 0x115 values stay intact.
+          for path in Path('tests').glob('test_*.py'):
+              text=path.read_text(encoding='utf-8'); original=text
+              for old,new in mapping.items():
+                  text=text.replace(old,new).replace(old.upper(),new.upper())
+              # Split TYP assertions for the moved 0x066 / 0x02b blocks.
+              text=text.replace('Type=0x066\nSubType=0x09','Type=0x064\nSubType=0x04')
+              text=text.replace('Type=0x066\nSubType=0x0a','Type=0x064\nSubType=0x08')
+              text=text.replace('Type=0x066\nSubType=0x0b','Type=0x064\nSubType=0x09')
+              text=text.replace('Type=0x066\nSubType=0x0c','Type=0x064\nSubType=0x0a')
+              text=text.replace('Type=0x064\nSubType=0x1e','Type=0x064\nSubType=0x07')
+              text=text.replace('Type=0x02b\nSubType=0x08','Type=0x064\nSubType=0x0d')
+              if text!=original: path.write_text(text,encoding='utf-8')
+
+          doc=Path('docs/POI_115_MIGRATION.md')
+          doc.write_text('''# POI group `0x115` migration\n\nThis file is the authoritative current-state record for the former `0x115` POIs. Historical snapshots under `docs/history/` are not current state.\n\n## Status: MIGRATED TO `0x064xx`, DEVICE VERIFICATION PENDING\n\nThe previous attempt moved several symbols to numerically free `0x66xx`/other addresses. That was not a valid definition of “safe”: those addresses can fail to render on the target Garmin. The affected custom symbols are now consolidated in the already proven `0x064xx` point family.\n\n| Old type | Meaning | Current type |\n| --- | --- | --- |\n| `0x11500` | межевой знак | `0x6404` |\n| `0x11501` | очистные сооружения | `0x6407` |\n| `0x11504` | урочище / locality | `0x6408` |\n| `0x11505` | пчеловод | `0x2f1a` |\n| `0x11506` | тура | `0x6409` |\n| `0x11507` | седловина / перевал | `0x640a` |\n| `0x11509` | chalet / домик | `0x640d` |\n| `0x1150a` | велосипеды / велосервис | `0x2f18` |\n\nThe TYP bitmap artwork for each of the six remapped symbols was moved with the style address; only Type/SubType changed.\n\n## Device-safety rule\n\nA free Garmin type is not automatically a working or safe type. For custom POIs, prefer a type family already confirmed on the target device. `0x064xx` is the working anchor for this set. `0x66xx` and extended `0x11xxx` families must not be used merely because a subtype is vacant. Real-device rendering is the final criterion.\n''',encoding='utf-8')
+
+          backlog=Path('docs/BACKLOG.md')
+          text=backlog.read_text(encoding='utf-8')
+          text=text.replace('### POI-01 — Аудит POI и перенос в безопасный диапазон Garmin types — DONE','### POI-01 — Аудит POI и перенос в безопасный диапазон Garmin types — PARTIAL')
+          section=text.find('### POI-01 — Аудит POI и перенос в безопасный диапазон Garmin types — PARTIAL')
+          if section>=0:
+              end=text.find('\n## Polygon rules',section)
+              if end>=0 and 'реальном Garmin' not in text[section:end]:
+                  text=text[:end]+('\n\nТекущее состояние: бывшие пользовательские POI `0x115` перенесены в проверенный рабочий диапазон `0x064xx`. '
+                                  'Задачу закрывать только после проверки их видимости на реальном Garmin. Свободный адрес в `0x66xx`/extended-диапазоне сам по себе безопасным не считается.\n')+text[end:]
+          backlog.write_text(text,encoding='utf-8')
+
+          # Final hard checks.
+          style='\n'.join(p.read_text(encoding='utf-8') for p in style_files)
+          for old in mapping: assert old not in style, old
+          for new in mapping.values():
+              assert new in style,new
+              t=int(new[2:4],16); s=int(new[4:6],16)
+              assert re.search(rf'(?ms)^\[_point\]\s*\nType=0x0?{t:02x}\s*\nSubType=0x{s:02x}\b.*?^\[end\]',typ_path.read_text(encoding='utf-8')),new
+          PY
+      - name: Commit and remove one-shot workflows
+        shell: bash
+        run: |
+          rm -f .github/workflows/remap-former-115-to-064.yml .github/workflows/remap-former-115-to-064-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles tests docs .github/workflows/remap-former-115-to-064*.yml
+          git commit -m 'Move former 0x115 custom POIs to working 0x064 range'
+          git push
