@@ -1,0 +1,52 @@
+name: Retire polygon 0x0d v2
+on: [push]
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git pull --rebase origin main
+      - name: Apply migration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/polygons')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('[0x0d resolution 22]', '[0x10f13 resolution 22]')
+          platform = "(public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x10f13 resolution 21]"
+          s = s.replace(platform, platform.replace('0x10f13', '0x10f14'))
+          s = s.replace('tourism=theme_park [0x0d resolution 21]', 'tourism=theme_park [0x10f13 resolution 21]')
+          assert '[0x0d resolution' not in s
+          p.write_text(s, encoding='utf-8')
+
+          t = Path('styles/uralla.txt')
+          x = t.read_text(encoding='utf-8')
+          assert 'Type=0x10f13\n;GRMN_TYPE: Customizable Areas/TOURISM_AREA/' not in x
+          assert 'Type=0x10f14\n;GRMN_TYPE: Customizable Areas/PLATFORM_AREA/' not in x
+          blocks = '''\n\n[_polygon]\nType=0x10f13\n;GRMN_TYPE: Customizable Areas/TOURISM_AREA/Tourism area\nString1=0x19,туристический объект\nString2=0x04,tourism area\nExtendedLabels=Y\nFontStyle=NoLabel (invisible)\nCustomColor=No\nContourColor=No\nXpm="0 0 1 0"\n"1 c #FFCA8B"\n[end]\n\n[_polygon]\nType=0x10f14\n;GRMN_TYPE: Customizable Areas/PLATFORM_AREA/Railway or public transport platform\nString1=0x19,платформа\nString2=0x04,platform\nExtendedLabels=Y\nFontStyle=NoLabel (invisible)\nCustomColor=No\nContourColor=No\nXpm="0 0 1 0"\n"1 c #FFCA8B"\n[end]\n'''
+          marker='\n\n[_polygon]\nType=0x0f\n'
+          assert marker in x
+          x=x.replace(marker, blocks+marker, 1)
+          dm='Type=0x10f12,4\n'
+          assert dm in x
+          x=x.replace(dm, dm+'Type=0x10f13,4\nType=0x10f14,4\n', 1)
+          t.write_text(x, encoding='utf-8')
+
+          b=Path('docs/BACKLOG.md')
+          y=b.read_text(encoding='utf-8')
+          y=y.replace('### POI-01 — Аудит POI и перенос группы `0x115` в безопасный диапазон — DONE','### POI-01 — Аудит custom POI и перенос в подтверждённый диапазон — DONE')
+          y=y.replace('Целевой объём этого этапа был ограничен пользовательскими POI группы `0x115`. Группа полностью освобождена: в production style и TYP больше нет активных `0x115xx` точек.','Активные custom POI из неработающих на целевом Garmin extended-семейств `0x115xx`, `0x116xx` и выше перенесены в подтверждённо рабочий диапазон `0x064xx`. Контрольные точки проверены на устройстве 29 августа 2026 года.')
+          y=y.replace('Итоговые подтверждённые переносы и их текущие адреса зафиксированы в `docs/POI_115_MIGRATION.md`; `tests/test_group_115_migration.py` не допускает возврата старой группы.','Итоговые адреса зафиксированы в `docs/POI_115_MIGRATION.md` и `docs/EXTENDED_POINT_TYPES.md`. Свободный extended-адрес сам по себе больше не считается безопасным.')
+          y=y.replace('- площадные `highway=footway|pedestrian|...` вынесены с системного `0x0d` (Garmin Reservation) на custom polygon, чтобы прибор не показывал «Резервация, заповедник»;','- все production-полигоны, ранее использовавшие системный `0x0d` (Garmin Reservation), вынесены на отдельные custom types: пешеходные площади, tourism-area и платформы;')
+          b.write_text(y, encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          rm -f .github/workflows/retire-polygon-0x0d.yml .github/workflows/retire-polygon-0x0d-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/polygons styles/uralla.txt docs/BACKLOG.md .github/workflows
+          git commit -m 'Retire system polygon 0x0d from production style'
+          git push
