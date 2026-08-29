@@ -79,7 +79,7 @@ jobs:
       - name: Verify focused tests and syntax
         run: |
           python -m py_compile uralla_build/preprocessor.py uralla_build/build_plan.py
-          python -m unittest tests.test_preprocessor
+          python -m unittest discover -s tests -p 'test_preprocessor.py'
           ! grep -R "transform_places" -n uralla_build config
       - name: Commit migration
         run: |
