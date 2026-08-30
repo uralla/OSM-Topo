@@ -1,0 +1,62 @@
+name: Remove POI neighbor diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-poi-neighbor-diagnostic.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove temporary full-scan diagnostic
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          poi = Path('uralla_build/poi_context.py')
+          text = poi.read_text(encoding='utf-8')
+          pattern = r'\n\ndef nearest_accommodation_details\(.*?\n\ndef enrich_accommodation_context\('
+          updated, count = re.subn(pattern, '\n\ndef enrich_accommodation_context(', text, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'expected one nearest_accommodation_details block, got {count}')
+          poi.write_text(updated, encoding='utf-8')
+
+          pre = Path('uralla_build/preprocessor.py')
+          text = pre.read_text(encoding='utf-8')
+          text, import_count = re.subn(r'^    nearest_accommodation_details,\n', '', text, flags=re.M)
+          if import_count != 1:
+              raise SystemExit(f'expected one import, got {import_count}')
+          block = '''            _emit_progress("POI accommodation check: scanning 20 nearest neighbors")\n            nearest = nearest_accommodation_details(\n                str(source),\n                osmium,\n                float(solnyshko_accommodation_sample["lat"]),\n                float(solnyshko_accommodation_sample["lon"]),\n                20,\n            )\n            for rank, neighbor in enumerate(nearest, start=1):\n                _emit_progress(\n                    "POI accommodation neighbor: "\n                    f"#{rank}; id={neighbor['id']}; "\n                    f"name={neighbor['name']!r}; tourism={neighbor['tourism']}; "\n                    f"distance={float(neighbor['distance_km']):.3f}km; "\n                    f"lat={float(neighbor['lat']):.6f}; "\n                    f"lon={float(neighbor['lon']):.6f}"\n                )\n'''
+          if block not in text:
+              raise SystemExit('neighbor diagnostic block not found')
+          pre.write_text(text.replace(block, ''), encoding='utf-8')
+          PY
+
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          ! grep -R "nearest_accommodation_details\|scanning 20 nearest neighbors\|POI accommodation neighbor" uralla_build
+          bash -n scripts/test-poi-context.sh
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py scripts/test-poi-context.sh
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Remove temporary accommodation neighbor scan'
+            git push
+          fi
