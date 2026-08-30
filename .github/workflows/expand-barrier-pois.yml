@@ -1,0 +1,94 @@
+name: Expand barrier POIs
+
+on:
+  push:
+    paths:
+      - '.github/workflows/expand-barrier-pois.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch barrier point rules
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('styles/uralla/points')
+          text = path.read_text(encoding='utf-8')
+          old = """#barrier=bollard | barrier=bus_trap {addaccess = no; add bicycle = yes; add foot = yes} [0x660f resolution 24]
+#barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate {addaccess = no; add foot = yes} [0x660f resolution 24]
+barrier=bollard | barrier=bus_trap [0x660f resolution 24]
+barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate [0x660f resolution 24]
+barrier=gate [0x5801 resolution 24]
+barrier=lift_gate [0x5800 resolution 24]
+barrier=toll_booth [0x58 resolution 24]
+"""
+          new = """# Physical barriers remain visible even when access=yes; the icon describes the object,
+# while access tags continue to describe who may pass it. Generic icons get a useful
+# selectable label so the actual barrier type is not lost.
+barrier=lift_gate { name '${name}' | 'шлагбаум' } [0x5800 resolution 24]
+barrier=swing_gate { name '${name}' | 'поворотный шлагбаум' } [0x5800 resolution 24]
+barrier=chain { name '${name}' | 'цепь' } [0x5800 resolution 24]
+
+barrier=gate { name '${name}' | 'ворота' } [0x5801 resolution 24]
+barrier=sliding_gate { name '${name}' | 'откатные ворота' } [0x5801 resolution 24]
+barrier=sally_port { name '${name}' | 'ворота' } [0x5801 resolution 24]
+barrier=kissing_gate { name '${name}' | 'калитка' } [0x5801 resolution 24]
+barrier=turnstile { name '${name}' | 'турникет' } [0x5801 resolution 24]
+barrier=full-height_turnstile { name '${name}' | 'турникет' } [0x5801 resolution 24]
+barrier=stile { name '${name}' | 'перелаз' } [0x5801 resolution 24]
+
+# Other physical obstacles keep the existing generic obstacle symbol, but expose their type.
+barrier=bollard { name '${name}' | 'столбик' } [0x660f resolution 24]
+barrier=bus_trap { name '${name}' | 'автобусный барьер' } [0x660f resolution 24]
+barrier=block { name '${name}' | 'блок' } [0x660f resolution 24]
+barrier=cycle_barrier { name '${name}' | 'велобарьер' } [0x660f resolution 24]
+barrier=motorcycle_barrier { name '${name}' | 'мотобарьер' } [0x660f resolution 24]
+barrier=log { name '${name}' | 'бревно' } [0x660f resolution 24]
+barrier=cattle_grid { name '${name}' | 'скотопрогонная решётка' } [0x660f resolution 24]
+
+barrier=toll_booth { name '${name}' | 'пункт оплаты' } [0x58 resolution 24]
+"""
+          if old not in text:
+              raise SystemExit('expected barrier block not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+      - name: Verify barrier rules
+        shell: python
+        run: |
+          from pathlib import Path
+          s = Path('styles/uralla/points').read_text(encoding='utf-8')
+          required = {
+              'barrier=lift_gate': '0x5800',
+              'barrier=swing_gate': '0x5800',
+              'barrier=chain': '0x5800',
+              'barrier=gate': '0x5801',
+              'barrier=sliding_gate': '0x5801',
+              'barrier=sally_port': '0x5801',
+              'barrier=kissing_gate': '0x5801',
+              'barrier=turnstile': '0x5801',
+              'barrier=full-height_turnstile': '0x5801',
+              'barrier=stile': '0x5801',
+              'barrier=motorcycle_barrier': '0x660f',
+              'barrier=log': '0x660f',
+              'barrier=cattle_grid': '0x660f',
+              'barrier=toll_booth': '0x58',
+          }
+          for tag, typ in required.items():
+              line = next((line for line in s.splitlines() if line.startswith(tag + ' ')), None)
+              assert line is not None, tag
+              assert typ in line, (tag, line)
+              assert "name '${name}' |" in line, (tag, line)
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/points
+          git diff --cached --quiet && exit 0
+          git commit -m 'Expand barrier POI coverage'
+          git push
