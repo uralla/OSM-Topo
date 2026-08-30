@@ -28,7 +28,6 @@ from .poi_context import (
     enrich_activity_diagnostics,
     enrich_food_shop_context,
     enrich_transit_stop_context,
-    nearest_accommodation_details,
 )
 
 
@@ -664,23 +663,6 @@ def preprocess_pbf(
                 f"activity2km={solnyshko_accommodation_sample.get('activity_2km', 'n/a')}; "
                 f"priority={solnyshko_accommodation_sample['priority']}"
             )
-            _emit_progress("POI accommodation check: scanning 20 nearest neighbors")
-            nearest = nearest_accommodation_details(
-                str(source),
-                osmium,
-                float(solnyshko_accommodation_sample["lat"]),
-                float(solnyshko_accommodation_sample["lon"]),
-                20,
-            )
-            for rank, neighbor in enumerate(nearest, start=1):
-                _emit_progress(
-                    "POI accommodation neighbor: "
-                    f"#{rank}; id={neighbor['id']}; "
-                    f"name={neighbor['name']!r}; tourism={neighbor['tourism']}; "
-                    f"distance={float(neighbor['distance_km']):.3f}km; "
-                    f"lat={float(neighbor['lat']):.6f}; "
-                    f"lon={float(neighbor['lon']):.6f}"
-                )
         _emit_progress(
             f"POI context: activity nodes {activity_index.shop_count:,}; "
             f"enriched POIs {counters['activity_context_enriched']:,}"
