@@ -1,0 +1,110 @@
+name: Add accommodation context scoring
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-accommodation-context.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install project
+        run: python -m pip install -e .
+      - name: Extend context scoring to hotels and hostels
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('uralla_build/poi_context.py')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              'FOOD_SHOP_VALUES = frozenset(\n',
+              'ACCOMMODATION_VALUES = frozenset({"hotel", "hostel"})\n\nFOOD_SHOP_VALUES = frozenset(\n',
+              1,
+          )
+          marker = '''def classify_food_shop(*, shops_2km: int, shops_10km: int) -> tuple[str, str]:\n'''
+          assert marker in s
+          insert = '''def is_accommodation(tags: Mapping[str, str] | object) -> bool:\n    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]\n    values = {str(key): str(value) for key, value in items}\n    return values.get("tourism") in ACCOMMODATION_VALUES\n\n\ndef classify_accommodation(*, objects_2km: int, objects_10km: int) -> tuple[str, str]:\n    """Use the same rarity thresholds as food shops."""\n\n    if objects_2km <= 1 and objects_10km <= 3:\n        return "remote", "isolated"\n    if objects_2km <= 3 and objects_10km <= 10:\n        return "settlement", "sparse"\n    return "urban", "common"\n\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+
+          marker = '''def enrich_food_shop_context(\n'''
+          assert marker in s
+          insert = '''def build_accommodation_index(source: str, osmium: Any) -> FoodShopIndex:\n    """Scan a PBF once and index node-based hotels and hostels."""\n\n    index = FoodShopIndex.empty()\n    for item in osmium.FileProcessor(source):\n        if not is_accommodation(item.tags):\n            continue\n        location = valid_node_location(item)\n        if location is None:\n            continue\n        index.add(*location)\n    return index\n\n\ndef enrich_accommodation_context(\n    item: object,\n    tags: Mapping[str, str] | object,\n    index: FoodShopIndex,\n) -> tuple[dict[str, str], bool, dict[str, object] | None]:\n    """Attach the same context priority used by grocery POIs to hotels/hostels."""\n\n    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]\n    result = {str(key): str(value) for key, value in items}\n    if not is_accommodation(result):\n        return result, False, None\n    location = valid_node_location(item)\n    if location is None:\n        return result, False, None\n    lat, lon = location\n    objects_2km = index.count_within(lat, lon, 2.0)\n    objects_10km = index.count_within(lat, lon, 10.0)\n    context, priority = classify_accommodation(objects_2km=objects_2km, objects_10km=objects_10km)\n    desired = {\n        POI_CONTEXT_TAG: context,\n        POI_PRIORITY_TAG: priority,\n        "uralla:poi_accommodation_2km": str(objects_2km),\n        "uralla:poi_accommodation_10km": str(objects_10km),\n    }\n    changed = any(result.get(key) != value for key, value in desired.items())\n    result.update(desired)\n    sample = {\n        "id": int(getattr(item, "id", 0)),\n        "name": result.get("name"),\n        "tourism": result.get("tourism"),\n        "context": context,\n        "priority": priority,\n        "objects_2km": objects_2km,\n        "objects_10km": objects_10km,\n        "lat": lat,\n        "lon": lon,\n    }\n    return result, changed, sample\n\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('uralla_build/preprocessor.py')
+          s = p.read_text(encoding='utf-8')
+          old = 'from .poi_context import build_food_shop_index, enrich_food_shop_context\n'
+          new = '''from .poi_context import (\n    build_accommodation_index,\n    build_food_shop_index,\n    enrich_accommodation_context,\n    enrich_food_shop_context,\n)\n'''
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = '''    food_shop_index = build_food_shop_index(str(source), osmium)\n    _emit_progress(\n        f"food-shop context: {food_shop_index.shop_count:,} node shops indexed "\n        f"in {time.monotonic() - context_started:.1f}s"\n    )\n'''
+          if old not in s:
+              old = '''    food_shop_index = build_food_shop_index(str(source), osmium)\n    _emit_progress(\n        f"[preprocess] food-shop context: {food_shop_index.shop_count:,} node shops indexed "\n        f"in {time.monotonic() - context_started:.1f}s"\n    )\n'''
+          assert old in s
+          new = old + '''    _emit_progress("accommodation context: indexing node hotels/hostels")\n    accommodation_started = time.monotonic()\n    accommodation_index = build_accommodation_index(str(source), osmium)\n    _emit_progress(\n        f"accommodation context: {accommodation_index.shop_count:,} node hotels/hostels indexed "\n        f"in {time.monotonic() - accommodation_started:.1f}s"\n    )\n'''
+          s = s.replace(old, new, 1)
+
+          old = '    poi_context_samples: list[dict[str, object]] = []\n'
+          assert old in s
+          s = s.replace(old, old + '    accommodation_context_samples: list[dict[str, object]] = []\n', 1)
+
+          marker = '''                original_tags = {str(key): str(value) for key, value in item.tags}\n'''
+          assert marker in s
+          insert = '''                final_tags, accommodation_added, accommodation_sample = enrich_accommodation_context(\n                    item, final_tags, accommodation_index\n                )\n                if accommodation_added:\n                    counters["accommodation_context_enriched"] += 1\n                    priority = final_tags.get("uralla:poi_priority", "unknown")\n                    counters[f"accommodation_priority_{priority}"] += 1\n                    if accommodation_sample is not None and len(accommodation_context_samples) < 200:\n                        accommodation_context_samples.append(accommodation_sample)\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+
+          marker = '            "poi_context_index_node_shops": food_shop_index.shop_count,\n'
+          assert marker in s
+          s = s.replace(marker, marker + '''            "accommodation_context_index_nodes": accommodation_index.shop_count,\n            "accommodation_context_enriched": counters["accommodation_context_enriched"],\n            "accommodation_priority_common": counters["accommodation_priority_common"],\n            "accommodation_priority_sparse": counters["accommodation_priority_sparse"],\n            "accommodation_priority_isolated": counters["accommodation_priority_isolated"],\n''', 1)
+
+          marker = '            "poi_context_samples": poi_context_samples,\n'
+          assert marker in s
+          s = s.replace(marker, marker + '            "accommodation_context_samples": accommodation_context_samples,\n', 1)
+
+          # Add a second concise log summary alongside the food-shop summary.
+          needle = 'POI context: food shops'
+          pos = s.find(needle)
+          assert pos != -1
+          line_end = s.find('\n', pos)
+          # locate the end of the surrounding _emit_progress(...) call
+          call_end = s.find('    )', line_end)
+          assert call_end != -1
+          call_end = s.find('\n', call_end) + 1
+          summary = '''        _emit_progress(\n            f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "\n            f"common {counters['accommodation_priority_common']:,}; "\n            f"sparse {counters['accommodation_priority_sparse']:,}; "\n            f"isolated {counters['accommodation_priority_isolated']:,}"\n        )\n'''
+          s = s[:call_end] + summary + s[call_end:]
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('styles/uralla/inc/priority_points')
+          s = p.read_text(encoding='utf-8')
+          old = '''tourism=guest_house [0x2b01 resolution 21]\n(tourism=hotel | tourism=motel) [0x2b01 resolution 24]\ntourism=hostel [0x2b02 resolution 24]\n'''
+          assert old in s
+          new = '''tourism=guest_house [0x2b01 resolution 21]\nuralla:poi_priority=isolated & tourism=hotel [0x2b01 resolution 22]\nuralla:poi_priority=sparse & tourism=hotel [0x2b01 resolution 23]\ntourism=hotel [0x2b01 resolution 24]\ntourism=motel [0x2b01 resolution 24]\nuralla:poi_priority=isolated & tourism=hostel [0x2b02 resolution 22]\nuralla:poi_priority=sparse & tourism=hostel [0x2b02 resolution 23]\ntourism=hostel [0x2b02 resolution 24]\n'''
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/preprocessor.py uralla_build/poi_context.py
+          python -m unittest tests.test_poi_context -v
+          grep -F 'uralla:poi_priority=isolated & tourism=hotel' styles/uralla/inc/priority_points
+          grep -F 'uralla:poi_priority=isolated & tourism=hostel' styles/uralla/inc/priority_points
+          grep -F 'POI context: hotels/hostels' uralla_build/preprocessor.py
+      - name: Commit
+        run: |
+          rm .github/workflows/add-accommodation-context.yml
+          git config user.name 'Alexey Klyanin'
+          git config user.email '42924160+uralla@users.noreply.github.com'
+          git add -A
+          git commit -m 'Add context-aware hotel and hostel POIs'
+          git push
