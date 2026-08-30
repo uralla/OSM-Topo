@@ -1,0 +1,73 @@
+name: Refine activity context diagnostics
+on:
+  push:
+    branches: [main]
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'Prepare activity context refinement'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch activity diagnostics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('uralla_build/preprocessor.py')
+          s = p.read_text()
+          s = s.replace(
+              '    activity_context_samples: list[dict[str, object]] = []\n',
+              '    activity_context_samples: list[dict[str, object]] = []\n'
+              '    activity_500m_values: list[int] = []\n'
+              '    activity_2km_values: list[int] = []\n'
+          )
+          s = s.replace(
+              '                if activity_added:\n'
+              '                    counters["activity_context_enriched"] += 1\n',
+              '                if activity_added:\n'
+              '                    counters["activity_context_enriched"] += 1\n'
+              '                    if activity_sample is not None:\n'
+              '                        activity_500m_values.append(int(activity_sample["activity_500m"]))\n'
+              '                        activity_2km_values.append(int(activity_sample["activity_2km"]))\n'
+          )
+          marker = '        _emit_progress(\n            f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "\n'
+          helper = '''        def _activity_percentile(values: list[int], percentile: float) -> int:\n            if not values:\n                return 0\n            ordered = sorted(values)\n            index = round((len(ordered) - 1) * percentile)\n            return ordered[index]\n\n        if activity_500m_values:\n            _emit_progress(\n                "POI activity density: "\n                f"samples {len(activity_500m_values):,}; "\n                f"500m p25={_activity_percentile(activity_500m_values, 0.25)} "\n                f"p50={_activity_percentile(activity_500m_values, 0.50)} "\n                f"p75={_activity_percentile(activity_500m_values, 0.75)} "\n                f"p90={_activity_percentile(activity_500m_values, 0.90)}; "\n                f"2km p25={_activity_percentile(activity_2km_values, 0.25)} "\n                f"p50={_activity_percentile(activity_2km_values, 0.50)} "\n                f"p75={_activity_percentile(activity_2km_values, 0.75)} "\n                f"p90={_activity_percentile(activity_2km_values, 0.90)}"\n            )\n'''
+          if marker not in s:
+              raise SystemExit('preprocessor marker not found')
+          s = s.replace(marker, helper + marker, 1)
+          p.write_text(s)
+
+          t = Path('tests/test_poi_context.py')
+          ts = t.read_text()
+          ts = ts.replace(
+              'from uralla_build.poi_context import FoodShopIndex, classify_food_shop, is_food_shop\n',
+              'from uralla_build.poi_context import (\n'
+              '    FoodShopIndex,\n'
+              '    classify_food_shop,\n'
+              '    is_food_shop,\n'
+              '    is_meaningful_context_node,\n'
+              ')\n'
+          )
+          insert = '''\n    def test_meaningful_context_node_filter(self) -> None:\n        self.assertFalse(is_meaningful_context_node({}))\n        self.assertFalse(is_meaningful_context_node({"source": "survey"}))\n        self.assertFalse(is_meaningful_context_node({"note": "check later", "fixme": "verify"}))\n        self.assertFalse(is_meaningful_context_node({"source:maxspeed": "RU:urban"}))\n        self.assertTrue(is_meaningful_context_node({"amenity": "toilets"}))\n        self.assertTrue(is_meaningful_context_node({"addr:housenumber": "3"}))\n        self.assertTrue(is_meaningful_context_node({"tourism": "guest_house", "source": "survey"}))\n\n'''
+          anchor = '    def test_grid_distance_count(self) -> None:\n'
+          if anchor not in ts:
+              raise SystemExit('test marker not found')
+          ts = ts.replace(anchor, insert + anchor, 1)
+          t.write_text(ts)
+          PY
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/preprocessor.py tests/test_poi_context.py
+          git commit -m 'Refine activity context diagnostics'
+          git push
