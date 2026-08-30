@@ -39,6 +39,16 @@ class PoiContextTests(unittest.TestCase):
             ("urban", "common"),
         )
 
+
+    def test_meaningful_context_node_filter(self) -> None:
+        self.assertFalse(is_meaningful_context_node({}))
+        self.assertFalse(is_meaningful_context_node({"source": "survey"}))
+        self.assertFalse(is_meaningful_context_node({"note": "check later", "fixme": "verify"}))
+        self.assertFalse(is_meaningful_context_node({"source:maxspeed": "RU:urban"}))
+        self.assertTrue(is_meaningful_context_node({"amenity": "toilets"}))
+        self.assertTrue(is_meaningful_context_node({"addr:housenumber": "3"}))
+        self.assertTrue(is_meaningful_context_node({"tourism": "guest_house", "source": "survey"}))
+
     def test_grid_distance_count(self) -> None:
         index = FoodShopIndex.empty()
         index.add(55.0000, 60.0000)

@@ -458,6 +458,8 @@ def preprocess_pbf(
     accommodation_context_samples: list[dict[str, object]] = []
     transit_context_samples: list[dict[str, object]] = []
     activity_context_samples: list[dict[str, object]] = []
+    activity_500m_values: list[int] = []
+    activity_2km_values: list[int] = []
     solnyshko_accommodation_sample: dict[str, object] | None = None
     started = time.monotonic()
     _emit_progress(
@@ -594,6 +596,9 @@ def preprocess_pbf(
                 )
                 if activity_added:
                     counters["activity_context_enriched"] += 1
+                    if activity_sample is not None:
+                        activity_500m_values.append(int(activity_sample["activity_500m"]))
+                        activity_2km_values.append(int(activity_sample["activity_2km"]))
                     if activity_sample is not None and len(activity_context_samples) < 200:
                         activity_context_samples.append(activity_sample)
                     if (
@@ -619,6 +624,26 @@ def preprocess_pbf(
             f"sparse {counters['poi_priority_sparse']:,}; "
             f"isolated {counters['poi_priority_isolated']:,}"
         )
+        def _activity_percentile(values: list[int], percentile: float) -> int:
+            if not values:
+                return 0
+            ordered = sorted(values)
+            index = round((len(ordered) - 1) * percentile)
+            return ordered[index]
+
+        if activity_500m_values:
+            _emit_progress(
+                "POI activity density: "
+                f"samples {len(activity_500m_values):,}; "
+                f"500m p25={_activity_percentile(activity_500m_values, 0.25)} "
+                f"p50={_activity_percentile(activity_500m_values, 0.50)} "
+                f"p75={_activity_percentile(activity_500m_values, 0.75)} "
+                f"p90={_activity_percentile(activity_500m_values, 0.90)}; "
+                f"2km p25={_activity_percentile(activity_2km_values, 0.25)} "
+                f"p50={_activity_percentile(activity_2km_values, 0.50)} "
+                f"p75={_activity_percentile(activity_2km_values, 0.75)} "
+                f"p90={_activity_percentile(activity_2km_values, 0.90)}"
+            )
         _emit_progress(
             f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "
             f"common {counters['accommodation_priority_common']:,}; "
