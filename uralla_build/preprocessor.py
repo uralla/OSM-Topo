@@ -22,6 +22,7 @@ from .river_landmarks import (
     enrich_river_landmark_tags,
     load_river_landmarks,
 )
+from .poi_context import build_food_shop_index, enrich_food_shop_context
 
 
 STRONG_WIKIDATA_KEYS = {
@@ -440,6 +441,13 @@ def preprocess_pbf(
     peak_landmarks = load_peak_landmarks(peak_catalog_path)
     river_landmarks = load_river_landmarks(river_catalog_path)
     osmium = _load_osmium()
+    _emit_progress("[preprocess] food-shop context: indexing node shops")
+    context_started = time.monotonic()
+    food_shop_index = build_food_shop_index(str(source), osmium)
+    _emit_progress(
+        f"[preprocess] food-shop context: {food_shop_index.shop_count:,} node shops indexed "
+        f"in {time.monotonic() - context_started:.1f}s"
+    )
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
     report_temporary = report_target.parent / f".{report_target.name}.{uuid4().hex}.partial"
     counters: Counter[str] = Counter()
@@ -448,6 +456,7 @@ def preprocess_pbf(
     geographic_label_samples: list[dict[str, object]] = []
     peak_samples: list[dict[str, object]] = []
     river_samples: list[dict[str, object]] = []
+    poi_context_samples: list[dict[str, object]] = []
     started = time.monotonic()
     _emit_progress(
         f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)"
@@ -528,6 +537,16 @@ def preprocess_pbf(
                             }
                         )
 
+                final_tags, poi_context_added, poi_context_sample = enrich_food_shop_context(
+                    item, final_tags, food_shop_index
+                )
+                if poi_context_added:
+                    counters["poi_context_enriched"] += 1
+                    priority = final_tags.get("uralla:poi_priority", "unknown")
+                    counters[f"poi_priority_{priority}"] += 1
+                    if poi_context_sample is not None and len(poi_context_samples) < 200:
+                        poi_context_samples.append(poi_context_sample)
+
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
@@ -536,7 +555,7 @@ def preprocess_pbf(
 
         _progress(counters["objects_seen"], started)
         report: dict[str, object] = {
-            "schema_version": 7,
+            "schema_version": 8,
             "input": str(source),
             "output": str(target),
             "profiles": list(profile_names),
@@ -553,12 +572,18 @@ def preprocess_pbf(
             "geographic_labels_enriched": counters["geographic_labels_enriched"],
             "peak_landmarks_enriched": counters["peak_landmarks_enriched"],
             "river_landmarks_enriched": counters["river_landmarks_enriched"],
+            "poi_context_index_node_shops": food_shop_index.shop_count,
+            "poi_context_enriched": counters["poi_context_enriched"],
+            "poi_priority_common": counters["poi_priority_common"],
+            "poi_priority_sparse": counters["poi_priority_sparse"],
+            "poi_priority_isolated": counters["poi_priority_isolated"],
             "rule_hits": dict(sorted(rule_hits.items())),
             "verification_mode": "disabled",
             "samples": samples,
             "geographic_label_samples": geographic_label_samples,
             "peak_landmark_samples": peak_samples,
             "river_landmark_samples": river_samples,
+            "poi_context_samples": poi_context_samples,
         }
         report_temporary.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
