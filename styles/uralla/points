@@ -251,7 +251,7 @@ barrier=bollard | barrier=bus_trap [0x660f resolution 24]
 barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate [0x660f resolution 24]
 barrier=gate [0x5801 resolution 24]
 barrier=lift_gate [0x5800 resolution 24]
-barrier=toll_booth [0x58 resolution 24]
+barrier=toll_booth { name '${name}' | 'пункт оплаты' } [0x5800 resolution 24]
 
 
 traffic_sign=city_limit [0x5600 resolution 23]
