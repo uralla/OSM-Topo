@@ -1,0 +1,102 @@
+name: Add transit context and POI diagnostics
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'Prepare transit context and POI diagnostics'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch context logic
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # poi_context.py
+          p = Path('uralla_build/poi_context.py')
+          s = p.read_text(encoding='utf-8')
+          marker = 'ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})\n'
+          assert marker in s
+          s = s.replace(marker, marker + 'TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})\n\n', 1)
+
+          marker = '''def is_accommodation(tags: Mapping[str, str] | object) -> bool:\n'''
+          assert marker in s
+          insert = '''def is_transit_stop(tags: Mapping[str, str] | object) -> bool:\n    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]\n    values = {str(key): str(value) for key, value in items}\n    if values.get("highway") in TRANSIT_STOP_HIGHWAYS:\n        return True\n    return (\n        values.get("public_transport") == "platform"\n        and (values.get("bus") == "yes" or values.get("trolleybus") == "yes")\n    )\n\n\ndef classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:\n    # A stop is useful farther out when it is not part of a dense urban stop grid.\n    if stops_2km <= 2:\n        return "remote", "isolated"\n    if stops_2km <= 6:\n        return "settlement", "sparse"\n    return "urban", "common"\n\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+
+          marker = '''def build_accommodation_index(source: str, osmium: Any) -> FoodShopIndex:\n'''
+          assert marker in s
+          insert = '''def build_transit_stop_index(source: str, osmium: Any) -> FoodShopIndex:\n    index = FoodShopIndex.empty()\n    for item in osmium.FileProcessor(source):\n        if not is_transit_stop(item.tags):\n            continue\n        location = valid_node_location(item)\n        if location is not None:\n            index.add(*location)\n    return index\n\n\ndef enrich_transit_stop_context(\n    item: object,\n    tags: Mapping[str, str] | object,\n    index: FoodShopIndex,\n) -> tuple[dict[str, str], bool, dict[str, object] | None]:\n    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]\n    result = {str(key): str(value) for key, value in items}\n    if not is_transit_stop(result):\n        return result, False, None\n    location = valid_node_location(item)\n    if location is None:\n        return result, False, None\n    lat, lon = location\n    stops_2km = index.count_within(lat, lon, 2.0)\n    context, priority = classify_transit_stop(stops_2km=stops_2km)\n    desired = {\n        POI_CONTEXT_TAG: context,\n        POI_PRIORITY_TAG: priority,\n        "uralla:poi_transit_2km": str(stops_2km),\n    }\n    changed = any(result.get(key) != value for key, value in desired.items())\n    result.update(desired)\n    return result, changed, {\n        "id": int(getattr(item, "id", 0)),\n        "name": result.get("name"),\n        "context": context,\n        "priority": priority,\n        "stops_2km": stops_2km,\n        "lat": lat,\n        "lon": lon,\n    }\n\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+          p.write_text(s, encoding='utf-8')
+
+          # preprocessor.py imports
+          p = Path('uralla_build/preprocessor.py')
+          s = p.read_text(encoding='utf-8')
+          old = '''from .poi_context import (\n    build_accommodation_index,\n    build_food_shop_index,\n    enrich_accommodation_context,\n    enrich_food_shop_context,\n)\n'''
+          assert old in s
+          new = '''from .poi_context import (\n    build_accommodation_index,\n    build_food_shop_index,\n    build_transit_stop_index,\n    enrich_accommodation_context,\n    enrich_food_shop_context,\n    enrich_transit_stop_context,\n)\n'''
+          s = s.replace(old, new, 1)
+
+          old = '''    _emit_progress(\n        f"accommodation context: {accommodation_index.shop_count:,} node hotels/hostels indexed "\n        f"in {time.monotonic() - accommodation_started:.1f}s"\n    )\n'''
+          assert old in s
+          new = old + '''    _emit_progress("transit context: indexing node stops")\n    transit_started = time.monotonic()\n    transit_stop_index = build_transit_stop_index(str(source), osmium)\n    _emit_progress(\n        f"transit context: {transit_stop_index.shop_count:,} node stops indexed "\n        f"in {time.monotonic() - transit_started:.1f}s"\n    )\n'''
+          s = s.replace(old, new, 1)
+
+          old = '    accommodation_context_samples: list[dict[str, object]] = []\n'
+          assert old in s
+          s = s.replace(old, old + '    transit_context_samples: list[dict[str, object]] = []\n', 1)
+
+          marker = '''                original_tags = {str(key): str(value) for key, value in item.tags}\n'''
+          assert marker in s
+          insert = '''                final_tags, transit_added, transit_sample = enrich_transit_stop_context(\n                    item, final_tags, transit_stop_index\n                )\n                if transit_added:\n                    counters["transit_context_enriched"] += 1\n                    transit_priority = final_tags.get("uralla:poi_priority", "unknown")\n                    counters[f"transit_priority_{transit_priority}"] += 1\n                    if transit_sample is not None and len(transit_context_samples) < 200:\n                        transit_context_samples.append(transit_sample)\n\n'''
+          s = s.replace(marker, insert + marker, 1)
+
+          # Log non-common accommodation classifications. This gives a concrete way
+          # to see whether a remote named hotel is actually receiving priority tags.
+          old = '''                    if accommodation_sample is not None and len(accommodation_context_samples) < 200:\n                        accommodation_context_samples.append(accommodation_sample)\n'''
+          assert old in s
+          new = old + '''                    if (\n                        accommodation_sample is not None\n                        and accommodation_priority != "common"\n                        and accommodation_sample.get("name")\n                    ):\n                        _emit_progress(\n                            "POI accommodation: "\n                            f"{accommodation_sample['name']!r}; "\n                            f"2km={accommodation_sample['objects_2km']}; "\n                            f"10km={accommodation_sample['objects_10km']}; "\n                            f"priority={accommodation_priority}"\n                        )\n'''
+          s = s.replace(old, new, 1)
+
+          marker = '''        report: dict[str, object] = {\n'''
+          assert marker in s
+          summary = '''        _emit_progress(\n            f"POI context: transit stops {transit_stop_index.shop_count:,}; "\n            f"common {counters['transit_priority_common']:,}; "\n            f"sparse {counters['transit_priority_sparse']:,}; "\n            f"isolated {counters['transit_priority_isolated']:,}"\n        )\n'''
+          s = s.replace(marker, summary + marker, 1)
+
+          marker = '            "accommodation_context_index_nodes": accommodation_index.shop_count,\n'
+          assert marker in s
+          s = s.replace(marker, marker + '''            "transit_context_index_nodes": transit_stop_index.shop_count,\n            "transit_context_enriched": counters["transit_context_enriched"],\n            "transit_priority_common": counters["transit_priority_common"],\n            "transit_priority_sparse": counters["transit_priority_sparse"],\n            "transit_priority_isolated": counters["transit_priority_isolated"],\n''', 1)
+          marker = '            "accommodation_context_samples": accommodation_context_samples,\n'
+          assert marker in s
+          s = s.replace(marker, marker + '            "transit_context_samples": transit_context_samples,\n', 1)
+          p.write_text(s, encoding='utf-8')
+
+          # style: buses outside dense grids at 22, dense urban grid at 24.
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = '''public_transport=platform & !(layer<0) & mkgmap:area2poi!=true\n\t| highway=bus_stop & mkgmap:area2poi!=true\n\t| amenity=bus_station & mkgmap:area2poi!=true\n\t| railway=tram_stop & mkgmap:area2poi!=true [0x2f08 resolution 23]\n'''
+          assert old in s
+          new = '''uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]\nuralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]\npublic_transport=platform & !(layer<0) & mkgmap:area2poi!=true\n\t| highway=bus_stop & mkgmap:area2poi!=true\n\t| amenity=bus_station & mkgmap:area2poi!=true\n\t| railway=tram_stop & mkgmap:area2poi!=true [0x2f08 resolution 24]\n'''
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          grep -q 'transit stops' uralla_build/preprocessor.py
+          grep -q 'uralla:poi_priority=isolated.*highway=bus_stop' styles/uralla/points
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py styles/uralla/points
+          git commit -m 'Add context-aware transit stops and POI diagnostics'
+          git push
