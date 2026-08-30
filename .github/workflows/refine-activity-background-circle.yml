@@ -1,0 +1,63 @@
+name: Refine activity background circle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refine-activity-background-circle.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use cell-center circle for wide activity background
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          poi = Path('uralla_build/poi_context.py')
+          text = poi.read_text(encoding='utf-8')
+          old = '''    def count_cells_within_bbox(self, lat: float, lon: float, radius_km: float) -> int:\n        \"\"\"Fast approximate wide-area count using whole grid cells.\"\"\"\n        lat_delta = radius_km / 110.574\n        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)\n        lon_delta = radius_km / lon_scale\n        min_y = floor((lat - lat_delta) / GRID_DEGREES)\n        max_y = floor((lat + lat_delta) / GRID_DEGREES)\n        min_x = floor((lon - lon_delta) / GRID_DEGREES)\n        max_x = floor((lon + lon_delta) / GRID_DEGREES)\n        return sum(\n            len(self.cells.get((y, x), ()))\n            for y in range(min_y, max_y + 1)\n            for x in range(min_x, max_x + 1)\n        )\n'''
+          new = '''    def count_cells_within_circle(self, lat: float, lon: float, radius_km: float) -> int:\n        \"\"\"Fast approximate wide-area count using grid cells whose centers are in range.\"\"\"\n        lat_delta = radius_km / 110.574\n        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)\n        lon_delta = radius_km / lon_scale\n        min_y = floor((lat - lat_delta) / GRID_DEGREES)\n        max_y = floor((lat + lat_delta) / GRID_DEGREES)\n        min_x = floor((lon - lon_delta) / GRID_DEGREES)\n        max_x = floor((lon + lon_delta) / GRID_DEGREES)\n        total = 0\n        for y in range(min_y, max_y + 1):\n            center_lat = (y + 0.5) * GRID_DEGREES\n            for x in range(min_x, max_x + 1):\n                center_lon = (x + 0.5) * GRID_DEGREES\n                if _haversine_km(lat, lon, center_lat, center_lon) <= radius_km:\n                    total += len(self.cells.get((y, x), ()))\n        return total\n'''
+          if old not in text:
+              raise SystemExit('bbox method not found')
+          text = text.replace(old, new)
+          old_call = '    activity_10km = index.count_cells_within_bbox(lat, lon, 10.0)\n'
+          new_call = '    activity_10km = index.count_cells_within_circle(lat, lon, 10.0)\n'
+          if old_call not in text:
+              raise SystemExit('bbox activity call not found')
+          poi.write_text(text.replace(old_call, new_call, 1), encoding='utf-8')
+
+          tests = Path('tests/test_poi_context.py')
+          text = tests.read_text(encoding='utf-8')
+          text = text.replace('def test_grid_bbox_background_count(self)', 'def test_grid_circle_background_count(self)')
+          text = text.replace('background = index.count_cells_within_bbox(55.0000, 60.0000, 10.0)', 'background = index.count_cells_within_circle(55.0000, 60.0000, 10.0)')
+          tests.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          grep -q 'count_cells_within_circle' uralla_build/poi_context.py
+          grep -q 'activity_10km = index.count_cells_within_circle' uralla_build/poi_context.py
+          bash -n scripts/test-poi-context.sh
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py tests/test_poi_context.py
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Refine 10 km activity background circle'
+            git push
+          fi
