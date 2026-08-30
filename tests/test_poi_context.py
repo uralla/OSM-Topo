@@ -5,6 +5,7 @@ import unittest
 from uralla_build.poi_context import (
     FoodShopIndex,
     classify_activity_context,
+    apply_activity_place_guard,
     classify_food_shop,
     is_food_shop,
     is_meaningful_context_node,
@@ -82,6 +83,30 @@ class PoiContextTests(unittest.TestCase):
         self.assertEqual(index.count_within(55.0000, 60.0000, 2.0), 2)
         self.assertEqual(index.count_within(55.0000, 60.0000, 12.0), 3)
 
+
+    def test_activity_place_guard_promotes_remote_near_village(self):
+        self.assertEqual(
+            apply_activity_place_guard(
+                "remote", {"village": {"distance_km": 1.89, "name": "Изюмовка"}}
+            ),
+            "settlement",
+        )
+
+    def test_activity_place_guard_keeps_remote_beyond_radius(self):
+        self.assertEqual(
+            apply_activity_place_guard(
+                "remote", {"village": {"distance_km": 2.01, "name": "Далеко"}}
+            ),
+            "remote",
+        )
+
+    def test_activity_place_guard_does_not_change_urban(self):
+        self.assertEqual(
+            apply_activity_place_guard(
+                "urban", {"village": {"distance_km": 0.1, "name": "Рядом"}}
+            ),
+            "urban",
+        )
 
 if __name__ == "__main__":
     unittest.main()

@@ -25,6 +25,7 @@ from .river_landmarks import (
 from .poi_context import (
     build_context_indexes,
     classify_activity_context,
+    classify_activity_context_with_place_guard,
     enrich_accommodation_context,
     enrich_activity_diagnostics,
     enrich_food_shop_context,
@@ -676,23 +677,34 @@ def preprocess_pbf(
                 f"criteria remote=(2km<=p25 and 10km<=p25), "
                 f"urban=(2km>=p75 and 10km>=p75)"
             )
+            guarded_class_counts: Counter[str] = Counter()
             activity_kind_counts: Counter[tuple[str, str]] = Counter()
             edge_samples: dict[tuple[str, str], list[dict[str, object]]] = {}
             for sample in activity_context_samples:
-                context = classify_activity_context(
+                context = classify_activity_context_with_place_guard(
                     activity_2km=int(sample["activity_2km"]),
                     activity_10km=int(sample["activity_10km"]),
                     local_p25=activity_2km_p25,
                     local_p75=activity_2km_p75,
                     background_p25=activity_10km_p25,
                     background_p75=activity_10km_p75,
+                    place_by_type=sample.get("place_by_type"),
                 )
+                guarded_class_counts[context] += 1
                 kind = str(sample.get("kind") or "other")
                 activity_kind_counts[(context, kind)] += 1
                 if context in {"remote", "urban"}:
                     bucket = edge_samples.setdefault((context, kind), [])
-                    if len(bucket) < 5:
+                    if len(bucket) < 8:
                         bucket.append(sample)
+
+            _emit_progress(
+                "POI activity final classifier: "
+                f"remote {guarded_class_counts['remote']:,}; "
+                f"settlement {guarded_class_counts['settlement']:,}; "
+                f"urban {guarded_class_counts['urban']:,}; "
+                "place_guard=city:7,town:5,village:2,hamlet:1km"
+            )
 
             for context in ("remote", "settlement", "urban"):
                 _emit_progress(
@@ -704,85 +716,10 @@ def preprocess_pbf(
                     f"other={activity_kind_counts[(context, 'other')]:,}"
                 )
 
-            remote_place_bands: Counter[str] = Counter()
-            for sample in activity_context_samples:
-                context = classify_activity_context(
-                    activity_2km=int(sample["activity_2km"]),
-                    activity_10km=int(sample["activity_10km"]),
-                    local_p25=activity_2km_p25,
-                    local_p75=activity_2km_p75,
-                    background_p25=activity_10km_p25,
-                    background_p75=activity_10km_p75,
-                )
-                if context != "remote":
-                    continue
-                distance = sample.get("place_distance_km")
-                if distance is None:
-                    band = ">10km"
-                elif float(distance) <= 0.5:
-                    band = "<=0.5km"
-                elif float(distance) <= 1.0:
-                    band = "<=1km"
-                elif float(distance) <= 2.0:
-                    band = "<=2km"
-                elif float(distance) <= 5.0:
-                    band = "<=5km"
-                else:
-                    band = "<=10km"
-                remote_place_bands[band] += 1
-            _emit_progress(
-                "POI remote place proximity: "
-                f"<=0.5km={remote_place_bands['<=0.5km']:,}; "
-                f"<=1km={remote_place_bands['<=1km']:,}; "
-                f"<=2km={remote_place_bands['<=2km']:,}; "
-                f"<=5km={remote_place_bands['<=5km']:,}; "
-                f"<=10km={remote_place_bands['<=10km']:,}; "
-                f">10km={remote_place_bands['>10km']:,}"
-            )
-
-            guard_scenarios = {
-                "tight": {"city": 5.0, "town": 3.0, "village": 1.0, "hamlet": 0.5},
-                "medium": {"city": 7.0, "town": 5.0, "village": 2.0, "hamlet": 1.0},
-                "wide": {"city": 10.0, "town": 7.0, "village": 3.0, "hamlet": 1.5},
-            }
-            for scenario_name, radii in guard_scenarios.items():
-                promoted = 0
-                remaining = 0
-                by_kind: Counter[str] = Counter()
-                for sample in activity_context_samples:
-                    context = classify_activity_context(
-                        activity_2km=int(sample["activity_2km"]),
-                        activity_10km=int(sample["activity_10km"]),
-                        local_p25=activity_2km_p25,
-                        local_p75=activity_2km_p75,
-                        background_p25=activity_10km_p25,
-                        background_p75=activity_10km_p75,
-                    )
-                    if context != "remote":
-                        continue
-                    by_type = sample.get("place_by_type") or {}
-                    guarded = any(
-                        place_type in by_type
-                        and float(by_type[place_type]["distance_km"]) <= radius
-                        for place_type, radius in radii.items()
-                    )
-                    if guarded:
-                        promoted += 1
-                        by_kind[str(sample.get("kind") or "other")] += 1
-                    else:
-                        remaining += 1
-                _emit_progress(
-                    "POI place guard scenario: "
-                    f"name={scenario_name}; promoted={promoted:,}; remaining_remote={remaining:,}; "
-                    f"food={by_kind['food']:,}; accommodation={by_kind['accommodation']:,}; "
-                    f"transit={by_kind['transit']:,}; "
-                    f"radii=city:{radii['city']:g},town:{radii['town']:g},village:{radii['village']:g},hamlet:{radii['hamlet']:g}km"
-                )
-
             for sample in activity_context_samples:
                 if normalize_text(str(sample.get("name") or "")) != "старый крым":
                     continue
-                context = classify_activity_context(
+                raw_context = classify_activity_context(
                     activity_2km=int(sample["activity_2km"]),
                     activity_10km=int(sample["activity_10km"]),
                     local_p25=activity_2km_p25,
@@ -790,9 +727,18 @@ def preprocess_pbf(
                     background_p25=activity_10km_p25,
                     background_p75=activity_10km_p75,
                 )
+                final_context = classify_activity_context_with_place_guard(
+                    activity_2km=int(sample["activity_2km"]),
+                    activity_10km=int(sample["activity_10km"]),
+                    local_p25=activity_2km_p25,
+                    local_p75=activity_2km_p75,
+                    background_p25=activity_10km_p25,
+                    background_p75=activity_10km_p75,
+                    place_by_type=sample.get("place_by_type"),
+                )
                 _emit_progress(
                     "POI named check: 'Старый Крым'; "
-                    f"id={sample.get('id')}; kind={sample.get('kind')}; context={context}; "
+                    f"id={sample.get('id')}; kind={sample.get('kind')}; raw_context={raw_context}; final_context={final_context}; "
                     f"priority={sample.get('priority')}; 2km={sample.get('activity_2km')}; "
                     f"10km={sample.get('activity_10km')}; place={sample.get('place_name')!r}; "
                     f"place_type={sample.get('place_type')}; "
@@ -802,16 +748,13 @@ def preprocess_pbf(
 
             for context in ("remote", "urban"):
                 for kind in ("food", "accommodation", "transit", "other"):
-                    for sample in edge_samples.get((context, kind), ()): 
+                    for sample in edge_samples.get((context, kind), ()):
                         _emit_progress(
                             f"POI activity sample: {context}; "
-                            f"name={sample.get('name')!r}; "
-                            f"kind={sample.get('kind')}; "
-                            f"priority={sample.get('priority')}; "
-                            f"500m={sample.get('activity_500m')}; "
-                            f"2km={sample.get('activity_2km')}; "
-                            f"10km={sample.get('activity_10km')}; "
-                            f"place={sample.get('place_name')!r}; "
+                            f"id={sample.get('id')}; name={sample.get('name')!r}; "
+                            f"kind={sample.get('kind')}; priority={sample.get('priority')}; "
+                            f"500m={sample.get('activity_500m')}; 2km={sample.get('activity_2km')}; "
+                            f"10km={sample.get('activity_10km')}; place={sample.get('place_name')!r}; "
                             f"place_type={sample.get('place_type')}; "
                             f"place_km={format(float(sample['place_distance_km']), '.2f') if sample.get('place_distance_km') is not None else 'n/a'}"
                         )

@@ -18,6 +18,7 @@ from typing import Any, Iterable, Mapping
 ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
 TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
 SETTLEMENT_PLACE_VALUES = frozenset({"city", "town", "village", "hamlet"})
+ACTIVITY_PLACE_GUARD_RADII_KM = {"city": 7.0, "town": 5.0, "village": 2.0, "hamlet": 1.0}
 
 
 FOOD_SHOP_VALUES = frozenset(
@@ -97,6 +98,44 @@ def classify_activity_context(
     if activity_2km >= local_p75 and activity_10km >= background_p75:
         return "urban"
     return "settlement"
+
+
+def apply_activity_place_guard(
+    context: str,
+    place_by_type: Mapping[str, object] | None,
+) -> str:
+    """Raise density-remote POIs to settlement when a nearby place anchor says so."""
+    if context != "remote" or not place_by_type:
+        return context
+    for place_type, radius_km in ACTIVITY_PLACE_GUARD_RADII_KM.items():
+        raw = place_by_type.get(place_type)
+        if not isinstance(raw, Mapping):
+            continue
+        distance = raw.get("distance_km")
+        if distance is not None and float(distance) <= radius_km:
+            return "settlement"
+    return "remote"
+
+
+def classify_activity_context_with_place_guard(
+    *,
+    activity_2km: int,
+    activity_10km: int,
+    local_p25: int,
+    local_p75: int,
+    background_p25: int,
+    background_p75: int,
+    place_by_type: Mapping[str, object] | None,
+) -> str:
+    context = classify_activity_context(
+        activity_2km=activity_2km,
+        activity_10km=activity_10km,
+        local_p25=local_p25,
+        local_p75=local_p75,
+        background_p25=background_p25,
+        background_p75=background_p75,
+    )
+    return apply_activity_place_guard(context, place_by_type)
 
 
 def classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:
