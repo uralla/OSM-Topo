@@ -40,7 +40,12 @@ shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 # Tourist accommodation / shelters. Keep useful established LOD while
 # consolidating the visual Garmin types.
 tourism=guest_house [0x2b01 resolution 21]
-(tourism=hotel | tourism=motel) [0x2b01 resolution 24]
+uralla:poi_priority=isolated & tourism=hotel [0x2b01 resolution 22]
+uralla:poi_priority=sparse & tourism=hotel [0x2b01 resolution 23]
+tourism=hotel [0x2b01 resolution 24]
+tourism=motel [0x2b01 resolution 24]
+uralla:poi_priority=isolated & tourism=hostel [0x2b02 resolution 22]
+uralla:poi_priority=sparse & tourism=hostel [0x2b02 resolution 23]
 tourism=hostel [0x2b02 resolution 24]
 amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
 (tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23]

@@ -15,6 +15,8 @@ from math import asin, cos, floor, radians, sin, sqrt
 from typing import Any, Iterable, Mapping
 
 
+ACCOMMODATION_VALUES = frozenset({"hotel", "hostel"})
+
 FOOD_SHOP_VALUES = frozenset(
     {
         "supermarket",
@@ -39,6 +41,20 @@ def is_food_shop(tags: Mapping[str, str] | object) -> bool:
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     values = {str(key): str(value) for key, value in items}
     return values.get("shop") in FOOD_SHOP_VALUES or values.get("amenity") == "supermarket"
+
+
+def is_accommodation(tags: Mapping[str, str] | object) -> bool:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    values = {str(key): str(value) for key, value in items}
+    return values.get("tourism") in ACCOMMODATION_VALUES
+
+
+def classify_accommodation(*, objects_2km: int, objects_10km: int) -> tuple[str, str]:
+    if objects_2km <= 1 and objects_10km <= 3:
+        return "remote", "isolated"
+    if objects_2km <= 3 and objects_10km <= 10:
+        return "settlement", "sparse"
+    return "urban", "common"
 
 
 def classify_food_shop(*, shops_2km: int, shops_10km: int) -> tuple[str, str]:
@@ -128,6 +144,48 @@ def build_food_shop_index(source: str, osmium: Any) -> FoodShopIndex:
             continue
         index.add(*location)
     return index
+
+
+def build_accommodation_index(source: str, osmium: Any) -> FoodShopIndex:
+    index = FoodShopIndex.empty()
+    for item in osmium.FileProcessor(source):
+        if not is_accommodation(item.tags):
+            continue
+        location = valid_node_location(item)
+        if location is not None:
+            index.add(*location)
+    return index
+
+
+def enrich_accommodation_context(
+    item: object,
+    tags: Mapping[str, str] | object,
+    index: FoodShopIndex,
+) -> tuple[dict[str, str], bool, dict[str, object] | None]:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    if not is_accommodation(result):
+        return result, False, None
+    location = valid_node_location(item)
+    if location is None:
+        return result, False, None
+    lat, lon = location
+    objects_2km = index.count_within(lat, lon, 2.0)
+    objects_10km = index.count_within(lat, lon, 10.0)
+    context, priority = classify_accommodation(objects_2km=objects_2km, objects_10km=objects_10km)
+    desired = {
+        POI_CONTEXT_TAG: context,
+        POI_PRIORITY_TAG: priority,
+        "uralla:poi_accommodation_2km": str(objects_2km),
+        "uralla:poi_accommodation_10km": str(objects_10km),
+    }
+    changed = any(result.get(key) != value for key, value in desired.items())
+    result.update(desired)
+    return result, changed, {
+        "id": int(getattr(item, "id", 0)), "name": result.get("name"),
+        "tourism": result.get("tourism"), "context": context, "priority": priority,
+        "objects_2km": objects_2km, "objects_10km": objects_10km, "lat": lat, "lon": lon,
+    }
 
 
 def enrich_food_shop_context(
