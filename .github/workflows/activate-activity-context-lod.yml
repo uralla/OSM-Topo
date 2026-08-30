@@ -1,0 +1,140 @@
+name: Activate activity context LOD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/activate-activity-context-lod.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Activate final activity context
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          poi = Path('uralla_build/poi_context.py')
+          text = poi.read_text(encoding='utf-8')
+
+          text = text.replace(
+              'POI_ACTIVITY_10KM_TAG = "uralla:poi_activity_10km"\n',
+              'POI_ACTIVITY_10KM_TAG = "uralla:poi_activity_10km"\nPOI_ACTIVITY_CONTEXT_TAG = "uralla:poi_activity_context"\n',
+              1,
+          )
+
+          marker = '''@dataclass(slots=True)\nclass ContextIndexes:\n    food: FoodShopIndex\n    accommodation: FoodShopIndex\n    transit: FoodShopIndex\n    activity: FoodShopIndex\n    places: PlaceAnchorIndex\n'''
+          replacement = '''@dataclass(slots=True)\nclass ContextIndexes:\n    food: FoodShopIndex\n    accommodation: FoodShopIndex\n    transit: FoodShopIndex\n    activity: FoodShopIndex\n    places: PlaceAnchorIndex\n    adaptive_candidates: list[tuple[int, float, float]]\n'''
+          if marker not in text:
+              raise SystemExit('ContextIndexes marker not found')
+          text = text.replace(marker, replacement, 1)
+
+          old = '''    places = PlaceAnchorIndex.empty()\n    for item in osmium.FileProcessor(source):\n'''
+          new = '''    places = PlaceAnchorIndex.empty()\n    adaptive_candidates: list[tuple[int, float, float]] = []\n    for item in osmium.FileProcessor(source):\n'''
+          if old not in text:
+              raise SystemExit('index init marker not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if is_food_shop(tags):\n            food.add(*location)\n        if is_accommodation(tags):\n            accommodation.add(*location)\n        if is_transit_stop(tags):\n            transit.add(*location)\n'''
+          new = '''        adaptive = False\n        if is_food_shop(tags):\n            food.add(*location)\n            adaptive = True\n        if is_accommodation(tags):\n            accommodation.add(*location)\n            adaptive = True\n        if is_transit_stop(tags):\n            transit.add(*location)\n            adaptive = True\n        if adaptive:\n            adaptive_candidates.append((int(getattr(item, "id", 0)), location[0], location[1]))\n'''
+          if old not in text:
+              raise SystemExit('adaptive category marker not found')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '    return ContextIndexes(food, accommodation, transit, activity, places)\n',
+              '    return ContextIndexes(food, accommodation, transit, activity, places, adaptive_candidates)\n',
+              1,
+          )
+
+          old_sig = '''def enrich_activity_diagnostics(\n    item: object,\n    tags: Mapping[str, str] | object,\n    index: FoodShopIndex,\n    places: PlaceAnchorIndex,\n) -> tuple[dict[str, str], bool, dict[str, object] | None]:\n'''
+          new_sig = '''def enrich_activity_diagnostics(\n    item: object,\n    tags: Mapping[str, str] | object,\n    index: FoodShopIndex,\n    places: PlaceAnchorIndex,\n    thresholds: Mapping[str, int] | None = None,\n) -> tuple[dict[str, str], bool, dict[str, object] | None]:\n'''
+          if old_sig not in text:
+              raise SystemExit('activity enrichment signature not found')
+          text = text.replace(old_sig, new_sig, 1)
+
+          old = '''    desired = {\n        POI_ACTIVITY_500M_TAG: str(activity_500m),\n        POI_ACTIVITY_2KM_TAG: str(activity_2km),\n        POI_ACTIVITY_10KM_TAG: str(activity_10km),\n    }\n'''
+          new = '''    desired = {\n        POI_ACTIVITY_500M_TAG: str(activity_500m),\n        POI_ACTIVITY_2KM_TAG: str(activity_2km),\n        POI_ACTIVITY_10KM_TAG: str(activity_10km),\n    }\n    if thresholds is not None:\n        final_context = classify_activity_context_with_place_guard(\n            activity_2km=activity_2km,\n            activity_10km=activity_10km,\n            local_p25=int(thresholds["2km_p25"]),\n            local_p75=int(thresholds["2km_p75"]),\n            background_p25=int(thresholds["10km_p25"]),\n            background_p75=int(thresholds["10km_p75"]),\n            place_by_type={\n                key: {"distance_km": value[0], "name": value[1]}\n                for key, value in nearest_places_by_type.items()\n            },\n        )\n        desired[POI_ACTIVITY_CONTEXT_TAG] = final_context\n'''
+          if old not in text:
+              raise SystemExit('activity desired tags marker not found')
+          text = text.replace(old, new, 1)
+          poi.write_text(text, encoding='utf-8')
+
+          pre = Path('uralla_build/preprocessor.py')
+          text = pre.read_text(encoding='utf-8')
+          marker = '''    place_anchor_index = context_indexes.places\n    _emit_progress(\n'''
+          addition = '''    place_anchor_index = context_indexes.places\n\n    # Percentile thresholds must be known before the writer pass so the final\n    # activity context can be persisted for mkgmap without a third PBF scan.\n    candidate_activity_500m: list[int] = []\n    candidate_activity_2km: list[int] = []\n    candidate_activity_10km: list[int] = []\n    for _candidate_id, candidate_lat, candidate_lon in context_indexes.adaptive_candidates:\n        candidate_activity_500m.append(activity_index.count_within(candidate_lat, candidate_lon, 0.5))\n        candidate_activity_2km.append(activity_index.count_within(candidate_lat, candidate_lon, 2.0))\n        candidate_activity_10km.append(activity_index.count_cells_within_circle(candidate_lat, candidate_lon, 10.0))\n    activity_thresholds = {\n        "2km_p25": _activity_percentile(candidate_activity_2km, 0.25),\n        "2km_p75": _activity_percentile(candidate_activity_2km, 0.75),\n        "10km_p25": _activity_percentile(candidate_activity_10km, 0.25),\n        "10km_p75": _activity_percentile(candidate_activity_10km, 0.75),\n    }\n    _emit_progress(\n        "POI activity thresholds ready before writer; "\n        f"samples {len(context_indexes.adaptive_candidates):,}; "\n        f"2km p25={activity_thresholds['2km_p25']} p75={activity_thresholds['2km_p75']}; "\n        f"10km p25={activity_thresholds['10km_p25']} p75={activity_thresholds['10km_p75']}"\n    )\n    _emit_progress(\n'''
+          if marker not in text:
+              raise SystemExit('pre-writer index marker not found')
+          text = text.replace(marker, addition, 1)
+
+          old = '''                final_tags, activity_added, activity_sample = enrich_activity_diagnostics(\n                    item, final_tags, activity_index, place_anchor_index\n                )\n'''
+          new = '''                final_tags, activity_added, activity_sample = enrich_activity_diagnostics(\n                    item, final_tags, activity_index, place_anchor_index, activity_thresholds\n                )\n'''
+          if old not in text:
+              raise SystemExit('activity enrichment call not found')
+          text = text.replace(old, new, 1)
+          pre.write_text(text, encoding='utf-8')
+
+          style = Path('styles/uralla/inc/priority_points')
+          text = style.read_text(encoding='utf-8')
+          grocery_marker = '# Grocery group. Prototype context scoring promotes rare food shops at farther zooms.\n# The preprocessor currently scores node shops only; ordinary fallbacks stay unchanged.\n'
+          grocery_replacement = '''# Grocery group. Category rarity remains the strongest promotion; final universal\n# activity context additionally promotes genuinely remote common shops to resolution 22.\n'''
+          if grocery_marker not in text:
+              raise SystemExit('grocery comment marker not found')
+          text = text.replace(grocery_marker, grocery_replacement, 1)
+          isolated = 'uralla:poi_priority=isolated & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 20]\n'
+          remote = 'uralla:poi_activity_context=remote & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 22]\n'
+          if isolated not in text:
+              raise SystemExit('grocery isolated rule not found')
+          text = text.replace(isolated, isolated + remote, 1)
+
+          acc_comment = '''# Tourist accommodation / shelters. Context scoring promotes rare accommodation\n# at farther zooms; node-based prototype currently covers hotel/hostel/guest_house.\n'''
+          acc_new = '''# Tourist accommodation / shelters. Category rarity remains strongest; final universal\n# activity context promotes genuinely remote common hotel/hostel/guest_house to resolution 22.\n'''
+          if acc_comment not in text:
+              raise SystemExit('accommodation comment not found')
+          text = text.replace(acc_comment, acc_new, 1)
+          for tourism, code in [('guest_house','0x2b01'), ('hotel','0x2b01'), ('hostel','0x2b02')]:
+              isolated = f'uralla:poi_priority=isolated & tourism={tourism} [{code} resolution 20]\n'
+              remote = f'uralla:poi_activity_context=remote & tourism={tourism} [{code} resolution 22]\n'
+              if isolated not in text:
+                  raise SystemExit(f'{tourism} isolated rule not found')
+              text = text.replace(isolated, isolated + remote, 1)
+          style.write_text(text, encoding='utf-8')
+
+          points = Path('styles/uralla/points')
+          text = points.read_text(encoding='utf-8')
+          isolated = 'uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]\n'
+          remote = 'uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]\n'
+          if isolated not in text:
+              raise SystemExit('transit isolated rule not found')
+          text = text.replace(isolated, isolated + remote, 1)
+          points.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          grep -q 'POI_ACTIVITY_CONTEXT_TAG = "uralla:poi_activity_context"' uralla_build/poi_context.py
+          grep -q 'activity_thresholds ready before writer\|POI activity thresholds ready before writer' uralla_build/preprocessor.py
+          grep -q 'uralla:poi_activity_context=remote' styles/uralla/inc/priority_points
+          grep -q 'uralla:poi_activity_context=remote' styles/uralla/points
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla/points
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Activate remote activity context LOD'
+            git push
+          fi
