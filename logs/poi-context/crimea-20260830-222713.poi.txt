@@ -1,0 +1,114 @@
+[preprocess] POI context: indexing node signals in one pass
+[preprocess] POI context: one-pass index complete; food 3,761; accommodation 2,680; transit 3,205; activity 140,829; 35.5s
+[preprocess] POI accommodation: 'Симферополь'; 2km=2; 10km=15; priority=sparse
+[preprocess] POI accommodation: 'Дубовая роща'; 2km=1; 10km=19; priority=sparse
+[preprocess] POI accommodation: 'Гузель'; 2km=2; 10km=3; priority=sparse
+[preprocess] [preprocess] 1,000,000 objects; 56,854 obj/s
+[preprocess] POI accommodation: '"Окунёвка Тур" пансионат'; 2km=2; 10km=5; priority=sparse
+[preprocess] POI accommodation: 'Yurkina Faso'; 2km=2; 10km=10; priority=sparse
+[preprocess] POI accommodation: 'Пансионат Казантип-Лазурный'; 2km=3; 10km=8; priority=sparse
+[preprocess] [preprocess] 2,000,000 objects; 57,649 obj/s
+[preprocess] POI accommodation: 'Альта'; 2km=1; 10km=1; priority=isolated
+[preprocess] POI accommodation: 'Конно-туристическая база "Ход конем"'; 2km=1; 10km=1; priority=isolated
+[preprocess] POI accommodation: '32'; 2km=1; 10km=3; priority=isolated
+[preprocess] POI accommodation: 'Домик у Шабалиных'; 2km=2; 10km=16; priority=sparse
+[preprocess] POI accommodation: 'Тарпанчи'; 2km=2; 10km=5; priority=sparse
+[preprocess] POI accommodation: 'Светомир'; 2km=1; 10km=7; priority=isolated
+[preprocess] POI accommodation: 'Шоколад'; 2km=2; 10km=3; priority=sparse
+[preprocess] POI accommodation: 'ДОК "Новоотрадное-1"'; 2km=3; 10km=8; priority=sparse
+[preprocess] POI accommodation: 'Охотничье хозяйство "Холодная гора"'; 2km=2; 10km=3; priority=sparse
+[preprocess] POI accommodation: 'У Нины'; 2km=2; 10km=3; priority=sparse
+[preprocess] POI accommodation: 'Paradise'; 2km=2; 10km=3; priority=sparse
+[preprocess] POI accommodation: 'База отдыха "Рубин"'; 2km=1; 10km=2; priority=isolated
+[preprocess] POI accommodation: 'Царское подворье'; 2km=2; 10km=3; priority=sparse
+[preprocess] POI accommodation: 'Бирюзовая Бухта'; 2km=1; 10km=17; priority=sparse
+[preprocess] POI accommodation: 'Солнышко'; 2km=2; 10km=191; priority=common
+[preprocess] POI accommodation: 'Зелёный Дом'; 2km=1; 10km=5; priority=isolated
+[preprocess] POI accommodation: 'Изумруд'; 2km=1; 10km=3; priority=isolated
+[preprocess] POI accommodation: 'Апарт-отель "Гора"'; 2km=3; 10km=7; priority=sparse
+[preprocess] POI accommodation: 'Guest House'; 2km=1; 10km=7; priority=isolated
+[preprocess] POI accommodation: 'Восток'; 2km=1; 10km=2; priority=isolated
+[preprocess] POI accommodation: 'Перевальное'; 2km=1; 10km=4; priority=isolated
+[preprocess] POI accommodation: 'ЭКО усадьба Можжевеловый дворик'; 2km=1; 10km=17; priority=sparse
+[preprocess] [preprocess] 3,000,000 objects; 54,961 obj/s
+[preprocess] POI accommodation: 'Маяк'; 2km=1; 10km=9; priority=isolated
+[preprocess] POI accommodation: 'Аврора'; 2km=1; 10km=2; priority=isolated
+[preprocess] POI accommodation: 'Гартенталь'; 2km=1; 10km=3; priority=isolated
+[preprocess] POI accommodation: 'Тиритака'; 2km=3; 10km=8; priority=sparse
+[preprocess] POI accommodation: 'Замок грёз'; 2km=1; 10km=8; priority=isolated
+[preprocess] POI accommodation: 'Усадьба баксан , банька ))'; 2km=1; 10km=2; priority=isolated
+[preprocess] POI accommodation: 'Ковбой, Конный клуб'; 2km=1; 10km=3; priority=isolated
+[preprocess] POI accommodation: 'Дядя Саша'; 2km=1; 10km=5; priority=isolated
+[preprocess] POI accommodation: 'Солнышко'; 2km=381; 10km=637; priority=common
+[preprocess] POI accommodation: 'Солнышко'; 2km=277; 10km=636; priority=common
+[preprocess] POI accommodation: 'Солнышко'; 2km=381; 10km=637; priority=common
+[preprocess] POI accommodation: 'Ангара'; 2km=1; 10km=4; priority=isolated
+[preprocess] POI accommodation: 'Пансионат "Солнечный ветер"'; 2km=2; 10km=12; priority=sparse
+[preprocess] POI accommodation: 'Душевное место'; 2km=3; 10km=22; priority=sparse
+[preprocess] POI accommodation: 'La Grace'; 2km=1; 10km=7; priority=isolated
+[preprocess] POI accommodation: 'Круть'; 2km=1; 10km=1; priority=isolated
+[preprocess] POI accommodation: 'Первая база'; 2km=2; 10km=19; priority=sparse
+[preprocess] POI accommodation: 'Арт-домик'; 2km=1; 10km=18; priority=sparse
+[preprocess] POI accommodation: 'Бутик-отель "Maverick House"'; 2km=2; 10km=4; priority=sparse
+[preprocess] POI accommodation: 'У Лены'; 2km=1; 10km=13; priority=sparse
+[preprocess] POI accommodation: 'Частный пляж и причал-226 ИП Денисенко'; 2km=1; 10km=1; priority=isolated
+[preprocess] POI accommodation: 'Поместье Барковых'; 2km=1; 10km=5; priority=isolated
+[preprocess] POI accommodation: 'Экоферма'; 2km=1; 10km=18; priority=sparse
+[preprocess] [preprocess] 4,000,000 objects; 54,439 obj/s
+[preprocess] POI accommodation: 'Поместье Керменчик'; 2km=3; 10km=19; priority=sparse
+[preprocess] POI accommodation: 'Усадьба Подгорная'; 2km=2; 10km=17; priority=sparse
+[preprocess] POI accommodation: 'Чаир'; 2km=2; 10km=20; priority=sparse
+[preprocess] POI accommodation: 'Сафари'; 2km=1; 10km=8; priority=isolated
+[preprocess] POI accommodation: 'Мій будинок дитинства'; 2km=1; 10km=1; priority=isolated
+[preprocess] POI accommodation: 'Усадьба Махульдур'; 2km=1; 10km=19; priority=sparse
+[preprocess] POI accommodation: 'Villa Aya'; 2km=1; 10km=14; priority=sparse
+[preprocess] [preprocess] 5,000,000 objects; 52,983 obj/s
+[preprocess] [preprocess] 5,288,680 objects; 52,138 obj/s
+[preprocess] POI context: food shops 3,761; common 3,496; sparse 221; isolated 44
+[preprocess] POI activity density: samples 9,645; 500m p25=25 p50=77 p75=164 p90=269; 2km p25=187 p50=531 p75=1208 p90=2352; 10km p25=1496 p50=3633 p75=6344 p90=14138
+[preprocess] POI activity classifier: remote 1,494; settlement 6,751; urban 1,400; criteria remote=(2km<=p25 and 10km<=p25), urban=(2km>=p75 and 10km>=p75)
+[preprocess] POI activity sample: urban; name='Дельфин'; kind=accommodation; priority=common; 500m=147; 2km=1652; 10km=17838
+[preprocess] POI activity sample: urban; name='Лидер'; kind=food; priority=common; 500m=359; 2km=1756; 10km=19739
+[preprocess] POI activity sample: urban; name='Генерала Лебедя'; kind=transit; priority=common; 500m=215; 2km=1354; 10km=19480
+[preprocess] POI activity sample: urban; name='Школа №7 (Переход)'; kind=transit; priority=common; 500m=165; 2km=1735; 10km=19455
+[preprocess] POI activity sample: urban; name='ул. Генерала Хрюкина'; kind=transit; priority=common; 500m=157; 2km=1687; 10km=19437
+[preprocess] POI activity sample: urban; name='ул. Силаева'; kind=transit; priority=common; 500m=418; 2km=1773; 10km=19456
+[preprocess] POI activity sample: urban; name='Кинотеатр Москва'; kind=transit; priority=common; 500m=584; 2km=1888; 10km=19456
+[preprocess] POI activity sample: urban; name='Ул. Кожанова'; kind=transit; priority=common; 500m=291; 2km=2530; 10km=18998
+[preprocess] POI activity sample: urban; name='Университет'; kind=transit; priority=common; 500m=236; 2km=2645; 10km=19297
+[preprocess] POI activity sample: urban; name='Площадь Суворова'; kind=transit; priority=common; 500m=314; 2km=2561; 10km=19297
+[preprocess] POI activity sample: urban; name='сквер Ленинского комсомола'; kind=transit; priority=common; 500m=285; 2km=2417; 10km=16357
+[preprocess] POI activity sample: urban; name='Дом офицеров флота'; kind=transit; priority=common; 500m=316; 2km=2047; 10km=16357
+[preprocess] POI activity sample: urban; name='Площадь Нахимова'; kind=transit; priority=common; 500m=231; 2km=1844; 10km=15509
+[preprocess] POI activity sample: urban; name='площадь Лазарева'; kind=transit; priority=common; 500m=417; 2km=1950; 10km=16357
+[preprocess] POI activity sample: urban; name='Кинотеатр Победа'; kind=transit; priority=common; 500m=452; 2km=2378; 10km=18825
+[preprocess] POI activity sample: urban; name='Большая Морская улица'; kind=transit; priority=common; 500m=434; 2km=2524; 10km=19297
+[preprocess] POI activity sample: urban; name='ул. Гоголя (Университет)'; kind=transit; priority=common; 500m=226; 2km=2624; 10km=19297
+[preprocess] POI activity sample: urban; name='Ул. Степаненко'; kind=transit; priority=common; 500m=289; 2km=2620; 10km=18998
+[preprocess] POI activity sample: urban; name='Ул. Кожанова'; kind=transit; priority=common; 500m=301; 2km=2516; 10km=18998
+[preprocess] POI activity sample: urban; name='Кинотеатр Москва'; kind=transit; priority=common; 500m=559; 2km=1869; 10km=19456
+[preprocess] POI activity sample: remote; name='ост. "У бабы Зины"'; kind=transit; priority=isolated; 500m=18; 2km=68; 10km=440
+[preprocess] POI activity sample: remote; name='Нижнезаморское'; kind=transit; priority=isolated; 500m=8; 2km=40; 10km=882
+[preprocess] POI activity sample: remote; name='Мысовое'; kind=transit; priority=isolated; 500m=31; 2km=134; 10km=842
+[preprocess] POI activity sample: remote; name=None; kind=accommodation; priority=common; 500m=30; 2km=113; 10km=842
+[preprocess] POI activity sample: remote; name='Изюмовка-1'; kind=transit; priority=common; 500m=8; 2km=68; 10km=1133
+[preprocess] POI activity sample: remote; name='Пансионат "Крошка Енот"'; kind=accommodation; priority=common; 500m=5; 2km=99; 10km=681
+[preprocess] POI activity sample: remote; name='Останино'; kind=transit; priority=isolated; 500m=6; 2km=29; 10km=1179
+[preprocess] POI activity sample: remote; name='Пресноводная'; kind=transit; priority=isolated; 500m=7; 2km=103; 10km=1251
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=isolated; 500m=1; 2km=1; 10km=13
+[preprocess] POI activity sample: remote; name='с. Терновка'; kind=transit; priority=isolated; 500m=24; 2km=55; 10km=1362
+[preprocess] POI activity sample: remote; name='Первомайское'; kind=transit; priority=sparse; 500m=12; 2km=54; 10km=1102
+[preprocess] POI activity sample: remote; name='Изюмовка-2'; kind=transit; priority=common; 500m=11; 2km=55; 10km=1067
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=common; 500m=18; 2km=121; 10km=1060
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=common; 500m=8; 2km=90; 10km=1075
+[preprocess] POI activity sample: remote; name='Старый Крым'; kind=transit; priority=common; 500m=24; 2km=144; 10km=1093
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=sparse; 500m=43; 2km=178; 10km=933
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=sparse; 500m=17; 2km=108; 10km=1250
+[preprocess] POI activity sample: remote; name='Конечная 33a,33'; kind=transit; priority=sparse; 500m=5; 2km=38; 10km=986
+[preprocess] POI activity sample: remote; name=None; kind=transit; priority=isolated; 500m=32; 2km=91; 10km=870
+[preprocess] POI activity sample: remote; name=None; kind=food; priority=common; 500m=26; 2km=119; 10km=1202
+[preprocess] POI context: hotels/hostels 2,680; common 2,615; sparse 34; isolated 31
+[preprocess] POI accommodation check: 'Солнышко'; id=7232356571; lat=44.753204; lon=34.545910; 2km=381; 10km=637; activity500m=123; activity2km=571; activity10km=1468; activity_context=settlement; priority=common
+[preprocess] POI context: activity nodes 140,829; enriched POIs 9,645
+[preprocess] POI context: transit stops 3,205; common 2,423; sparse 455; isolated 327
+[preprocess] [preprocess] done; report: report.json
