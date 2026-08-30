@@ -440,6 +440,28 @@ def preprocess_pbf(
     transit_stop_index = context_indexes.transit
     activity_index = context_indexes.activity
     place_anchor_index = context_indexes.places
+
+    # Percentile thresholds must be known before the writer pass so the final
+    # activity context can be persisted for mkgmap without a third PBF scan.
+    candidate_activity_500m: list[int] = []
+    candidate_activity_2km: list[int] = []
+    candidate_activity_10km: list[int] = []
+    for _candidate_id, candidate_lat, candidate_lon in context_indexes.adaptive_candidates:
+        candidate_activity_500m.append(activity_index.count_within(candidate_lat, candidate_lon, 0.5))
+        candidate_activity_2km.append(activity_index.count_within(candidate_lat, candidate_lon, 2.0))
+        candidate_activity_10km.append(activity_index.count_cells_within_circle(candidate_lat, candidate_lon, 10.0))
+    activity_thresholds = {
+        "2km_p25": _activity_percentile(candidate_activity_2km, 0.25),
+        "2km_p75": _activity_percentile(candidate_activity_2km, 0.75),
+        "10km_p25": _activity_percentile(candidate_activity_10km, 0.25),
+        "10km_p75": _activity_percentile(candidate_activity_10km, 0.75),
+    }
+    _emit_progress(
+        "POI activity thresholds ready before writer; "
+        f"samples {len(context_indexes.adaptive_candidates):,}; "
+        f"2km p25={activity_thresholds['2km_p25']} p75={activity_thresholds['2km_p75']}; "
+        f"10km p25={activity_thresholds['10km_p25']} p75={activity_thresholds['10km_p75']}"
+    )
     _emit_progress(
         "POI context: one-pass index complete; "
         f"food {food_shop_index.shop_count:,}; "
@@ -596,7 +618,7 @@ def preprocess_pbf(
                         transit_context_samples.append(transit_sample)
 
                 final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
-                    item, final_tags, activity_index, place_anchor_index
+                    item, final_tags, activity_index, place_anchor_index, activity_thresholds
                 )
                 if activity_added:
                     counters["activity_context_enriched"] += 1

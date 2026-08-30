@@ -40,6 +40,7 @@ POI_NEAR_10KM_TAG = "uralla:poi_food_10km"
 POI_ACTIVITY_500M_TAG = "uralla:poi_activity_500m"
 POI_ACTIVITY_2KM_TAG = "uralla:poi_activity_2km"
 POI_ACTIVITY_10KM_TAG = "uralla:poi_activity_10km"
+POI_ACTIVITY_CONTEXT_TAG = "uralla:poi_activity_context"
 CONTEXT_METADATA_KEYS = frozenset({"source", "created_by", "attribution", "note", "fixme", "check_date", "survey:date"})
 GRID_DEGREES = 0.05
 EARTH_RADIUS_KM = 6371.0088
@@ -320,6 +321,7 @@ class ContextIndexes:
     transit: FoodShopIndex
     activity: FoodShopIndex
     places: PlaceAnchorIndex
+    adaptive_candidates: list[tuple[int, float, float]]
 
 
 def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
@@ -330,6 +332,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
     transit = FoodShopIndex.empty()
     activity = FoodShopIndex.empty()
     places = PlaceAnchorIndex.empty()
+    adaptive_candidates: list[tuple[int, float, float]] = []
     for item in osmium.FileProcessor(source):
         location = valid_node_location(item)
         if location is None:
@@ -337,16 +340,22 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         tags = {str(key): str(value) for key, value in item.tags}
         if is_meaningful_context_node(tags):
             activity.add(*location)
+        adaptive = False
         if is_food_shop(tags):
             food.add(*location)
+            adaptive = True
         if is_accommodation(tags):
             accommodation.add(*location)
+            adaptive = True
         if is_transit_stop(tags):
             transit.add(*location)
+            adaptive = True
+        if adaptive:
+            adaptive_candidates.append((int(getattr(item, "id", 0)), location[0], location[1]))
         place_type = tags.get("place")
         if place_type in SETTLEMENT_PLACE_VALUES:
             places.add(*location, place_type, tags.get("name") or tags.get("name:ru"))
-    return ContextIndexes(food, accommodation, transit, activity, places)
+    return ContextIndexes(food, accommodation, transit, activity, places, adaptive_candidates)
 
 
 def enrich_activity_diagnostics(
@@ -354,6 +363,7 @@ def enrich_activity_diagnostics(
     tags: Mapping[str, str] | object,
     index: FoodShopIndex,
     places: PlaceAnchorIndex,
+    thresholds: Mapping[str, int] | None = None,
 ) -> tuple[dict[str, str], bool, dict[str, object] | None]:
     """Attach general human-activity density diagnostics to context-aware POIs."""
 
@@ -375,6 +385,20 @@ def enrich_activity_diagnostics(
         POI_ACTIVITY_2KM_TAG: str(activity_2km),
         POI_ACTIVITY_10KM_TAG: str(activity_10km),
     }
+    if thresholds is not None:
+        final_context = classify_activity_context_with_place_guard(
+            activity_2km=activity_2km,
+            activity_10km=activity_10km,
+            local_p25=int(thresholds["2km_p25"]),
+            local_p75=int(thresholds["2km_p75"]),
+            background_p25=int(thresholds["10km_p25"]),
+            background_p75=int(thresholds["10km_p75"]),
+            place_by_type={
+                key: {"distance_km": value[0], "name": value[1]}
+                for key, value in nearest_places_by_type.items()
+            },
+        )
+        desired[POI_ACTIVITY_CONTEXT_TAG] = final_context
     changed = any(result.get(key) != value for key, value in desired.items())
     result.update(desired)
     if is_food_shop(result):
