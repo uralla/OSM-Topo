@@ -601,7 +601,7 @@ def preprocess_pbf(
                         activity_500m_values.append(int(activity_sample["activity_500m"]))
                         activity_2km_values.append(int(activity_sample["activity_2km"]))
                         activity_10km_values.append(int(activity_sample["activity_10km"]))
-                    if activity_sample is not None and len(activity_context_samples) < 200:
+                    if activity_sample is not None:
                         activity_context_samples.append(activity_sample)
                     if (
                         activity_sample is not None
@@ -689,6 +689,7 @@ def preprocess_pbf(
                     _emit_progress(
                         "POI activity sample: remote; "
                         f"name={sample.get('name')!r}; "
+                        f"kind={sample.get('kind')}; "
                         f"priority={sample.get('priority')}; "
                         f"500m={sample.get('activity_500m')}; "
                         f"2km={sample.get('activity_2km')}; "
@@ -699,6 +700,7 @@ def preprocess_pbf(
                     _emit_progress(
                         "POI activity sample: urban; "
                         f"name={sample.get('name')!r}; "
+                        f"kind={sample.get('kind')}; "
                         f"priority={sample.get('priority')}; "
                         f"500m={sample.get('activity_500m')}; "
                         f"2km={sample.get('activity_2km')}; "

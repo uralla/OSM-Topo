@@ -272,9 +272,18 @@ def enrich_activity_diagnostics(
     }
     changed = any(result.get(key) != value for key, value in desired.items())
     result.update(desired)
+    if is_food_shop(result):
+        poi_kind = "food"
+    elif is_accommodation(result):
+        poi_kind = "accommodation"
+    elif is_transit_stop(result):
+        poi_kind = "transit"
+    else:
+        poi_kind = "other"
     return result, changed, {
         "id": int(getattr(item, "id", 0)),
         "name": result.get("name"),
+        "kind": poi_kind,
         "priority": result.get(POI_PRIORITY_TAG),
         "activity_500m": activity_500m,
         "activity_2km": activity_2km,
