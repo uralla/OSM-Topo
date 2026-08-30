@@ -396,6 +396,14 @@ def _progress(objects_seen: int, started: float) -> None:
     _emit_progress(f"[preprocess] {objects_seen:,} objects; {rate:,.0f} obj/s")
 
 
+def _activity_percentile(values: list[int], percentile: float) -> int:
+    if not values:
+        return 0
+    ordered = sorted(values)
+    index = round((len(ordered) - 1) * percentile)
+    return ordered[index]
+
+
 def _emit_geographic_label_change(item: object, tags: Mapping[str, str]) -> None:
     name = tags.get("name")
     label = tags.get(DISPLAY_LABEL_TAG)
@@ -652,13 +660,6 @@ def preprocess_pbf(
             f"sparse {counters['poi_priority_sparse']:,}; "
             f"isolated {counters['poi_priority_isolated']:,}"
         )
-        def _activity_percentile(values: list[int], percentile: float) -> int:
-            if not values:
-                return 0
-            ordered = sorted(values)
-            index = round((len(ordered) - 1) * percentile)
-            return ordered[index]
-
         if activity_500m_values:
             activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)
             activity_2km_p75 = _activity_percentile(activity_2km_values, 0.75)
