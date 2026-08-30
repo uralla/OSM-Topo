@@ -27,10 +27,13 @@ printf 'Product: %s\n' "$PRODUCT"
 printf 'Full log: %s\n' "$FULL_LOG"
 printf 'POI extract: %s\n\n' "$POI_LOG"
 
+START_EPOCH=$(date +%s)
 set +e
 "${BUILD_CMD[@]}" 2>&1 | tee "$FULL_LOG"
 BUILD_STATUS=${PIPESTATUS[0]}
 set -e
+END_EPOCH=$(date +%s)
+ELAPSED=$((END_EPOCH - START_EPOCH))
 
 # Keep only the lines useful for tuning the context classifier. The full log is
 # retained next to this compact extract for timing/error analysis.
@@ -44,6 +47,7 @@ printf '============================================================\n'
 cat "$POI_LOG"
 printf '============================================================\n'
 printf 'Build exit status: %d\n' "$BUILD_STATUS"
+printf 'Wall time: %02d:%02d:%02d\n' $((ELAPSED / 3600)) $(((ELAPSED % 3600) / 60)) $((ELAPSED % 60))
 printf 'Full log: %s\n' "$FULL_LOG"
 printf 'POI extract: %s\n' "$POI_LOG"
 
