@@ -165,6 +165,22 @@ class FoodShopIndex:
         return total
 
 
+    def count_cells_within_bbox(self, lat: float, lon: float, radius_km: float) -> int:
+        """Fast approximate wide-area count using whole grid cells."""
+        lat_delta = radius_km / 110.574
+        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)
+        lon_delta = radius_km / lon_scale
+        min_y = floor((lat - lat_delta) / GRID_DEGREES)
+        max_y = floor((lat + lat_delta) / GRID_DEGREES)
+        min_x = floor((lon - lon_delta) / GRID_DEGREES)
+        max_x = floor((lon + lon_delta) / GRID_DEGREES)
+        return sum(
+            len(self.cells.get((y, x), ()))
+            for y in range(min_y, max_y + 1)
+            for x in range(min_x, max_x + 1)
+        )
+
+
 def valid_node_location(item: object) -> tuple[float, float] | None:
     """Return (lat, lon) for a node-like object, otherwise None."""
 
@@ -228,7 +244,7 @@ def enrich_activity_diagnostics(
     lat, lon = location
     activity_500m = index.count_within(lat, lon, 0.5)
     activity_2km = index.count_within(lat, lon, 2.0)
-    activity_10km = index.count_within(lat, lon, 10.0)
+    activity_10km = index.count_cells_within_bbox(lat, lon, 10.0)
     desired = {
         POI_ACTIVITY_500M_TAG: str(activity_500m),
         POI_ACTIVITY_2KM_TAG: str(activity_2km),

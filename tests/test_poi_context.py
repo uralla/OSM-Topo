@@ -56,6 +56,16 @@ class PoiContextTests(unittest.TestCase):
         index.add(55.1200, 60.0000)
         self.assertEqual(index.count_within(55.0000, 60.0000, 10.0), 2)
 
+    def test_grid_bbox_background_count(self) -> None:
+        index = FoodShopIndex.empty()
+        index.add(55.0000, 60.0000)
+        index.add(55.0500, 60.0000)
+        index.add(55.1200, 60.0000)
+        exact = index.count_within(55.0000, 60.0000, 10.0)
+        background = index.count_cells_within_bbox(55.0000, 60.0000, 10.0)
+        self.assertGreaterEqual(background, exact)
+        self.assertEqual(exact, 2)
+
     def test_grid_distance_count(self) -> None:
         index = FoodShopIndex.empty()
         index.add(55.0000, 60.0000)
