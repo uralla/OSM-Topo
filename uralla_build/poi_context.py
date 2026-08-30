@@ -253,6 +253,26 @@ class PlaceAnchorIndex:
                         nearest = (distance, place_type, name)
         return nearest
 
+    def nearest_by_type_within(
+        self, lat: float, lon: float, radius_km: float
+    ) -> dict[str, tuple[float, str | None]]:
+        lat_delta = radius_km / 110.574
+        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)
+        lon_delta = radius_km / lon_scale
+        min_y = floor((lat - lat_delta) / GRID_DEGREES)
+        max_y = floor((lat + lat_delta) / GRID_DEGREES)
+        min_x = floor((lon - lon_delta) / GRID_DEGREES)
+        max_x = floor((lon + lon_delta) / GRID_DEGREES)
+        nearest: dict[str, tuple[float, str | None]] = {}
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                for candidate_lat, candidate_lon, place_type, name in self.cells.get((y, x), ()):
+                    distance = _haversine_km(lat, lon, candidate_lat, candidate_lon)
+                    current = nearest.get(place_type)
+                    if distance <= radius_km and (current is None or distance < current[0]):
+                        nearest[place_type] = (distance, name)
+        return nearest
+
 
 @dataclass(slots=True)
 class ContextIndexes:
@@ -310,6 +330,7 @@ def enrich_activity_diagnostics(
     activity_2km = index.count_within(lat, lon, 2.0)
     activity_10km = index.count_cells_within_circle(lat, lon, 10.0)
     nearest_place = places.nearest_within(lat, lon, 10.0)
+    nearest_places_by_type = places.nearest_by_type_within(lat, lon, 10.0)
     desired = {
         POI_ACTIVITY_500M_TAG: str(activity_500m),
         POI_ACTIVITY_2KM_TAG: str(activity_2km),
@@ -336,6 +357,7 @@ def enrich_activity_diagnostics(
         "place_distance_km": nearest_place[0] if nearest_place is not None else None,
         "place_type": nearest_place[1] if nearest_place is not None else None,
         "place_name": nearest_place[2] if nearest_place is not None else None,
+        "place_by_type": {key: {"distance_km": value[0], "name": value[1]} for key, value in nearest_places_by_type.items()},
         "lat": lat,
         "lon": lon,
     }
