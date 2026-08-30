@@ -196,54 +196,100 @@ def _run(command: list[str], repo_root: Path) -> int:
     return int(completed.returncode)
 
 
-def _history(history: HistoryStore, product: str) -> None:
-    _header(f"HISTORY — {product}")
-    with history.connect() as connection:
-        builds = connection.execute(
-            """SELECT * FROM builds WHERE product = ?
-               ORDER BY created_at DESC LIMIT 12""",
-            (product,),
-        ).fetchall()
-    if not builds:
-        print("  No builds yet.")
-        input("\n0 = back: ")
-        return
+def _stage_duration(attempts: list[dict[str, Any]], stage_name: str) -> str:
+    total = sum(
+        float(a.get("duration_seconds") or 0.0)
+        for a in attempts
+        if a.get("stage_name") == stage_name
+        and a.get("status") in {"success", "failed", "interrupted", "skipped"}
+    )
+    return _duration(total) if total > 0 else "—"
 
-    for index, build in enumerate(builds):
-        attempts = history.attempts(str(build["build_id"]))
-        terminal_attempts = [
-            attempt
-            for attempt in attempts
-            if attempt.get("status") in {"success", "failed", "interrupted", "skipped"}
-        ]
-        total = sum(float(a.get("duration_seconds") or 0.0) for a in terminal_attempts)
-        status = str(build["status"]).upper()
-        finished = build["finished_at"] or build["created_at"]
+
+def _history_detail(history: HistoryStore, build: Mapping[str, object]) -> None:
+    build_id = str(build["build_id"])
+    attempts = history.attempts(build_id)
+    terminal_attempts = [
+        attempt
+        for attempt in attempts
+        if attempt.get("status") in {"success", "failed", "interrupted", "skipped"}
+    ]
+    total = sum(float(a.get("duration_seconds") or 0.0) for a in terminal_attempts)
+    finished = build["finished_at"] or build["created_at"]
+
+    _header(f"BUILD — {build_id[:12]}")
+    print(f"  Date:   {_local_time(finished)}")
+    print(f"  Status: {str(build['status']).upper()}")
+    print(f"  Total:  {_duration(total)}")
+    print(f"  ID:     {build_id}")
+    print("\n  Stages")
+    print("  " + "─" * (_WIDTH - 4))
+    for attempt in terminal_attempts:
+        marker = " ↺" if attempt.get("status") == "skipped" else ""
+        print(
+            f"  {str(attempt.get('stage_name')):<24} "
+            f"{str(attempt.get('status')).upper():<12} "
+            f"{_duration(attempt.get('duration_seconds')):>9}{marker}"
+        )
+    error = next(
+        (str(a.get("error")) for a in reversed(attempts) if a.get("error")),
+        "",
+    )
+    if error:
+        print(f"\n  ERROR: {error}")
+    input("\n0 = back: ")
+
+
+def _history(history: HistoryStore, product: str) -> None:
+    while True:
+        _header(f"HISTORY — {product}")
+        with history.connect() as connection:
+            builds = connection.execute(
+                """SELECT * FROM builds WHERE product = ?
+                   ORDER BY created_at DESC LIMIT 12""",
+                (product,),
+            ).fetchall()
+        if not builds:
+            print("  No builds yet.")
+            input("\n0 = back: ")
+            return
 
         print(
-            f"  {_local_time(finished)}   {status:<11}   total {_duration(total)}"
+            f"  {'#':>2}  {'Date':<17} {'Status':<10} {'Total':>8} "
+            f"{'Preprocess':>10} {'Splitter':>9} {'mkgmap':>8}"
         )
+        print("  " + "─" * (_WIDTH - 4))
+        build_rows: list[dict[str, object]] = []
+        for index, build in enumerate(builds, 1):
+            build_dict = dict(build)
+            build_rows.append(build_dict)
+            attempts = history.attempts(str(build["build_id"]))
+            terminal_attempts = [
+                attempt
+                for attempt in attempts
+                if attempt.get("status") in {"success", "failed", "interrupted", "skipped"}
+            ]
+            total = sum(float(a.get("duration_seconds") or 0.0) for a in terminal_attempts)
+            finished = build["finished_at"] or build["created_at"]
+            print(
+                f"  {index:>2}. {_local_time(finished):<17} "
+                f"{str(build['status']).upper():<10} {_duration(total):>8} "
+                f"{_stage_duration(terminal_attempts, 'preprocess'):>10} "
+                f"{_stage_duration(terminal_attempts, 'splitter'):>9} "
+                f"{_stage_duration(terminal_attempts, 'mkgmap'):>8}"
+            )
 
-        stages = "  ·  ".join(
-            f"{a.get('stage_name')} {_duration(a.get('duration_seconds'))}"
-            + (" ↺" if a.get("status") == "skipped" else "")
-            for a in terminal_attempts
-        )
-        if stages:
-            print(f"    {stages}")
-
-        error = next(
-            (str(a.get("error")) for a in reversed(attempts) if a.get("error")),
-            "",
-        )
-        if error:
-            print(f"    ERROR: {error}")
-
-        print(f"    build: {str(build['build_id'])[:12]}")
-        if index != len(builds) - 1:
-            print("  " + "─" * (_WIDTH - 4))
-
-    input("\n0 = back: ")
+        print("  " + "─" * (_WIDTH - 4))
+        print("  Select build number for details, 0 = back")
+        choice = input("\nSelect: ").strip()
+        if choice in {"0", ""}:
+            return
+        try:
+            selected = int(choice) - 1
+        except ValueError:
+            continue
+        if 0 <= selected < len(build_rows):
+            _history_detail(history, build_rows[selected])
 
 
 def _product_menu(
