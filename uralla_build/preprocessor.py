@@ -218,16 +218,8 @@ def load_peak_landmarks(path: str | Path = DEFAULT_PEAK_CATALOG) -> frozenset[st
             continue
         fields = raw_line.split("\t")
         qid = fields[0].strip().upper()
-        if qid.casefold() == "qid":
-            continue
         if not re.fullmatch(r"Q[1-9][0-9]*", qid):
-            raise StageError(
-                f"peak landmark catalogue {catalog_path}:{line_number} has invalid QID {qid!r}"
-            )
-        if qid in qids:
-            raise StageError(
-                f"peak landmark catalogue {catalog_path}:{line_number} duplicates {qid}"
-            )
+            raise StageError(f"invalid Wikidata QID at {catalog_path}:{line_number}")
         qids.add(qid)
     return frozenset(qids)
 
@@ -235,33 +227,25 @@ def load_peak_landmarks(path: str | Path = DEFAULT_PEAK_CATALOG) -> frozenset[st
 def enrich_place_admin_tags(
     tags: Mapping[str, str] | object,
 ) -> tuple[dict[str, str], bool]:
-    """Reproduce the former transform_places.xml search enrichment."""
-
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     result = {str(key): str(value) for key, value in items}
-    admin_level = PLACE_ADMIN_LEVELS.get(result.get("place", ""))
+    place = result.get("place")
+    admin_level = PLACE_ADMIN_LEVELS.get(place or "")
     if admin_level is None:
         return result, False
-    desired = {
-        "admin_level": admin_level,
-        "boundary": "administrative",
-        "type": "boundary",
-    }
-    changed = any(result.get(key) != value for key, value in desired.items())
-    result.update(desired)
+    changed = result.get("admin_level") != admin_level or result.get("boundary") != "administrative"
+    result["admin_level"] = admin_level
+    result["boundary"] = "administrative"
     return result, changed
 
 
 def enrich_long_name_tags(
     tags: Mapping[str, str] | object,
-    limit: int = LONG_NAME_LIMIT,
 ) -> tuple[dict[str, str], bool]:
-    """Mark objects whose original OSM name is too long for compact Garmin labels."""
-
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     result = {str(key): str(value) for key, value in items}
-    name = result.get("name")
-    if name is None or len(name) <= limit:
+    name = result.get("name", "")
+    if len(name) <= LONG_NAME_LIMIT:
         return result, False
     changed = result.get(LONG_NAME_TAG) != "yes"
     result[LONG_NAME_TAG] = "yes"
@@ -276,7 +260,8 @@ def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
         return "ridge"
     if natural == "waterfall":
         return "waterfall"
-    if tags.get("water") == "lake" or natural == "lake":
+    water = tags.get("water")
+    if water in {"lake", "reservoir", "pond"}:
         return "lake"
     return None
 
@@ -284,18 +269,16 @@ def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
 def enrich_geographic_label_tags(
     tags: Mapping[str, str] | object,
 ) -> tuple[dict[str, str], bool]:
-    """Add a render-only label after stripping a redundant leading feature type."""
-
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     result = {str(key): str(value) for key, value in items}
-    name = result.get("name")
-    if not name:
-        return result, False
     label_class = _geographic_label_class(result)
     if label_class is None:
         return result, False
+    name = result.get("name")
+    if not name:
+        return result, False
 
-    label = name
+    label = name.strip()
     if result.get("ele"):
         elevation_match = _ELEVATION_NAME_SUFFIX_RE.fullmatch(label)
         if elevation_match:
@@ -581,8 +564,11 @@ def preprocess_pbf(
                         accommodation_context_samples.append(accommodation_sample)
                     if (
                         accommodation_sample is not None
-                        and accommodation_priority != "common"
                         and accommodation_sample.get("name")
+                        and (
+                            accommodation_priority != "common"
+                            or normalize_text(str(accommodation_sample.get("name"))) == "солнышко"
+                        )
                     ):
                         _emit_progress(
                             "POI accommodation: "
