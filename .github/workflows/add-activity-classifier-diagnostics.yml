@@ -1,0 +1,101 @@
+name: Add activity classifier diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-activity-classifier-diagnostics.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add percentile-based activity classifier diagnostics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          poi = Path('uralla_build/poi_context.py')
+          text = poi.read_text(encoding='utf-8')
+          marker = '''def classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:\n'''
+          addition = '''def classify_activity_context(\n    *,\n    activity_2km: int,\n    activity_10km: int,\n    local_p25: int,\n    local_p75: int,\n    background_p25: int,\n    background_p75: int,\n) -> str:\n    \"\"\"Classify general activity context from territory-relative density bands.\"\"\"\n    if activity_2km <= local_p25 and activity_10km <= background_p25:\n        return \"remote\"\n    if activity_2km >= local_p75 and activity_10km >= background_p75:\n        return \"urban\"\n    return \"settlement\"\n\n\n'''
+          if marker not in text:
+              raise SystemExit('classifier insertion marker not found')
+          if 'def classify_activity_context(' not in text:
+              text = text.replace(marker, addition + marker)
+          poi.write_text(text, encoding='utf-8')
+
+          pre = Path('uralla_build/preprocessor.py')
+          text = pre.read_text(encoding='utf-8')
+          old = '''from .poi_context import (\n    build_context_indexes,\n'''
+          new = '''from .poi_context import (\n    build_context_indexes,\n    classify_activity_context,\n'''
+          if old not in text:
+              raise SystemExit('poi context import marker not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        if activity_500m_values:\n            _emit_progress(\n                \"POI activity density: \"\n'''
+          new = '''        if activity_500m_values:\n            activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)\n            activity_2km_p75 = _activity_percentile(activity_2km_values, 0.75)\n            activity_10km_p25 = _activity_percentile(activity_10km_values, 0.25)\n            activity_10km_p75 = _activity_percentile(activity_10km_values, 0.75)\n            _emit_progress(\n                \"POI activity density: \"\n'''
+          if old not in text:
+              raise SystemExit('activity density block marker not found')
+          text = text.replace(old, new, 1)
+
+          marker = '''            )\n        _emit_progress(\n            f\"POI context: hotels/hostels {accommodation_index.shop_count:,}; \"\n'''
+          addition = '''            )\n            activity_class_counts: Counter[str] = Counter(\n                classify_activity_context(\n                    activity_2km=activity_2km,\n                    activity_10km=activity_10km,\n                    local_p25=activity_2km_p25,\n                    local_p75=activity_2km_p75,\n                    background_p25=activity_10km_p25,\n                    background_p75=activity_10km_p75,\n                )\n                for activity_2km, activity_10km in zip(activity_2km_values, activity_10km_values)\n            )\n            _emit_progress(\n                \"POI activity classifier: \"\n                f\"remote {activity_class_counts['remote']:,}; \"\n                f\"settlement {activity_class_counts['settlement']:,}; \"\n                f\"urban {activity_class_counts['urban']:,}; \"\n                f\"criteria remote=(2km<=p25 and 10km<=p25), \"\n                f\"urban=(2km>=p75 and 10km>=p75)\"\n            )\n        _emit_progress(\n            f\"POI context: hotels/hostels {accommodation_index.shop_count:,}; \"\n'''
+          if marker not in text:
+              raise SystemExit('activity classifier output insertion marker not found')
+          text = text.replace(marker, addition, 1)
+
+          old = '''                f\"activity10km={solnyshko_accommodation_sample.get('activity_10km', 'n/a')}; \"\n                f\"priority={solnyshko_accommodation_sample['priority']}\"\n'''
+          new = '''                f\"activity10km={solnyshko_accommodation_sample.get('activity_10km', 'n/a')}; \"\n                f\"activity_context={classify_activity_context(activity_2km=int(solnyshko_accommodation_sample.get('activity_2km', 0)), activity_10km=int(solnyshko_accommodation_sample.get('activity_10km', 0)), local_p25=activity_2km_p25, local_p75=activity_2km_p75, background_p25=activity_10km_p25, background_p75=activity_10km_p75) if activity_500m_values else 'n/a'}; \"\n                f\"priority={solnyshko_accommodation_sample['priority']}\"\n'''
+          if old not in text:
+              raise SystemExit('Solnyshko classifier log marker not found')
+          pre.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          tests = Path('tests/test_poi_context.py')
+          text = tests.read_text(encoding='utf-8')
+          old = '''    FoodShopIndex,\n    classify_food_shop,\n'''
+          new = '''    FoodShopIndex,\n    classify_activity_context,\n    classify_food_shop,\n'''
+          if old not in text:
+              raise SystemExit('test import marker not found')
+          text = text.replace(old, new, 1)
+          marker = '''    def test_rarity_classes(self) -> None:\n'''
+          addition = '''    def test_activity_context_classifier(self) -> None:\n        kwargs = dict(local_p25=20, local_p75=100, background_p25=200, background_p75=1000)\n        self.assertEqual(classify_activity_context(activity_2km=10, activity_10km=100, **kwargs), \"remote\")\n        self.assertEqual(classify_activity_context(activity_2km=50, activity_10km=150, **kwargs), \"settlement\")\n        self.assertEqual(classify_activity_context(activity_2km=150, activity_10km=1500, **kwargs), \"urban\")\n        self.assertEqual(classify_activity_context(activity_2km=150, activity_10km=100, **kwargs), \"settlement\")\n\n'''
+          if marker not in text:
+              raise SystemExit('test insertion marker not found')
+          if 'test_activity_context_classifier' not in text:
+              text = text.replace(marker, addition + marker, 1)
+          tests.write_text(text, encoding='utf-8')
+
+          script = Path('scripts/test-poi-context.sh')
+          text = script.read_text(encoding='utf-8')
+          text = text.replace('POI activity density:|POI accommodation check:', 'POI activity density:|POI activity classifier:|POI accommodation check:')
+          script.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          grep -q 'POI activity classifier:' uralla_build/preprocessor.py
+          grep -q 'activity_context=' uralla_build/preprocessor.py
+          grep -q 'POI activity classifier:' scripts/test-poi-context.sh
+          bash -n scripts/test-poi-context.sh
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py tests/test_poi_context.py scripts/test-poi-context.sh
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Add activity context classifier diagnostics'
+            git push
+          fi
