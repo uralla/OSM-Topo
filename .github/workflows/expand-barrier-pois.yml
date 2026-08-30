@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch barrier point rules
-        shell: python
+        shell: python {0}
         run: |
           from pathlib import Path
 
@@ -59,7 +59,7 @@ barrier=toll_booth { name '${name}' | 'пункт оплаты' } [0x58 resoluti
               raise SystemExit('expected barrier block not found')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
       - name: Verify barrier rules
-        shell: python
+        shell: python {0}
         run: |
           from pathlib import Path
           s = Path('styles/uralla/points').read_text(encoding='utf-8')
