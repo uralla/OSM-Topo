@@ -674,8 +674,8 @@ def preprocess_pbf(
                 f"criteria remote=(2km<=p25 and 10km<=p25), "
                 f"urban=(2km>=p75 and 10km>=p75)"
             )
-            remote_samples = 0
-            urban_samples = 0
+            activity_kind_counts: Counter[tuple[str, str]] = Counter()
+            edge_samples: dict[tuple[str, str], list[dict[str, object]]] = {}
             for sample in activity_context_samples:
                 context = classify_activity_context(
                     activity_2km=int(sample["activity_2km"]),
@@ -685,30 +685,35 @@ def preprocess_pbf(
                     background_p25=activity_10km_p25,
                     background_p75=activity_10km_p75,
                 )
-                if context == "remote" and remote_samples < 20:
-                    _emit_progress(
-                        "POI activity sample: remote; "
-                        f"name={sample.get('name')!r}; "
-                        f"kind={sample.get('kind')}; "
-                        f"priority={sample.get('priority')}; "
-                        f"500m={sample.get('activity_500m')}; "
-                        f"2km={sample.get('activity_2km')}; "
-                        f"10km={sample.get('activity_10km')}"
-                    )
-                    remote_samples += 1
-                elif context == "urban" and urban_samples < 20:
-                    _emit_progress(
-                        "POI activity sample: urban; "
-                        f"name={sample.get('name')!r}; "
-                        f"kind={sample.get('kind')}; "
-                        f"priority={sample.get('priority')}; "
-                        f"500m={sample.get('activity_500m')}; "
-                        f"2km={sample.get('activity_2km')}; "
-                        f"10km={sample.get('activity_10km')}"
-                    )
-                    urban_samples += 1
-                if remote_samples >= 20 and urban_samples >= 20:
-                    break
+                kind = str(sample.get("kind") or "other")
+                activity_kind_counts[(context, kind)] += 1
+                if context in {"remote", "urban"}:
+                    bucket = edge_samples.setdefault((context, kind), [])
+                    if len(bucket) < 5:
+                        bucket.append(sample)
+
+            for context in ("remote", "settlement", "urban"):
+                _emit_progress(
+                    "POI activity matrix: "
+                    f"context={context}; "
+                    f"food={activity_kind_counts[(context, 'food')]:,}; "
+                    f"accommodation={activity_kind_counts[(context, 'accommodation')]:,}; "
+                    f"transit={activity_kind_counts[(context, 'transit')]:,}; "
+                    f"other={activity_kind_counts[(context, 'other')]:,}"
+                )
+
+            for context in ("remote", "urban"):
+                for kind in ("food", "accommodation", "transit", "other"):
+                    for sample in edge_samples.get((context, kind), ()): 
+                        _emit_progress(
+                            f"POI activity sample: {context}; "
+                            f"name={sample.get('name')!r}; "
+                            f"kind={sample.get('kind')}; "
+                            f"priority={sample.get('priority')}; "
+                            f"500m={sample.get('activity_500m')}; "
+                            f"2km={sample.get('activity_2km')}; "
+                            f"10km={sample.get('activity_10km')}"
+                        )
         _emit_progress(
             f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "
             f"common {counters['accommodation_priority_common']:,}; "
