@@ -17,6 +17,7 @@ from typing import Any, Iterable, Mapping
 
 ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
 TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
+SETTLEMENT_PLACE_VALUES = frozenset({"city", "town", "village", "hamlet"})
 
 
 FOOD_SHOP_VALUES = frozenset(
@@ -217,11 +218,49 @@ def valid_node_location(item: object) -> tuple[float, float] | None:
 
 
 @dataclass(slots=True)
+class PlaceAnchorIndex:
+    cells: dict[tuple[int, int], list[tuple[float, float, str, str | None]]]
+    anchor_count: int = 0
+
+    @classmethod
+    def empty(cls) -> "PlaceAnchorIndex":
+        return cls(defaultdict(list), 0)
+
+    @staticmethod
+    def _cell(lat: float, lon: float) -> tuple[int, int]:
+        return floor(lat / GRID_DEGREES), floor(lon / GRID_DEGREES)
+
+    def add(self, lat: float, lon: float, place_type: str, name: str | None) -> None:
+        self.cells[self._cell(lat, lon)].append((lat, lon, place_type, name))
+        self.anchor_count += 1
+
+    def nearest_within(
+        self, lat: float, lon: float, radius_km: float
+    ) -> tuple[float, str, str | None] | None:
+        lat_delta = radius_km / 110.574
+        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)
+        lon_delta = radius_km / lon_scale
+        min_y = floor((lat - lat_delta) / GRID_DEGREES)
+        max_y = floor((lat + lat_delta) / GRID_DEGREES)
+        min_x = floor((lon - lon_delta) / GRID_DEGREES)
+        max_x = floor((lon + lon_delta) / GRID_DEGREES)
+        nearest: tuple[float, str, str | None] | None = None
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                for candidate_lat, candidate_lon, place_type, name in self.cells.get((y, x), ()):
+                    distance = _haversine_km(lat, lon, candidate_lat, candidate_lon)
+                    if distance <= radius_km and (nearest is None or distance < nearest[0]):
+                        nearest = (distance, place_type, name)
+        return nearest
+
+
+@dataclass(slots=True)
 class ContextIndexes:
     food: FoodShopIndex
     accommodation: FoodShopIndex
     transit: FoodShopIndex
     activity: FoodShopIndex
+    places: PlaceAnchorIndex
 
 
 def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
@@ -231,6 +270,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
     accommodation = FoodShopIndex.empty()
     transit = FoodShopIndex.empty()
     activity = FoodShopIndex.empty()
+    places = PlaceAnchorIndex.empty()
     for item in osmium.FileProcessor(source):
         location = valid_node_location(item)
         if location is None:
@@ -244,13 +284,17 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
             accommodation.add(*location)
         if is_transit_stop(tags):
             transit.add(*location)
-    return ContextIndexes(food, accommodation, transit, activity)
+        place_type = tags.get("place")
+        if place_type in SETTLEMENT_PLACE_VALUES:
+            places.add(*location, place_type, tags.get("name") or tags.get("name:ru"))
+    return ContextIndexes(food, accommodation, transit, activity, places)
 
 
 def enrich_activity_diagnostics(
     item: object,
     tags: Mapping[str, str] | object,
     index: FoodShopIndex,
+    places: PlaceAnchorIndex,
 ) -> tuple[dict[str, str], bool, dict[str, object] | None]:
     """Attach general human-activity density diagnostics to context-aware POIs."""
 
@@ -265,6 +309,7 @@ def enrich_activity_diagnostics(
     activity_500m = index.count_within(lat, lon, 0.5)
     activity_2km = index.count_within(lat, lon, 2.0)
     activity_10km = index.count_cells_within_circle(lat, lon, 10.0)
+    nearest_place = places.nearest_within(lat, lon, 10.0)
     desired = {
         POI_ACTIVITY_500M_TAG: str(activity_500m),
         POI_ACTIVITY_2KM_TAG: str(activity_2km),
@@ -288,6 +333,9 @@ def enrich_activity_diagnostics(
         "activity_500m": activity_500m,
         "activity_2km": activity_2km,
         "activity_10km": activity_10km,
+        "place_distance_km": nearest_place[0] if nearest_place is not None else None,
+        "place_type": nearest_place[1] if nearest_place is not None else None,
+        "place_name": nearest_place[2] if nearest_place is not None else None,
         "lat": lat,
         "lon": lon,
     }

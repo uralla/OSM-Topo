@@ -438,12 +438,14 @@ def preprocess_pbf(
     accommodation_index = context_indexes.accommodation
     transit_stop_index = context_indexes.transit
     activity_index = context_indexes.activity
+    place_anchor_index = context_indexes.places
     _emit_progress(
         "POI context: one-pass index complete; "
         f"food {food_shop_index.shop_count:,}; "
         f"accommodation {accommodation_index.shop_count:,}; "
         f"transit {transit_stop_index.shop_count:,}; "
         f"activity {activity_index.shop_count:,}; "
+        f"places {place_anchor_index.anchor_count:,}; "
         f"{time.monotonic() - context_started:.1f}s"
     )
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
@@ -593,7 +595,7 @@ def preprocess_pbf(
                         transit_context_samples.append(transit_sample)
 
                 final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
-                    item, final_tags, activity_index
+                    item, final_tags, activity_index, place_anchor_index
                 )
                 if activity_added:
                     counters["activity_context_enriched"] += 1
@@ -702,6 +704,42 @@ def preprocess_pbf(
                     f"other={activity_kind_counts[(context, 'other')]:,}"
                 )
 
+            remote_place_bands: Counter[str] = Counter()
+            for sample in activity_context_samples:
+                context = classify_activity_context(
+                    activity_2km=int(sample["activity_2km"]),
+                    activity_10km=int(sample["activity_10km"]),
+                    local_p25=activity_2km_p25,
+                    local_p75=activity_2km_p75,
+                    background_p25=activity_10km_p25,
+                    background_p75=activity_10km_p75,
+                )
+                if context != "remote":
+                    continue
+                distance = sample.get("place_distance_km")
+                if distance is None:
+                    band = ">10km"
+                elif float(distance) <= 0.5:
+                    band = "<=0.5km"
+                elif float(distance) <= 1.0:
+                    band = "<=1km"
+                elif float(distance) <= 2.0:
+                    band = "<=2km"
+                elif float(distance) <= 5.0:
+                    band = "<=5km"
+                else:
+                    band = "<=10km"
+                remote_place_bands[band] += 1
+            _emit_progress(
+                "POI remote place proximity: "
+                f"<=0.5km={remote_place_bands['<=0.5km']:,}; "
+                f"<=1km={remote_place_bands['<=1km']:,}; "
+                f"<=2km={remote_place_bands['<=2km']:,}; "
+                f"<=5km={remote_place_bands['<=5km']:,}; "
+                f"<=10km={remote_place_bands['<=10km']:,}; "
+                f">10km={remote_place_bands['>10km']:,}"
+            )
+
             for context in ("remote", "urban"):
                 for kind in ("food", "accommodation", "transit", "other"):
                     for sample in edge_samples.get((context, kind), ()): 
@@ -712,7 +750,10 @@ def preprocess_pbf(
                             f"priority={sample.get('priority')}; "
                             f"500m={sample.get('activity_500m')}; "
                             f"2km={sample.get('activity_2km')}; "
-                            f"10km={sample.get('activity_10km')}"
+                            f"10km={sample.get('activity_10km')}; "
+                            f"place={sample.get('place_name')!r}; "
+                            f"place_type={sample.get('place_type')}; "
+                            f"place_km={format(float(sample['place_distance_km']), '.2f') if sample.get('place_distance_km') is not None else 'n/a'}"
                         )
         _emit_progress(
             f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "
