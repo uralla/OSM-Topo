@@ -26,7 +26,7 @@ The very large HGT/DEM tree remains separately configurable through `dem_root`.
 
 ## POI context diagnostic build
 
-Run `scripts/test-poi-context.sh [product]` from the repository root (default product: `crimea`). It performs a normal full product build, keeps the complete console log under `logs/poi-context/`, and writes a compact `*.poi.txt` extract containing the POI context/activity diagnostics used while tuning adaptive visibility.
+Run `bash scripts/test-poi-context.sh [product]` from the repository root (default product: `crimea`). It performs a normal full product build, keeps the complete console log under `logs/poi-context/`, and writes a compact `*.poi.txt` extract containing the POI context/activity diagnostics used while tuning adaptive visibility.
 
 ## Documentation
 
