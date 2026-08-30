@@ -1,0 +1,48 @@
+[source] crimea: local 38.6 MiB, age 0.44 d; fresh (< 1 d), reused
+[preprocess] POI context: indexing node signals in one pass
+[preprocess] running 00:30
+[preprocess] Traceback (most recent call last):
+[preprocess]   File "<frozen runpy>", line 203, in _run_module_as_main
+[preprocess]   File "<frozen runpy>", line 88, in _run_code
+[preprocess]   File "/Volumes/1TSams/github/OSM-Topo/uralla_build/__main__.py", line 45, in <module>
+[preprocess]     raise SystemExit(main(arguments))
+[preprocess]                      ~~~~^^^^^^^^^^^
+[preprocess]   File "/Volumes/1TSams/github/OSM-Topo/uralla_build/entrypoint.py", line 230, in main
+[preprocess]     return cli_main(arguments)
+[preprocess]   File "/Volumes/1TSams/github/OSM-Topo/uralla_build/cli.py", line 588, in main
+[preprocess]     return int(args.handler(args))
+[preprocess]                ~~~~~~~~~~~~^^^^^^
+[preprocess]   File "/Volumes/1TSams/github/OSM-Topo/uralla_build/cli.py", line 454, in _preprocess
+[preprocess]     report = preprocess_pbf(
+[preprocess]         args.input,
+[preprocess]     ...<3 lines>...
+[preprocess]         args.report,
+[preprocess]     )
+[preprocess]   File "/Volumes/1TSams/github/OSM-Topo/uralla_build/preprocessor.py", line 454, in preprocess_pbf
+[preprocess]     "2km_p25": _activity_percentile(candidate_activity_2km, 0.25),
+[preprocess]                ^^^^^^^^^^^^^^^^^^^^
+[preprocess] UnboundLocalError: cannot access local variable '_activity_percentile' where it is not associated with a value
+{
+  "mode": "apply",
+  "result": {
+    "build_id": "eec625e91cd9430dbb0bbea136abe57c",
+    "product": "crimea",
+    "status": "failed",
+    "stages": [
+      {
+        "build_id": "eec625e91cd9430dbb0bbea136abe57c",
+        "attempt_id": 309,
+        "product": "crimea",
+        "stage": "preprocess",
+        "status": "failed",
+        "exit_code": 1,
+        "duration_seconds": 42.210268583963625,
+        "stdout_log": "/Volumes/1TSams/garmin_lab/builds/eec625e91cd9430dbb0bbea136abe57c/preprocess/stdout.attempt-1.log",
+        "stderr_log": "/Volumes/1TSams/garmin_lab/builds/eec625e91cd9430dbb0bbea136abe57c/preprocess/stderr.attempt-1.log",
+        "checkpoint": null,
+        "reused_attempt_id": null
+      }
+    ],
+    "final_result": null
+  }
+}

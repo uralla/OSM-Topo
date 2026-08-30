@@ -1,0 +1,1 @@
+[preprocess] POI context: indexing node signals in one pass
