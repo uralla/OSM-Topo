@@ -119,8 +119,9 @@ def _queue_state(manifest: Mapping[str, object], history: HistoryStore) -> dict[
     except Exception:
         return {}
     result: dict[str, str] = {}
+    running = history.running_products()
     for item in queue:
-        if item.product in history.running_products():
+        if item.product in running:
             result[item.product] = "RUNNING"
         elif item.never_built:
             result[item.product] = "NEW"
@@ -181,8 +182,8 @@ def _command(repo_root: Path, host_path: Path, manifest_path: Path, product: str
 def _run(command: list[str], repo_root: Path) -> int:
     print("\nCommand:")
     print("  " + shlex.join(command))
-    answer = input("\nEnter = run, c = cancel: ").strip().lower()
-    if answer == "c":
+    answer = input("\nEnter = run, 0 = cancel: ").strip().lower()
+    if answer == "0":
         return 0
     print()
     try:
@@ -205,26 +206,44 @@ def _history(history: HistoryStore, product: str) -> None:
         ).fetchall()
     if not builds:
         print("  No builds yet.")
-        input("\nPress Enter…")
+        input("\n0 = back: ")
         return
-    print(f"  {'Date':<17} {'Status':<12} {'Total':>9}  {'Build ID':<32} Error")
-    print("  " + "─" * (_WIDTH - 4))
-    for build in builds:
+
+    for index, build in enumerate(builds):
         attempts = history.attempts(str(build["build_id"]))
-        total = sum(float(a.get("duration_seconds") or 0.0) for a in attempts)
-        error = next((str(a.get("error")) for a in reversed(attempts) if a.get("error")), "")
+        terminal_attempts = [
+            attempt
+            for attempt in attempts
+            if attempt.get("status") in {"success", "failed", "interrupted", "skipped"}
+        ]
+        total = sum(float(a.get("duration_seconds") or 0.0) for a in terminal_attempts)
+        status = str(build["status"]).upper()
+        finished = build["finished_at"] or build["created_at"]
+
         print(
-            f"  {_local_time(build['created_at']):<17} {str(build['status']).upper():<12} "
-            f"{_duration(total):>9}  {str(build['build_id']):<32.32} {error[:20]}"
+            f"  {_local_time(finished)}   {status:<11}   total {_duration(total)}"
         )
-        stage_line = "  " + "  ".join(
-            f"{a.get('stage_name')}={_duration(a.get('duration_seconds'))}"
-            for a in attempts
-            if a.get("status") in {"success", "failed", "interrupted"}
+
+        stages = "  ·  ".join(
+            f"{a.get('stage_name')} {_duration(a.get('duration_seconds'))}"
+            + (" ↺" if a.get("status") == "skipped" else "")
+            for a in terminal_attempts
         )
-        if stage_line.strip():
-            print(stage_line)
-    input("\nPress Enter…")
+        if stages:
+            print(f"    {stages}")
+
+        error = next(
+            (str(a.get("error")) for a in reversed(attempts) if a.get("error")),
+            "",
+        )
+        if error:
+            print(f"    ERROR: {error}")
+
+        print(f"    build: {str(build['build_id'])[:12]}")
+        if index != len(builds) - 1:
+            print("  " + "─" * (_WIDTH - 4))
+
+    input("\n0 = back: ")
 
 
 def _product_menu(
@@ -251,7 +270,7 @@ def _product_menu(
         print("  3. History / stage timings")
         print("  4. Edit map configuration  [next GUI phase]")
         print("  5. Delete map configuration [next GUI phase]")
-        print("  b. Back")
+        print("  0. Back")
         choice = input("\nSelect: ").strip().lower()
         if choice == "1":
             _run(_command(repo_root, host_path, manifest_path, key, mkgmap_only=False), repo_root)
@@ -262,7 +281,7 @@ def _product_menu(
         elif choice in {"4", "5"}:
             print("\nThis editor is the next GUI phase; build actions are already active.")
             input("Press Enter…")
-        elif choice in {"b", "q", ""}:
+        elif choice in {"0", "q", ""}:
             return
 
 
