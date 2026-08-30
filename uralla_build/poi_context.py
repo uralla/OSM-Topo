@@ -15,7 +15,7 @@ from math import asin, cos, floor, radians, sin, sqrt
 from typing import Any, Iterable, Mapping
 
 
-ACCOMMODATION_VALUES = frozenset({"hotel", "hostel"})
+ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
 
 FOOD_SHOP_VALUES = frozenset(
     {
