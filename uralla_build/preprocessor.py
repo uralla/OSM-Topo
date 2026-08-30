@@ -441,11 +441,11 @@ def preprocess_pbf(
     peak_landmarks = load_peak_landmarks(peak_catalog_path)
     river_landmarks = load_river_landmarks(river_catalog_path)
     osmium = _load_osmium()
-    _emit_progress("[preprocess] food-shop context: indexing node shops")
+    _emit_progress("food-shop context: indexing node shops")
     context_started = time.monotonic()
     food_shop_index = build_food_shop_index(str(source), osmium)
     _emit_progress(
-        f"[preprocess] food-shop context: {food_shop_index.shop_count:,} node shops indexed "
+        f"food-shop context: {food_shop_index.shop_count:,} node shops indexed "
         f"in {time.monotonic() - context_started:.1f}s"
     )
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
@@ -554,6 +554,13 @@ def preprocess_pbf(
                     writer.add(item.replace(tags=final_tags))
 
         _progress(counters["objects_seen"], started)
+        _emit_progress(
+            "POI context: "
+            f"food shops {counters['poi_context_enriched']:,}; "
+            f"common {counters['poi_priority_common']:,}; "
+            f"sparse {counters['poi_priority_sparse']:,}; "
+            f"isolated {counters['poi_priority_isolated']:,}"
+        )
         report: dict[str, object] = {
             "schema_version": 8,
             "input": str(source),
