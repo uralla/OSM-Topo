@@ -4,6 +4,7 @@ import unittest
 
 from uralla_build.poi_context import (
     FoodShopIndex,
+    classify_activity_context,
     classify_food_shop,
     is_food_shop,
     is_meaningful_context_node,
@@ -24,6 +25,13 @@ class PoiContextTests(unittest.TestCase):
         self.assertTrue(is_meaningful_context_node({"amenity": "toilets"}))
         self.assertTrue(is_meaningful_context_node({"addr:housenumber": "3"}))
         self.assertTrue(is_meaningful_context_node({"natural": "peak"}))
+
+    def test_activity_context_classifier(self) -> None:
+        kwargs = dict(local_p25=20, local_p75=100, background_p25=200, background_p75=1000)
+        self.assertEqual(classify_activity_context(activity_2km=10, activity_10km=100, **kwargs), "remote")
+        self.assertEqual(classify_activity_context(activity_2km=50, activity_10km=150, **kwargs), "settlement")
+        self.assertEqual(classify_activity_context(activity_2km=150, activity_10km=1500, **kwargs), "urban")
+        self.assertEqual(classify_activity_context(activity_2km=150, activity_10km=100, **kwargs), "settlement")
 
     def test_rarity_classes(self) -> None:
         self.assertEqual(

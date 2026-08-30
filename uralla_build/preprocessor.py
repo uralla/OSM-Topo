@@ -24,6 +24,7 @@ from .river_landmarks import (
 )
 from .poi_context import (
     build_context_indexes,
+    classify_activity_context,
     enrich_accommodation_context,
     enrich_activity_diagnostics,
     enrich_food_shop_context,
@@ -634,6 +635,10 @@ def preprocess_pbf(
             return ordered[index]
 
         if activity_500m_values:
+            activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)
+            activity_2km_p75 = _activity_percentile(activity_2km_values, 0.75)
+            activity_10km_p25 = _activity_percentile(activity_10km_values, 0.25)
+            activity_10km_p75 = _activity_percentile(activity_10km_values, 0.75)
             _emit_progress(
                 "POI activity density: "
                 f"samples {len(activity_500m_values):,}; "
@@ -649,6 +654,25 @@ def preprocess_pbf(
                 f"p50={_activity_percentile(activity_10km_values, 0.50)} "
                 f"p75={_activity_percentile(activity_10km_values, 0.75)} "
                 f"p90={_activity_percentile(activity_10km_values, 0.90)}"
+            )
+            activity_class_counts: Counter[str] = Counter(
+                classify_activity_context(
+                    activity_2km=activity_2km,
+                    activity_10km=activity_10km,
+                    local_p25=activity_2km_p25,
+                    local_p75=activity_2km_p75,
+                    background_p25=activity_10km_p25,
+                    background_p75=activity_10km_p75,
+                )
+                for activity_2km, activity_10km in zip(activity_2km_values, activity_10km_values)
+            )
+            _emit_progress(
+                "POI activity classifier: "
+                f"remote {activity_class_counts['remote']:,}; "
+                f"settlement {activity_class_counts['settlement']:,}; "
+                f"urban {activity_class_counts['urban']:,}; "
+                f"criteria remote=(2km<=p25 and 10km<=p25), "
+                f"urban=(2km>=p75 and 10km>=p75)"
             )
         _emit_progress(
             f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "
@@ -669,6 +693,7 @@ def preprocess_pbf(
                 f"activity500m={solnyshko_accommodation_sample.get('activity_500m', 'n/a')}; "
                 f"activity2km={solnyshko_accommodation_sample.get('activity_2km', 'n/a')}; "
                 f"activity10km={solnyshko_accommodation_sample.get('activity_10km', 'n/a')}; "
+                f"activity_context={classify_activity_context(activity_2km=int(solnyshko_accommodation_sample.get('activity_2km', 0)), activity_10km=int(solnyshko_accommodation_sample.get('activity_10km', 0)), local_p25=activity_2km_p25, local_p75=activity_2km_p75, background_p25=activity_10km_p25, background_p75=activity_10km_p75) if activity_500m_values else 'n/a'}; "
                 f"priority={solnyshko_accommodation_sample['priority']}"
             )
         _emit_progress(

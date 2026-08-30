@@ -81,6 +81,23 @@ def is_transit_stop(tags: Mapping[str, str] | object) -> bool:
     )
 
 
+def classify_activity_context(
+    *,
+    activity_2km: int,
+    activity_10km: int,
+    local_p25: int,
+    local_p75: int,
+    background_p25: int,
+    background_p75: int,
+) -> str:
+    """Classify general activity context from territory-relative density bands."""
+    if activity_2km <= local_p25 and activity_10km <= background_p25:
+        return "remote"
+    if activity_2km >= local_p75 and activity_10km >= background_p75:
+        return "urban"
+    return "settlement"
+
+
 def classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:
     # A stop is useful farther out when it is not part of a dense urban stop grid.
     if stops_2km <= 2:

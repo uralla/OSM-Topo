@@ -75,7 +75,7 @@ ELAPSED=$((END_EPOCH - START_EPOCH))
 # Keep only the lines useful for tuning the context classifier. The full log is
 # retained next to this compact extract for timing/error analysis.
 grep -E \
-    'POI context:|POI activity density:|POI accommodation check:|POI accommodation:|\[preprocess\].*(objects|done)|BUILD (COMPLETE|FAILED)|TOTAL' \
+    'POI context:|POI activity density:|POI activity classifier:|POI accommodation check:|POI accommodation:|\[preprocess\].*(objects|done)|BUILD (COMPLETE|FAILED)|TOTAL' \
     "$FULL_LOG" > "$POI_LOG" || true
 
 printf '\n============================================================\n'
