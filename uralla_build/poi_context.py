@@ -50,9 +50,9 @@ def is_accommodation(tags: Mapping[str, str] | object) -> bool:
 
 
 def classify_accommodation(*, objects_2km: int, objects_10km: int) -> tuple[str, str]:
-    if objects_2km <= 1 and objects_10km <= 3:
+    if objects_2km <= 1 and objects_10km <= 10:
         return "remote", "isolated"
-    if objects_2km <= 3 and objects_10km <= 10:
+    if objects_2km <= 3 and objects_10km <= 25:
         return "settlement", "sparse"
     return "urban", "common"
 
@@ -60,14 +60,15 @@ def classify_accommodation(*, objects_2km: int, objects_10km: int) -> tuple[str,
 def classify_food_shop(*, shops_2km: int, shops_10km: int) -> tuple[str, str]:
     """Return (context, priority) from local food-shop rarity.
 
-    Counts include the shop being classified. Thresholds are deliberately
-    coarse for the first map test; they are expected to be tuned from visual
-    results rather than treated as geographic truth.
+    Counts include the shop being classified. The 2 km radius is the primary
+    local-density signal; the 10 km radius is deliberately permissive so a
+    nearby town or city does not hide a genuinely remote tourist-useful POI.
+    Thresholds are still experimental and tuned from real Garmin map tests.
     """
 
-    if shops_2km <= 1 and shops_10km <= 3:
+    if shops_2km <= 1 and shops_10km <= 10:
         return "remote", "isolated"
-    if shops_2km <= 3 and shops_10km <= 10:
+    if shops_2km <= 3 and shops_10km <= 25:
         return "settlement", "sparse"
     return "urban", "common"
 
