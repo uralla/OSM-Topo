@@ -459,6 +459,7 @@ def preprocess_pbf(
     activity_context_samples: list[dict[str, object]] = []
     activity_500m_values: list[int] = []
     activity_2km_values: list[int] = []
+    activity_10km_values: list[int] = []
     solnyshko_accommodation_sample: dict[str, object] | None = None
     started = time.monotonic()
     _emit_progress(
@@ -598,6 +599,7 @@ def preprocess_pbf(
                     if activity_sample is not None:
                         activity_500m_values.append(int(activity_sample["activity_500m"]))
                         activity_2km_values.append(int(activity_sample["activity_2km"]))
+                        activity_10km_values.append(int(activity_sample["activity_10km"]))
                     if activity_sample is not None and len(activity_context_samples) < 200:
                         activity_context_samples.append(activity_sample)
                     if (
@@ -608,6 +610,7 @@ def preprocess_pbf(
                     ):
                         solnyshko_accommodation_sample["activity_500m"] = activity_sample["activity_500m"]
                         solnyshko_accommodation_sample["activity_2km"] = activity_sample["activity_2km"]
+                        solnyshko_accommodation_sample["activity_10km"] = activity_sample["activity_10km"]
 
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
@@ -641,7 +644,11 @@ def preprocess_pbf(
                 f"2km p25={_activity_percentile(activity_2km_values, 0.25)} "
                 f"p50={_activity_percentile(activity_2km_values, 0.50)} "
                 f"p75={_activity_percentile(activity_2km_values, 0.75)} "
-                f"p90={_activity_percentile(activity_2km_values, 0.90)}"
+                f"p90={_activity_percentile(activity_2km_values, 0.90)}; "
+                f"10km p25={_activity_percentile(activity_10km_values, 0.25)} "
+                f"p50={_activity_percentile(activity_10km_values, 0.50)} "
+                f"p75={_activity_percentile(activity_10km_values, 0.75)} "
+                f"p90={_activity_percentile(activity_10km_values, 0.90)}"
             )
         _emit_progress(
             f"POI context: hotels/hostels {accommodation_index.shop_count:,}; "
@@ -661,6 +668,7 @@ def preprocess_pbf(
                 f"10km={solnyshko_accommodation_sample['objects_10km']}; "
                 f"activity500m={solnyshko_accommodation_sample.get('activity_500m', 'n/a')}; "
                 f"activity2km={solnyshko_accommodation_sample.get('activity_2km', 'n/a')}; "
+                f"activity10km={solnyshko_accommodation_sample.get('activity_10km', 'n/a')}; "
                 f"priority={solnyshko_accommodation_sample['priority']}"
             )
         _emit_progress(

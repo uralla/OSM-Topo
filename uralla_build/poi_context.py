@@ -37,6 +37,7 @@ POI_NEAR_2KM_TAG = "uralla:poi_food_2km"
 POI_NEAR_10KM_TAG = "uralla:poi_food_10km"
 POI_ACTIVITY_500M_TAG = "uralla:poi_activity_500m"
 POI_ACTIVITY_2KM_TAG = "uralla:poi_activity_2km"
+POI_ACTIVITY_10KM_TAG = "uralla:poi_activity_10km"
 CONTEXT_METADATA_KEYS = frozenset({"source", "created_by", "attribution", "note", "fixme", "check_date", "survey:date"})
 GRID_DEGREES = 0.05
 EARTH_RADIUS_KM = 6371.0088
@@ -227,9 +228,11 @@ def enrich_activity_diagnostics(
     lat, lon = location
     activity_500m = index.count_within(lat, lon, 0.5)
     activity_2km = index.count_within(lat, lon, 2.0)
+    activity_10km = index.count_within(lat, lon, 10.0)
     desired = {
         POI_ACTIVITY_500M_TAG: str(activity_500m),
         POI_ACTIVITY_2KM_TAG: str(activity_2km),
+        POI_ACTIVITY_10KM_TAG: str(activity_10km),
     }
     changed = any(result.get(key) != value for key, value in desired.items())
     result.update(desired)
@@ -239,6 +242,7 @@ def enrich_activity_diagnostics(
         "priority": result.get(POI_PRIORITY_TAG),
         "activity_500m": activity_500m,
         "activity_2km": activity_2km,
+        "activity_10km": activity_10km,
         "lat": lat,
         "lon": lon,
     }
