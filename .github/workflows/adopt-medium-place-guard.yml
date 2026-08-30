@@ -1,0 +1,92 @@
+name: Adopt medium place guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/adopt-medium-place-guard.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Adopt canonical place guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          poi = Path('uralla_build/poi_context.py')
+          text = poi.read_text(encoding='utf-8')
+          marker = 'SETTLEMENT_PLACE_VALUES = frozenset({"city", "town", "village", "hamlet"})\n'
+          replacement = marker + 'ACTIVITY_PLACE_GUARD_RADII_KM = {"city": 7.0, "town": 5.0, "village": 2.0, "hamlet": 1.0}\n'
+          if 'ACTIVITY_PLACE_GUARD_RADII_KM' not in text:
+              if marker not in text:
+                  raise SystemExit('settlement place marker not found')
+              text = text.replace(marker, replacement, 1)
+
+          marker = '''def classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:\n'''
+          addition = '''def apply_activity_place_guard(\n    context: str,\n    place_by_type: Mapping[str, object] | None,\n) -> str:\n    \"\"\"Raise density-remote POIs to settlement when a nearby place anchor says so.\"\"\"\n    if context != \"remote\" or not place_by_type:\n        return context\n    for place_type, radius_km in ACTIVITY_PLACE_GUARD_RADII_KM.items():\n        raw = place_by_type.get(place_type)\n        if not isinstance(raw, Mapping):\n            continue\n        distance = raw.get(\"distance_km\")\n        if distance is not None and float(distance) <= radius_km:\n            return \"settlement\"\n    return \"remote\"\n\n\ndef classify_activity_context_with_place_guard(\n    *,\n    activity_2km: int,\n    activity_10km: int,\n    local_p25: int,\n    local_p75: int,\n    background_p25: int,\n    background_p75: int,\n    place_by_type: Mapping[str, object] | None,\n) -> str:\n    context = classify_activity_context(\n        activity_2km=activity_2km,\n        activity_10km=activity_10km,\n        local_p25=local_p25,\n        local_p75=local_p75,\n        background_p25=background_p25,\n        background_p75=background_p75,\n    )\n    return apply_activity_place_guard(context, place_by_type)\n\n\n'''
+          if 'def apply_activity_place_guard(' not in text:
+              if marker not in text:
+                  raise SystemExit('transit classifier marker not found')
+              text = text.replace(marker, addition + marker, 1)
+          poi.write_text(text, encoding='utf-8')
+
+          pre = Path('uralla_build/preprocessor.py')
+          text = pre.read_text(encoding='utf-8')
+          text = text.replace(
+              '    classify_activity_context,\n',
+              '    classify_activity_context,\n    classify_activity_context_with_place_guard,\n',
+              1,
+          )
+
+          # Keep the raw percentile classifier summary, then make all semantic matrix/sample checks use the guarded classifier.
+          start = text.index('            activity_kind_counts: Counter[tuple[str, str]] = Counter()')
+          end = text.index('        _emit_progress(\n            f"POI context: hotels/hostels', start)
+          old = text[start:end]
+          new = '''            guarded_class_counts: Counter[str] = Counter()\n            activity_kind_counts: Counter[tuple[str, str]] = Counter()\n            edge_samples: dict[tuple[str, str], list[dict[str, object]]] = {}\n            for sample in activity_context_samples:\n                context = classify_activity_context_with_place_guard(\n                    activity_2km=int(sample[\"activity_2km\"]),\n                    activity_10km=int(sample[\"activity_10km\"]),\n                    local_p25=activity_2km_p25,\n                    local_p75=activity_2km_p75,\n                    background_p25=activity_10km_p25,\n                    background_p75=activity_10km_p75,\n                    place_by_type=sample.get(\"place_by_type\"),\n                )\n                guarded_class_counts[context] += 1\n                kind = str(sample.get(\"kind\") or \"other\")\n                activity_kind_counts[(context, kind)] += 1\n                if context in {\"remote\", \"urban\"}:\n                    bucket = edge_samples.setdefault((context, kind), [])\n                    if len(bucket) < 8:\n                        bucket.append(sample)\n\n            _emit_progress(\n                \"POI activity final classifier: \"\n                f\"remote {guarded_class_counts['remote']:,}; \"\n                f\"settlement {guarded_class_counts['settlement']:,}; \"\n                f\"urban {guarded_class_counts['urban']:,}; \"\n                \"place_guard=city:7,town:5,village:2,hamlet:1km\"\n            )\n\n            for context in (\"remote\", \"settlement\", \"urban\"):\n                _emit_progress(\n                    \"POI activity matrix: \"\n                    f\"context={context}; \"\n                    f\"food={activity_kind_counts[(context, 'food')]:,}; \"\n                    f\"accommodation={activity_kind_counts[(context, 'accommodation')]:,}; \"\n                    f\"transit={activity_kind_counts[(context, 'transit')]:,}; \"\n                    f\"other={activity_kind_counts[(context, 'other')]:,}\"\n                )\n\n            for sample in activity_context_samples:\n                if normalize_text(str(sample.get(\"name\") or \"\")) != \"старый крым\":\n                    continue\n                raw_context = classify_activity_context(\n                    activity_2km=int(sample[\"activity_2km\"]),\n                    activity_10km=int(sample[\"activity_10km\"]),\n                    local_p25=activity_2km_p25,\n                    local_p75=activity_2km_p75,\n                    background_p25=activity_10km_p25,\n                    background_p75=activity_10km_p75,\n                )\n                final_context = classify_activity_context_with_place_guard(\n                    activity_2km=int(sample[\"activity_2km\"]),\n                    activity_10km=int(sample[\"activity_10km\"]),\n                    local_p25=activity_2km_p25,\n                    local_p75=activity_2km_p75,\n                    background_p25=activity_10km_p25,\n                    background_p75=activity_10km_p75,\n                    place_by_type=sample.get(\"place_by_type\"),\n                )\n                _emit_progress(\n                    \"POI named check: 'Старый Крым'; \"\n                    f\"id={sample.get('id')}; kind={sample.get('kind')}; raw_context={raw_context}; final_context={final_context}; \"\n                    f\"priority={sample.get('priority')}; 2km={sample.get('activity_2km')}; \"\n                    f\"10km={sample.get('activity_10km')}; place={sample.get('place_name')!r}; \"\n                    f\"place_type={sample.get('place_type')}; \"\n                    f\"place_km={format(float(sample['place_distance_km']), '.2f') if sample.get('place_distance_km') is not None else 'n/a'}; \"\n                    f\"lat={float(sample['lat']):.6f}; lon={float(sample['lon']):.6f}\"\n                )\n\n            for context in (\"remote\", \"urban\"):\n                for kind in (\"food\", \"accommodation\", \"transit\", \"other\"):\n                    for sample in edge_samples.get((context, kind), ()):\n                        _emit_progress(\n                            f\"POI activity sample: {context}; \"\n                            f\"id={sample.get('id')}; name={sample.get('name')!r}; \"\n                            f\"kind={sample.get('kind')}; priority={sample.get('priority')}; \"\n                            f\"500m={sample.get('activity_500m')}; 2km={sample.get('activity_2km')}; \"\n                            f\"10km={sample.get('activity_10km')}; place={sample.get('place_name')!r}; \"\n                            f\"place_type={sample.get('place_type')}; \"\n                            f\"place_km={format(float(sample['place_distance_km']), '.2f') if sample.get('place_distance_km') is not None else 'n/a'}\"\n                        )\n'''
+          text = text[:start] + new + text[end:]
+          pre.write_text(text, encoding='utf-8')
+
+          tests = Path('tests/test_poi_context.py')
+          t = tests.read_text(encoding='utf-8')
+          if 'apply_activity_place_guard' not in t:
+              t = t.replace(
+                  '    classify_activity_context,\n',
+                  '    classify_activity_context,\n    apply_activity_place_guard,\n',
+                  1,
+              )
+              insert = '''\n    def test_activity_place_guard_promotes_remote_near_village(self):\n        self.assertEqual(\n            apply_activity_place_guard(\n                \"remote\", {\"village\": {\"distance_km\": 1.89, \"name\": \"Изюмовка\"}}\n            ),\n            \"settlement\",\n        )\n\n    def test_activity_place_guard_keeps_remote_beyond_radius(self):\n        self.assertEqual(\n            apply_activity_place_guard(\n                \"remote\", {\"village\": {\"distance_km\": 2.01, \"name\": \"Далеко\"}}\n            ),\n            \"remote\",\n        )\n\n    def test_activity_place_guard_does_not_change_urban(self):\n        self.assertEqual(\n            apply_activity_place_guard(\n                \"urban\", {\"village\": {\"distance_km\": 0.1, \"name\": \"Рядом\"}}\n            ),\n            \"urban\",\n        )\n'''
+              idx = t.rfind('\nif __name__ == "__main__":')
+              if idx == -1:
+                  idx = len(t)
+              t = t[:idx] + insert + t[idx:]
+              tests.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Verify
+        run: |
+          python -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          grep -q 'ACTIVITY_PLACE_GUARD_RADII_KM' uralla_build/poi_context.py
+          grep -q 'POI activity final classifier:' uralla_build/preprocessor.py
+          grep -q 'raw_context=' uralla_build/preprocessor.py
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py tests/test_poi_context.py
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Adopt medium place guard for activity context'
+            git push
+          fi
