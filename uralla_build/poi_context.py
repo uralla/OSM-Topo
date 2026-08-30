@@ -224,6 +224,39 @@ def build_accommodation_index(source: str, osmium: Any) -> FoodShopIndex:
     return index
 
 
+def nearest_accommodation_details(
+    source: str,
+    osmium: Any,
+    lat: float,
+    lon: float,
+    limit: int = 20,
+) -> list[dict[str, object]]:
+    """Diagnostic-only full scan returning nearest node accommodations."""
+
+    rows: list[dict[str, object]] = []
+    for item in osmium.FileProcessor(source):
+        if not is_accommodation(item.tags):
+            continue
+        location = valid_node_location(item)
+        if location is None:
+            continue
+        candidate_lat, candidate_lon = location
+        distance_km = _haversine_km(lat, lon, candidate_lat, candidate_lon)
+        tags = {str(key): str(value) for key, value in item.tags}
+        rows.append(
+            {
+                "id": int(getattr(item, "id", 0)),
+                "name": tags.get("name"),
+                "tourism": tags.get("tourism"),
+                "lat": candidate_lat,
+                "lon": candidate_lon,
+                "distance_km": distance_km,
+            }
+        )
+    rows.sort(key=lambda row: float(row["distance_km"]))
+    return rows[:limit]
+
+
 def enrich_accommodation_context(
     item: object,
     tags: Mapping[str, str] | object,
