@@ -16,6 +16,8 @@ from typing import Any, Iterable, Mapping
 
 
 ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
+TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
+
 
 FOOD_SHOP_VALUES = frozenset(
     {
@@ -41,6 +43,26 @@ def is_food_shop(tags: Mapping[str, str] | object) -> bool:
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     values = {str(key): str(value) for key, value in items}
     return values.get("shop") in FOOD_SHOP_VALUES or values.get("amenity") == "supermarket"
+
+
+def is_transit_stop(tags: Mapping[str, str] | object) -> bool:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    values = {str(key): str(value) for key, value in items}
+    if values.get("highway") in TRANSIT_STOP_HIGHWAYS:
+        return True
+    return (
+        values.get("public_transport") == "platform"
+        and (values.get("bus") == "yes" or values.get("trolleybus") == "yes")
+    )
+
+
+def classify_transit_stop(*, stops_2km: int) -> tuple[str, str]:
+    # A stop is useful farther out when it is not part of a dense urban stop grid.
+    if stops_2km <= 2:
+        return "remote", "isolated"
+    if stops_2km <= 6:
+        return "settlement", "sparse"
+    return "urban", "common"
 
 
 def is_accommodation(tags: Mapping[str, str] | object) -> bool:
@@ -145,6 +167,50 @@ def build_food_shop_index(source: str, osmium: Any) -> FoodShopIndex:
             continue
         index.add(*location)
     return index
+
+
+def build_transit_stop_index(source: str, osmium: Any) -> FoodShopIndex:
+    index = FoodShopIndex.empty()
+    for item in osmium.FileProcessor(source):
+        if not is_transit_stop(item.tags):
+            continue
+        location = valid_node_location(item)
+        if location is not None:
+            index.add(*location)
+    return index
+
+
+def enrich_transit_stop_context(
+    item: object,
+    tags: Mapping[str, str] | object,
+    index: FoodShopIndex,
+) -> tuple[dict[str, str], bool, dict[str, object] | None]:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    if not is_transit_stop(result):
+        return result, False, None
+    location = valid_node_location(item)
+    if location is None:
+        return result, False, None
+    lat, lon = location
+    stops_2km = index.count_within(lat, lon, 2.0)
+    context, priority = classify_transit_stop(stops_2km=stops_2km)
+    desired = {
+        POI_CONTEXT_TAG: context,
+        POI_PRIORITY_TAG: priority,
+        "uralla:poi_transit_2km": str(stops_2km),
+    }
+    changed = any(result.get(key) != value for key, value in desired.items())
+    result.update(desired)
+    return result, changed, {
+        "id": int(getattr(item, "id", 0)),
+        "name": result.get("name"),
+        "context": context,
+        "priority": priority,
+        "stops_2km": stops_2km,
+        "lat": lat,
+        "lon": lon,
+    }
 
 
 def build_accommodation_index(source: str, osmium: Any) -> FoodShopIndex:

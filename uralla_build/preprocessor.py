@@ -25,8 +25,10 @@ from .river_landmarks import (
 from .poi_context import (
     build_accommodation_index,
     build_food_shop_index,
+    build_transit_stop_index,
     enrich_accommodation_context,
     enrich_food_shop_context,
+    enrich_transit_stop_context,
 )
 
 
@@ -460,6 +462,13 @@ def preprocess_pbf(
         f"accommodation context: {accommodation_index.shop_count:,} node hotels/hostels indexed "
         f"in {time.monotonic() - accommodation_started:.1f}s"
     )
+    _emit_progress("transit context: indexing node stops")
+    transit_started = time.monotonic()
+    transit_stop_index = build_transit_stop_index(str(source), osmium)
+    _emit_progress(
+        f"transit context: {transit_stop_index.shop_count:,} node stops indexed "
+        f"in {time.monotonic() - transit_started:.1f}s"
+    )
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
     report_temporary = report_target.parent / f".{report_target.name}.{uuid4().hex}.partial"
     counters: Counter[str] = Counter()
@@ -470,6 +479,7 @@ def preprocess_pbf(
     river_samples: list[dict[str, object]] = []
     poi_context_samples: list[dict[str, object]] = []
     accommodation_context_samples: list[dict[str, object]] = []
+    transit_context_samples: list[dict[str, object]] = []
     started = time.monotonic()
     _emit_progress(
         f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)"
@@ -569,6 +579,28 @@ def preprocess_pbf(
                     counters[f"accommodation_priority_{accommodation_priority}"] += 1
                     if accommodation_sample is not None and len(accommodation_context_samples) < 200:
                         accommodation_context_samples.append(accommodation_sample)
+                    if (
+                        accommodation_sample is not None
+                        and accommodation_priority != "common"
+                        and accommodation_sample.get("name")
+                    ):
+                        _emit_progress(
+                            "POI accommodation: "
+                            f"{accommodation_sample['name']!r}; "
+                            f"2km={accommodation_sample['objects_2km']}; "
+                            f"10km={accommodation_sample['objects_10km']}; "
+                            f"priority={accommodation_priority}"
+                        )
+
+                final_tags, transit_added, transit_sample = enrich_transit_stop_context(
+                    item, final_tags, transit_stop_index
+                )
+                if transit_added:
+                    counters["transit_context_enriched"] += 1
+                    transit_priority = final_tags.get("uralla:poi_priority", "unknown")
+                    counters[f"transit_priority_{transit_priority}"] += 1
+                    if transit_sample is not None and len(transit_context_samples) < 200:
+                        transit_context_samples.append(transit_sample)
 
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
@@ -590,6 +622,12 @@ def preprocess_pbf(
             f"sparse {counters['accommodation_priority_sparse']:,}; "
             f"isolated {counters['accommodation_priority_isolated']:,}"
         )
+        _emit_progress(
+            f"POI context: transit stops {transit_stop_index.shop_count:,}; "
+            f"common {counters['transit_priority_common']:,}; "
+            f"sparse {counters['transit_priority_sparse']:,}; "
+            f"isolated {counters['transit_priority_isolated']:,}"
+        )
         report: dict[str, object] = {
             "schema_version": 8,
             "input": str(source),
@@ -610,6 +648,11 @@ def preprocess_pbf(
             "river_landmarks_enriched": counters["river_landmarks_enriched"],
             "poi_context_index_node_shops": food_shop_index.shop_count,
             "accommodation_context_index_nodes": accommodation_index.shop_count,
+            "transit_context_index_nodes": transit_stop_index.shop_count,
+            "transit_context_enriched": counters["transit_context_enriched"],
+            "transit_priority_common": counters["transit_priority_common"],
+            "transit_priority_sparse": counters["transit_priority_sparse"],
+            "transit_priority_isolated": counters["transit_priority_isolated"],
             "accommodation_context_enriched": counters["accommodation_context_enriched"],
             "accommodation_priority_common": counters["accommodation_priority_common"],
             "accommodation_priority_sparse": counters["accommodation_priority_sparse"],
@@ -626,6 +669,7 @@ def preprocess_pbf(
             "river_landmark_samples": river_samples,
             "poi_context_samples": poi_context_samples,
             "accommodation_context_samples": accommodation_context_samples,
+            "transit_context_samples": transit_context_samples,
         }
         report_temporary.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
