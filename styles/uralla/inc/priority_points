@@ -37,9 +37,11 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 
-# Tourist accommodation / shelters. Keep useful established LOD while
-# consolidating the visual Garmin types.
-tourism=guest_house [0x2b01 resolution 21]
+# Tourist accommodation / shelters. Context scoring promotes rare accommodation
+# at farther zooms; node-based prototype currently covers hotel/hostel/guest_house.
+uralla:poi_priority=isolated & tourism=guest_house [0x2b01 resolution 22]
+uralla:poi_priority=sparse & tourism=guest_house [0x2b01 resolution 23]
+tourism=guest_house [0x2b01 resolution 24]
 uralla:poi_priority=isolated & tourism=hotel [0x2b01 resolution 22]
 uralla:poi_priority=sparse & tourism=hotel [0x2b01 resolution 23]
 tourism=hotel [0x2b01 resolution 24]
