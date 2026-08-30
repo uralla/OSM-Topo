@@ -1,0 +1,39 @@
+name: Add toll booth point
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-toll-booth-point.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add toll booth Garmin point
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          needle = 'barrier=lift_gate [0x5800 resolution 24]\n'
+          insert = needle + 'barrier=toll_booth [0x58 resolution 24]\n'
+          if 'barrier=toll_booth [0x58 resolution 24]' not in s:
+              if needle not in s:
+                  raise SystemExit('barrier insertion point not found')
+              s = s.replace(needle, insert, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -F 'barrier=toll_booth [0x58 resolution 24]' styles/uralla/points
+      - name: Commit
+        run: |
+          git config user.name 'Alexey Klyanin'
+          git config user.email '42924160+uralla@users.noreply.github.com'
+          git add styles/uralla/points
+          git commit -m 'Render toll booths as Garmin 0x58' || true
+          git push
