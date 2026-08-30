@@ -18,8 +18,13 @@ cd "$REPO_ROOT"
 
 if command -v uralla-build >/dev/null 2>&1; then
     BUILD_CMD=(uralla-build build-product "$PRODUCT" --repo-root "$REPO_ROOT" --apply --no-resume)
-else
+elif command -v python3 >/dev/null 2>&1; then
+    BUILD_CMD=(python3 -m uralla_build build-product "$PRODUCT" --repo-root "$REPO_ROOT" --apply --no-resume)
+elif command -v python >/dev/null 2>&1; then
     BUILD_CMD=(python -m uralla_build build-product "$PRODUCT" --repo-root "$REPO_ROOT" --apply --no-resume)
+else
+    printf 'ERROR: neither uralla-build, python3 nor python is available in PATH.\n' >&2
+    exit 127
 fi
 
 printf 'POI context diagnostic build\n'
