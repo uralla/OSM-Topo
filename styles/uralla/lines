@@ -64,7 +64,7 @@ highway=* & (disused=yes | abandoned=yes)
 # Foot/cycle/bridle/pedestrian ways keep their own visual language.
 highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
 & (smoothness=very_horrible | smoothness=impassable | smoothness=horrible)
-[0x1001a resolution 24 continue]
+[0x1001b resolution 24 continue]
 
 highway=* & highway!=path & highway!=footway & highway!=cycleway & highway!=bridleway & highway!=steps & highway!=pedestrian
 & (smoothness=bad | smoothness=very_bad)
