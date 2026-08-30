@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from uralla_build.poi_context import FoodShopIndex, classify_food_shop, is_food_shop
+from uralla_build.poi_context import (
+    FoodShopIndex,
+    classify_food_shop,
+    is_food_shop,
+    is_meaningful_context_node,
+)
 
 
 class PoiContextTests(unittest.TestCase):
@@ -11,6 +16,14 @@ class PoiContextTests(unittest.TestCase):
         self.assertTrue(is_food_shop({"shop": "convenience"}))
         self.assertTrue(is_food_shop({"amenity": "supermarket"}))
         self.assertFalse(is_food_shop({"shop": "clothes"}))
+
+    def test_meaningful_context_node_detection(self) -> None:
+        self.assertFalse(is_meaningful_context_node({}))
+        self.assertFalse(is_meaningful_context_node({"source": "survey"}))
+        self.assertFalse(is_meaningful_context_node({"fixme": "check"}))
+        self.assertTrue(is_meaningful_context_node({"amenity": "toilets"}))
+        self.assertTrue(is_meaningful_context_node({"addr:housenumber": "3"}))
+        self.assertTrue(is_meaningful_context_node({"natural": "peak"}))
 
     def test_rarity_classes(self) -> None:
         self.assertEqual(

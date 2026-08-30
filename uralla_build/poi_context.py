@@ -35,8 +35,32 @@ POI_CONTEXT_TAG = "uralla:poi_context"
 POI_PRIORITY_TAG = "uralla:poi_priority"
 POI_NEAR_2KM_TAG = "uralla:poi_food_2km"
 POI_NEAR_10KM_TAG = "uralla:poi_food_10km"
+POI_ACTIVITY_500M_TAG = "uralla:poi_activity_500m"
+POI_ACTIVITY_2KM_TAG = "uralla:poi_activity_2km"
+CONTEXT_METADATA_KEYS = frozenset({"source", "created_by", "attribution", "note", "fixme", "check_date", "survey:date"})
 GRID_DEGREES = 0.05
 EARTH_RADIUS_KM = 6371.0088
+
+
+def is_meaningful_context_node(tags: Mapping[str, str] | object) -> bool:
+    """Return True for a tagged node carrying real map semantics.
+
+    Untagged geometry vertices never reach this predicate as meaningful context;
+    metadata-only nodes are excluded so detailed geometry cannot fake urban density.
+    """
+
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    for raw_key, raw_value in items:
+        key = str(raw_key)
+        value = str(raw_value)
+        if not value:
+            continue
+        if key in CONTEXT_METADATA_KEYS:
+            continue
+        if key.startswith(("source:", "note:", "fixme:", "check_date:")):
+            continue
+        return True
+    return False
 
 
 def is_food_shop(tags: Mapping[str, str] | object) -> bool:
@@ -153,6 +177,71 @@ def valid_node_location(item: object) -> tuple[float, float] | None:
         return float(location.lat), float(location.lon)
     except (AttributeError, TypeError, ValueError):
         return None
+
+
+@dataclass(slots=True)
+class ContextIndexes:
+    food: FoodShopIndex
+    accommodation: FoodShopIndex
+    transit: FoodShopIndex
+    activity: FoodShopIndex
+
+
+def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
+    """Build all current node context indexes in one PBF pass."""
+
+    food = FoodShopIndex.empty()
+    accommodation = FoodShopIndex.empty()
+    transit = FoodShopIndex.empty()
+    activity = FoodShopIndex.empty()
+    for item in osmium.FileProcessor(source):
+        location = valid_node_location(item)
+        if location is None:
+            continue
+        tags = {str(key): str(value) for key, value in item.tags}
+        if is_meaningful_context_node(tags):
+            activity.add(*location)
+        if is_food_shop(tags):
+            food.add(*location)
+        if is_accommodation(tags):
+            accommodation.add(*location)
+        if is_transit_stop(tags):
+            transit.add(*location)
+    return ContextIndexes(food, accommodation, transit, activity)
+
+
+def enrich_activity_diagnostics(
+    item: object,
+    tags: Mapping[str, str] | object,
+    index: FoodShopIndex,
+) -> tuple[dict[str, str], bool, dict[str, object] | None]:
+    """Attach general human-activity density diagnostics to context-aware POIs."""
+
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+    if POI_PRIORITY_TAG not in result:
+        return result, False, None
+    location = valid_node_location(item)
+    if location is None:
+        return result, False, None
+    lat, lon = location
+    activity_500m = index.count_within(lat, lon, 0.5)
+    activity_2km = index.count_within(lat, lon, 2.0)
+    desired = {
+        POI_ACTIVITY_500M_TAG: str(activity_500m),
+        POI_ACTIVITY_2KM_TAG: str(activity_2km),
+    }
+    changed = any(result.get(key) != value for key, value in desired.items())
+    result.update(desired)
+    return result, changed, {
+        "id": int(getattr(item, "id", 0)),
+        "name": result.get("name"),
+        "priority": result.get(POI_PRIORITY_TAG),
+        "activity_500m": activity_500m,
+        "activity_2km": activity_2km,
+        "lat": lat,
+        "lon": lon,
+    }
 
 
 def build_food_shop_index(source: str, osmium: Any) -> FoodShopIndex:

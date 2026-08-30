@@ -23,10 +23,9 @@ from .river_landmarks import (
     load_river_landmarks,
 )
 from .poi_context import (
-    build_accommodation_index,
-    build_food_shop_index,
-    build_transit_stop_index,
+    build_context_indexes,
     enrich_accommodation_context,
+    enrich_activity_diagnostics,
     enrich_food_shop_context,
     enrich_transit_stop_context,
     nearest_accommodation_details,
@@ -432,26 +431,20 @@ def preprocess_pbf(
     peak_landmarks = load_peak_landmarks(peak_catalog_path)
     river_landmarks = load_river_landmarks(river_catalog_path)
     osmium = _load_osmium()
-    _emit_progress("food-shop context: indexing node shops")
+    _emit_progress("POI context: indexing node signals in one pass")
     context_started = time.monotonic()
-    food_shop_index = build_food_shop_index(str(source), osmium)
+    context_indexes = build_context_indexes(str(source), osmium)
+    food_shop_index = context_indexes.food
+    accommodation_index = context_indexes.accommodation
+    transit_stop_index = context_indexes.transit
+    activity_index = context_indexes.activity
     _emit_progress(
-        f"food-shop context: {food_shop_index.shop_count:,} node shops indexed "
-        f"in {time.monotonic() - context_started:.1f}s"
-    )
-    _emit_progress("accommodation context: indexing node hotels/hostels")
-    accommodation_started = time.monotonic()
-    accommodation_index = build_accommodation_index(str(source), osmium)
-    _emit_progress(
-        f"accommodation context: {accommodation_index.shop_count:,} node hotels/hostels indexed "
-        f"in {time.monotonic() - accommodation_started:.1f}s"
-    )
-    _emit_progress("transit context: indexing node stops")
-    transit_started = time.monotonic()
-    transit_stop_index = build_transit_stop_index(str(source), osmium)
-    _emit_progress(
-        f"transit context: {transit_stop_index.shop_count:,} node stops indexed "
-        f"in {time.monotonic() - transit_started:.1f}s"
+        "POI context: one-pass index complete; "
+        f"food {food_shop_index.shop_count:,}; "
+        f"accommodation {accommodation_index.shop_count:,}; "
+        f"transit {transit_stop_index.shop_count:,}; "
+        f"activity {activity_index.shop_count:,}; "
+        f"{time.monotonic() - context_started:.1f}s"
     )
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial.osm.pbf"
     report_temporary = report_target.parent / f".{report_target.name}.{uuid4().hex}.partial"
@@ -464,6 +457,7 @@ def preprocess_pbf(
     poi_context_samples: list[dict[str, object]] = []
     accommodation_context_samples: list[dict[str, object]] = []
     transit_context_samples: list[dict[str, object]] = []
+    activity_context_samples: list[dict[str, object]] = []
     solnyshko_accommodation_sample: dict[str, object] | None = None
     started = time.monotonic()
     _emit_progress(
@@ -595,6 +589,22 @@ def preprocess_pbf(
                     if transit_sample is not None and len(transit_context_samples) < 200:
                         transit_context_samples.append(transit_sample)
 
+                final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
+                    item, final_tags, activity_index
+                )
+                if activity_added:
+                    counters["activity_context_enriched"] += 1
+                    if activity_sample is not None and len(activity_context_samples) < 200:
+                        activity_context_samples.append(activity_sample)
+                    if (
+                        activity_sample is not None
+                        and activity_sample.get("name") == "Солнышко"
+                        and solnyshko_accommodation_sample is not None
+                        and activity_sample.get("id") == solnyshko_accommodation_sample.get("id")
+                    ):
+                        solnyshko_accommodation_sample["activity_500m"] = activity_sample["activity_500m"]
+                        solnyshko_accommodation_sample["activity_2km"] = activity_sample["activity_2km"]
+
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
@@ -625,6 +635,8 @@ def preprocess_pbf(
                 f"lon={float(solnyshko_accommodation_sample['lon']):.6f}; "
                 f"2km={solnyshko_accommodation_sample['objects_2km']}; "
                 f"10km={solnyshko_accommodation_sample['objects_10km']}; "
+                f"activity500m={solnyshko_accommodation_sample.get('activity_500m', 'n/a')}; "
+                f"activity2km={solnyshko_accommodation_sample.get('activity_2km', 'n/a')}; "
                 f"priority={solnyshko_accommodation_sample['priority']}"
             )
             _emit_progress("POI accommodation check: scanning 20 nearest neighbors")
@@ -644,6 +656,10 @@ def preprocess_pbf(
                     f"lat={float(neighbor['lat']):.6f}; "
                     f"lon={float(neighbor['lon']):.6f}"
                 )
+        _emit_progress(
+            f"POI context: activity nodes {activity_index.shop_count:,}; "
+            f"enriched POIs {counters['activity_context_enriched']:,}"
+        )
         _emit_progress(
             f"POI context: transit stops {transit_stop_index.shop_count:,}; "
             f"common {counters['transit_priority_common']:,}; "
@@ -671,6 +687,8 @@ def preprocess_pbf(
             "poi_context_index_node_shops": food_shop_index.shop_count,
             "accommodation_context_index_nodes": accommodation_index.shop_count,
             "transit_context_index_nodes": transit_stop_index.shop_count,
+            "activity_context_index_nodes": activity_index.shop_count,
+            "activity_context_enriched": counters["activity_context_enriched"],
             "transit_context_enriched": counters["transit_context_enriched"],
             "transit_priority_common": counters["transit_priority_common"],
             "transit_priority_sparse": counters["transit_priority_sparse"],
@@ -692,6 +710,7 @@ def preprocess_pbf(
             "poi_context_samples": poi_context_samples,
             "accommodation_context_samples": accommodation_context_samples,
             "transit_context_samples": transit_context_samples,
+            "activity_context_samples": activity_context_samples,
         }
         report_temporary.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
