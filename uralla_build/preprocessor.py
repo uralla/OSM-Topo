@@ -463,6 +463,7 @@ def preprocess_pbf(
     poi_context_samples: list[dict[str, object]] = []
     accommodation_context_samples: list[dict[str, object]] = []
     transit_context_samples: list[dict[str, object]] = []
+    solnyshko_accommodation_sample: dict[str, object] | None = None
     started = time.monotonic()
     _emit_progress(
         f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)"
@@ -564,6 +565,11 @@ def preprocess_pbf(
                         accommodation_context_samples.append(accommodation_sample)
                     if (
                         accommodation_sample is not None
+                        and accommodation_sample.get("name") == "Солнышко"
+                    ):
+                        solnyshko_accommodation_sample = dict(accommodation_sample)
+                    if (
+                        accommodation_sample is not None
                         and accommodation_sample.get("name")
                         and (
                             accommodation_priority != "common"
@@ -608,6 +614,16 @@ def preprocess_pbf(
             f"sparse {counters['accommodation_priority_sparse']:,}; "
             f"isolated {counters['accommodation_priority_isolated']:,}"
         )
+        if solnyshko_accommodation_sample is None:
+            _emit_progress("POI accommodation check: 'Солнышко' not enriched")
+        else:
+            _emit_progress(
+                "POI accommodation check: "
+                f"'Солнышко'; id={solnyshko_accommodation_sample['id']}; "
+                f"2km={solnyshko_accommodation_sample['objects_2km']}; "
+                f"10km={solnyshko_accommodation_sample['objects_10km']}; "
+                f"priority={solnyshko_accommodation_sample['priority']}"
+            )
         _emit_progress(
             f"POI context: transit stops {transit_stop_index.shop_count:,}; "
             f"common {counters['transit_priority_common']:,}; "
