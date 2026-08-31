@@ -1,0 +1,77 @@
+name: One-shot natural label abbreviations
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-natural-label-abbrev.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch and verify
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('uralla_build/preprocessor.py')
+          s = p.read_text()
+
+          s = s.replace('_LAKE_LEADING_ABBREVIATIONS:', '_GEOGRAPHIC_LEADING_ABBREVIATIONS:', 1)
+          s = s.replace('for pattern, prefix in _LAKE_LEADING_ABBREVIATIONS:', 'for pattern, prefix in _GEOGRAPHIC_LEADING_ABBREVIATIONS:', 1)
+
+          old = '''    label_class = _geographic_label_class(result)\n    if label_class is None:\n        return result, False\n    name = result.get("name")\n    if not name:\n        return result, False\n\n    label = name.strip()\n'''
+          new = '''    label_class = _geographic_label_class(result)\n    natural = result.get("natural")\n    if label_class is None and natural is None:\n        return result, False\n    name = result.get("name")\n    if not name:\n        return result, False\n\n    label = name.strip()\n'''
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, new, 1)
+
+          old = '''    for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n        match = pattern.fullmatch(label)\n        if not match:\n            continue\n        stripped = match.group(1).strip()\n        if stripped:\n            label = stripped\n        break\n\n    if label_class == "lake":\n        for pattern, prefix in _GEOGRAPHIC_LEADING_ABBREVIATIONS:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            tail = match.group(1).strip()\n            if tail:\n                label = prefix + tail\n            break\n'''
+          new = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = stripped\n            break\n\n    # Compact directional/size adjectives on ordinary natural features and lakes.\n    # Prominent peak/volcano landmarks keep their full display names.\n    if (label_class == "lake" or natural is not None) and result.get(PEAK_LANDMARK_TAG) != "yes":\n        for pattern, prefix in _GEOGRAPHIC_LEADING_ABBREVIATIONS:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            tail = match.group(1).strip()\n            if tail:\n                label = prefix + tail\n            break\n'''
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, new, 1)
+
+          old = '''                final_tags, _long_name_added = enrich_long_name_tags(final_tags)\n                before_label = final_tags.get(DISPLAY_LABEL_TAG)\n                final_tags, label_added = enrich_geographic_label_tags(final_tags)\n                if label_added:\n'''
+          new = '''                final_tags, _long_name_added = enrich_long_name_tags(final_tags)\n                final_tags, peak_added = enrich_peak_landmark_tags(\n                    final_tags, peak_landmarks\n                )\n                if peak_added:\n                    counters["peak_landmarks_enriched"] += 1\n                    if len(peak_samples) < 100:\n                        peak_samples.append(\n                            {\n                                "type": _object_kind(item),\n                                "id": int(item.id),\n                                "wikidata": final_tags.get("wikidata"),\n                                "name": final_tags.get("name") or final_tags.get("name:ru"),\n                            }\n                        )\n                before_label = final_tags.get(DISPLAY_LABEL_TAG)\n                final_tags, label_added = enrich_geographic_label_tags(final_tags)\n                if label_added:\n'''
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, new, 1)
+
+          old = '''                final_tags, peak_added = enrich_peak_landmark_tags(\n                    final_tags, peak_landmarks\n                )\n                if peak_added:\n                    counters["peak_landmarks_enriched"] += 1\n                    if len(peak_samples) < 100:\n                        peak_samples.append(\n                            {\n                                "type": _object_kind(item),\n                                "id": int(item.id),\n                                "wikidata": final_tags.get("wikidata"),\n                                "name": final_tags.get("name") or final_tags.get("name:ru"),\n                            }\n                        )\n\n                final_tags, river_added = enrich_river_landmark_tags(\n'''
+          new = '''                final_tags, river_added = enrich_river_landmark_tags(\n'''
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+
+          python3 - <<'PY'
+          from uralla_build.preprocessor import enrich_geographic_label_tags
+
+          cases = [
+              ({'natural':'peak','name':'гора Малый Иремель'}, 'Мал. Иремель'),
+              ({'natural':'peak','name':'гора Большой Иремель','uralla:peak_landmark':'yes'}, 'Большой Иремель'),
+              ({'natural':'ridge','name':'хребет Верхний Какули'}, 'В. Какули'),
+              ({'natural':'waterfall','name':'водопад Нижний Какули'}, 'Н. Какули'),
+              ({'natural':'cave_entrance','name':'Большая Какули'}, 'Бол. Какули'),
+              ({'natural':'spring','name':'Малый Ключ'}, 'Мал. Ключ'),
+              ({'water':'lake','name':'озеро Верхнее Какули'}, 'В. Какули'),
+              ({'water':'lake','name':'озеро Большое Какашево'}, 'Бол. Какашево'),
+          ]
+          for tags, expected in cases:
+              result, _ = enrich_geographic_label_tags(tags)
+              actual = result.get('uralla:label', tags['name'])
+              assert actual == expected, (tags, actual, expected)
+          PY
+          python -m py_compile uralla_build/preprocessor.py
+          python -m unittest tests.test_poi_context -v
+          git diff --check
+          git diff -- uralla_build/preprocessor.py
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/preprocessor.py
+          git commit -m 'Generalize natural feature label abbreviations'
+          git push
