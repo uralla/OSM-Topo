@@ -23,6 +23,7 @@ from .river_landmarks import (
     load_river_landmarks,
 )
 from .poi_context import (
+    POI_ACTIVITY_CONTEXT_TAG,
     build_context_indexes,
     classify_activity_context,
     classify_activity_context_with_place_guard,
@@ -646,6 +647,10 @@ def preprocess_pbf(
                         solnyshko_accommodation_sample["activity_2km"] = activity_sample["activity_2km"]
                         solnyshko_accommodation_sample["activity_10km"] = activity_sample["activity_10km"]
 
+                activity_context_value = final_tags.get(POI_ACTIVITY_CONTEXT_TAG)
+                if activity_context_value in {"remote", "settlement", "urban"}:
+                    counters[f"activity_context_written_{activity_context_value}"] += 1
+
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
@@ -659,6 +664,13 @@ def preprocess_pbf(
             f"common {counters['poi_priority_common']:,}; "
             f"sparse {counters['poi_priority_sparse']:,}; "
             f"isolated {counters['poi_priority_isolated']:,}"
+        )
+        _emit_progress(
+            "POI activity context tags written: "
+            f"remote {counters['activity_context_written_remote']:,}; "
+            f"settlement {counters['activity_context_written_settlement']:,}; "
+            f"urban {counters['activity_context_written_urban']:,}; "
+            f"total {sum(counters[f'activity_context_written_{value}'] for value in ('remote', 'settlement', 'urban')):,}"
         )
         if activity_500m_values:
             activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)
