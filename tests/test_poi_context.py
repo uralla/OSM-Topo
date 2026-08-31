@@ -39,8 +39,19 @@ class PoiContextTests(unittest.TestCase):
     def test_screen_pressure_classifier(self) -> None:
         kwargs = dict(local_p25=20, local_p75=100, background_p25=200, background_p75=1000)
         self.assertEqual(classify_screen_pressure(pressure_2km=10, pressure_10km=100, **kwargs), "low")
+        self.assertEqual(classify_screen_pressure(pressure_2km=10, pressure_10km=900, **kwargs), "low")
+        self.assertEqual(classify_screen_pressure(pressure_2km=10, pressure_10km=1000, **kwargs), "medium")
         self.assertEqual(classify_screen_pressure(pressure_2km=50, pressure_10km=500, **kwargs), "medium")
         self.assertEqual(classify_screen_pressure(pressure_2km=150, pressure_10km=1500, **kwargs), "high")
+        # Ai-Petri control shape: locally below p25, broad background below p75.
+        self.assertEqual(
+            classify_screen_pressure(
+                pressure_2km=131, pressure_10km=6793,
+                local_p25=207, local_p75=1343,
+                background_p25=2117, background_p75=7735,
+            ),
+            "low",
+        )
 
     def test_weighted_screen_pressure_index(self) -> None:
         index = WeightedPointIndex.empty()

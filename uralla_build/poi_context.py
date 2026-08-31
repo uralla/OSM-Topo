@@ -98,7 +98,11 @@ def classify_screen_pressure(
     background_p25: int,
     background_p75: int,
 ) -> str:
-    if pressure_2km <= local_p25 and pressure_10km <= background_p25:
+    # Screen pressure is intentionally local-first: the 2 km neighborhood
+    # represents immediate visual competition. The 10 km background is only a
+    # guard against calling a locally sparse pocket "low" inside an already
+    # very dense wider area.
+    if pressure_2km <= local_p25 and pressure_10km < background_p75:
         return "low"
     if pressure_2km >= local_p75 and pressure_10km >= background_p75:
         return "high"
