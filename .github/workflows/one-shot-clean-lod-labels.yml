@@ -1,4 +1,5 @@
 name: One-shot clean LOD labels
+# trigger
 on:
   push:
     branches: [main]
