@@ -1,0 +1,112 @@
+name: One-shot clean LOD labels
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-clean-lod-labels.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch labels
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('styles/uralla/inc/priority_points')
+          s = p.read_text(encoding='utf-8')
+          old = '''# Grocery group. Final adaptive visibility is consumed from uralla:poi_lod_class,
+# produced by the preprocessor from rarity + activity context + screen pressure +
+# intrinsic category floor. Temporary visual suffixes expose the actual final class.
+# Untagged fallbacks preserve legacy safety: supermarkets=23, other groceries=24.
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
+(shop=supermarket | amenity=supermarket) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
+'''
+          new = '''# Grocery group. Final adaptive visibility is consumed from uralla:poi_lod_class,
+# produced by the preprocessor from rarity + activity context + screen pressure +
+# intrinsic category floor. Untagged fallbacks preserve legacy safety:
+# supermarkets=23, other groceries=24.
+# Unnamed convenience shops stay visually unlabeled but expose "магазинчик" on hover.
+uralla:poi_lod_class=H & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 22]
+uralla:poi_lod_class=M & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 23]
+uralla:poi_lod_class=L & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 24]
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 22]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 23]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 24]
+shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 24]
+(shop=supermarket | amenity=supermarket) { name '${name}' } [0x2e02 resolution 23]
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 24]
+'''
+          assert old in s, 'grocery debug block not found'
+          s = s.replace(old, new, 1)
+
+          old = '''# Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
+uralla:poi_lod_class=H & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
+tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
+uralla:poi_lod_class=H & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
+tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
+tourism=motel [0x2b01 resolution 24]
+uralla:poi_lod_class=H & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
+uralla:poi_lod_class=M & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]
+uralla:poi_lod_class=L & tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
+tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
+'''
+          new = '''# Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
+uralla:poi_lod_class=H & tourism=guest_house { name '${name}' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=guest_house { name '${name}' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=guest_house { name '${name}' } [0x2b01 resolution 24]
+tourism=guest_house { name '${name}' } [0x2b01 resolution 24]
+uralla:poi_lod_class=H & tourism=hotel { name '${name}' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=hotel { name '${name}' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=hotel { name '${name}' } [0x2b01 resolution 24]
+tourism=hotel { name '${name}' } [0x2b01 resolution 24]
+tourism=motel [0x2b01 resolution 24]
+uralla:poi_lod_class=H & tourism=hostel { name '${name}' } [0x2b02 resolution 22]
+uralla:poi_lod_class=M & tourism=hostel { name '${name}' } [0x2b02 resolution 23]
+uralla:poi_lod_class=L & tourism=hostel { name '${name}' } [0x2b02 resolution 24]
+tourism=hostel { name '${name}' } [0x2b02 resolution 24]
+'''
+          assert old in s, 'accommodation debug block not found'
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = '''uralla:poi_lod_class=H & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]
+uralla:poi_lod_class=M & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [M]' | '[M]' } [0x2f08 resolution 23]
+uralla:poi_lod_class=L & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
+(highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
+'''
+          new = '''uralla:poi_lod_class=H & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name}' } [0x2f08 resolution 22]
+uralla:poi_lod_class=M & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name}' } [0x2f08 resolution 23]
+uralla:poi_lod_class=L & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name}' } [0x2f08 resolution 24]
+(highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name}' } [0x2f08 resolution 24]
+'''
+          assert old in s, 'transit debug block not found'
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+          git diff --check
+          ! grep -q "name '\${name} \[H\]'" styles/uralla/inc/priority_points
+          ! grep -q "name '\${name} \[M\]'" styles/uralla/inc/priority_points
+          ! grep -q "name '\${name} \[L\]'" styles/uralla/inc/priority_points
+          ! grep -q "name '\${name} \[H\]'" styles/uralla/points
+          grep -q "shop=convenience & name!=\*.*label:2='магазинчик'" styles/uralla/inc/priority_points
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/inc/priority_points styles/uralla/points
+          git commit -m 'Remove LOD debug labels and add convenience hover text'
+          git push
