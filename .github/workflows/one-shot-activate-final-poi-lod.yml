@@ -1,4 +1,5 @@
 name: One-shot activate final POI LOD
+# retry trigger
 
 on:
   push:
