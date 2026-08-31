@@ -26,29 +26,20 @@ jobs:
 
           p = Path('uralla_build/poi_context.py')
           s = p.read_text(encoding='utf-8')
-
           old = 'from typing import Any, Iterable, Mapping\n'
-          new = 'from typing import Any, Iterable, Mapping\n\nfrom .poi_lod import POI_LOD_CLASS_TAG, classify_poi_lod, intrinsic_floor_for_tags\n'
+          new = 'from typing import Any, Iterable, Mapping\n\nfrom .poi_lod import POI_LOD_CLASS_TAG, classify_poi_lod, intrinsic_floor_for_poi\n'
           assert old in s and new not in s
           s = s.replace(old, new, 1)
 
           old = '''            desired[POI_SCREEN_PRESSURE_TAG] = screen_context\n    changed = any(result.get(key) != value for key, value in desired.items())\n'''
-          new = '''            desired[POI_SCREEN_PRESSURE_TAG] = screen_context\n\n    lod_class = None\n    activity_context = desired.get(POI_ACTIVITY_CONTEXT_TAG) or result.get(POI_ACTIVITY_CONTEXT_TAG)\n    if activity_context and screen_context:\n        lod_class = classify_poi_lod(\n            priority=result.get(POI_PRIORITY_TAG, "common"),\n            activity_context=activity_context,\n            screen_pressure=screen_context,\n            intrinsic_floor=intrinsic_floor_for_tags(result),\n        )\n        desired[POI_LOD_CLASS_TAG] = lod_class\n\n    changed = any(result.get(key) != value for key, value in desired.items())\n'''
+          new = '''            desired[POI_SCREEN_PRESSURE_TAG] = screen_context\n\n    lod_class = None\n    activity_context = desired.get(POI_ACTIVITY_CONTEXT_TAG) or result.get(POI_ACTIVITY_CONTEXT_TAG)\n    if activity_context and screen_context:\n        lod_class = classify_poi_lod(\n            priority=result.get(POI_PRIORITY_TAG, "common"),\n            activity_context=activity_context,\n            screen_pressure=screen_context,\n            intrinsic_floor=intrinsic_floor_for_poi(result),\n        )\n        desired[POI_LOD_CLASS_TAG] = lod_class\n\n    changed = any(result.get(key) != value for key, value in desired.items())\n'''
           assert old in s
           s = s.replace(old, new, 1)
 
           old = '''        "screen_pressure": screen_context,\n        "place_distance_km": nearest_place[0] if nearest_place is not None else None,\n'''
-          new = '''        "screen_pressure": screen_context,\n        "lod_class": lod_class,\n        "intrinsic_floor": intrinsic_floor_for_tags(result),\n        "place_distance_km": nearest_place[0] if nearest_place is not None else None,\n'''
+          new = '''        "screen_pressure": screen_context,\n        "lod_class": lod_class,\n        "intrinsic_floor": intrinsic_floor_for_poi(result),\n        "place_distance_km": nearest_place[0] if nearest_place is not None else None,\n'''
           assert old in s
           s = s.replace(old, new, 1)
-          p.write_text(s, encoding='utf-8')
-
-          p = Path('uralla_build/poi_lod.py')
-          s = p.read_text(encoding='utf-8')
-          marker = '_CLASS_SCORE = {"L": 0, "M": 1, "H": 2}\n\n\n'
-          addition = '''_CLASS_SCORE = {"L": 0, "M": 1, "H": 2}\n\n\ndef intrinsic_floor_for_tags(tags: object) -> str:\n    """Return the category-level minimum LOD class for an adaptive POI."""\n    items = tags.items() if hasattr(tags, "items") else iter(tags)\n    values = {str(key): str(value) for key, value in items}\n    if values.get("shop") == "supermarket" or values.get("amenity") == "supermarket":\n        return "M"\n    return "L"\n\n\n'''
-          assert marker in s and 'def intrinsic_floor_for_tags' not in s
-          s = s.replace(marker, addition, 1)
           p.write_text(s, encoding='utf-8')
 
           p = Path('uralla_build/preprocessor.py')
@@ -68,15 +59,6 @@ jobs:
           assert old in s
           s = s.replace(old, new, 1)
           p.write_text(s, encoding='utf-8')
-
-          p = Path('tests/test_poi_lod.py')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace('from uralla_build.poi_lod import classify_poi_lod\n', 'from uralla_build.poi_lod import classify_poi_lod, intrinsic_floor_for_tags\n', 1)
-          insert = '''\n    def test_intrinsic_floor_from_tags(self) -> None:\n        self.assertEqual(intrinsic_floor_for_tags({"shop": "supermarket"}), "M")\n        self.assertEqual(intrinsic_floor_for_tags({"amenity": "supermarket"}), "M")\n        self.assertEqual(intrinsic_floor_for_tags({"shop": "convenience"}), "L")\n        self.assertEqual(intrinsic_floor_for_tags({"tourism": "hotel"}), "L")\n'''
-          marker = '\n\nif __name__ == "__main__":\n'
-          assert marker in s and 'test_intrinsic_floor_from_tags' not in s
-          s = s.replace(marker, insert + marker, 1)
-          p.write_text(s, encoding='utf-8')
           PY
 
       - name: Validate
@@ -89,6 +71,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add uralla_build/poi_lod.py uralla_build/poi_context.py uralla_build/preprocessor.py tests/test_poi_lod.py
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py
           git commit -m 'Integrate final POI LOD diagnostics'
           git push
