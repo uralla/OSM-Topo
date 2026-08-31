@@ -1,0 +1,43 @@
+name: One-shot outdoor POI progression
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-outdoor-poi-progression.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch outdoor POIs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text(encoding='utf-8')
+          old = """tourism=camp_site {name '${name}' | 'кемпинг'} [0x4a01 resolution 23-23 continue]\ntourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #\n"""
+          new = """# Camps keep one dedicated icon across the whole useful range. Named camps show\n# their real name; unnamed camps stay visually clean and expose \"кемпинг\" on hover.\ntourism=camp_site & name=* { name '${name}' } [0x2b03 resolution 22]\ntourism=camp_site & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='кемпинг' } [0x2b03 resolution 22]\n"""
+          assert old in s, 'camp_site block not found'
+          s = s.replace(old, new, 1)
+
+          old = """tourism=picnic_site & shelter=yes [0x2b05 resolution 24]\ntourism=picnic_site & shelter!=yes [0x4a00 resolution 24]\n\nleisure=firepit | amenity=firepit | amenity=bbq | tourism=picnic_site & fireplace=yes {name '${name}'} [0x2b06 resolution 24]\namenity=bench [0x4a01 resolution 24]\n"""
+          new = """# Picnic sites are destination-level POIs and stay visible from 22 through 24.\n# A shelter still uses the shelter icon; ordinary picnic sites use 0x4a00.\ntourism=picnic_site & shelter=yes [0x2b05 resolution 22]\ntourism=picnic_site & shelter!=yes [0x4a00 resolution 22]\n\nleisure=firepit | amenity=firepit | amenity=bbq | tourism=picnic_site & fireplace=yes {name '${name}'} [0x2b06 resolution 24]\n# Benches and picnic tables are smaller infrastructure: visible from 23 through 24.\n(amenity=bench | leisure=picnic_table) [0x4a01 resolution 23]\n"""
+          assert old in s, 'picnic/bench block not found'
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+          git diff --check
+          grep -q "tourism=camp_site & name=\*.*0x2b03 resolution 22" styles/uralla/points
+          grep -q "tourism=camp_site & name!=\*.*label:2='кемпинг'.*0x2b03 resolution 22" styles/uralla/points
+          grep -q "tourism=picnic_site & shelter!=yes \[0x4a00 resolution 22\]" styles/uralla/points
+          grep -q "(amenity=bench | leisure=picnic_table) \[0x4a01 resolution 23\]" styles/uralla/points
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/points
+          git commit -m 'Progress outdoor POIs by importance'
+          git push
