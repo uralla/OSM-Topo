@@ -10,13 +10,13 @@ uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete 
 # Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
 (amenity=restaurant | amenity=cafe | amenity=fast_food | amenity=food_court) [0x2a00 resolution 24]
 
-# Grocery group. Adaptive rarity/context visibility is intentionally constrained to
-# 22-24: isolated/remote=22, sparse=23, ordinary=24. Supermarkets keep their existing
-# category-level resolution 23 fallback because they are intrinsically more important.
-# Temporary visual debug suffixes: H=22, M=23, L=24.
-uralla:poi_priority=isolated & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
-uralla:poi_activity_context=remote & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
-uralla:poi_priority=sparse & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
+# Grocery group. Final adaptive visibility is consumed from uralla:poi_lod_class,
+# produced by the preprocessor from rarity + activity context + screen pressure +
+# intrinsic category floor. Temporary visual suffixes expose the actual final class.
+# Untagged fallbacks preserve legacy safety: supermarkets=23, other groceries=24.
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
 (shop=supermarket | amenity=supermarket) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
 (shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
 
@@ -40,20 +40,19 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 
-# Tourist accommodation / shelters. Adaptive visibility follows the same 22-24 scale:
-# isolated/remote=22, sparse=23, ordinary=24.
-uralla:poi_priority=isolated & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_activity_context=remote & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_priority=sparse & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+# Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
+uralla:poi_lod_class=H & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
 tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-uralla:poi_priority=isolated & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_activity_context=remote & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_priority=sparse & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+uralla:poi_lod_class=H & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
+uralla:poi_lod_class=M & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
+uralla:poi_lod_class=L & tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
 tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
 tourism=motel [0x2b01 resolution 24]
-uralla:poi_priority=isolated & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
-uralla:poi_activity_context=remote & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
-uralla:poi_priority=sparse & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]
+uralla:poi_lod_class=H & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
+uralla:poi_lod_class=M & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]
+uralla:poi_lod_class=L & tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
 tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
 amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
 (tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23]
