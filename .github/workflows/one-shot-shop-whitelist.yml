@@ -1,0 +1,36 @@
+name: One-shot shop whitelist
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-shop-whitelist.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch shop whitelist
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/inc/priority_points')
+          s = p.read_text(encoding='utf-8')
+          old = '''# All remaining shops use one generic shop icon.\nshop=* & shop!=no & shop!=none [0x2e00 resolution 24]\n'''
+          new = '''# Tourist-useful non-food shops only. Broad shop=* fallback is intentionally absent:\n# specialist retail such as books, phones, medical supplies, fashion, etc. is omitted.\n(shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]\n(shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]\n'''
+          assert s.count(old) == 1, 'generic shop fallback block not found exactly once'
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          git diff --check
+          grep -Fq 'shop=hardware | shop=doityourself | shop=houseware' styles/uralla/inc/priority_points
+          grep -Fq 'shop=sports | shop=outdoor' styles/uralla/inc/priority_points
+          ! grep -Fq 'shop=* & shop!=no & shop!=none [0x2e00 resolution 24]' styles/uralla/inc/priority_points
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add styles/uralla/inc/priority_points
+          git commit -m 'Restrict shop POIs to tourist-useful categories'
+          git push
