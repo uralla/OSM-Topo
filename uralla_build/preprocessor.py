@@ -68,6 +68,9 @@ _ELEVATION_NAME_SUFFIX_RE = re.compile(
 
 _LAKE_LEADING_ABBREVIATIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"^(?:Большое|Большая|Большой|Большие)\s+(.+?)$", re.IGNORECASE), "Бол. "),
+    (re.compile(r"^(?:Малое|Малая|Малый|Малые)\s+(.+?)$", re.IGNORECASE), "Мал. "),
+    (re.compile(r"^(?:Верхнее|Верхняя|Верхний|Верхние)\s+(.+?)$", re.IGNORECASE), "В. "),
+    (re.compile(r"^(?:Нижнее|Нижняя|Нижний|Нижние)\s+(.+?)$", re.IGNORECASE), "Н. "),
 )
 
 
