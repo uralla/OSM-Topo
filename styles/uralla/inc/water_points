@@ -9,7 +9,13 @@ natural=beach & mkgmap:area2poi!=true [0x6604 resolution 24]
 natural=glacier & mkgmap:area2poi!=true [0x650a resolution 21]
 
 natural=water & name=* & mkgmap:area2poi!=true [0x6603 resolution 21]
-natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi!=true [0x6508 resolution 21]
+# Waterfalls follow the same progressive visibility scheme as cave entrances:
+# - resolution 23 only: named waterfalls, icon without a permanent label;
+# - resolution 24: all waterfalls; named ones show their real name, unnamed stay unlabeled.
+# Restricting the first output to 23-23 avoids duplicate POIs at resolution 24.
+((natural=waterfall | waterway=waterfall) & name=* & mkgmap:area2poi!=true) { set mkgmap:label:1=' ' } [0x6508 resolution 23-23 continue]
+((natural=waterfall | waterway=waterfall) & name=* & mkgmap:area2poi!=true) { set mkgmap:label:1='${name}' } [0x6508 resolution 24]
+((natural=waterfall | waterway=waterfall) & name!=* & mkgmap:area2poi!=true) { set mkgmap:label:1=' ' } [0x6508 resolution 24]
 (natural=wetland | natural=marsh | natural=swamp | natural=mud | natural=bog)
     & name=* & mkgmap:area2poi!=true [0x6513 resolution 21]
 
