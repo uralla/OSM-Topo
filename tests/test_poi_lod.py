@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from uralla_build.poi_lod import classify_poi_lod
+from uralla_build.poi_lod import classify_poi_lod, intrinsic_floor_for_poi
 
 
 class PoiLodClassifierTests(unittest.TestCase):
@@ -63,6 +63,13 @@ class PoiLodClassifierTests(unittest.TestCase):
             ),
             "H",
         )
+
+    def test_intrinsic_floor_matches_existing_category_fallbacks(self) -> None:
+        self.assertEqual(intrinsic_floor_for_poi({"shop": "supermarket"}), "M")
+        self.assertEqual(intrinsic_floor_for_poi({"amenity": "supermarket"}), "M")
+        self.assertEqual(intrinsic_floor_for_poi({"shop": "convenience"}), "L")
+        self.assertEqual(intrinsic_floor_for_poi({"tourism": "hotel"}), "L")
+        self.assertEqual(intrinsic_floor_for_poi({"highway": "bus_stop"}), "L")
 
 
 if __name__ == "__main__":
