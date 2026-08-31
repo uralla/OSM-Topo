@@ -35,6 +35,35 @@ class PoiLodClassifierTests(unittest.TestCase):
                         "H",
                     )
 
+    def test_intrinsic_floor_preserves_category_importance(self) -> None:
+        self.assertEqual(
+            classify_poi_lod(
+                priority="common",
+                activity_context="urban",
+                screen_pressure="high",
+                intrinsic_floor="M",
+            ),
+            "M",
+        )
+        self.assertEqual(
+            classify_poi_lod(
+                priority="common",
+                activity_context="remote",
+                screen_pressure="low",
+                intrinsic_floor="M",
+            ),
+            "H",
+        )
+        self.assertEqual(
+            classify_poi_lod(
+                priority="common",
+                activity_context="settlement",
+                screen_pressure="medium",
+                intrinsic_floor="H",
+            ),
+            "H",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
