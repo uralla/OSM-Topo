@@ -66,7 +66,7 @@ _ELEVATION_NAME_SUFFIX_RE = re.compile(
 )
 
 
-_LAKE_LEADING_ABBREVIATIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+_GEOGRAPHIC_LEADING_ABBREVIATIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"^(?:Большое|Большая|Большой|Большие)\s+(.+?)$", re.IGNORECASE), "Бол. "),
     (re.compile(r"^(?:Малое|Малая|Малый|Малые)\s+(.+?)$", re.IGNORECASE), "Мал. "),
     (re.compile(r"^(?:Верхнее|Верхняя|Верхний|Верхние)\s+(.+?)$", re.IGNORECASE), "В. "),
@@ -283,7 +283,8 @@ def enrich_geographic_label_tags(
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     result = {str(key): str(value) for key, value in items}
     label_class = _geographic_label_class(result)
-    if label_class is None:
+    natural = result.get("natural")
+    if label_class is None and natural is None:
         return result, False
     name = result.get("name")
     if not name:
@@ -297,17 +298,20 @@ def enrich_geographic_label_tags(
             if stripped:
                 label = stripped
 
-    for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:
-        match = pattern.fullmatch(label)
-        if not match:
-            continue
-        stripped = match.group(1).strip()
-        if stripped:
-            label = stripped
-        break
+    if label_class is not None:
+        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:
+            match = pattern.fullmatch(label)
+            if not match:
+                continue
+            stripped = match.group(1).strip()
+            if stripped:
+                label = stripped
+            break
 
-    if label_class == "lake":
-        for pattern, prefix in _LAKE_LEADING_ABBREVIATIONS:
+    # Compact directional/size adjectives on ordinary natural features and lakes.
+    # Prominent peak/volcano landmarks keep their full display names.
+    if (label_class == "lake" or natural is not None) and result.get(PEAK_LANDMARK_TAG) != "yes":
+        for pattern, prefix in _GEOGRAPHIC_LEADING_ABBREVIATIONS:
             match = pattern.fullmatch(label)
             if not match:
                 continue
@@ -565,6 +569,20 @@ def preprocess_pbf(
                 if place_admin_added:
                     counters["place_admin_enriched"] += 1
                 final_tags, _long_name_added = enrich_long_name_tags(final_tags)
+                final_tags, peak_added = enrich_peak_landmark_tags(
+                    final_tags, peak_landmarks
+                )
+                if peak_added:
+                    counters["peak_landmarks_enriched"] += 1
+                    if len(peak_samples) < 100:
+                        peak_samples.append(
+                            {
+                                "type": _object_kind(item),
+                                "id": int(item.id),
+                                "wikidata": final_tags.get("wikidata"),
+                                "name": final_tags.get("name") or final_tags.get("name:ru"),
+                            }
+                        )
                 before_label = final_tags.get(DISPLAY_LABEL_TAG)
                 final_tags, label_added = enrich_geographic_label_tags(final_tags)
                 if label_added:
@@ -583,21 +601,6 @@ def preprocess_pbf(
                         )
                 elif before_label != final_tags.get(DISPLAY_LABEL_TAG):
                     counters["geographic_labels_enriched"] += 1
-
-                final_tags, peak_added = enrich_peak_landmark_tags(
-                    final_tags, peak_landmarks
-                )
-                if peak_added:
-                    counters["peak_landmarks_enriched"] += 1
-                    if len(peak_samples) < 100:
-                        peak_samples.append(
-                            {
-                                "type": _object_kind(item),
-                                "id": int(item.id),
-                                "wikidata": final_tags.get("wikidata"),
-                                "name": final_tags.get("name") or final_tags.get("name:ru"),
-                            }
-                        )
 
                 final_tags, river_added = enrich_river_landmark_tags(
                     final_tags, river_landmarks
