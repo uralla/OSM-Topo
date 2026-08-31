@@ -25,8 +25,10 @@ shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='маг�
 (shop=supermarket | amenity=supermarket) { name '${name}' } [0x2e02 resolution 23]
 (shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 24]
 
-# Bicycle shop remains a distinct tourist-useful POI.
-# [CUSTOM/АВТОРСКОЕ] Bicycle services use a dedicated visible-label POI.
+# Bicycle shop remains a distinct tourist-useful POI and uses adaptive LOD.
+uralla:poi_lod_class=H & shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 22]
+uralla:poi_lod_class=M & shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 23]
+uralla:poi_lod_class=L & shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]
 shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 23]
 amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' } [0x2f18 resolution 24]
 # Bicycle parking is intentionally not rendered for now.
@@ -49,7 +51,13 @@ shop=ticket & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='билеты
 
 # Tourist-useful non-food shops only. Broad shop=* fallback is intentionally absent:
 # specialist retail such as books, phones, medical supplies, fashion, etc. is omitted.
+uralla:poi_lod_class=H & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 22]
+uralla:poi_lod_class=M & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 23]
+uralla:poi_lod_class=L & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]
 (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]
+uralla:poi_lod_class=H & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 22]
+uralla:poi_lod_class=M & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 23]
+uralla:poi_lod_class=L & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]
 (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]
 
 # Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.

@@ -473,6 +473,7 @@ def preprocess_pbf(
     transit_stop_index = context_indexes.transit
     picnic_index = context_indexes.picnic
     outdoor_furniture_index = context_indexes.outdoor_furniture
+    tourist_retail_index = context_indexes.tourist_retail
     activity_index = context_indexes.activity
     screen_pressure_index = context_indexes.screen_pressure
     place_anchor_index = context_indexes.places
@@ -522,6 +523,7 @@ def preprocess_pbf(
         f"transit {transit_stop_index.shop_count:,}; "
         f"picnic {picnic_index.shop_count:,}; "
         f"furniture {outdoor_furniture_index.shop_count:,}; "
+        f"retail {tourist_retail_index.shop_count:,}; "
         f"activity {activity_index.shop_count:,}; "
         f"screen {screen_pressure_index.point_count:,}/{screen_pressure_index.total_weight:,}w; "
         f"places {place_anchor_index.anchor_count:,}; "
@@ -683,6 +685,12 @@ def preprocess_pbf(
                 )
                 if furniture_added:
                     counters["furniture_context_enriched"] += 1
+
+                final_tags, retail_added, _retail_sample = enrich_outdoor_context(
+                    item, final_tags, tourist_retail_index, kind="retail"
+                )
+                if retail_added:
+                    counters["retail_context_enriched"] += 1
 
                 final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
                     item, final_tags, activity_index, place_anchor_index, activity_thresholds, screen_pressure_index, screen_thresholds

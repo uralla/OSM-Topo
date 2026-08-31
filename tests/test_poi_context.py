@@ -11,6 +11,7 @@ from uralla_build.poi_context import (
     classify_screen_pressure,
     classify_outdoor_rarity,
     is_outdoor_furniture,
+    is_tourist_retail,
     is_picnic_site,
     is_food_shop,
     is_meaningful_context_node,
@@ -157,3 +158,10 @@ class PoiContextTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_tourist_retail_whitelist_is_adaptive():
+    for value in ("bicycle", "hardware", "doityourself", "houseware", "sports", "outdoor"):
+        assert is_tourist_retail({"shop": value})
+    for value in ("books", "mobile_phone", "medical_supply"):
+        assert not is_tourist_retail({"shop": value})

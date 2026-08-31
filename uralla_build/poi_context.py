@@ -21,6 +21,7 @@ ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
 TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
 PICNIC_SITE_VALUES = frozenset({"picnic_site"})
 OUTDOOR_FURNITURE_VALUES = frozenset({"bench", "picnic_table"})
+TOURIST_RETAIL_VALUES = frozenset({"bicycle", "hardware", "doityourself", "houseware", "sports", "outdoor"})
 SETTLEMENT_PLACE_VALUES = frozenset({"city", "town", "village", "hamlet"})
 ACTIVITY_PLACE_GUARD_RADII_KM = {"city": 7.0, "town": 5.0, "village": 2.0, "hamlet": 1.0}
 
@@ -138,6 +139,12 @@ def is_outdoor_furniture(tags: Mapping[str, str] | object) -> bool:
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     values = {str(key): str(value) for key, value in items}
     return values.get("amenity") == "bench" or values.get("leisure") == "picnic_table"
+
+
+def is_tourist_retail(tags: Mapping[str, str] | object) -> bool:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    values = {str(key): str(value) for key, value in items}
+    return values.get("shop") in TOURIST_RETAIL_VALUES
 
 
 def classify_outdoor_rarity(*, objects_2km: int, objects_10km: int) -> tuple[str, str]:
@@ -440,6 +447,7 @@ class ContextIndexes:
     transit: FoodShopIndex
     picnic: FoodShopIndex
     outdoor_furniture: FoodShopIndex
+    tourist_retail: FoodShopIndex
     activity: FoodShopIndex
     screen_pressure: WeightedPointIndex
     places: PlaceAnchorIndex
@@ -454,6 +462,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
     transit = FoodShopIndex.empty()
     picnic = FoodShopIndex.empty()
     outdoor_furniture = FoodShopIndex.empty()
+    tourist_retail = FoodShopIndex.empty()
     activity = FoodShopIndex.empty()
     screen_pressure = WeightedPointIndex.empty()
     places = PlaceAnchorIndex.empty()
@@ -484,12 +493,15 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         if is_outdoor_furniture(tags):
             outdoor_furniture.add(*location)
             adaptive = True
+        if is_tourist_retail(tags):
+            tourist_retail.add(*location)
+            adaptive = True
         if adaptive:
             adaptive_candidates.append((int(getattr(item, "id", 0)), location[0], location[1]))
         place_type = tags.get("place")
         if place_type in SETTLEMENT_PLACE_VALUES:
             places.add(*location, place_type, tags.get("name") or tags.get("name:ru"))
-    return ContextIndexes(food, accommodation, transit, picnic, outdoor_furniture, activity, screen_pressure, places, adaptive_candidates)
+    return ContextIndexes(food, accommodation, transit, picnic, outdoor_furniture, tourist_retail, activity, screen_pressure, places, adaptive_candidates)
 
 
 def enrich_outdoor_context(
@@ -501,7 +513,14 @@ def enrich_outdoor_context(
 ) -> tuple[dict[str, str], bool, dict[str, object] | None]:
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     result = {str(key): str(value) for key, value in items}
-    matches = is_picnic_site(result) if kind == "picnic" else is_outdoor_furniture(result)
+    if kind == "picnic":
+        matches = is_picnic_site(result)
+    elif kind == "furniture":
+        matches = is_outdoor_furniture(result)
+    elif kind == "retail":
+        matches = is_tourist_retail(result)
+    else:
+        raise ValueError(f"unknown outdoor context kind: {kind}")
     if not matches:
         return result, False, None
     location = valid_node_location(item)

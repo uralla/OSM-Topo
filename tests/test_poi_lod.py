@@ -74,3 +74,7 @@ class PoiLodClassifierTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_bicycle_intrinsic_floor_is_medium():
+    assert intrinsic_floor_for_poi({"shop": "bicycle"}) == "M"

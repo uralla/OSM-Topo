@@ -38,7 +38,8 @@ man_made=geoglyph { name '${name}' | 'геоглиф' } [0x1181b resolution 24]
 tourism=attraction & natural=water {delete tourism}
 
 man_made=* & area=yes 			{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
-(building=* | bridge=yes & area=yes) 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
+building=* 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | 'здание' } [0x13 resolution 24]
+bridge=yes & area=yes 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
 tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
 # Theme parks have an intentional earlier overview polygon than the generic tourism fallback.
 tourism=theme_park [0x10f13 resolution 21]

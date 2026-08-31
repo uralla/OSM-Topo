@@ -23,7 +23,7 @@ def intrinsic_floor_for_poi(tags: Mapping[str, str]) -> str:
     adaptive categories normally fall back to resolution 24.
     """
 
-    if tags.get("shop") == "supermarket" or tags.get("amenity") == "supermarket":
+    if tags.get("shop") in {"supermarket", "bicycle"} or tags.get("amenity") == "supermarket":
         return "M"
     return "L"
 
