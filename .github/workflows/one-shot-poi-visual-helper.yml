@@ -1,0 +1,20 @@
+name: One-shot POI visual helper check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-poi-visual-helper.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check helper syntax
+        run: |
+          bash -n scripts/poi-visual-check.sh
+          grep -q 'REMOTE food' scripts/poi-visual-check.sh
+          grep -q 'crimea-visual-check.gpx' scripts/poi-visual-check.sh
