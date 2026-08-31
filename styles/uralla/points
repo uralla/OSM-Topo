@@ -187,11 +187,9 @@ railway=station & !(layer<0) [0x6400 resolution 21-23]
 ( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x6400 resolution 19-23]
 ( public_transport=platform & railway=platform & mkgmap:area2poi!=true) & !(layer<0) [0x2f17 resolution 24]
 
-# Adaptive bus-stop visibility uses the same 22-24 scale as food/accommodation:
-# isolated/remote=22, sparse=23, ordinary=24.
 uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
 uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
-uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 23]
+uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
 public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
 	| highway=bus_stop & mkgmap:area2poi!=true
 	| amenity=bus_station & mkgmap:area2poi!=true
@@ -253,14 +251,54 @@ railway=level_crossing [0x1615 resolution 24]
 #barrier=bollard | barrier=bus_trap {addaccess = no; add bicycle = yes; add foot = yes} [0x660f resolution 24]
 #barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate {addaccess = no; add foot = yes} [0x660f resolution 24]
 barrier=bollard | barrier=bus_trap [0x660f resolution 24]
-barrier=gate [0x5800 resolution 24]
+barrier=block | barrier=cycle_barrier | barrier=stile | barrier=kissing_gate [0x660f resolution 24]
+barrier=gate [0x5801 resolution 24]
 barrier=lift_gate [0x5800 resolution 24]
-barrier=swing_gate [0x5800 resolution 24]
-barrier=kissing_gate | barrier=stile [0x5801 resolution 24]
-barrier=toll_booth [0x5800 resolution 24]
-barrier=block | barrier=cycle_barrier [0x660f resolution 24]
+barrier=toll_booth { name '${name}' | 'пункт оплаты' } [0x5800 resolution 24]
 
+
+traffic_sign=city_limit [0x5600 resolution 23]
+highway=ford | ford=yes [0x6406 resolution 24]	
+
+### Добавляем еще разных точек ###
+# Залив, плес
+natural=bay [0x6503 resolution 21]
+# Мыс
+natural=cape [0x6606 resolution 21]
+
+# Вход в метро
+railway=subway_entrance [0x1614 resolution 24]
+# карьер, рудник
+landuse=quarry [0x640c resolution 24]
+# бункер, дот
+military=bunker & mkgmap:area2poi!=true [0x640b resolution 24]
+highway=* & bridge=yes | bridge=yes [0x6401 resolution 24 continue]
+
+# маяки
+man_made=lighthouse [0x1600 resolution 19]
+
+# госучереждения
+office=government & uralla:long_name=yes { name 'учреждение' } [0x3003 resolution 24]
+office=government [0x3003 resolution 24]
+
+# точки из Whitewater 
+# http://wiki.openstreetmap.org/wiki/WikiProject_Whitewater_Maps
+whitewater=rapid	  {name '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}' |
+			  '${whitewater:rapid_name}' } [0x650e resolution 24]
+# Combined access point must precede the single-tag fallbacks.
+whitewater=put_in & whitewater=egress [0x6516 resolution 24]
+whitewater=egress	  [0x6514 resolution 24]
+whitewater=put_in	  [0x6515 resolution 24]
+whitewater=hazard	  [0x6517 resolution 24]
+
+# Всякие лежачие милиционэры
+
+
+	
+include 'inc/water_points';
 include 'inc/landuse_points';
 
 <finalize>
+# The finalizer section is executed for each element when a rule with an element type matches
+name=* { name '${name}' }
 include 'inc/address';
