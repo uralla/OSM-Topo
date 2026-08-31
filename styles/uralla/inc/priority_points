@@ -37,6 +37,11 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 # Motor-vehicle shops/services are one class; rental is handled above.
 (shop=car_parts | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
+# Ticket shops use the information POI icon. Named objects keep their real name;
+# unnamed ones stay unlabeled on the map but expose "билеты" in object details/hover.
+shop=ticket & name=* { name '${name}' } [0x4c00 resolution 24]
+shop=ticket & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='билеты' } [0x4c00 resolution 24]
+
 # All remaining shops use one generic shop icon.
 shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
 
