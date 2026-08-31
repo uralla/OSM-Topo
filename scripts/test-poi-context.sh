@@ -20,7 +20,7 @@ python_is_usable() {
     local candidate="$1"
     command -v "$candidate" >/dev/null 2>&1 || [[ -x "$candidate" ]] || return 1
     "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1 || return 1
-    "$candidate" -c 'import yaml, osmium' >/dev/null 2>&1 || return 1
+    "$candidate" -c 'import yaml, osmium; raise SystemExit(0 if hasattr(osmium, "FileProcessor") else 1)' >/dev/null 2>&1 || return 1
     return 0
 }
 
@@ -53,7 +53,7 @@ else
 
     if [[ -z "$PYTHON_BIN" ]]; then
         printf 'ERROR: no usable Python environment found.\n' >&2
-        printf 'OSM-Topo requires Python >= 3.11 with PyYAML and osmium installed.\n' >&2
+        printf 'OSM-Topo requires Python >= 3.11 with PyYAML and PyOsmium exposing osmium.FileProcessor.\n' >&2
         if is_wsl || [[ "$(uname -s 2>/dev/null || true)" == "Linux" ]]; then
             printf '\nRecommended one-time setup on WSL/Linux:\n' >&2
             printf '  sudo apt update\n' >&2
@@ -95,7 +95,7 @@ ELAPSED=$((END_EPOCH - START_EPOCH))
 # Keep only the lines useful for tuning the context classifier. The full log is
 # retained next to this compact extract for timing/error analysis.
 grep -E \
-    'POI context:|POI activity thresholds ready before writer:|POI activity density:|POI activity classifier:|POI activity final classifier:|POI activity matrix:|POI remote place proximity:|POI place guard scenario:|POI named check:|POI activity sample:|POI accommodation check:|POI accommodation:|\[preprocess\].*(objects|done)|BUILD (COMPLETE|FAILED)|TOTAL' \
+    'POI context:|POI activity thresholds ready before writer|POI activity density:|POI activity classifier:|POI activity final classifier:|POI activity matrix:|POI remote place proximity:|POI place guard scenario:|POI named check:|POI activity sample:|POI accommodation check:|POI accommodation:|\[preprocess\].*(objects|done)|BUILD (COMPLETE|FAILED)|TOTAL' \
     "$FULL_LOG" > "$POI_LOG" || true
 
 printf '\n============================================================\n'
