@@ -225,18 +225,23 @@ tourism=attraction [0x2c04 resolution 24 continue]
 tourism=artwork [0x2c04 resolution 24]
 tourism=aquarium [0x2c07 resolution 24]
 
-tourism=camp_site {name '${name}' | 'кемпинг'} [0x4a01 resolution 23-23 continue]
-tourism=camp_site {name '${name}' | 'кемпинг'} [0x2b03 resolution 24] #
+# Camps keep one dedicated icon across the whole useful range. Named camps show
+# their real name; unnamed camps stay visually clean and expose "кемпинг" on hover.
+tourism=camp_site & name=* { name '${name}' } [0x2b03 resolution 22]
+tourism=camp_site & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='кемпинг' } [0x2b03 resolution 22]
 tourism=chalet [0x640d resolution 21]
 # Legacy tourism=lean_to fallback; amenity=shelter is handled in inc/priority_points.
 tourism=lean_to [0x2b05 resolution 24]
 (historic=museum | tourism=museum) [0x2c02 resolution 24]
 
-tourism=picnic_site & shelter=yes [0x2b05 resolution 24]
-tourism=picnic_site & shelter!=yes [0x4a00 resolution 24]
+# Picnic sites are destination-level POIs and stay visible from 22 through 24.
+# A shelter still uses the shelter icon; ordinary picnic sites use 0x4a00.
+tourism=picnic_site & shelter=yes [0x2b05 resolution 22]
+tourism=picnic_site & shelter!=yes [0x4a00 resolution 22]
 
 leisure=firepit | amenity=firepit | amenity=bbq | tourism=picnic_site & fireplace=yes {name '${name}'} [0x2b06 resolution 24]
-amenity=bench [0x4a01 resolution 24]
+# Benches and picnic tables are smaller infrastructure: visible from 23 through 24.
+(amenity=bench | leisure=picnic_table) [0x4a01 resolution 23]
 tourism=theme_park [0x2c01 resolution 24]
 # Viewpoint icon stays visible. Named viewpoints keep their real name; unnamed ones
 # get a blank Garmin primary label so the TYP fallback text cannot clutter the map.
