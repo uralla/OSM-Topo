@@ -115,11 +115,11 @@ natural=arch [0x6601 resolution 23]
 tourism=viewpoint & name=* { name '${name}' } [0x2c04 resolution 23]
 tourism=viewpoint & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='видовая точка' } [0x2c04 resolution 23]
 # Cave entrances use one icon progressively across two levels:
-# - resolution 23: named caves only, icon without a permanent label;
+# - resolution 23 only: named caves, icon without a permanent label;
 # - resolution 24: all caves; named caves show their real name, unnamed caves stay unlabeled.
-# Source tags remain intact so object information/hover still exposes the original data.
-natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23 continue]
-natural=cave_entrance & name=* { name '${name}' } [0x6608 resolution 24]
+# The 23-level output is restricted to 23-23 so it cannot duplicate the 24-level POI.
+natural=cave_entrance & name=* { set mkgmap:label:1=' ' } [0x6608 resolution 23-23 continue]
+natural=cave_entrance & name=* { set mkgmap:label:1='${name}' } [0x6608 resolution 24]
 natural=cave_entrance & name!=* { set mkgmap:label:1=' ' } [0x6608 resolution 24]
 # Climbing POI: icon only at the closest detail level; keep source name/details.
 sport=climbing { set mkgmap:label:1=' ' } [0x6607 resolution 24]
