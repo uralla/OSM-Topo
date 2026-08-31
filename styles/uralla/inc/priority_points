@@ -47,8 +47,10 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 shop=ticket & name=* { name '${name}' } [0x4c00 resolution 24]
 shop=ticket & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='билеты' } [0x4c00 resolution 24]
 
-# All remaining shops use one generic shop icon.
-shop=* & shop!=no & shop!=none [0x2e00 resolution 24]
+# Tourist-useful non-food shops only. Broad shop=* fallback is intentionally absent:
+# specialist retail such as books, phones, medical supplies, fashion, etc. is omitted.
+(shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]
+(shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]
 
 # Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
 uralla:poi_lod_class=H & tourism=guest_house { name '${name}' } [0x2b01 resolution 22]
