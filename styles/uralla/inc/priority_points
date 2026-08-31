@@ -97,8 +97,13 @@ leisure=nature_reserve { delete leisure }
 boundary=protected_area { delete boundary }
 boundary=national_park { delete boundary }
 
-# Unnamed trees/shrubs are map clutter; named ones continue to the existing rules.
-natural=tree & name!=* { delete natural }
+# Trees: a named tree is already a landmark in its own right, so its tree type wins
+# over secondary tags such as tourism=attraction. Needle-leaved named trees use the
+# conifer icon; broad-leaved or otherwise unspecified named trees use the tree icon.
+# Unnamed trees stay completely out of POI rendering, including attraction fallback.
+natural=tree & name=* & leaf_type=needleleaved { name '${name}' } [0x2c09 resolution 24]
+natural=tree & name=* { name '${name}' } [0x2c08 resolution 24]
+natural=tree & name!=* { delete natural; delete tourism }
 natural=shrub & name!=* { delete natural }
 
 # [CUSTOM/АВТОРСКОЕ] Barrier landmarks. The real TYP identifies 0x5800 as
