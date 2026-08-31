@@ -1,0 +1,67 @@
+[source] crimea: local 38.6 MiB, age 3.98 d; stale (>= 1 d), update required
+[source] crimea: downloading https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf
+[source] temporary file: /mnt/g/garmin_dev/input/.crimean-fed-district-latest.partial.osm.pbf
+[source] download attempt 1/4
+[source] connecting; server-response timeout 300 s
+[source] connected in 0.6 s; remote size: 38.6 MiB
+[source] downloaded 4.0 MiB / 38.6 MiB (10.4%); 1.1 MiB/s
+[source] downloaded 8.0 MiB / 38.6 MiB (20.7%); 1.2 MiB/s
+[source] downloaded 12.0 MiB / 38.6 MiB (31.1%); 1.3 MiB/s
+[source] downloaded 16.0 MiB / 38.6 MiB (41.5%); 1.5 MiB/s
+[source] downloaded 20.0 MiB / 38.6 MiB (51.8%); 1.5 MiB/s
+[source] downloaded 24.0 MiB / 38.6 MiB (62.2%); 1.5 MiB/s
+[source] downloaded 28.0 MiB / 38.6 MiB (72.5%); 1.6 MiB/s
+[source] downloaded 32.0 MiB / 38.6 MiB (82.9%); 1.6 MiB/s
+[source] downloaded 36.0 MiB / 38.6 MiB (93.3%); 1.7 MiB/s
+[source] download complete: 38.6 MiB in 22.6 s; avg 1.7 MiB/s
+[source] validating PBF: 38.6 MiB
+[source] validation OK
+[source] replacing existing source atomically
+[source] crimea: updated; saved 38.6 MiB -> /mnt/g/garmin_dev/input/crimean-fed-district-latest.osm.pbf
+[preprocess] POI context: indexing node signals in one pass
+[preprocess] Traceback (most recent call last):
+[preprocess]   File "<frozen runpy>", line 198, in _run_module_as_main
+[preprocess]   File "<frozen runpy>", line 88, in _run_code
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/__main__.py", line 45, in <module>
+[preprocess]     raise SystemExit(main(arguments))
+[preprocess]                      ^^^^^^^^^^^^^^^
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/entrypoint.py", line 230, in main
+[preprocess]     return cli_main(arguments)
+[preprocess]            ^^^^^^^^^^^^^^^^^^^
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/cli.py", line 588, in main
+[preprocess]     return int(args.handler(args))
+[preprocess]                ^^^^^^^^^^^^^^^^^^
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/cli.py", line 454, in _preprocess
+[preprocess]     report = preprocess_pbf(
+[preprocess]              ^^^^^^^^^^^^^^^
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/preprocessor.py", line 445, in preprocess_pbf
+[preprocess]     context_indexes = build_context_indexes(str(source), osmium)
+[preprocess]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[preprocess]   File "/mnt/g/github/OSM Topo/uralla_build/poi_context.py", line 336, in build_context_indexes
+[preprocess]     for item in osmium.FileProcessor(source):
+[preprocess]                 ^^^^^^^^^^^^^^^^^^^^
+[preprocess] AttributeError: module 'osmium' has no attribute 'FileProcessor'
+{
+  "mode": "apply",
+  "result": {
+    "build_id": "beae924792b34101b5611990861a1fa2",
+    "product": "crimea",
+    "status": "failed",
+    "stages": [
+      {
+        "build_id": "beae924792b34101b5611990861a1fa2",
+        "attempt_id": 93,
+        "product": "crimea",
+        "stage": "preprocess",
+        "status": "failed",
+        "exit_code": 1,
+        "duration_seconds": 1.0351105610006925,
+        "stdout_log": "/mnt/g/garmin_dev/builds/beae924792b34101b5611990861a1fa2/preprocess/stdout.attempt-1.log",
+        "stderr_log": "/mnt/g/garmin_dev/builds/beae924792b34101b5611990861a1fa2/preprocess/stderr.attempt-1.log",
+        "checkpoint": null,
+        "reused_attempt_id": null
+      }
+    ],
+    "final_result": null
+  }
+}
