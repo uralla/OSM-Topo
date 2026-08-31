@@ -1,0 +1,44 @@
+name: One-shot adaptive LOD 22-24
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-adaptive-lod-22-24.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch and verify
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          old = "uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]"
+          new = "uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 23]"
+          assert s.count(old) == 1, s.count(old)
+          p.write_text(s.replace(old, new, 1))
+
+          q = Path('styles/uralla/inc/priority_points').read_text()
+          assert 'uralla:poi_priority=isolated & tourism=guest_house [0x2b01 resolution 22]' in q
+          assert 'uralla:poi_priority=sparse & tourism=guest_house [0x2b01 resolution 23]' in q
+          assert 'uralla:poi_activity_context=remote & tourism=guest_house [0x2b01 resolution 22]' in q
+          assert 'resolution 20' not in '\n'.join(line for line in q.splitlines() if 'uralla:poi_priority=' in line)
+          PY
+          git diff --check
+          git diff -- styles/uralla/points styles/uralla/inc/priority_points
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/points
+          git commit -m 'Use 22-24 adaptive POI LOD scale'
+          git push
