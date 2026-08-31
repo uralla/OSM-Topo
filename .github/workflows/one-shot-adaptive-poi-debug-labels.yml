@@ -1,0 +1,116 @@
+name: One-shot adaptive POI debug labels
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-adaptive-poi-debug-labels.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch and verify
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('styles/uralla/inc/priority_points')
+          s = p.read_text()
+          replacements = {
+              "uralla:poi_priority=isolated & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 22]":
+              "uralla:poi_priority=isolated & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]",
+              "uralla:poi_activity_context=remote & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 22]":
+              "uralla:poi_activity_context=remote & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]",
+              "uralla:poi_priority=sparse & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 23]":
+              "uralla:poi_priority=sparse & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]",
+              "(shop=supermarket | amenity=supermarket) [0x2e02 resolution 23]":
+              "(shop=supermarket | amenity=supermarket) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]",
+              "(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) [0x2e02 resolution 24]":
+              "(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]",
+              "uralla:poi_priority=isolated & tourism=guest_house [0x2b01 resolution 22]":
+              "uralla:poi_priority=isolated & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]",
+              "uralla:poi_activity_context=remote & tourism=guest_house [0x2b01 resolution 22]":
+              "uralla:poi_activity_context=remote & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]",
+              "uralla:poi_priority=sparse & tourism=guest_house [0x2b01 resolution 23]":
+              "uralla:poi_priority=sparse & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]",
+              "tourism=guest_house [0x2b01 resolution 24]":
+              "tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]",
+              "uralla:poi_priority=isolated & tourism=hotel [0x2b01 resolution 22]":
+              "uralla:poi_priority=isolated & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]",
+              "uralla:poi_activity_context=remote & tourism=hotel [0x2b01 resolution 22]":
+              "uralla:poi_activity_context=remote & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]",
+              "uralla:poi_priority=sparse & tourism=hotel [0x2b01 resolution 23]":
+              "uralla:poi_priority=sparse & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]",
+              "tourism=hotel [0x2b01 resolution 24]":
+              "tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]",
+              "uralla:poi_priority=isolated & tourism=hostel [0x2b02 resolution 22]":
+              "uralla:poi_priority=isolated & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]",
+              "uralla:poi_activity_context=remote & tourism=hostel [0x2b02 resolution 22]":
+              "uralla:poi_activity_context=remote & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]",
+              "uralla:poi_priority=sparse & tourism=hostel [0x2b02 resolution 23]":
+              "uralla:poi_priority=sparse & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]",
+              "tourism=hostel [0x2b02 resolution 24]":
+              "tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]",
+          }
+          for old, new in replacements.items():
+              assert s.count(old) == 1, (old, s.count(old))
+              s = s.replace(old, new, 1)
+          s = s.replace(
+              '# category-level resolution 23 fallback because they are intrinsically more important.',
+              '# category-level resolution 23 fallback because they are intrinsically more important.\n# Temporary visual debug suffixes: H=22, M=23, L=24.',
+              1,
+          )
+          p.write_text(s)
+
+          p = Path('styles/uralla/points')
+          s = p.read_text()
+          replacements = {
+              "uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]":
+              "uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]",
+              "uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]":
+              "uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]",
+              "uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 23]":
+              "uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [M]' | '[M]' } [0x2f08 resolution 23]",
+          }
+          for old, new in replacements.items():
+              assert s.count(old) == 1, (old, s.count(old))
+              s = s.replace(old, new, 1)
+
+          old = """public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
+\t| highway=bus_stop & mkgmap:area2poi!=true
+\t| amenity=bus_station & mkgmap:area2poi!=true
+\t| railway=tram_stop & mkgmap:area2poi!=true [0x2f08 resolution 24]
+"""
+          new = """(highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
+public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
+\t| amenity=bus_station & mkgmap:area2poi!=true
+\t| railway=tram_stop & mkgmap:area2poi!=true [0x2f08 resolution 24]
+"""
+          assert s.count(old) == 1, s.count(old)
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+
+          grep -q "poi_priority=isolated.*name '\${name} \[H\]'.*resolution 22" styles/uralla/inc/priority_points
+          grep -q "poi_priority=sparse.*name '\${name} \[M\]'.*resolution 23" styles/uralla/inc/priority_points
+          grep -q "shop=bakers.*name '\${name} \[L\]'.*resolution 24" styles/uralla/inc/priority_points
+          grep -q "tourism=guest_house.*name '\${name} \[L\]'.*resolution 24" styles/uralla/inc/priority_points
+          grep -q "poi_priority=isolated.*bus_stop.*name '\${name} \[H\]'.*resolution 22" styles/uralla/points
+          grep -q "poi_priority=sparse.*bus_stop.*name '\${name} \[M\]'.*resolution 23" styles/uralla/points
+          grep -q "bus_stop.*name '\${name} \[L\]'.*resolution 24" styles/uralla/points
+          grep -q "amenity=bus_station.*resolution 24" styles/uralla/points
+          git diff --check
+          git diff -- styles/uralla/inc/priority_points styles/uralla/points
+
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/inc/priority_points styles/uralla/points
+          git commit -m 'Add adaptive POI LOD debug labels'
+          git push
