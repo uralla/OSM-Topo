@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from math import asin, cos, floor, radians, sin, sqrt
 from typing import Any, Iterable, Mapping
 
+from .poi_lod import POI_LOD_CLASS_TAG, classify_poi_lod, intrinsic_floor_for_poi
+
 
 ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
 TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
@@ -515,6 +517,18 @@ def enrich_activity_diagnostics(
                 background_p75=int(screen_thresholds["10km_p75"]),
             )
             desired[POI_SCREEN_PRESSURE_TAG] = screen_context
+
+    lod_class = None
+    activity_context = desired.get(POI_ACTIVITY_CONTEXT_TAG) or result.get(POI_ACTIVITY_CONTEXT_TAG)
+    if activity_context and screen_context:
+        lod_class = classify_poi_lod(
+            priority=result.get(POI_PRIORITY_TAG, "common"),
+            activity_context=activity_context,
+            screen_pressure=screen_context,
+            intrinsic_floor=intrinsic_floor_for_poi(result),
+        )
+        desired[POI_LOD_CLASS_TAG] = lod_class
+
     changed = any(result.get(key) != value for key, value in desired.items())
     result.update(desired)
     if is_food_shop(result):
@@ -536,6 +550,8 @@ def enrich_activity_diagnostics(
         "screen_pressure_2km": screen_2km,
         "screen_pressure_10km": screen_10km,
         "screen_pressure": screen_context,
+        "lod_class": lod_class,
+        "intrinsic_floor": intrinsic_floor_for_poi(result),
         "place_distance_km": nearest_place[0] if nearest_place is not None else None,
         "place_type": nearest_place[1] if nearest_place is not None else None,
         "place_name": nearest_place[2] if nearest_place is not None else None,

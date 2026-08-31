@@ -695,6 +695,20 @@ def preprocess_pbf(
                 if activity_context_value in {"remote", "settlement", "urban"}:
                     counters[f"activity_context_written_{activity_context_value}"] += 1
 
+                lod_class_value = final_tags.get("uralla:poi_lod_class")
+                if lod_class_value in {"H", "M", "L"}:
+                    counters[f"poi_lod_class_{lod_class_value}"] += 1
+                    if int(getattr(item, "id", 0)) == 4912997022:
+                        _emit_progress(
+                            "POI LOD named check: 'Солнышко' Ai-Petri; "
+                            f"id={int(item.id)}; priority={final_tags.get('uralla:poi_priority')}; "
+                            f"activity={final_tags.get('uralla:poi_activity_context')}; "
+                            f"screen={final_tags.get('uralla:poi_screen_pressure')}; "
+                            f"lod={lod_class_value}; "
+                            f"screen2km={final_tags.get('uralla:poi_screen_pressure_2km')}; "
+                            f"screen10km={final_tags.get('uralla:poi_screen_pressure_10km')}"
+                        )
+
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
                     writer.add(item)
@@ -715,6 +729,13 @@ def preprocess_pbf(
             f"settlement {counters['activity_context_written_settlement']:,}; "
             f"urban {counters['activity_context_written_urban']:,}; "
             f"total {sum(counters[f'activity_context_written_{value}'] for value in ('remote', 'settlement', 'urban')):,}"
+        )
+        _emit_progress(
+            "POI final LOD diagnostics: "
+            f"H={counters['poi_lod_class_H']:,}; "
+            f"M={counters['poi_lod_class_M']:,}; "
+            f"L={counters['poi_lod_class_L']:,}; "
+            f"total={sum(counters[f'poi_lod_class_{value}'] for value in ('H', 'M', 'L')):,}"
         )
         if candidate_screen_2km:
             screen_counts = Counter(
@@ -920,6 +941,9 @@ def preprocess_pbf(
             "transit_context_index_nodes": transit_stop_index.shop_count,
             "activity_context_index_nodes": activity_index.shop_count,
             "activity_context_enriched": counters["activity_context_enriched"],
+            "poi_lod_class_H": counters["poi_lod_class_H"],
+            "poi_lod_class_M": counters["poi_lod_class_M"],
+            "poi_lod_class_L": counters["poi_lod_class_L"],
             "transit_context_enriched": counters["transit_context_enriched"],
             "transit_priority_common": counters["transit_priority_common"],
             "transit_priority_sparse": counters["transit_priority_sparse"],
