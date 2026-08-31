@@ -21,10 +21,11 @@ jobs:
           new = "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 24]"
           assert s.count(old) == 1, 'pipeline rule not found exactly once'
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          s2 = p.read_text(encoding='utf-8')
+          assert new in s2
+          assert old not in s2
           PY
           git diff --check
-          grep -Fq "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 24]" styles/uralla/lines
-          ! grep -Fq "man_made=pipeline {name '${name}' | '${operator}'} [0x28 resolution 23]" styles/uralla/lines
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
