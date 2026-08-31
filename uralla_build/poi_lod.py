@@ -7,10 +7,25 @@ new model has been validated against real Garmin renders.
 
 from __future__ import annotations
 
+from typing import Mapping
+
 
 POI_LOD_CLASS_TAG = "uralla:poi_lod_class"
 
 _CLASS_SCORE = {"L": 0, "M": 1, "H": 2}
+
+
+def intrinsic_floor_for_poi(tags: Mapping[str, str]) -> str:
+    """Return the category-level minimum LOD class for an adaptive POI.
+
+    This mirrors existing map semantics rather than inventing new importance:
+    supermarkets already have a resolution-23 fallback, while the other current
+    adaptive categories normally fall back to resolution 24.
+    """
+
+    if tags.get("shop") == "supermarket" or tags.get("amenity") == "supermarket":
+        return "M"
+    return "L"
 
 
 def classify_poi_lod(
