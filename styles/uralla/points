@@ -189,7 +189,7 @@ railway=station & !(layer<0) [0x6400 resolution 21-23]
 
 uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
 uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
-uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 22]
+uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true [0x2f08 resolution 23]
 public_transport=platform & !(layer<0) & mkgmap:area2poi!=true
 	| highway=bus_stop & mkgmap:area2poi!=true
 	| amenity=bus_station & mkgmap:area2poi!=true
