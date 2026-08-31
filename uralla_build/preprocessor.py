@@ -66,6 +66,11 @@ _ELEVATION_NAME_SUFFIX_RE = re.compile(
 )
 
 
+_LAKE_LEADING_ABBREVIATIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^(?:Большое|Большая|Большой|Большие)\s+(.+?)$", re.IGNORECASE), "Бол. "),
+)
+
+
 _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
     "mountain": (
         re.compile(r"^\s*гора\s+(.+?)\s*$", re.IGNORECASE),
@@ -297,6 +302,16 @@ def enrich_geographic_label_tags(
         if stripped:
             label = stripped
         break
+
+    if label_class == "lake":
+        for pattern, prefix in _LAKE_LEADING_ABBREVIATIONS:
+            match = pattern.fullmatch(label)
+            if not match:
+                continue
+            tail = match.group(1).strip()
+            if tail:
+                label = prefix + tail
+            break
 
     if label == name:
         return result, False
