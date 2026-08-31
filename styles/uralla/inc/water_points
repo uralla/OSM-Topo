@@ -11,12 +11,15 @@ natural=glacier & mkgmap:area2poi!=true [0x650a resolution 21]
 natural=water & name=* & mkgmap:area2poi!=true [0x6603 resolution 21]
 # Waterfalls follow the same progressive visibility scheme as cave entrances:
 # - resolution 23 only: named waterfalls, icon without a permanent label;
-# - resolution 24: all waterfalls; named ones use a compact "вдп <name>" label,
+# - resolution 24: all waterfalls; named ones keep a compact display label,
 #   while unnamed waterfalls stay unlabeled.
-# Restricting the first output to 23-23 avoids duplicate POIs at resolution 24.
+# An explicit leading waterfall type word is abbreviated to "вдп"; a clean name
+# gets no artificial type prefix. Restricting the first output to 23-23 avoids
+# duplicate POIs at resolution 24.
 ((natural=waterfall | waterway=waterfall) & name=* & mkgmap:area2poi!=true) { set mkgmap:label:1=' ' } [0x6508 resolution 23-23 continue]
-((natural=waterfall | waterway=waterfall) & name=* & uralla:label=* & mkgmap:area2poi!=true) { set mkgmap:label:1='вдп ${uralla:label}' } [0x6508 resolution 24]
-((natural=waterfall | waterway=waterfall) & name=* & uralla:label!=* & mkgmap:area2poi!=true) { set mkgmap:label:1='вдп ${name}' } [0x6508 resolution 24]
+((natural=waterfall | waterway=waterfall) & name~'^(Водопад|водопад|ВОДОПАД) ' & mkgmap:area2poi!=true) { name '${name|subst:Водопад =>вдп |subst:водопад =>вдп |subst:ВОДОПАД =>вдп }' } [0x6508 resolution 24]
+((natural=waterfall | waterway=waterfall) & name~'^(вод\.|Вод\.|ВОД\.|вдп\.|Вдп\.|ВДП\.) ' & mkgmap:area2poi!=true) { name '${name|subst:вод. =>вдп |subst:Вод. =>вдп |subst:ВОД. =>вдп |subst:вдп. =>вдп |subst:Вдп. =>вдп |subst:ВДП. =>вдп }' } [0x6508 resolution 24]
+((natural=waterfall | waterway=waterfall) & name=* & !(name~'^(Водопад|водопад|ВОДОПАД|вод\.|Вод\.|ВОД\.|вдп\.|Вдп\.|ВДП\.) ') & mkgmap:area2poi!=true) { name '${uralla:label}' | '${name}' } [0x6508 resolution 24]
 ((natural=waterfall | waterway=waterfall) & name!=* & mkgmap:area2poi!=true) { set mkgmap:label:1=' ' } [0x6508 resolution 24]
 (natural=wetland | natural=marsh | natural=swamp | natural=mud | natural=bog)
     & name=* & mkgmap:area2poi!=true [0x6513 resolution 21]
