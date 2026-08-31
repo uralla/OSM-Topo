@@ -9,6 +9,9 @@ from uralla_build.poi_context import (
     apply_activity_place_guard,
     classify_food_shop,
     classify_screen_pressure,
+    classify_outdoor_rarity,
+    is_outdoor_furniture,
+    is_picnic_site,
     is_food_shop,
     is_meaningful_context_node,
     screen_pressure_weight,
@@ -140,6 +143,17 @@ class PoiContextTests(unittest.TestCase):
             ),
             "urban",
         )
+    def test_outdoor_candidate_detection(self):
+        self.assertTrue(is_picnic_site({"tourism": "picnic_site"}))
+        self.assertTrue(is_outdoor_furniture({"amenity": "bench"}))
+        self.assertTrue(is_outdoor_furniture({"leisure": "picnic_table"}))
+        self.assertFalse(is_outdoor_furniture({"amenity": "shelter"}))
+
+    def test_outdoor_rarity(self):
+        self.assertEqual(classify_outdoor_rarity(objects_2km=1, objects_10km=10), ("remote", "isolated"))
+        self.assertEqual(classify_outdoor_rarity(objects_2km=3, objects_10km=25), ("settlement", "sparse"))
+        self.assertEqual(classify_outdoor_rarity(objects_2km=4, objects_10km=26), ("urban", "common"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -31,6 +31,7 @@ from .poi_context import (
     enrich_accommodation_context,
     enrich_activity_diagnostics,
     enrich_food_shop_context,
+    enrich_outdoor_context,
     enrich_transit_stop_context,
 )
 
@@ -470,6 +471,8 @@ def preprocess_pbf(
     food_shop_index = context_indexes.food
     accommodation_index = context_indexes.accommodation
     transit_stop_index = context_indexes.transit
+    picnic_index = context_indexes.picnic
+    outdoor_furniture_index = context_indexes.outdoor_furniture
     activity_index = context_indexes.activity
     screen_pressure_index = context_indexes.screen_pressure
     place_anchor_index = context_indexes.places
@@ -517,6 +520,8 @@ def preprocess_pbf(
         f"food {food_shop_index.shop_count:,}; "
         f"accommodation {accommodation_index.shop_count:,}; "
         f"transit {transit_stop_index.shop_count:,}; "
+        f"picnic {picnic_index.shop_count:,}; "
+        f"furniture {outdoor_furniture_index.shop_count:,}; "
         f"activity {activity_index.shop_count:,}; "
         f"screen {screen_pressure_index.point_count:,}/{screen_pressure_index.total_weight:,}w; "
         f"places {place_anchor_index.anchor_count:,}; "
@@ -666,6 +671,18 @@ def preprocess_pbf(
                     counters[f"transit_priority_{transit_priority}"] += 1
                     if transit_sample is not None and len(transit_context_samples) < 200:
                         transit_context_samples.append(transit_sample)
+
+                final_tags, picnic_added, _picnic_sample = enrich_outdoor_context(
+                    item, final_tags, picnic_index, kind="picnic"
+                )
+                if picnic_added:
+                    counters["picnic_context_enriched"] += 1
+
+                final_tags, furniture_added, _furniture_sample = enrich_outdoor_context(
+                    item, final_tags, outdoor_furniture_index, kind="furniture"
+                )
+                if furniture_added:
+                    counters["furniture_context_enriched"] += 1
 
                 final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
                     item, final_tags, activity_index, place_anchor_index, activity_thresholds, screen_pressure_index, screen_thresholds
