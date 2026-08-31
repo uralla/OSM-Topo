@@ -1,0 +1,32 @@
+name: One-shot adaptive POI debug labels v2
+on: [push]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch and verify
+        shell: bash
+        run: |
+          python3 .github/scripts/one_shot_adaptive_poi_debug_labels.py
+          grep -q "poi_priority=isolated.*name '\${name} \[H\]'.*resolution 22" styles/uralla/inc/priority_points
+          grep -q "poi_priority=sparse.*name '\${name} \[M\]'.*resolution 23" styles/uralla/inc/priority_points
+          grep -q "tourism=guest_house.*name '\${name} \[L\]'.*resolution 24" styles/uralla/inc/priority_points
+          grep -q "poi_priority=isolated.*bus_stop.*name '\${name} \[H\]'.*resolution 22" styles/uralla/points
+          grep -q "poi_priority=sparse.*bus_stop.*name '\${name} \[M\]'.*resolution 23" styles/uralla/points
+          grep -q "bus_stop.*name '\${name} \[L\]'.*resolution 24" styles/uralla/points
+          grep -q "amenity=bus_station.*resolution 24" styles/uralla/points
+          git diff --check
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles/uralla/inc/priority_points styles/uralla/points
+          git commit -m 'Add adaptive POI LOD debug labels'
+          git push
