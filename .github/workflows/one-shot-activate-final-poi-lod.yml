@@ -1,5 +1,4 @@
 name: One-shot activate final POI LOD
-# retry trigger
 
 on:
   push:
@@ -17,99 +16,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch adaptive style rules
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('styles/uralla/inc/priority_points')
-          s = p.read_text(encoding='utf-8')
-          old = '''# Grocery group. Adaptive rarity/context visibility is intentionally constrained to
-# 22-24: isolated/remote=22, sparse=23, ordinary=24. Supermarkets keep their existing
-# category-level resolution 23 fallback because they are intrinsically more important.
-# Temporary visual debug suffixes: H=22, M=23, L=24.
-uralla:poi_priority=isolated & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
-uralla:poi_activity_context=remote & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
-uralla:poi_priority=sparse & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
-(shop=supermarket | amenity=supermarket) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
-(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
-'''
-          new = '''# Grocery group. Final adaptive visibility is consumed from uralla:poi_lod_class,
-# produced by the preprocessor from rarity + activity context + screen pressure +
-# intrinsic category floor. Temporary visual suffixes expose the actual final class.
-# Untagged fallbacks preserve legacy safety: supermarkets=23, other groceries=24.
-uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [H]' | '[H]' } [0x2e02 resolution 22]
-uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
-uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
-(shop=supermarket | amenity=supermarket) { name '${name} [M]' | '[M]' } [0x2e02 resolution 23]
-(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name} [L]' | '[L]' } [0x2e02 resolution 24]
-'''
-          assert old in s
-          s = s.replace(old, new, 1)
-
-          old = '''# Tourist accommodation / shelters. Adaptive visibility follows the same 22-24 scale:
-# isolated/remote=22, sparse=23, ordinary=24.
-uralla:poi_priority=isolated & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_activity_context=remote & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_priority=sparse & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
-tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-uralla:poi_priority=isolated & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_activity_context=remote & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_priority=sparse & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
-tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-tourism=motel [0x2b01 resolution 24]
-uralla:poi_priority=isolated & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
-uralla:poi_activity_context=remote & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
-uralla:poi_priority=sparse & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]
-tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
-'''
-          new = '''# Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
-uralla:poi_lod_class=H & tourism=guest_house { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_lod_class=M & tourism=guest_house { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
-uralla:poi_lod_class=L & tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-tourism=guest_house { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-uralla:poi_lod_class=H & tourism=hotel { name '${name} [H]' | '[H]' } [0x2b01 resolution 22]
-uralla:poi_lod_class=M & tourism=hotel { name '${name} [M]' | '[M]' } [0x2b01 resolution 23]
-uralla:poi_lod_class=L & tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-tourism=hotel { name '${name} [L]' | '[L]' } [0x2b01 resolution 24]
-tourism=motel [0x2b01 resolution 24]
-uralla:poi_lod_class=H & tourism=hostel { name '${name} [H]' | '[H]' } [0x2b02 resolution 22]
-uralla:poi_lod_class=M & tourism=hostel { name '${name} [M]' | '[M]' } [0x2b02 resolution 23]
-uralla:poi_lod_class=L & tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
-tourism=hostel { name '${name} [L]' | '[L]' } [0x2b02 resolution 24]
-'''
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s, encoding='utf-8')
-
-          p = Path('styles/uralla/points')
-          s = p.read_text(encoding='utf-8')
-          old = '''uralla:poi_priority=isolated & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]
-uralla:poi_activity_context=remote & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]
-uralla:poi_priority=sparse & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [M]' | '[M]' } [0x2f08 resolution 23]
-(highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
-'''
-          new = '''uralla:poi_lod_class=H & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [H]' | '[H]' } [0x2f08 resolution 22]
-uralla:poi_lod_class=M & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [M]' | '[M]' } [0x2f08 resolution 23]
-uralla:poi_lod_class=L & (highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
-(highway=bus_stop | public_transport=platform & (bus=yes | trolleybus=yes)) & mkgmap:area2poi!=true { name '${name} [L]' | '[L]' } [0x2f08 resolution 24]
-'''
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Validate exact activation
+      - name: Apply exact style patch
+        run: python3 scripts/activate-final-poi-lod.py
+      - name: Validate
         run: |
           grep -q 'uralla:poi_lod_class=H' styles/uralla/inc/priority_points
           grep -q 'uralla:poi_lod_class=M' styles/uralla/inc/priority_points
           grep -q 'uralla:poi_lod_class=L' styles/uralla/inc/priority_points
           grep -q 'uralla:poi_lod_class=H.*highway=bus_stop' styles/uralla/points
-          ! grep -q 'uralla:poi_priority=isolated.*shop=supermarket' styles/uralla/inc/priority_points
-          ! grep -q 'uralla:poi_activity_context=remote.*tourism=hotel' styles/uralla/inc/priority_points
-          ! grep -q 'uralla:poi_priority=sparse.*highway=bus_stop' styles/uralla/points
           git diff --check
-
       - name: Commit production changes
         run: |
           git config user.name 'github-actions[bot]'
