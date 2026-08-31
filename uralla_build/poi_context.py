@@ -41,6 +41,10 @@ POI_ACTIVITY_500M_TAG = "uralla:poi_activity_500m"
 POI_ACTIVITY_2KM_TAG = "uralla:poi_activity_2km"
 POI_ACTIVITY_10KM_TAG = "uralla:poi_activity_10km"
 POI_ACTIVITY_CONTEXT_TAG = "uralla:poi_activity_context"
+POI_SCREEN_PRESSURE_TAG = "uralla:poi_screen_pressure"
+POI_SCREEN_PRESSURE_2KM_TAG = "uralla:poi_screen_pressure_2km"
+POI_SCREEN_PRESSURE_10KM_TAG = "uralla:poi_screen_pressure_10km"
+SCREEN_PRESSURE_PRIMARY_KEYS = frozenset({"amenity", "tourism", "shop", "historic", "natural", "man_made", "leisure", "highway", "railway", "aeroway", "craft", "emergency", "power", "barrier", "traffic_sign", "whitewater", "office", "landuse", "military", "sport", "place"})
 CONTEXT_METADATA_KEYS = frozenset({"source", "created_by", "attribution", "note", "fixme", "check_date", "survey:date"})
 GRID_DEGREES = 0.05
 EARTH_RADIUS_KM = 6371.0088
@@ -65,6 +69,38 @@ def is_meaningful_context_node(tags: Mapping[str, str] | object) -> bool:
             continue
         return True
     return False
+
+
+def screen_pressure_weight(tags: Mapping[str, str] | object) -> int:
+    """Approximate how much a node competes for Garmin screen space.
+
+    This deliberately ignores address/metadata-only nodes. A generic render-like POI
+    weighs 1, a named POI weighs 2, and settlement place labels weigh 4. The style
+    does not consume this signal yet; it is diagnostic while we validate the model.
+    """
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    values = {str(key): str(value) for key, value in items}
+    if not any(values.get(key) for key in SCREEN_PRESSURE_PRIMARY_KEYS):
+        return 0
+    if values.get("place") in SETTLEMENT_PLACE_VALUES:
+        return 4
+    return 2 if (values.get("name") or values.get("name:ru")) else 1
+
+
+def classify_screen_pressure(
+    *,
+    pressure_2km: int,
+    pressure_10km: int,
+    local_p25: int,
+    local_p75: int,
+    background_p25: int,
+    background_p75: int,
+) -> str:
+    if pressure_2km <= local_p25 and pressure_10km <= background_p25:
+        return "low"
+    if pressure_2km >= local_p75 and pressure_10km >= background_p75:
+        return "high"
+    return "medium"
 
 
 def is_food_shop(tags: Mapping[str, str] | object) -> bool:
@@ -258,6 +294,61 @@ def valid_node_location(item: object) -> tuple[float, float] | None:
 
 
 @dataclass(slots=True)
+class WeightedPointIndex:
+    cells: dict[tuple[int, int], list[tuple[float, float, int]]]
+    point_count: int = 0
+    total_weight: int = 0
+
+    @classmethod
+    def empty(cls) -> "WeightedPointIndex":
+        return cls(defaultdict(list), 0, 0)
+
+    @staticmethod
+    def _cell(lat: float, lon: float) -> tuple[int, int]:
+        return floor(lat / GRID_DEGREES), floor(lon / GRID_DEGREES)
+
+    def add(self, lat: float, lon: float, weight: int) -> None:
+        if weight <= 0:
+            return
+        self.cells[self._cell(lat, lon)].append((lat, lon, int(weight)))
+        self.point_count += 1
+        self.total_weight += int(weight)
+
+    def score_within(self, lat: float, lon: float, radius_km: float) -> int:
+        lat_delta = radius_km / 110.574
+        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)
+        lon_delta = radius_km / lon_scale
+        min_y = floor((lat - lat_delta) / GRID_DEGREES)
+        max_y = floor((lat + lat_delta) / GRID_DEGREES)
+        min_x = floor((lon - lon_delta) / GRID_DEGREES)
+        max_x = floor((lon + lon_delta) / GRID_DEGREES)
+        total = 0
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                for candidate_lat, candidate_lon, weight in self.cells.get((y, x), ()):
+                    if _haversine_km(lat, lon, candidate_lat, candidate_lon) <= radius_km:
+                        total += weight
+        return total
+
+    def score_cells_within_circle(self, lat: float, lon: float, radius_km: float) -> int:
+        lat_delta = radius_km / 110.574
+        lon_scale = max(111.320 * abs(cos(radians(lat))), 1.0)
+        lon_delta = radius_km / lon_scale
+        min_y = floor((lat - lat_delta) / GRID_DEGREES)
+        max_y = floor((lat + lat_delta) / GRID_DEGREES)
+        min_x = floor((lon - lon_delta) / GRID_DEGREES)
+        max_x = floor((lon + lon_delta) / GRID_DEGREES)
+        total = 0
+        for y in range(min_y, max_y + 1):
+            center_lat = (y + 0.5) * GRID_DEGREES
+            for x in range(min_x, max_x + 1):
+                center_lon = (x + 0.5) * GRID_DEGREES
+                if _haversine_km(lat, lon, center_lat, center_lon) <= radius_km:
+                    total += sum(weight for _lat, _lon, weight in self.cells.get((y, x), ()))
+        return total
+
+
+@dataclass(slots=True)
 class PlaceAnchorIndex:
     cells: dict[tuple[int, int], list[tuple[float, float, str, str | None]]]
     anchor_count: int = 0
@@ -320,6 +411,7 @@ class ContextIndexes:
     accommodation: FoodShopIndex
     transit: FoodShopIndex
     activity: FoodShopIndex
+    screen_pressure: WeightedPointIndex
     places: PlaceAnchorIndex
     adaptive_candidates: list[tuple[int, float, float]]
 
@@ -331,6 +423,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
     accommodation = FoodShopIndex.empty()
     transit = FoodShopIndex.empty()
     activity = FoodShopIndex.empty()
+    screen_pressure = WeightedPointIndex.empty()
     places = PlaceAnchorIndex.empty()
     adaptive_candidates: list[tuple[int, float, float]] = []
     for item in osmium.FileProcessor(source):
@@ -340,6 +433,9 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         tags = {str(key): str(value) for key, value in item.tags}
         if is_meaningful_context_node(tags):
             activity.add(*location)
+        pressure_weight = screen_pressure_weight(tags)
+        if pressure_weight:
+            screen_pressure.add(*location, pressure_weight)
         adaptive = False
         if is_food_shop(tags):
             food.add(*location)
@@ -355,7 +451,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         place_type = tags.get("place")
         if place_type in SETTLEMENT_PLACE_VALUES:
             places.add(*location, place_type, tags.get("name") or tags.get("name:ru"))
-    return ContextIndexes(food, accommodation, transit, activity, places, adaptive_candidates)
+    return ContextIndexes(food, accommodation, transit, activity, screen_pressure, places, adaptive_candidates)
 
 
 def enrich_activity_diagnostics(
@@ -364,6 +460,8 @@ def enrich_activity_diagnostics(
     index: FoodShopIndex,
     places: PlaceAnchorIndex,
     thresholds: Mapping[str, int] | None = None,
+    screen_index: WeightedPointIndex | None = None,
+    screen_thresholds: Mapping[str, int] | None = None,
 ) -> tuple[dict[str, str], bool, dict[str, object] | None]:
     """Attach general human-activity density diagnostics to context-aware POIs."""
 
@@ -399,6 +497,24 @@ def enrich_activity_diagnostics(
             },
         )
         desired[POI_ACTIVITY_CONTEXT_TAG] = final_context
+    screen_2km = None
+    screen_10km = None
+    screen_context = None
+    if screen_index is not None:
+        screen_2km = screen_index.score_within(lat, lon, 2.0)
+        screen_10km = screen_index.score_cells_within_circle(lat, lon, 10.0)
+        desired[POI_SCREEN_PRESSURE_2KM_TAG] = str(screen_2km)
+        desired[POI_SCREEN_PRESSURE_10KM_TAG] = str(screen_10km)
+        if screen_thresholds is not None:
+            screen_context = classify_screen_pressure(
+                pressure_2km=screen_2km,
+                pressure_10km=screen_10km,
+                local_p25=int(screen_thresholds["2km_p25"]),
+                local_p75=int(screen_thresholds["2km_p75"]),
+                background_p25=int(screen_thresholds["10km_p25"]),
+                background_p75=int(screen_thresholds["10km_p75"]),
+            )
+            desired[POI_SCREEN_PRESSURE_TAG] = screen_context
     changed = any(result.get(key) != value for key, value in desired.items())
     result.update(desired)
     if is_food_shop(result):
@@ -417,6 +533,9 @@ def enrich_activity_diagnostics(
         "activity_500m": activity_500m,
         "activity_2km": activity_2km,
         "activity_10km": activity_10km,
+        "screen_pressure_2km": screen_2km,
+        "screen_pressure_10km": screen_10km,
+        "screen_pressure": screen_context,
         "place_distance_km": nearest_place[0] if nearest_place is not None else None,
         "place_type": nearest_place[1] if nearest_place is not None else None,
         "place_name": nearest_place[2] if nearest_place is not None else None,

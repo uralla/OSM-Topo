@@ -27,6 +27,7 @@ from .poi_context import (
     build_context_indexes,
     classify_activity_context,
     classify_activity_context_with_place_guard,
+    classify_screen_pressure,
     enrich_accommodation_context,
     enrich_activity_diagnostics,
     enrich_food_shop_context,
@@ -448,6 +449,7 @@ def preprocess_pbf(
     accommodation_index = context_indexes.accommodation
     transit_stop_index = context_indexes.transit
     activity_index = context_indexes.activity
+    screen_pressure_index = context_indexes.screen_pressure
     place_anchor_index = context_indexes.places
 
     # Percentile thresholds must be known before the writer pass so the final
@@ -465,6 +467,17 @@ def preprocess_pbf(
         "10km_p25": _activity_percentile(candidate_activity_10km, 0.25),
         "10km_p75": _activity_percentile(candidate_activity_10km, 0.75),
     }
+    candidate_screen_2km: list[int] = []
+    candidate_screen_10km: list[int] = []
+    for _candidate_id, candidate_lat, candidate_lon in context_indexes.adaptive_candidates:
+        candidate_screen_2km.append(screen_pressure_index.score_within(candidate_lat, candidate_lon, 2.0))
+        candidate_screen_10km.append(screen_pressure_index.score_cells_within_circle(candidate_lat, candidate_lon, 10.0))
+    screen_thresholds = {
+        "2km_p25": _activity_percentile(candidate_screen_2km, 0.25),
+        "2km_p75": _activity_percentile(candidate_screen_2km, 0.75),
+        "10km_p25": _activity_percentile(candidate_screen_10km, 0.25),
+        "10km_p75": _activity_percentile(candidate_screen_10km, 0.75),
+    }
     _emit_progress(
         "POI activity thresholds ready before writer; "
         f"samples {len(context_indexes.adaptive_candidates):,}; "
@@ -472,11 +485,18 @@ def preprocess_pbf(
         f"10km p25={activity_thresholds['10km_p25']} p75={activity_thresholds['10km_p75']}"
     )
     _emit_progress(
+        "POI screen pressure thresholds ready before writer; "
+        f"samples {len(context_indexes.adaptive_candidates):,}; "
+        f"2km p25={screen_thresholds['2km_p25']} p75={screen_thresholds['2km_p75']}; "
+        f"10km p25={screen_thresholds['10km_p25']} p75={screen_thresholds['10km_p75']}"
+    )
+    _emit_progress(
         "POI context: one-pass index complete; "
         f"food {food_shop_index.shop_count:,}; "
         f"accommodation {accommodation_index.shop_count:,}; "
         f"transit {transit_stop_index.shop_count:,}; "
         f"activity {activity_index.shop_count:,}; "
+        f"screen {screen_pressure_index.point_count:,}/{screen_pressure_index.total_weight:,}w; "
         f"places {place_anchor_index.anchor_count:,}; "
         f"{time.monotonic() - context_started:.1f}s"
     )
@@ -627,7 +647,7 @@ def preprocess_pbf(
                         transit_context_samples.append(transit_sample)
 
                 final_tags, activity_added, activity_sample = enrich_activity_diagnostics(
-                    item, final_tags, activity_index, place_anchor_index, activity_thresholds
+                    item, final_tags, activity_index, place_anchor_index, activity_thresholds, screen_pressure_index, screen_thresholds
                 )
                 if activity_added:
                     counters["activity_context_enriched"] += 1
@@ -646,6 +666,9 @@ def preprocess_pbf(
                         solnyshko_accommodation_sample["activity_500m"] = activity_sample["activity_500m"]
                         solnyshko_accommodation_sample["activity_2km"] = activity_sample["activity_2km"]
                         solnyshko_accommodation_sample["activity_10km"] = activity_sample["activity_10km"]
+                        solnyshko_accommodation_sample["screen_pressure_2km"] = activity_sample["screen_pressure_2km"]
+                        solnyshko_accommodation_sample["screen_pressure_10km"] = activity_sample["screen_pressure_10km"]
+                        solnyshko_accommodation_sample["screen_pressure"] = activity_sample["screen_pressure"]
 
                 activity_context_value = final_tags.get(POI_ACTIVITY_CONTEXT_TAG)
                 if activity_context_value in {"remote", "settlement", "urban"}:
@@ -672,6 +695,34 @@ def preprocess_pbf(
             f"urban {counters['activity_context_written_urban']:,}; "
             f"total {sum(counters[f'activity_context_written_{value}'] for value in ('remote', 'settlement', 'urban')):,}"
         )
+        if candidate_screen_2km:
+            screen_counts = Counter(
+                classify_screen_pressure(
+                    pressure_2km=p2, pressure_10km=p10,
+                    local_p25=screen_thresholds["2km_p25"], local_p75=screen_thresholds["2km_p75"],
+                    background_p25=screen_thresholds["10km_p25"], background_p75=screen_thresholds["10km_p75"],
+                )
+                for p2, p10 in zip(candidate_screen_2km, candidate_screen_10km)
+            )
+            _emit_progress(
+                "POI screen pressure: "
+                f"samples {len(candidate_screen_2km):,}; "
+                f"2km p25={screen_thresholds['2km_p25']} p50={_activity_percentile(candidate_screen_2km, 0.50)} p75={screen_thresholds['2km_p75']} p90={_activity_percentile(candidate_screen_2km, 0.90)}; "
+                f"10km p25={screen_thresholds['10km_p25']} p50={_activity_percentile(candidate_screen_10km, 0.50)} p75={screen_thresholds['10km_p75']} p90={_activity_percentile(candidate_screen_10km, 0.90)}; "
+                f"low={screen_counts['low']:,}; medium={screen_counts['medium']:,}; high={screen_counts['high']:,}"
+            )
+            if solnyshko_accommodation_sample is not None:
+                _emit_progress(
+                    "POI screen pressure named check: 'Солнышко'; "
+                    f"id={solnyshko_accommodation_sample.get('id')}; "
+                    f"priority={solnyshko_accommodation_sample.get('priority')}; "
+                    f"2km={solnyshko_accommodation_sample.get('screen_pressure_2km')}; "
+                    f"10km={solnyshko_accommodation_sample.get('screen_pressure_10km')}; "
+                    f"pressure={solnyshko_accommodation_sample.get('screen_pressure')}; "
+                    f"activity2km={solnyshko_accommodation_sample.get('activity_2km')}; "
+                    f"activity10km={solnyshko_accommodation_sample.get('activity_10km')}"
+                )
+
         if activity_500m_values:
             activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)
             activity_2km_p75 = _activity_percentile(activity_2km_values, 0.75)
