@@ -7,9 +7,11 @@ from unittest.mock import patch
 import zipfile
 
 from uralla_build.external_data import (
+    OSM_SOURCE_URLS,
     RemoteMetadata,
     _download,
     has_refresh_errors,
+    refresh_osm_source,
     refresh_supplemental_data,
 )
 from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
@@ -169,6 +171,28 @@ class ExternalDataRefreshTests(unittest.TestCase):
             results = refresh_supplemental_data(self._manifest(), self._host(root), downloader=downloader)
             self.assertTrue(has_refresh_errors(results))
             self.assertTrue(all(result.status == "error" for result in results))
+
+
+    def test_primary_source_downloads_to_manifest_path(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {"sources": {"kazakhstan": {"path": "input/kazakhstan-latest.osm.pbf"}}}
+            def downloader(url: str, target: Path) -> None:
+                self.assertEqual(url, OSM_SOURCE_URLS["kazakhstan"])
+                target.write_bytes(b"pbf-test")
+            result = refresh_osm_source(manifest, self._host(root), "kazakhstan", downloader=downloader)
+            self.assertEqual(result.status, "updated")
+            self.assertEqual((root / "data/input/kazakhstan-latest.osm.pbf").read_bytes(), b"pbf-test")
+
+    def test_primary_source_failure_without_local_file_is_error(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {"sources": {"armenia": {"path": "input/armenia-latest.osm.pbf"}}}
+            result = refresh_osm_source(
+                manifest, self._host(root), "armenia",
+                downloader=lambda _url, _target: (_ for _ in ()).throw(OSError("offline")),
+            )
+            self.assertEqual(result.status, "error")
 
 
 if __name__ == "__main__":

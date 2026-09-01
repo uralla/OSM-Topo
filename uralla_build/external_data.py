@@ -26,6 +26,19 @@ SUPPLEMENTAL_URLS = {
     "geonames": "https://download.geonames.org/export/dump/cities15000.zip",
 }
 
+OSM_SOURCE_URLS = {
+    "russia": "https://download.geofabrik.de/russia-latest.osm.pbf",
+    "northwestern": "https://download.geofabrik.de/russia/northwestern-fed-district-latest.osm.pbf",
+    "crimea": "https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf",
+    "belarus": "https://download.geofabrik.de/europe/belarus-latest.osm.pbf",
+    "georgia": "https://download.geofabrik.de/europe/georgia-latest.osm.pbf",
+    "turkey": "https://download.geofabrik.de/europe/turkey-latest.osm.pbf",
+    "kazakhstan": "https://download.geofabrik.de/asia/kazakhstan-latest.osm.pbf",
+    "kyrgyzstan": "https://download.geofabrik.de/asia/kyrgyzstan-latest.osm.pbf",
+    "armenia": "https://download.geofabrik.de/asia/armenia-latest.osm.pbf",
+    "mongolia": "https://download.geofabrik.de/asia/mongolia-latest.osm.pbf",
+}
+
 _DOWNLOAD_BLOCK = 1024 * 1024
 _PROGRESS_STEP = 8 * 1024 * 1024
 
@@ -242,6 +255,96 @@ def refresh_supplemental_data(
                     )
                 )
     return results
+
+
+def refresh_osm_source(
+    manifest: dict[str, object],
+    host: HostConfig,
+    source_key: str,
+    *,
+    downloader: Callable[[str, Path], None] | None = None,
+    reporter: Callable[[str], None] | None = None,
+) -> RefreshResult:
+    """Ensure one primary Geofabrik PBF exists and is current enough for a build.
+
+    A new file is staged and atomically installed. If refresh fails but an older
+    local PBF exists, keep it and continue with a warning; if no fallback exists,
+    fail before the build pipeline starts.
+    """
+    sources = manifest.get("sources")
+    if not isinstance(sources, dict):
+        return RefreshResult(source_key, "error", "", "manifest sources are missing")
+    source = sources.get(source_key)
+    if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+        return RefreshResult(source_key, "error", "", f"source {source_key!r} is not configured")
+    url = OSM_SOURCE_URLS.get(source_key)
+    if url is None:
+        return RefreshResult(source_key, "error", "", f"no download URL configured for source {source_key!r}")
+
+    target = data_path(host, source["path"])
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if reporter is not None:
+        if target.is_file():
+            reporter(f"[source:{source_key}] local: {target} ({_format_mib(target.stat().st_size)})")
+        else:
+            reporter(f"[source:{source_key}] local: missing ({target})")
+
+    metadata: RemoteMetadata | None = None
+    if downloader is None and target.is_file():
+        try:
+            if reporter is not None:
+                reporter(f"[source:{source_key}] checking remote metadata: {url}")
+            metadata = _remote_metadata(url)
+            if _is_current(target, metadata):
+                size = target.stat().st_size
+                if reporter is not None:
+                    reporter(f"[source:{source_key}] up to date: {_format_mib(size)}; skipping download")
+                return RefreshResult(source_key, "unchanged", str(target), "remote file is not newer", size)
+        except Exception as exc:
+            if reporter is not None:
+                reporter(f"[source:{source_key}] metadata check unavailable: {exc}; downloading normally")
+
+    try:
+        with tempfile.TemporaryDirectory(prefix=f".uralla-source-{source_key}-", dir=target.parent) as temp_dir:
+            staged = Path(temp_dir) / target.name
+            if reporter is not None:
+                reporter(f"[source:{source_key}] download: {url}")
+            if downloader is None:
+                def progress(downloaded: int, total: int | None, elapsed: float) -> None:
+                    if reporter is None:
+                        return
+                    if downloaded == 0:
+                        reporter(f"[source:{source_key}] receiving: " + (f"0.0 / {_format_mib(total)}" if total else "size unknown"))
+                        return
+                    speed = downloaded / max(elapsed, 1e-9)
+                    if total:
+                        reporter(f"[source:{source_key}] received: {_format_mib(downloaded)} / {_format_mib(total)} ({min(100.0, downloaded * 100 / total):.1f}%) at {_format_mib(int(speed))}/s")
+                    else:
+                        reporter(f"[source:{source_key}] received: {_format_mib(downloaded)} at {_format_mib(int(speed))}/s")
+                _download(url, staged, progress=progress)
+            else:
+                downloader(url, staged)
+            size = staged.stat().st_size
+            if size <= 0:
+                raise OSError("downloaded PBF is empty")
+            replacement = target.parent / f".{target.name}.partial"
+            if replacement.exists():
+                replacement.unlink()
+            staged.replace(replacement)
+            os.replace(replacement, target)
+            if metadata is not None and metadata.modified_at is not None:
+                os.utime(target, (metadata.modified_at, metadata.modified_at))
+        if reporter is not None:
+            reporter(f"[source:{source_key}] updated: {target} ({_format_mib(size)})")
+        return RefreshResult(source_key, "updated", str(target), url, size)
+    except Exception as exc:
+        if target.is_file() and target.stat().st_size > 0:
+            if reporter is not None:
+                reporter(f"[source:{source_key}] WARN: refresh failed; keeping existing PBF: {exc}")
+            return RefreshResult(source_key, "warning", str(target), f"refresh failed; keeping existing PBF: {exc}", target.stat().st_size)
+        if reporter is not None:
+            reporter(f"[source:{source_key}] ERROR: refresh failed and no local fallback exists: {exc}")
+        return RefreshResult(source_key, "error", str(target), f"refresh failed and no local fallback exists: {exc}")
 
 
 def has_refresh_errors(results: list[RefreshResult]) -> bool:

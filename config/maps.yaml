@@ -56,6 +56,7 @@ sources:
 products:
   armenia:
     source: armenia
+    extract: false
     polygon: poly/armenia.poly
     elevation: elevation/armenia.osm.pbf
     geonames: null
@@ -76,6 +77,7 @@ products:
 
   belarus:
     source: belarus
+    extract: false
     polygon: poly/belarus.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -178,6 +180,7 @@ products:
 
   georgia:
     source: georgia
+    extract: false
     polygon: poly/georgia.poly
     elevation: null
     geonames: null
@@ -218,6 +221,7 @@ products:
 
   kg:
     source: kyrgyzstan
+    extract: false
     polygon: poly/KG.poly
     elevation: elevation/kg.osm.pbf
     geonames: input/cities15000.zip
@@ -321,6 +325,7 @@ products:
 
   mongolia:
     source: mongolia
+    extract: false
     polygon: poly/mongolia.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -487,6 +492,7 @@ products:
 
   turkey:
     source: turkey
+    extract: false
     polygon: poly/turkey.poly
     elevation: elevation/turkey.osm.pbf
     geonames: input/cities15000.zip

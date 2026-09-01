@@ -14,7 +14,7 @@ import sys
 from .bootstrap import apply_bootstrap, build_bootstrap_plan, load_tools_lock
 from .build_plan import ProductBuildPlan, plan_product_build
 from .errors import ManifestError, StageError, ValidationIssue
-from .external_data import has_refresh_errors, refresh_supplemental_data
+from .external_data import has_refresh_errors, refresh_osm_source, refresh_supplemental_data
 from .doctor import has_errors, run_doctor
 from .dem import select_dem_files, write_selection
 from .history import HistoryStore
@@ -373,6 +373,18 @@ def _build_product(args: argparse.Namespace) -> int:
         if not isinstance(products, dict) or not isinstance(products.get(args.product), dict):
             raise StageError(f"unknown product: {args.product}")
         product = products[args.product]
+
+        if args.apply and getattr(args, "from_stage", None) != "mkgmap":
+            source_key = product.get("source")
+            if not isinstance(source_key, str):
+                raise StageError(f"product {args.product!r} has no source")
+            if not args.json:
+                print(f"Checking OSM source for {args.product}: {source_key}")
+            source_result = refresh_osm_source(
+                manifest, host, source_key, reporter=None if args.json else print
+            )
+            if source_result.status == "error":
+                raise StageError(source_result.detail)
 
         if not args.apply:
             plan = plan_product_build(
