@@ -1,0 +1,40 @@
+name: One-shot integrate area POIs
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-integrate-area-pois.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install project
+        run: pip install -e .
+      - name: Patch preprocessor
+        run: python .github/scripts/one_shot_integrate_area_pois.py
+      - name: Tests
+        run: |
+          python -m py_compile uralla_build/area_pois.py uralla_build/preprocessor.py
+          python -m pytest tests/test_area_pois.py -q
+          grep -q 'discover_marketplace_area_pois' uralla_build/preprocessor.py
+          grep -q 'synthetic_marketplace_pois' uralla_build/preprocessor.py
+          ! grep -q '^add-pois-to-areas$' styles/uralla.args
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/preprocessor.py
+          if git diff --cached --quiet; then
+            echo 'No changes'
+            exit 0
+          fi
+          git commit -m 'Generate marketplace POIs in semantic preprocessor'
+          git push
