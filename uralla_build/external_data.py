@@ -40,7 +40,7 @@ OSM_SOURCE_URLS = {
 }
 
 _DOWNLOAD_BLOCK = 1024 * 1024
-_PROGRESS_STEP = 8 * 1024 * 1024
+_PROGRESS_STEP = 2 * 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,7 +230,7 @@ def refresh_supplemental_data(
             if reporter is not None:
                 reporter(f"[{name}] updated: {target} ({size} bytes)")
             results.append(RefreshResult(name, "updated", str(target), url, size))
-        except Exception as exc:  # network, filesystem and invalid ZIP all use the same fallback policy
+        except Exception as exc:
             if target.is_file():
                 if reporter is not None:
                     reporter(f"[{name}] WARN: refresh failed; keeping existing archive: {exc}")
@@ -310,6 +310,8 @@ def refresh_osm_source(
             if reporter is not None:
                 reporter(f"[source:{source_key}] download: {url}")
             if downloader is None:
+                if reporter is not None:
+                    reporter(f"[source:{source_key}] connecting...")
                 def progress(downloaded: int, total: int | None, elapsed: float) -> None:
                     if reporter is None:
                         return
