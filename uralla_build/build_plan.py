@@ -254,8 +254,10 @@ def plan_product_build(
         f"--wanted-admin-level={defaults_splitter.get('wanted_admin_level')}",
         "--output-dir=tiles",
     ]
-    if product.get("extract", True) and splitter.get("use_polygon", True):
-        splitter_command.append(f"--polygon-file={polygon}")
+    # Splitter 654 is systematically unreliable with our .poly files. The source
+    # is already clipped by osmium extract when extract=true, and whole-extract
+    # products do not need an additional splitter polygon either. Keep .poly use
+    # confined to extraction and optional mkgmap DEM clipping.
     max_threads = splitter.get("max_threads")
     if max_threads is not None:
         splitter_command.append(f"--max-threads={max_threads}")
