@@ -225,6 +225,9 @@ highway=tertiary_link | highway=tertiary & junction=roundabout [0x11 road_class=
 highway=tertiary & length()>500 [0x07 resolution 18-19 continue]
 highway=tertiary [0x11 road_class=2 road_speed=5 resolution 20]
 
+# Density-aware overview suppression starts strictly below tertiary.
+include 'inc/road_density';
+
 highway=minor & length()>400 [0x06 resolution 20-22 continue]
 highway=minor [0x06 road_class=1 road_speed=5 resolution 23]
 
