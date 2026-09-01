@@ -382,7 +382,7 @@ def augment_area_pois(
     *,
     reporter: Any = None,
 ) -> dict[str, int]:
-    """Copy a preprocessed PBF and prepend approved missing area-derived POIs."""
+    """Copy a source PBF and prepend approved missing area-derived POIs."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     candidates = discover_area_pois(str(source), osmium)

@@ -1,4 +1,4 @@
-"""Composite preprocess entry: semantic enrichment, road density, then area POIs."""
+"""Composite preprocess entry: area POIs, semantic enrichment, then road density."""
 
 from __future__ import annotations
 
@@ -79,25 +79,25 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     output = args.output.resolve()
+    area = output.parent / f".{output.name}.{uuid4().hex}.area-pois.osm.pbf"
     semantic = output.parent / f".{output.name}.{uuid4().hex}.semantic.osm.pbf"
-    density = output.parent / f".{output.name}.{uuid4().hex}.road-density.osm.pbf"
     try:
-        preprocess_pbf(
+        osmium = _load_osmium()
+        area_stats = augment_area_pois(
             args.input,
+            area,
+            osmium,
+            reporter=_report,
+        )
+        preprocess_pbf(
+            area,
             semantic,
             args.config,
             args.profile,
             args.report,
         )
-        osmium = _load_osmium()
         road_density_stats = augment_road_density(
             semantic,
-            density,
-            osmium,
-            reporter=_report,
-        )
-        area_stats = augment_area_pois(
-            density,
             output,
             osmium,
             reporter=_report,
@@ -121,7 +121,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
         print(f"ERROR preprocess: {exc}", file=sys.stderr)
         return 1
     finally:
+        if area.exists():
+            area.unlink()
         if semantic.exists():
             semantic.unlink()
-        if density.exists():
-            density.unlink()
