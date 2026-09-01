@@ -55,3 +55,5 @@ jobs:
           fi
           git commit -m "Capitalize proper names after geographic prefix stripping"
           git push
+
+# retrigger 2026-09-01
