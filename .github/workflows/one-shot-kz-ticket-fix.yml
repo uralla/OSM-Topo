@@ -1,0 +1,27 @@
+name: One-shot KZ and ticket fix
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-kz-ticket-fix.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact patch
+        run: python3 .github/scripts/one_shot_kz_ticket_fix.py
+      - name: Verify
+        run: |
+          git diff --check
+          python3 .github/scripts/one_shot_kz_ticket_fix.py || true
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add config/maps.yaml styles/uralla/inc/priority_points
+          git commit -m 'Skip KZ extract and fix ticket hover label'
+          git push
