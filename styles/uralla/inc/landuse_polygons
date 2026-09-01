@@ -36,9 +36,11 @@ landuse=quarry [0x0c resolution 21]
 # Resolution 24 is intentionally reserved for detailed building polygons.
 landuse=industrial [0x0c resolution 21]
 
-# Overview residential fill is only for resolution 21; detailed residential starts at 22 below.
+# Residential landuse stays the residential polygon type at all rendered levels.
+# 0x03 is reserved for actual settlement/place polygons and must not leak the
+# "населёнка" label into ordinary residential landuse in object information.
 landuse=residential [0x10 resolution 21-21 continue]
-landuse=residential [0x03 resolution 22]
+landuse=residential [0x10 resolution 22]
 
 landuse=village_green [0x17 resolution 21]
 landuse=landfill [0x0f resolution 21]
