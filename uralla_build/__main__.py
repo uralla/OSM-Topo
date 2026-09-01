@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-from .cli import main as cli_main
 from .entrypoint import main
 from .interactive import run_interactive
 
@@ -43,12 +42,6 @@ if interactive is not None:
         run_interactive(manifest_path=manifest_path, host_path=host_path)
     )
 
-# The legacy top-level entrypoint still owns full builds and mkgmap-only rebuilds.
-# Splitter-resume is implemented in the newer CLI layer, so route that request
-# directly there instead of letting the legacy guard reject it first.
-if "--from-stage" in arguments:
-    index = arguments.index("--from-stage")
-    if index + 1 < len(arguments) and arguments[index + 1] == "splitter":
-        raise SystemExit(cli_main(arguments))
-
+# All build-product paths deliberately pass through the shared entrypoint so
+# full builds and incremental resumes use the same source policy and final UI.
 raise SystemExit(main(arguments))
