@@ -20,6 +20,8 @@ uralla:label=* { set name='${uralla:label}' }
 # This include is intentionally used by all three production style entry files.
 name=* { set name='${name|subst:, Гостинично-ресторанный комплекс=>
                      |subst:, гостинично-ресторанный комплекс=>
+                     |subst:Туристическая база=>Турбаза
+                     |subst:туристическая база=>турбаза
                      |subst:Великая Отечественная война=>ВОВ
                      |subst:Великой Отечественной войны=>ВОВ
                      |subst:Великую Отечественную войну=>ВОВ
