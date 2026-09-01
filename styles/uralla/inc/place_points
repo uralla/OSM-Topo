@@ -3,6 +3,9 @@
 # A matching Garmin type ends processing for the place node, so each settlement
 # receives exactly one significance class here.
 
+# Hardcoded landmark: exact exje.ru handicraft/jewelry point stays visible from resolution 19.
+craft=handicraft & name='Посольство Уральских Гор' & operator=exje.ru & shop=jewelry { name '${name}' } [0x02c04 resolution 19]
+
 # Agreed removals from point display.
 (amenity=casino | amenity=cinema | amenity=concert_hall | amenity=conference_centre | amenity=kindergarten | amenity=nightclub | amenity=theatre) { delete amenity; delete building }
 (shop=tires | shop=tyres) { delete shop; delete building }
