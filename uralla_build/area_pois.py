@@ -1,8 +1,12 @@
-"""Deliberate area-to-POI synthesis for selected semantic categories.
+"""Deliberate area-to-POI synthesis for semantic POI categories.
 
 mkgmap's global add-pois-to-areas option stays disabled. This module creates only
-explicitly allowed POIs, suppresses them when a real equivalent node already exists
-inside the polygon, and chooses a point guaranteed to be inside a simple polygon.
+POIs that correspond to categories intentionally rendered by the point style,
+suppresses them when a real equivalent node already exists inside the polygon,
+and chooses a point guaranteed to be inside a simple closed way.
+
+Multipolygon relations are intentionally out of scope unless a concrete important
+case requires them.
 """
 
 from __future__ import annotations
@@ -20,9 +24,178 @@ SYNTHETIC_AREA_POI_TAG = "uralla:synthetic_area_poi"
 class SyntheticAreaPoi:
     source_type: str
     source_id: int
+    kind: str
     lon: float
     lat: float
     tags: dict[str, str]
+
+
+# Semantic facility/landmark categories from the production point style that may
+# legitimately be mapped as a closed area instead of a separate node. Broad water,
+# wetland, glacier, protected-area and settlement polygons are deliberately absent:
+# their polygon/label rendering is already the intended representation.
+_AMENITY_AREA_POIS = frozenset(
+    {
+        "airport",
+        "arts_centre",
+        "atm",
+        "bank",
+        "bar",
+        "bbq",
+        "biergarten",
+        "border_control",
+        "bus_station",
+        "car_rental",
+        "car_sharing",
+        "car_wash",
+        "casino",
+        "cinema",
+        "clinic",
+        "college",
+        "community_center",
+        "community_centre",
+        "concert_hall",
+        "conference_centre",
+        "convention_center",
+        "courthouse",
+        "dentist",
+        "doctors",
+        "embassy",
+        "ferry_terminal",
+        "fire_station",
+        "firepit",
+        "food_court",
+        "fountain",
+        "fuel",
+        "grave_yard",
+        "hospital",
+        "kindergarten",
+        "library",
+        "marketplace",
+        "nightclub",
+        "parking",
+        "pharmacy",
+        "place_of_worship",
+        "police",
+        "post_office",
+        "prison",
+        "pub",
+        "public_building",
+        "recycling",
+        "restaurant",
+        "cafe",
+        "fast_food",
+        "school",
+        "shelter",
+        "supermarket",
+        "theatre",
+        "toilets",
+        "townhall",
+        "university",
+        "waste_disposal",
+        "zoo",
+    }
+)
+
+_SHOP_AREA_POIS = frozenset(
+    {
+        "bakers",
+        "bakery",
+        "bicycle",
+        "butcher",
+        "car_parts",
+        "car_rental",
+        "car_repair",
+        "car_wrecker",
+        "convenience",
+        "doityourself",
+        "general",
+        "grocery",
+        "hardware",
+        "houseware",
+        "motorcycle",
+        "organic",
+        "outdoor",
+        "outpost",
+        "sports",
+        "supermarket",
+        "ticket",
+        "tires",
+        "tyres",
+    }
+)
+
+_TOURISM_AREA_POIS = frozenset(
+    {
+        "alpine_hut",
+        "aquarium",
+        "artwork",
+        "attraction",
+        "camp_site",
+        "chalet",
+        "guest_house",
+        "hostel",
+        "hotel",
+        "information",
+        "lean_to",
+        "motel",
+        "museum",
+        "picnic_site",
+        "theme_park",
+        "viewpoint",
+        "wilderness_hut",
+        "wine_cellar",
+        "zoo",
+    }
+)
+
+_HISTORIC_AREA_POIS = frozenset(
+    {
+        "archaeological_site",
+        "castle",
+        "fort",
+        "memorial",
+        "monument",
+        "museum",
+        "ruins",
+    }
+)
+
+_LEISURE_AREA_POIS = frozenset(
+    {
+        "common",
+        "garden",
+        "golf_course",
+        "ice_rink",
+        "marina",
+        "park",
+        "recreation_ground",
+        "stadium",
+        "track",
+        "water_park",
+    }
+)
+
+_MAN_MADE_AREA_POIS = frozenset(
+    {
+        "antenna",
+        "cairn",
+        "communications_tower",
+        "geoglyph",
+        "lighthouse",
+        "mast",
+        "survey_point",
+        "tower",
+        "wastewater_plant",
+        "water_tower",
+        "windmill",
+    }
+)
+
+_AEROWAY_AREA_POIS = frozenset({"aerodrome", "airport", "helipad", "terminal"})
+_LANDUSE_AREA_POIS = frozenset(
+    {"cemetary", "cemetery", "forest", "military", "quarry", "retail", "village_green", "wood"}
+)
 
 
 def _point_on_segment(
@@ -64,17 +237,11 @@ def point_in_polygon(point: tuple[float, float], ring: Sequence[tuple[float, flo
 
 
 def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] | None:
-    """Choose a point strictly inside a simple polygon when possible.
-
-    Horizontal scanlines between vertex Y coordinates are intersected with the
-    polygon and the midpoint of the widest inside interval is selected. Unlike a
-    bounding-box or vertex centroid, this remains inside concave/L-shaped polygons.
-    """
+    """Choose a point strictly inside a simple polygon when possible."""
     if len(ring) < 4 or ring[0] != ring[-1]:
         return None
-    xs = [point[0] for point in ring[:-1]]
     ys = [point[1] for point in ring[:-1]]
-    if not xs or not ys:
+    if not ys:
         return None
     unique_y = sorted(set(ys))
     if len(unique_y) == 1:
@@ -115,30 +282,85 @@ def _tags_dict(tags: Mapping[str, str] | object) -> dict[str, str]:
     return {str(key): str(value) for key, value in items}
 
 
-def _is_marketplace(tags: Mapping[str, str]) -> bool:
-    return tags.get("amenity") == "marketplace"
+def area_poi_kind(tags: Mapping[str, str]) -> str | None:
+    """Return the semantic POI kind for a closed way, or None when area-only.
 
-
-def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
-    """Find marketplace polygons missing an equivalent real node inside them.
-
-    Closed ways are supported deliberately. Multipolygon relation support can be
-    added in this module without changing the preprocessor/style contract.
+    The ordering follows the point style closely enough that a multi-tag area gets
+    duplicate suppression against the point category that would visually win.
     """
-    real_nodes: list[tuple[float, float]] = []
-    areas: list[tuple[int, list[tuple[float, float]], dict[str, str]]] = []
+    amenity = tags.get("amenity")
+    shop = tags.get("shop")
+    tourism = tags.get("tourism")
+    historic = tags.get("historic")
+    leisure = tags.get("leisure")
+    man_made = tags.get("man_made")
+    aeroway = tags.get("aeroway")
+    landuse = tags.get("landuse")
+
+    if amenity in _AMENITY_AREA_POIS:
+        return f"amenity:{amenity}"
+    if shop in _SHOP_AREA_POIS:
+        return f"shop:{shop}"
+    if tourism in _TOURISM_AREA_POIS:
+        return f"tourism:{tourism}"
+    if historic in _HISTORIC_AREA_POIS:
+        return f"historic:{historic}"
+    if leisure in _LEISURE_AREA_POIS:
+        # These point rules require a real name for common/garden/park.
+        if leisure in {"common", "garden", "park"} and not tags.get("name"):
+            return None
+        return f"leisure:{leisure}"
+    if tags.get("healthcare"):
+        return f"healthcare:{tags['healthcare']}"
+    if man_made in _MAN_MADE_AREA_POIS:
+        return f"man_made:{man_made}"
+    if aeroway in _AEROWAY_AREA_POIS:
+        return f"aeroway:{aeroway}"
+    if tags.get("office") == "government":
+        return "office:government"
+    if landuse in _LANDUSE_AREA_POIS:
+        if landuse in {"forest", "military", "retail", "village_green", "wood"} and not tags.get("name"):
+            return None
+        return f"landuse:{landuse}"
+    if tags.get("military") == "bunker":
+        return "military:bunker"
+    if tags.get("power") == "generator" and tags.get("generator:source") == "wind":
+        return "power:wind-generator"
+    if tags.get("natural") == "forest" and tags.get("name"):
+        return "natural:forest"
+    if tags.get("natural") == "wood" and tags.get("name"):
+        return "natural:wood"
+    if tags.get("natural") == "hot_spring":
+        return "natural:hot_spring"
+    if tags.get("natural") == "arch":
+        return "natural:arch"
+    if tags.get("natural") == "rock":
+        return "natural:rock"
+    if tags.get("natural") == "cliff":
+        return "natural:cliff"
+    return None
+
+
+def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
+    """Find eligible closed ways missing a real equivalent POI node inside."""
+    real_nodes: dict[str, list[tuple[float, float]]] = {}
+    areas: list[tuple[int, str, list[tuple[float, float]], dict[str, str]]] = []
 
     processor = osmium.FileProcessor(source).with_locations()
     for item in processor:
         tags = _tags_dict(item.tags)
-        if not _is_marketplace(tags):
+        kind = area_poi_kind(tags)
+        if kind is None:
             continue
+
         location = getattr(item, "location", None)
         if location is not None:
             valid = getattr(location, "valid", None)
             if not callable(valid) or valid():
                 try:
-                    real_nodes.append((float(location.lon), float(location.lat)))
+                    real_nodes.setdefault(kind, []).append(
+                        (float(location.lon), float(location.lat))
+                    )
                     continue
                 except (AttributeError, TypeError, ValueError):
                     pass
@@ -159,10 +381,10 @@ def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAr
             continue
         if len(ring) < 4 or ring[0] != ring[-1]:
             continue
-        areas.append((int(item.id), ring, tags))
+        areas.append((int(item.id), kind, ring, tags))
 
     result: list[SyntheticAreaPoi] = []
-    for source_id, ring, tags in areas:
+    for source_id, kind, ring, tags in areas:
         min_x = min(point[0] for point in ring)
         max_x = max(point[0] for point in ring)
         min_y = min(point[1] for point in ring)
@@ -171,7 +393,7 @@ def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAr
             min_x <= lon <= max_x
             and min_y <= lat <= max_y
             and point_in_polygon((lon, lat), ring)
-            for lon, lat in real_nodes
+            for lon, lat in real_nodes.get(kind, ())
         )
         if duplicate:
             continue
@@ -185,6 +407,7 @@ def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAr
             SyntheticAreaPoi(
                 source_type="way",
                 source_id=source_id,
+                kind=kind,
                 lon=lon,
                 lat=lat,
                 tags=synthetic_tags,
@@ -193,22 +416,23 @@ def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAr
     return result
 
 
-def augment_marketplace_area_pois(
+def augment_area_pois(
     input_path: str | Path,
     output_path: str | Path,
     osmium: Any,
     *,
     reporter: Any = None,
 ) -> dict[str, int]:
-    """Copy a preprocessed PBF and prepend missing marketplace centre POIs."""
+    """Copy a preprocessed PBF and prepend missing semantic area-derived POIs."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
-    candidates = discover_marketplace_area_pois(str(source), osmium)
+    candidates = discover_area_pois(str(source), osmium)
     if reporter is not None:
-        reporter(f"Area POI: marketplace candidates to synthesize: {len(candidates):,}")
+        reporter(f"Area POI: candidates to synthesize: {len(candidates):,}")
 
     temporary = target.parent / f".{target.name}.{uuid4().hex}.area-poi.partial.osm.pbf"
     target.parent.mkdir(parents=True, exist_ok=True)
+    created_by_kind: dict[str, int] = {}
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             for index, candidate in enumerate(candidates, start=1):
@@ -220,10 +444,11 @@ def augment_marketplace_area_pois(
                         tags=candidate.tags,
                     )
                 )
+                created_by_kind[candidate.kind] = created_by_kind.get(candidate.kind, 0) + 1
                 if reporter is not None:
                     reporter(
-                        "[preprocess] area POI marketplace "
-                        f"{candidate.source_type}{candidate.source_id}: "
+                        "[preprocess] area POI "
+                        f"{candidate.kind} {candidate.source_type}{candidate.source_id}: "
                         f"{candidate.tags.get('name')!r} -> node{synthetic_id} "
                         f"({candidate.lat:.6f}, {candidate.lon:.6f})"
                     )
@@ -234,7 +459,10 @@ def augment_marketplace_area_pois(
         if temporary.exists():
             temporary.unlink()
 
-    return {
-        "marketplace_candidates": len(candidates),
-        "marketplace_created": len(candidates),
+    stats: dict[str, int] = {
+        "candidates": len(candidates),
+        "created": len(candidates),
     }
+    for kind, count in sorted(created_by_kind.items()):
+        stats[f"created:{kind}"] = count
+    return stats
