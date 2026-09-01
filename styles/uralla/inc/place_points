@@ -8,6 +8,10 @@
 (shop=tires | shop=tyres) { delete shop; delete building }
 leisure=bowling_alley { delete leisure; delete building }
 
+# Parking type is already expressed by amenity=parking; keep map labels compact
+# for both ordinary nodes and preprocessor-created area POIs.
+amenity=parking { set name='парковка' }
+
 # Cities: large regional centres should remain visible on distant zooms.
 place=city & mkgmap:area2poi!=true & population > 999999 [0x0100 resolution 12]
 place=city & mkgmap:area2poi!=true & population > 499999 [0x0200 resolution 14]
