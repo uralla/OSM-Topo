@@ -319,7 +319,7 @@ highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]
 
 # power lines
 power=line {name '${name} ${ref}' | '${name}' | '${ref}' }
-power=line & length()>500 [0x29 resolution 21-23 continue]
+power=line & length()>500 [0x29 resolution 22-23 continue]
 power=line | power=minor_line [0x29 resolution 24]
 man_made=cutline & power!=line [0x10f10 resolution 24]
 

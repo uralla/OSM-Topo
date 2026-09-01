@@ -73,6 +73,9 @@ amenity=school & building!=* [0x0a resolution 22 continue]
 amenity=baby_hatch [0x0a resolution 22 continue]
 # amenity=supermarket is superceded by shop=supermarket or landuse=retail
 amenity=supermarket & building!=* [0x08 resolution 22]
+# Marketplaces are retail areas; keep both overview and close-detail fills.
+amenity=marketplace & building!=* [0x08 resolution 22-23 continue]
+amenity=marketplace & building!=* [0x10909 resolution 24]
 amenity=university & building!=* [0x0a resolution 22 continue]
 
 amenity=fountain [0x13 resolution 24]

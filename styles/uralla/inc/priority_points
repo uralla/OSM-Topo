@@ -34,6 +34,9 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 # Bicycle parking is intentionally not rendered for now.
 # amenity=bicycle_parking { name '${name}' | 'велопарковка' } [0x2f18 resolution 24]
 
+# Marketplaces: node POIs and area-derived centre POIs use one shopping symbol.
+amenity=marketplace { name '${name}' | 'рынок' } [0x2e00 resolution 23]
+
 # Parcel pickup points: current OSM tags plus the deprecated vending-machine form.
 # Keep labels simple: use the real name, otherwise a generic designation.
 (amenity=parcel_locker | post_office=post_partner | shop=outpost | amenity=vending_machine & vending~'.*parcel_pickup.*') { name '${name}' | 'пункт выдачи' } [0x2f05 resolution 24]

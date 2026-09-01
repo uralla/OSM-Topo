@@ -30,13 +30,24 @@ natural=hot_spring & mkgmap:area2poi!=true [0x6416 resolution 22]
 # [CUSTOM/АВТОРСКОЕ] Water sources: seasonal=* except seasonal=no is treated
 # as intermittent. Source labels are kept in the POI data but the corresponding
 # TYP points use FontStyle=NoLabel so icons stay uncluttered on the map.
-(man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring)
+# Springs use the shared adaptive POI LOD (H=22, M=23, L=24). Other water
+# source classes retain their established fixed visibility.
+(man_made=water_well | man_made=water_tap | amenity=drinking_water)
     & intermittent!=yes & !(seasonal=* & seasonal!=no)
     [0x6511 resolution 22]
-
-(man_made=water_well | man_made=water_tap | amenity=drinking_water | natural=spring)
+(man_made=water_well | man_made=water_tap | amenity=drinking_water)
     & (intermittent=yes | (seasonal=* & seasonal!=no))
     { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' }
     [0x6512 resolution 23]
+
+uralla:poi_lod_class=H & natural=spring & intermittent!=yes & !(seasonal=* & seasonal!=no) [0x6511 resolution 22]
+uralla:poi_lod_class=M & natural=spring & intermittent!=yes & !(seasonal=* & seasonal!=no) [0x6511 resolution 23]
+uralla:poi_lod_class=L & natural=spring & intermittent!=yes & !(seasonal=* & seasonal!=no) [0x6511 resolution 24]
+natural=spring & intermittent!=yes & !(seasonal=* & seasonal!=no) [0x6511 resolution 24]
+
+uralla:poi_lod_class=H & natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 22]
+uralla:poi_lod_class=M & natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 23]
+uralla:poi_lod_class=L & natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 24]
+natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 24]
 
 amenity=water_point [0x5001 resolution 23]
