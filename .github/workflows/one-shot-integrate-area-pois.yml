@@ -16,8 +16,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install project
-        run: pip install -e .
+      - name: Install project and test runner
+        run: |
+          pip install -e .
+          pip install pytest
       - name: Patch preprocessor
         run: python .github/scripts/one_shot_integrate_area_pois.py
       - name: Tests
