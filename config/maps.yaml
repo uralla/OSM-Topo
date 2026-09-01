@@ -300,6 +300,7 @@ products:
       output_img: KZ.OSM.img
     splitter:
       max_nodes: 500000
+      use_polygon: false
     mkgmap:
       dem_dists: 15000
 
@@ -450,29 +451,49 @@ products:
     splitter:
       max_nodes: 1000000
 
-  sak:
+  sfo:
     source: russia
-    polygon: poly/RU-SAK.poly
-    elevation: elevation/RU-SAK.osm.pbf
+    polygon: poly/siberian-fed-district.poly
+    elevation: null
     geonames: input/cities15000.zip
     identity:
-      family_id: 1017
+      family_id: 1002
       product_id: 1
-      overview_mapnumber: "01017000"
-      first_tile_mapid: "01017001"
-      last_reserved_mapid: "01017999"
+      overview_mapnumber: "10020000"
+      first_tile_mapid: "10020001"
+      last_reserved_mapid: "10029999"
     names:
-      family: topo-sak
-      series: topo-sak
-      overview: topo-sak
-      description: topo-sak
-      output_img: topo-sak.img
+      family: Siberian.OSM
+      series: Siberian.OSM
+      overview: Siberian.OSM
+      description: Siberian OSM
+      output_img: Siberian-fed-district.img
     splitter:
-      max_nodes: 2000000
+      max_nodes: 1000000
 
-  south-fed-district:
+  ural-fed-district:
     source: russia
-    polygon: poly/south-fed-district.poly
+    polygon: poly/ural-fed-district.poly
+    elevation: null
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1005
+      product_id: 1
+      overview_mapnumber: "10050000"
+      first_tile_mapid: "10050001"
+      last_reserved_mapid: "10059999"
+    names:
+      family: Ural.OSM
+      series: Ural.OSM
+      overview: Ural.OSM
+      description: Ural OSM
+      output_img: Ural-fed-district.img
+    splitter:
+      max_nodes: 1000000
+
+  volga-fed-district:
+    source: russia
+    polygon: poly/volga-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
     identity:
@@ -482,124 +503,38 @@ products:
       first_tile_mapid: "10030001"
       last_reserved_mapid: "10039999"
     names:
-      family: South.OSM
-      series: South.OSM
-      overview: South.OSM
-      description: South_OSM
-      output_img: South-fed-district.img
-    splitter:
-      max_nodes: 2000000
-
-  turkey:
-    source: turkey
-    extract: false
-    polygon: poly/turkey.poly
-    elevation: elevation/turkey.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1054
-      product_id: 1
-      overview_mapnumber: "10540000"
-      first_tile_mapid: "10540001"
-      last_reserved_mapid: "10549999"
-    names:
-      family: Turkey.OSM
-      series: Turkey.OSM
-      overview: Turkey.OSM
-      description: Turkey.OSM
-      output_img: Turkey.OSM.img
-    splitter:
-      max_nodes: 800000
-
-  ural-fd:
-    source: russia
-    polygon: poly/ural-fed-district.poly
-    elevation: elevation/ele_10_ru_ural-fed-district.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1026
-      product_id: 1
-      overview_mapnumber: "10260000"
-      first_tile_mapid: "10260001"
-      last_reserved_mapid: "10269999"
-    names:
-      family: Ural-fed-district
-      series: Ural-fed-district
-      overview: Ural-fed-district
-      description: ural_fd
-      output_img: Ural-fed-district.img
-    splitter:
-      max_nodes: 2000000
-
-  ural-n:
-    source: russia
-    polygon: poly/ru_ural_polar.poly
-    elevation: elevation/ural_n.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1018
-      product_id: 1
-      overview_mapnumber: "01018000"
-      first_tile_mapid: "01018001"
-      last_reserved_mapid: "01018999"
-    names:
-      family: Topo-Ural-N
-      series: Topo-Ural-N
-      overview: Topo-Ural-N
-      description: Topo-Ural-N
-      output_img: Topo-Ural-N.img
-    splitter:
-      max_nodes: 2000000
-    mkgmap:
-      dem_dists: 9942
-      dem_poly: true
-
-  ural-s:
-    source: russia
-    polygon: poly/ru_ural.poly
-    elevation: elevation/ural.osm.pbf
-    geonames: null
-    identity:
-      family_id: 1022
-      product_id: 1
-      overview_mapnumber: "10220000"
-      first_tile_mapid: "10220001"
-      last_reserved_mapid: "10229999"
-    names:
-      family: Topo-Ural-S
-      series: Topo-Ural-S
-      overview: Topo-Ural-S
-      description: Topo-Ural-S
-      output_img: Topo-Ural-S.img
-    splitter:
-      max_nodes: 500000
-    mkgmap:
-      dem_poly: true
-
-  volga-fed-district:
-    source: russia
-    polygon: poly/volga-fed-district.poly
-    elevation: elevation/ele_10_ru_volga-fed-district.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1001
-      product_id: 1
-      overview_mapnumber: "10010000"
-      first_tile_mapid: "10010001"
-      last_reserved_mapid: "10019999"
-    names:
       family: Volga.OSM
       series: Volga.OSM
       overview: Volga.OSM
-      description: Volga_OSM
+      description: Volga OSM
       output_img: Volga-fed-district.img
     splitter:
-      max_nodes: 2000000
+      max_nodes: 1000000
 
-  zap-sib:
+  yamal:
     source: russia
-    polygon: poly/zap-sib.poly
-    elevation: elevation/zap-sib.osm.pbf
+    polygon: poly/RU-YAN.poly
+    elevation: elevation/RU-YAN.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1017
+      product_id: 1
+      overview_mapnumber: "01017000"
+      first_tile_mapid: "01017001"
+      last_reserved_mapid: "01017999"
+    names:
+      family: topo-yamal
+      series: topo-yamal
+      overview: topo-yamal
+      description: topo-yamal
+      output_img: topo-yamal.img
+    splitter:
+      max_nodes: 1000000
+
+  yakutia:
+    source: russia
+    polygon: poly/RU-SA.poly
+    elevation: elevation/RU-SA.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1011
@@ -608,13 +543,30 @@ products:
       first_tile_mapid: "01011001"
       last_reserved_mapid: "01011999"
     names:
-      family: topo-zap-sib
-      series: topo-zap-sib
-      overview: topo-zap-sib
-      description: topo-zap-sib
-      output_img: topo-zap-sib.img
+      family: topo-yakutia
+      series: topo-yakutia
+      overview: topo-yakutia
+      description: topo-yakutia
+      output_img: topo-yakutia.img
+    splitter:
+      max_nodes: 2000000
+
+  yugra:
+    source: russia
+    polygon: poly/RU-KHM.poly
+    elevation: elevation/RU-KHM.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1018
+      product_id: 1
+      overview_mapnumber: "01018000"
+      first_tile_mapid: "01018001"
+      last_reserved_mapid: "01018999"
+    names:
+      family: topo-yugra
+      series: topo-yugra
+      overview: topo-yugra
+      description: topo-yugra
+      output_img: topo-yugra.img
     splitter:
       max_nodes: 1000000
-    mkgmap:
-      dem_dists: 15000
-      dem_poly: true
