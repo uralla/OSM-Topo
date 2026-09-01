@@ -1,0 +1,31 @@
+name: One-shot remove Solnyshko debug
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-remove-solnyshko-debug.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Remove Solnyshko diagnostics
+        run: python3 .github/scripts/one_shot_remove_solnyshko_debug.py
+      - name: Verify
+        run: |
+          python3 -m py_compile uralla_build/preprocessor.py
+          ! grep -n "Солнышко\|solnyshko_" uralla_build/preprocessor.py
+          test ! -e .github/workflows/debug-solnyshko-accommodation.yml
+          test ! -e .github/workflows/debug-solnyshko-neighbors.yml
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 41898282+uralla@users.noreply.github.com
+          git add -A uralla_build/preprocessor.py .github/workflows/debug-solnyshko-accommodation.yml .github/workflows/debug-solnyshko-neighbors.yml
+          git commit -m 'Remove Solnyshko-specific diagnostics'
+          git push
