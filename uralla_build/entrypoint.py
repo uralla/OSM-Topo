@@ -73,20 +73,28 @@ def _format_size(size: int) -> str:
 
 
 def _last_json_mapping(output: str) -> Mapping[str, object] | None:
-    """Return the final JSON object from mixed human/machine stdout."""
+    """Return the last build payload from mixed human/machine stdout.
+
+    Diagnostic text may legally appear both before and after the JSON payload.
+    Prefer an object carrying ``result`` (the build-product payload), and only
+    fall back to the last decodable mapping when no such object is present.
+    """
     decoder = json.JSONDecoder()
-    for index in range(len(output) - 1, -1, -1):
-        if output[index] != "{":
+    last_mapping: Mapping[str, object] | None = None
+    last_payload: Mapping[str, object] | None = None
+    for index, character in enumerate(output):
+        if character != "{":
             continue
         try:
-            value, end = decoder.raw_decode(output[index:])
+            value, _ = decoder.raw_decode(output[index:])
         except json.JSONDecodeError:
             continue
-        if output[index + end :].strip():
+        if not isinstance(value, Mapping):
             continue
-        if isinstance(value, Mapping):
-            return value
-    return None
+        last_mapping = value
+        if "result" in value:
+            last_payload = value
+    return last_payload or last_mapping
 
 
 def _build_version(host: HostConfig, build_id: str) -> str:
