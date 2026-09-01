@@ -19,6 +19,7 @@ from .doctor import has_errors, run_doctor
 from .dem import select_dem_files, write_selection
 from .history import HistoryStore
 from .host import load_host_config, validate_host_config
+from .incremental import rebuild_from_mkgmap, rebuild_from_splitter
 from .manifest import load_manifest, validate_manifest
 from .pipeline import PipelineRunner, PipelineStage
 from .publish import publication_targets, publish_product
@@ -374,7 +375,7 @@ def _build_product(args: argparse.Namespace) -> int:
             raise StageError(f"unknown product: {args.product}")
         product = products[args.product]
 
-        if args.apply and getattr(args, "from_stage", None) != "mkgmap":
+        if args.apply and getattr(args, "from_stage", None) is None:
             source_key = product.get("source")
             if not isinstance(source_key, str):
                 raise StageError(f"product {args.product!r} has no source")
@@ -410,6 +411,31 @@ def _build_product(args: argparse.Namespace) -> int:
             }
             status = 0
         else:
+            from_stage = getattr(args, "from_stage", None)
+            if from_stage == "splitter":
+                payload = rebuild_from_splitter(
+                    manifest, host, product_key=args.product, repo_root=args.repo_root,
+                    manifest_path=args.manifest, tools_lock_path=args.tools_lock, build_id=args.build_id,
+                )
+                result_status = payload.get("result", {}).get("status") if isinstance(payload.get("result"), dict) else None
+                status = 0 if result_status == "success" else 1
+                if args.json:
+                    print(json.dumps({"ok": status == 0, "report": payload}, ensure_ascii=False, indent=2))
+                else:
+                    print(json.dumps(payload, ensure_ascii=False, indent=2))
+                return status
+            if from_stage == "mkgmap":
+                payload = rebuild_from_mkgmap(
+                    manifest, host, product_key=args.product, repo_root=args.repo_root,
+                    manifest_path=args.manifest, tools_lock_path=args.tools_lock, build_id=args.build_id,
+                )
+                result_status = payload.get("result", {}).get("status") if isinstance(payload.get("result"), dict) else None
+                status = 0 if result_status == "success" else 1
+                if args.json:
+                    print(json.dumps({"ok": status == 0, "report": payload}, ensure_ascii=False, indent=2))
+                else:
+                    print(json.dumps(payload, ensure_ascii=False, indent=2))
+                return status
             runner = StageRunner(host.paths.work_root)
             pipeline = PipelineRunner(runner)
             selected: dict[str, ProductBuildPlan] = {}
@@ -579,6 +605,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     product_parser.add_argument("--build-id")
     product_parser.add_argument("--no-resume", action="store_true")
+    product_parser.add_argument("--from-stage", choices=("splitter", "mkgmap"))
     product_parser.add_argument(
         "--apply", action="store_true", help="execute stages and publish the release"
     )

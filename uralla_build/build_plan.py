@@ -246,7 +246,6 @@ def plan_product_build(
         str(_tool_jar(tools_lock, host, "splitter")),
         str(splitter_input),
         f"--description={_text(names.get('description'), f'products.{product_key}.names.description')}",
-        f"--polygon-file={polygon}",
         f"--precomp-sea={sea}",
         f"--keep-complete={_bool_option(defaults_splitter.get('keep_complete', True))}",
         f"--mapid={_text(identity.get('first_tile_mapid'), f'products.{product_key}.identity.first_tile_mapid')}",
@@ -255,6 +254,8 @@ def plan_product_build(
         f"--wanted-admin-level={defaults_splitter.get('wanted_admin_level')}",
         "--output-dir=tiles",
     ]
+    if splitter.get("use_polygon", True):
+        splitter_command.append(f"--polygon-file={polygon}")
     max_threads = splitter.get("max_threads")
     if max_threads is not None:
         splitter_command.append(f"--max-threads={max_threads}")

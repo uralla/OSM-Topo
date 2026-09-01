@@ -159,7 +159,7 @@ def _show_products(manifest: Mapping[str, object], history: HistoryStore) -> lis
     return keys
 
 
-def _command(repo_root: Path, host_path: Path, manifest_path: Path, product: str, *, mkgmap_only: bool) -> list[str]:
+def _command(repo_root: Path, host_path: Path, manifest_path: Path, product: str, *, from_stage: str | None = None) -> list[str]:
     command = [
         sys.executable,
         "-m",
@@ -173,8 +173,8 @@ def _command(repo_root: Path, host_path: Path, manifest_path: Path, product: str
         "--repo-root",
         str(repo_root),
     ]
-    if mkgmap_only:
-        command.extend(("--from-stage", "mkgmap"))
+    if from_stage is not None:
+        command.extend(("--from-stage", from_stage))
     command.append("--apply")
     return command
 
@@ -312,19 +312,22 @@ def _product_menu(
         else:
             print("  No previous builds.")
         print("\n  1. Full build")
-        print("  2. mkgmap only (reuse prepared splitter data)")
-        print("  3. History / stage timings")
-        print("  4. Edit map configuration  [next GUI phase]")
-        print("  5. Delete map configuration [next GUI phase]")
+        print("  2. Continue from splitter (reuse latest merge checkpoint)")
+        print("  3. mkgmap only (reuse prepared splitter data)")
+        print("  4. History / stage timings")
+        print("  5. Edit map configuration  [next GUI phase]")
+        print("  6. Delete map configuration [next GUI phase]")
         print("  0. Back")
         choice = input("\nSelect: ").strip().lower()
         if choice == "1":
-            _run(_command(repo_root, host_path, manifest_path, key, mkgmap_only=False), repo_root)
+            _run(_command(repo_root, host_path, manifest_path, key), repo_root)
         elif choice == "2":
-            _run(_command(repo_root, host_path, manifest_path, key, mkgmap_only=True), repo_root)
+            _run(_command(repo_root, host_path, manifest_path, key, from_stage="splitter"), repo_root)
         elif choice == "3":
+            _run(_command(repo_root, host_path, manifest_path, key, from_stage="mkgmap"), repo_root)
+        elif choice == "4":
             _history(history, key)
-        elif choice in {"4", "5"}:
+        elif choice in {"5", "6"}:
             print("\nThis editor is the next GUI phase; build actions are already active.")
             input("Press Enter…")
         elif choice in {"0", "q", ""}:

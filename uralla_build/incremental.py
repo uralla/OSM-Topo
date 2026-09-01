@@ -41,6 +41,108 @@ def _latest_successful_splitter_build(
     )
 
 
+def _latest_failed_merge_checkpoint(
+    history: HistoryStore,
+    builds_root: Path,
+    product: str,
+) -> tuple[str, Path]:
+    with history.connect() as connection:
+        rows = connection.execute(
+            """SELECT build_id FROM builds
+               WHERE product = ? AND status IN ('failed', 'interrupted')
+               ORDER BY created_at DESC""",
+            (product,),
+        ).fetchall()
+    for row in rows:
+        build_id = str(row["build_id"])
+        attempts = history.attempts(build_id)
+        if not any(
+            attempt.get("stage_name") == "merge" and attempt.get("status") == "success"
+            for attempt in attempts
+        ):
+            continue
+        checkpoint = builds_root / build_id / "merge" / "enriched.osm.pbf"
+        if checkpoint.is_file() and checkpoint.stat().st_size > 0:
+            return build_id, checkpoint
+    raise StageError(
+        f"no failed build with reusable merge checkpoint exists for {product!r}"
+    )
+
+
+def rebuild_from_splitter(
+    manifest: Mapping[str, object],
+    host: HostConfig,
+    *,
+    product_key: str,
+    repo_root: str | Path,
+    manifest_path: str | Path,
+    tools_lock_path: str | Path,
+    build_id: str | None = None,
+) -> dict[str, object]:
+    """Run splitter and later stages using the latest failed build's merge checkpoint."""
+    products = manifest.get("products")
+    product = products.get(product_key) if isinstance(products, Mapping) else None
+    if not isinstance(product, Mapping):
+        raise StageError(f"unknown product: {product_key}")
+
+    runner = StageRunner(host.paths.work_root)
+    previous_id, previous_merge = _latest_failed_merge_checkpoint(
+        runner.history, runner.builds_root, product_key
+    )
+    metadata = {
+        "mode": "from-stage:splitter",
+        "reused_build_id": previous_id,
+        "reused_merge": str(previous_merge),
+    }
+    if build_id is None:
+        identifier = runner.create_build(product_key, metadata)
+    else:
+        identifier = runner.history.create_build(product_key, metadata, build_id=build_id)
+
+    build = runner.history.get_build(identifier)
+    if build is None:
+        raise StageError(f"unknown build id after creation: {identifier}")
+    created = date.fromisoformat(str(build["created_at"])[:10])
+    lock = load_tools_lock(tools_lock_path)
+    plan = plan_product_build(
+        manifest, host, lock, product_key=product_key, build_id=identifier,
+        repo_root=repo_root, manifest_path=manifest_path, build_date=created,
+    )
+    names = [stage.name for stage in plan.stages]
+    if "splitter" not in names:
+        runner.history.set_build_status(identifier, "failed")
+        raise StageError("build plan contains no splitter stage")
+    start = names.index("splitter")
+    resumed = list(plan.stages[start:])
+    current_input = runner.builds_root / identifier / "merge" / "enriched.osm.pbf"
+    splitter_stage = resumed[0]
+    command = tuple(
+        str(previous_merge) if argument == str(current_input) else argument
+        for argument in splitter_stage.command
+    )
+    if command == splitter_stage.command:
+        runner.history.set_build_status(identifier, "failed")
+        raise StageError("could not substitute previous merge checkpoint into splitter command")
+    resumed[0] = PipelineStage(
+        splitter_stage.name, command, splitter_stage.expected_outputs,
+        splitter_stage.prepare_directories, splitter_stage.environment, splitter_stage.resume_key,
+    )
+
+    def finalize(_build_id: str) -> object:
+        artifacts = publish_product(host, product, plan.img_source, plan.gmapi_source)
+        return [artifact.to_dict() for artifact in artifacts]
+
+    result = PipelineRunner(runner).run(
+        product=product_key, stages=tuple(resumed), build_id=identifier,
+        metadata=None, resume=False, finalize=finalize,
+    )
+    return {
+        "mode": "apply", "from_stage": "splitter",
+        "reused_build_id": previous_id, "reused_merge": str(previous_merge),
+        "result": result.to_dict(),
+    }
+
+
 def rebuild_from_mkgmap(
     manifest: Mapping[str, object],
     host: HostConfig,
