@@ -1,0 +1,58 @@
+name: One-shot splitter polygon policy and download progress
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-splitter-poly-and-download-progress.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch splitter polygon policy and source progress
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('uralla_build/build_plan.py')
+          s = p.read_text(encoding='utf-8')
+          old = '    if splitter.get("use_polygon", True):\n        splitter_command.append(f"--polygon-file={polygon}")\n'
+          new = '    if product.get("extract", True) and splitter.get("use_polygon", True):\n        splitter_command.append(f"--polygon-file={polygon}")\n'
+          if old not in s and new not in s:
+              raise SystemExit('splitter polygon anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('uralla_build/external_data.py')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('_PROGRESS_STEP = 8 * 1024 * 1024', '_PROGRESS_STEP = 2 * 1024 * 1024', 1)
+          old = '''            if downloader is None:\n                def progress(downloaded: int, total: int | None, elapsed: float) -> None:\n'''
+          new = '''            if downloader is None:\n                if reporter is not None:\n                    reporter(f"[source:{source_key}] connecting...")\n                def progress(downloaded: int, total: int | None, elapsed: float) -> None:\n'''
+          if old not in s and new not in s:
+              raise SystemExit('source progress anchor not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('tests/test_build_plan.py')
+          s = p.read_text(encoding='utf-8')
+          marker = '''    def test_existing_managed_areas_are_reused(self) -> None:\n'''
+          test = '''    def test_splitter_polygon_is_skipped_for_preclipped_extracts(self) -> None:\n        with TemporaryDirectory() as directory:\n            root = Path(directory)\n            armenia = self._plan(root, "armenia")\n            ural = self._plan(root, "ural-n")\n            armenia_splitter = next(stage for stage in armenia.stages if stage.name == "splitter")\n            ural_splitter = next(stage for stage in ural.stages if stage.name == "splitter")\n            self.assertFalse(any(arg.startswith("--polygon-file=") for arg in armenia_splitter.command))\n            self.assertTrue(any(arg.startswith("--polygon-file=") for arg in ural_splitter.command))\n\n'''
+          if test not in s:
+              if marker not in s:
+                  raise SystemExit('test insertion anchor not found')
+              s = s.replace(marker, test + marker, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          python3 -m py_compile uralla_build/build_plan.py uralla_build/external_data.py
+          python3 -m unittest tests.test_build_plan.ProductBuildPlanTests.test_splitter_polygon_is_skipped_for_preclipped_extracts -v
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uralla_build/build_plan.py uralla_build/external_data.py tests/test_build_plan.py
+          git commit -m 'Skip splitter polygons for preclipped extracts and show download progress'
+          git push
