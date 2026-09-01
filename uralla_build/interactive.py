@@ -7,6 +7,7 @@ CLI commands. It does not implement a second build system.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
 import shlex
 from pathlib import Path
 import subprocess
@@ -155,8 +156,68 @@ def _show_products(manifest: Mapping[str, object], history: HistoryStore) -> lis
             f"{states.get(key, '—'):<10} {last:<17} {age:>6}  {status:<11}"
         )
     print("  " + "─" * (_WIDTH - 4))
-    print("  a  add map    q  quit")
+    print("  u  update from GitHub    a  add map    q  quit")
     return keys
+
+
+def _git_head(repo_root: Path) -> str | None:
+    completed = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return None
+    return completed.stdout.strip() or None
+
+
+def _update_repository(repo_root: Path, host_path: Path, manifest_path: Path) -> None:
+    _header("UPDATE FROM GITHUB")
+    print(f"  Repository: {repo_root}")
+    print("  Command:    git pull --ff-only\n")
+    before = _git_head(repo_root)
+    try:
+        completed = subprocess.run(["git", "pull", "--ff-only"], cwd=repo_root)
+    except KeyboardInterrupt:
+        print("\nUpdate interrupted.")
+        input("Press Enter to return…")
+        return
+    if completed.returncode != 0:
+        print(f"\nGit update failed with exit code {completed.returncode}.")
+        input("Press Enter to return…")
+        return
+
+    after = _git_head(repo_root)
+    if before is not None and before == after:
+        print("\nRepository is already up to date.")
+        input("Press Enter to return…")
+        return
+
+    if before and after:
+        print(f"\nUpdated: {before[:12]} -> {after[:12]}")
+    else:
+        print("\nRepository updated.")
+    print("Restarting the menu so the new code is loaded…")
+    try:
+        os.chdir(repo_root)
+        os.execv(
+            sys.executable,
+            [
+                sys.executable,
+                "-m",
+                "uralla_build",
+                "--manifest",
+                str(manifest_path),
+                "--host",
+                str(host_path),
+            ],
+        )
+    except OSError as exc:
+        print(f"\nRepository was updated, but automatic restart failed: {exc}")
+        print("Exit and run ./start again to load the new code.")
+        input("Press Enter to return…")
 
 
 def _command(repo_root: Path, host_path: Path, manifest_path: Path, product: str, *, from_stage: str | None = None) -> list[str]:
@@ -358,6 +419,9 @@ def run_interactive(
         choice = input("\nSelect map: ").strip().lower()
         if choice in {"q", "quit", "exit"}:
             return 0
+        if choice == "u":
+            _update_repository(repo, host_file, manifest_file)
+            continue
         if choice == "a":
             print("\nMap editor/add wizard is the next GUI phase.")
             input("Press Enter…")
