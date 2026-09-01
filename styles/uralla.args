@@ -21,7 +21,9 @@ location-autofill=is_in,nearest
 x-split-name-index
 housenumbers
 add-boundary-nodes-at-admin-boundaries
-add-pois-to-areas
+# Area-derived POIs are created deliberately by the semantic preprocessor.
+# Keep mkgmap's global generator disabled to avoid duplicates and bad centroid placement.
+#add-pois-to-areas
 
 
 #transparent
@@ -55,7 +57,7 @@ improve-overview
 order-by-decreasing-area
 cycle-map
 link-pois-to-ways
-# add-pois-to-areas is enabled once above; point style filters mkgmap:area2poi where needed.
+#add-pois-to-areas
 
 
 
