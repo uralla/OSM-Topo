@@ -1,4 +1,4 @@
-name: One-shot capitalize geographic labels
+name: One-shot geographic label cleanup
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Patch geographic label capitalization
+      - name: Patch geographic labels
         shell: bash
         run: |
           python3 - <<'PY'
@@ -30,12 +30,26 @@ jobs:
                   raise SystemExit('normalize_text anchor not found')
               text = text.replace(anchor, helper, 1)
 
-          old = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = stripped\n            break\n'''
-          new = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = _capitalize_first_cased_character(stripped)\n            break\n'''
-          if new not in text:
-              if old not in text:
+          old_prefix = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = stripped\n            break\n'''
+          new_prefix = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = _capitalize_first_cased_character(stripped)\n            break\n'''
+          if new_prefix not in text:
+              if old_prefix not in text:
                   raise SystemExit('geographic prefix block not found')
-              text = text.replace(old, new, 1)
+              text = text.replace(old_prefix, new_prefix, 1)
+
+          compound_constant = '''\n_COMPOUND_LAKE_PREFIX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (\n    (re.compile(r"^(?:Большое|Большая|Большой|Большие)\\s+озеро\\s+(.+?)$", re.IGNORECASE), "Бол. "),\n    (re.compile(r"^(?:Малое|Малая|Малый|Малые)\\s+озеро\\s+(.+?)$", re.IGNORECASE), "Мал. "),\n    (re.compile(r"^(?:Верхнее|Верхняя|Верхний|Верхние)\\s+озеро\\s+(.+?)$", re.IGNORECASE), "В. "),\n    (re.compile(r"^(?:Нижнее|Нижняя|Нижний|Нижние)\\s+озеро\\s+(.+?)$", re.IGNORECASE), "Н. "),\n)\n'''
+          marker = '''_GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {\n'''
+          if '_COMPOUND_LAKE_PREFIX_PATTERNS' not in text:
+              if marker not in text:
+                  raise SystemExit('geographic patterns marker not found')
+              text = text.replace(marker, compound_constant + '\n' + marker, 1)
+
+          compound_block = '''    if label_class == "lake":\n        for pattern, prefix in _COMPOUND_LAKE_PREFIX_PATTERNS:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            tail = match.group(1).strip()\n            if tail:\n                label = prefix + _capitalize_first_cased_character(tail)\n            break\n\n'''
+          insert_before = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n'''
+          if compound_block not in text:
+              if insert_before not in text:
+                  raise SystemExit('label prefix processing marker not found')
+              text = text.replace(insert_before, compound_block + insert_before, 1)
 
           path.write_text(text, encoding='utf-8')
           PY
@@ -53,7 +67,5 @@ jobs:
             echo "No source changes needed"
             exit 0
           fi
-          git commit -m "Capitalize proper names after geographic prefix stripping"
+          git commit -m "Handle adjective plus lake compound labels"
           git push
-
-# retrigger 2026-09-01
