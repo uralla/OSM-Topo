@@ -14,7 +14,7 @@ from .cli import main as cli_main
 from .errors import ManifestError, StageError
 from .history import HistoryStore
 from .host import HostConfig, load_host_config
-from .incremental import rebuild_from_mkgmap
+from .incremental import rebuild_from_mkgmap, rebuild_from_splitter
 from .manifest import load_manifest
 from .source import DEFAULT_SOURCE_DOWNLOADS, ensure_product_source, load_source_downloads
 
@@ -129,7 +129,9 @@ def _human_build_summary(
     ]
     reused = payload.get("reused_build_id")
     if isinstance(reused, str) and reused:
-        lines.append(f"  Reused build   {reused} (splitter output)")
+        from_stage = payload.get("from_stage")
+        reused_kind = "merge checkpoint" if from_stage == "splitter" else "splitter output"
+        lines.append(f"  Reused build   {reused} ({reused_kind})")
     lines.extend(
         [
             "",
@@ -179,9 +181,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR build-product: {exc}", file=sys.stderr)
         return 1
 
-    if from_stage is not None and from_stage != "mkgmap":
+    if from_stage is not None and from_stage not in {"splitter", "mkgmap"}:
         print(
-            f"ERROR build-product: --from-stage currently supports only 'mkgmap', got {from_stage!r}",
+            f"ERROR build-product: --from-stage supports 'splitter' or 'mkgmap', got {from_stage!r}",
             file=sys.stderr,
         )
         return 1
@@ -200,6 +202,31 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     human_summary = request is not None and "--json" not in arguments
+
+    if request is not None and from_stage == "splitter":
+        assert manifest is not None and host is not None and product is not None
+        tools_lock = Path(_option_value(arguments, "--tools-lock", "config/tools.lock.yaml"))
+        build_id = _option_value(arguments, "--build-id", "") or None
+        try:
+            payload = rebuild_from_splitter(
+                manifest,
+                host,
+                product_key=product,
+                repo_root=repo_root,
+                manifest_path=manifest_path,
+                tools_lock_path=tools_lock,
+                build_id=build_id,
+            )
+        except (ManifestError, StageError, OSError, ValueError) as exc:
+            print(f"ERROR build-product: {exc}", file=sys.stderr)
+            return 1
+        result = payload.get("result")
+        status = 0 if isinstance(result, Mapping) and result.get("status") == "success" else 1
+        if "--json" in arguments:
+            print(json.dumps({"ok": status == 0, "report": payload}, ensure_ascii=False, indent=2))
+        else:
+            print(_human_build_summary(payload, manifest, host, product))
+        return status
 
     if request is not None and from_stage == "mkgmap":
         assert manifest is not None and host is not None and product is not None
@@ -236,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     if not output:
         return status
 
-    if status != 0 or manifest is None or host is None or product is None:
+    if manifest is None or host is None or product is None:
         print(output)
         return status
 
