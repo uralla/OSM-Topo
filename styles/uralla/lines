@@ -237,28 +237,29 @@ highway=residential & area!=yes [0x0d road_class=0 road_speed=2 resolution 23]
 
 # [CUSTOM/АВТОРСКОЕ] Marked route members keep the same far/near visual hierarchy
 # as ordinary ways, but both thresholds are shifted one resolution farther out.
+# Routing carrier gets a mild +1 road-speed preference; road_class and access stay unchanged.
 # Never extend a marked route below resolution 20. These rules must stay before
 # the base pedestrian/path/track rules so marked ways are emitted only here.
 mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e road_class=0 road_speed=0 resolution 23-24]
+mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
 mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e road_class=0 road_speed=2 resolution 23-24]
 mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-22 continue]
-mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=2 resolution 23-24]
 # Urban sidewalk/crossing footways stay in the pedestrian visual class.
 mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x0e road_class=0 road_speed=0 resolution 23-24]
+mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
 # Other designated footways are topo trails, not pedestrian streets.
 mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
+mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
 mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
+mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
 mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=2 resolution 23-24]
 mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-22 continue]
-mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=2 resolution 23-24]
 mkgmap:trail_name=* & highway=bridleway & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 road_class=0 road_speed=0 resolution 23-24]
+mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
 
 # Some countries allow, others disallow bicycling on pedestrian streets.
 highway=pedestrian & area!=yes [0x07 road_class=0 road_speed=0 resolution 22-23 continue]
