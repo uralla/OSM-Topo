@@ -1,6 +1,6 @@
 """Deliberate area-to-POI synthesis for selected semantic categories.
 
-mkgmap's global add-pois-to-areas option stays disabled.  This module creates only
+mkgmap's global add-pois-to-areas option stays disabled. This module creates only
 explicitly allowed POIs, suppresses them when a real equivalent node already exists
 inside the polygon, and chooses a point guaranteed to be inside a simple polygon.
 """
@@ -8,7 +8,9 @@ inside the polygon, and chooses a point guaranteed to be inside a simple polygon
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Mapping, Sequence
+from uuid import uuid4
 
 
 SYNTHETIC_AREA_POI_TAG = "uralla:synthetic_area_poi"
@@ -64,9 +66,9 @@ def point_in_polygon(point: tuple[float, float], ring: Sequence[tuple[float, flo
 def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] | None:
     """Choose a point strictly inside a simple polygon when possible.
 
-    The algorithm evaluates horizontal scanlines between vertex Y coordinates and
-    picks the midpoint of the widest inside interval.  Unlike a bounding-box or
-    vertex centroid, that midpoint remains inside concave/L-shaped polygons.
+    Horizontal scanlines between vertex Y coordinates are intersected with the
+    polygon and the midpoint of the widest inside interval is selected. Unlike a
+    bounding-box or vertex centroid, this remains inside concave/L-shaped polygons.
     """
     if len(ring) < 4 or ring[0] != ring[-1]:
         return None
@@ -75,13 +77,13 @@ def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] |
     if not xs or not ys:
         return None
     unique_y = sorted(set(ys))
-    candidates: list[float] = []
     if len(unique_y) == 1:
         return None
-    for low, high in zip(unique_y, unique_y[1:]):
-        if high > low:
-            candidates.append((low + high) / 2.0)
-    # Prefer a line near the polygon's vertical centre, then maximize free width.
+    candidates = [
+        (low + high) / 2.0
+        for low, high in zip(unique_y, unique_y[1:])
+        if high > low
+    ]
     center_y = (min(ys) + max(ys)) / 2.0
     candidates.sort(key=lambda value: abs(value - center_y))
     best: tuple[float, float, float] | None = None
@@ -120,8 +122,8 @@ def _is_marketplace(tags: Mapping[str, str]) -> bool:
 def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
     """Find marketplace polygons missing an equivalent real node inside them.
 
-    Closed ways are supported deliberately.  Multipolygon relation support can be
-    added in the same module without changing the preprocessor/style contract.
+    Closed ways are supported deliberately. Multipolygon relation support can be
+    added in this module without changing the preprocessor/style contract.
     """
     real_nodes: list[tuple[float, float]] = []
     areas: list[tuple[int, list[tuple[float, float]], dict[str, str]]] = []
@@ -189,3 +191,50 @@ def discover_marketplace_area_pois(source: str, osmium: Any) -> list[SyntheticAr
             )
         )
     return result
+
+
+def augment_marketplace_area_pois(
+    input_path: str | Path,
+    output_path: str | Path,
+    osmium: Any,
+    *,
+    reporter: Any = None,
+) -> dict[str, int]:
+    """Copy a preprocessed PBF and prepend missing marketplace centre POIs."""
+    source = Path(input_path).resolve()
+    target = Path(output_path).resolve()
+    candidates = discover_marketplace_area_pois(str(source), osmium)
+    if reporter is not None:
+        reporter(f"Area POI: marketplace candidates to synthesize: {len(candidates):,}")
+
+    temporary = target.parent / f".{target.name}.{uuid4().hex}.area-poi.partial.osm.pbf"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with osmium.SimpleWriter(str(temporary)) as writer:
+            for index, candidate in enumerate(candidates, start=1):
+                synthetic_id = -(9_000_000_000_000_000 + index)
+                writer.add_node(
+                    osmium.osm.mutable.Node(
+                        id=synthetic_id,
+                        location=(candidate.lon, candidate.lat),
+                        tags=candidate.tags,
+                    )
+                )
+                if reporter is not None:
+                    reporter(
+                        "[preprocess] area POI marketplace "
+                        f"{candidate.source_type}{candidate.source_id}: "
+                        f"{candidate.tags.get('name')!r} -> node{synthetic_id} "
+                        f"({candidate.lat:.6f}, {candidate.lon:.6f})"
+                    )
+            for item in osmium.FileProcessor(str(source)):
+                writer.add(item)
+        temporary.replace(target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+    return {
+        "marketplace_candidates": len(candidates),
+        "marketplace_created": len(candidates),
+    }
