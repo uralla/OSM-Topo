@@ -34,3 +34,4 @@ jobs:
           git add uralla_build/preprocessor.py uralla_build/preprocess_pipeline.py uralla_build/area_pois.py
           git commit -m 'Run area POIs through semantic preprocessing'
           git push
+# trigger
