@@ -320,7 +320,6 @@ def area_poi_kind(tags: Mapping[str, str]) -> str | None:
     if historic in _HISTORIC_AREA_POIS:
         return f"historic:{historic}"
     if leisure in _LEISURE_AREA_POIS:
-        # These point rules require a real name for common/garden/park.
         if leisure in {"common", "garden", "park"} and not tags.get("name"):
             return None
         return f"leisure:{leisure}"
@@ -438,6 +437,11 @@ def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
             )
         )
     return result
+
+
+# Compatibility name retained temporarily because the semantic preprocessor still
+# imports the old marketplace-specific symbol. The implementation is now generic.
+discover_marketplace_area_pois = discover_area_pois
 
 
 def augment_area_pois(
