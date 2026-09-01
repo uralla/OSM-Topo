@@ -27,22 +27,43 @@ def _report(message: str) -> None:
         pass
 
 
-def _sort_pbf(path: Path) -> None:
-    """Restore canonical OSM object/id ordering after synthetic node insertion."""
-    sorted_path = path.parent / f".{path.name}.{uuid4().hex}.sorted.osm.pbf"
+def _run_osmium_rewrite(path: Path, command: list[str], suffix: str) -> None:
+    """Rewrite one PBF atomically with an osmium command."""
+    rewritten = path.parent / f".{path.name}.{uuid4().hex}.{suffix}.osm.pbf"
     try:
         completed = subprocess.run(
-            ["osmium", "sort", "-O", str(path), "-o", str(sorted_path)],
+            [*command, "-O", str(path), "-o", str(rewritten)],
             check=False,
         )
         if completed.returncode != 0:
             raise StageError(
-                f"osmium sort failed for area-POI output with exit code {completed.returncode}"
+                f"{' '.join(command)} failed for area-POI output "
+                f"with exit code {completed.returncode}"
             )
-        sorted_path.replace(path)
+        rewritten.replace(path)
     finally:
-        if sorted_path.exists():
-            sorted_path.unlink()
+        if rewritten.exists():
+            rewritten.unlink()
+
+
+def _sort_pbf(path: Path) -> None:
+    """Restore canonical OSM object/id ordering after synthetic node insertion."""
+    _run_osmium_rewrite(path, ["osmium", "sort"], "sorted")
+
+
+def _renumber_nodes(path: Path) -> None:
+    """Eliminate negative synthetic node IDs while preserving all node references.
+
+    osmium versions agree on ordinary positive-ID ordering but older/newer stacks can
+    disagree around negative IDs. This build artifact never leaves the Garmin build
+    pipeline, so normalising node IDs is safer than carrying temporary negative IDs
+    into the elevation merge. Ways and relations keep their original OSM IDs.
+    """
+    _run_osmium_rewrite(
+        path,
+        ["osmium", "renumber", "--object-type=node", "--start-id=1"],
+        "renumbered",
+    )
 
 
 def run_preprocess_pipeline(argv: list[str]) -> int:
@@ -74,6 +95,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             reporter=_report,
         )
         _sort_pbf(output)
+        _renumber_nodes(output)
         report_path = args.report.resolve()
         try:
             report = json.loads(report_path.read_text(encoding="utf-8"))
