@@ -59,3 +59,9 @@ def test_intentionally_hidden_point_categories_stay_hidden_for_areas():
     assert area_poi_kind({"leisure": "playground"}) is None
     assert area_poi_kind({"leisure": "sports_centre"}) is None
     assert area_poi_kind({"leisure": "swimming_pool"}) is None
+
+
+def test_kitesurfing_area_is_eligible_for_poi():
+    from uralla_build.area_pois import area_poi_kind
+
+    assert area_poi_kind({"sport": "kitesurfing"}) == "sport:kitesurfing"

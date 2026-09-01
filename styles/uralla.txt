@@ -7339,6 +7339,39 @@ DayXpm="13 13 2 1"   Colormode=16
 
 [_point]
 Type=0x066
+SubType=0x09
+; CUSTOM: kitesurfing placeholder. Reserved for final user-drawn icon.
+String1=0x19,кайты
+String2=0x04,kitesurfing
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="16 16 2 1"   Colormode=16
+"  c none"
+"! c #0066FF"
+"                "
+"                "
+"      !!!!      "
+"    !!!!!!!!    "
+"   !!!!!!!!!!   "
+"   !!!!!!!!!!   "
+"  !!!!!!!!!!!!  "
+"  !!!!!!!!!!!!  "
+"  !!!!!!!!!!!!  "
+"  !!!!!!!!!!!!  "
+"   !!!!!!!!!!   "
+"   !!!!!!!!!!   "
+"    !!!!!!!!    "
+"      !!!!      "
+"                "
+"                "
+;1234567890123456
+[end]
+
+
+[_point]
+Type=0x066
 SubType=0x0f
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/PILLAR/Pillar/Non NT, NT
 String1=0x19,преграда

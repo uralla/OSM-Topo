@@ -147,6 +147,12 @@ def is_tourist_retail(tags: Mapping[str, str] | object) -> bool:
     return values.get("shop") in TOURIST_RETAIL_VALUES
 
 
+def is_kitesurfing(tags: Mapping[str, str] | object) -> bool:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    values = {str(key): str(value) for key, value in items}
+    return values.get("sport") == "kitesurfing"
+
+
 def is_spring(tags: Mapping[str, str] | object) -> bool:
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
     values = {str(key): str(value) for key, value in items}
@@ -454,6 +460,7 @@ class ContextIndexes:
     picnic: FoodShopIndex
     outdoor_furniture: FoodShopIndex
     tourist_retail: FoodShopIndex
+    kitesurfing: FoodShopIndex
     spring: FoodShopIndex
     activity: FoodShopIndex
     screen_pressure: WeightedPointIndex
@@ -470,6 +477,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
     picnic = FoodShopIndex.empty()
     outdoor_furniture = FoodShopIndex.empty()
     tourist_retail = FoodShopIndex.empty()
+    kitesurfing = FoodShopIndex.empty()
     spring = FoodShopIndex.empty()
     activity = FoodShopIndex.empty()
     screen_pressure = WeightedPointIndex.empty()
@@ -504,6 +512,9 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         if is_tourist_retail(tags):
             tourist_retail.add(*location)
             adaptive = True
+        if is_kitesurfing(tags):
+            kitesurfing.add(*location)
+            adaptive = True
         if is_spring(tags):
             spring.add(*location)
             adaptive = True
@@ -512,7 +523,7 @@ def build_context_indexes(source: str, osmium: Any) -> ContextIndexes:
         place_type = tags.get("place")
         if place_type in SETTLEMENT_PLACE_VALUES:
             places.add(*location, place_type, tags.get("name") or tags.get("name:ru"))
-    return ContextIndexes(food, accommodation, transit, picnic, outdoor_furniture, tourist_retail, spring, activity, screen_pressure, places, adaptive_candidates)
+    return ContextIndexes(food, accommodation, transit, picnic, outdoor_furniture, tourist_retail, kitesurfing, spring, activity, screen_pressure, places, adaptive_candidates)
 
 
 def enrich_outdoor_context(
@@ -530,6 +541,8 @@ def enrich_outdoor_context(
         matches = is_outdoor_furniture(result)
     elif kind == "retail":
         matches = is_tourist_retail(result)
+    elif kind == "kitesurfing":
+        matches = is_kitesurfing(result)
     elif kind == "spring":
         matches = is_spring(result)
     else:

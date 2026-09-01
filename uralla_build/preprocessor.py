@@ -479,6 +479,7 @@ def preprocess_pbf(
     picnic_index = context_indexes.picnic
     outdoor_furniture_index = context_indexes.outdoor_furniture
     tourist_retail_index = context_indexes.tourist_retail
+    kitesurfing_index = context_indexes.kitesurfing
     spring_index = context_indexes.spring
     activity_index = context_indexes.activity
     screen_pressure_index = context_indexes.screen_pressure
@@ -530,6 +531,7 @@ def preprocess_pbf(
         f"picnic {picnic_index.shop_count:,}; "
         f"furniture {outdoor_furniture_index.shop_count:,}; "
         f"retail {tourist_retail_index.shop_count:,}; "
+        f"kitesurfing {kitesurfing_index.shop_count:,}; "
         f"spring {spring_index.shop_count:,}; "
         f"activity {activity_index.shop_count:,}; "
         f"screen {screen_pressure_index.point_count:,}/{screen_pressure_index.total_weight:,}w; "
@@ -698,6 +700,12 @@ def preprocess_pbf(
                 )
                 if retail_added:
                     counters["retail_context_enriched"] += 1
+
+                final_tags, kitesurfing_added, _kitesurfing_sample = enrich_outdoor_context(
+                    item, final_tags, kitesurfing_index, kind="kitesurfing"
+                )
+                if kitesurfing_added:
+                    counters["kitesurfing_context_enriched"] += 1
 
                 final_tags, spring_added, _spring_sample = enrich_outdoor_context(
                     item, final_tags, spring_index, kind="spring"
