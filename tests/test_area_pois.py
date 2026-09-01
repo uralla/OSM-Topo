@@ -1,4 +1,4 @@
-from uralla_build.area_pois import interior_point, point_in_polygon
+from uralla_build.area_pois import area_poi_kind, interior_point, point_in_polygon
 
 
 def test_interior_point_stays_inside_l_shaped_polygon():
@@ -30,3 +30,32 @@ def test_point_in_polygon_rejects_l_shape_hole_like_corner():
     ]
     assert point_in_polygon((0.5, 3.0), ring)
     assert not point_in_polygon((2.0, 2.0), ring)
+
+
+def test_common_facility_areas_become_pois():
+    assert area_poi_kind({"amenity": "marketplace"}) == "amenity:marketplace"
+    assert area_poi_kind({"tourism": "hotel"}) == "tourism:hotel"
+    assert area_poi_kind({"amenity": "school"}) == "amenity:school"
+    assert area_poi_kind({"shop": "supermarket"}) == "shop:supermarket"
+    assert area_poi_kind({"amenity": "fuel", "shop": "convenience"}) == "amenity:fuel"
+
+
+def test_named_area_point_rules_keep_their_name_requirement():
+    assert area_poi_kind({"leisure": "park"}) is None
+    assert area_poi_kind({"leisure": "park", "name": "Парк"}) == "leisure:park"
+    assert area_poi_kind({"landuse": "forest"}) is None
+    assert area_poi_kind({"landuse": "forest", "name": "Бор"}) == "landuse:forest"
+
+
+def test_area_only_geography_does_not_get_synthetic_centre_poi():
+    assert area_poi_kind({"natural": "water", "name": "Озеро"}) is None
+    assert area_poi_kind({"natural": "wetland", "name": "Болото"}) is None
+    assert area_poi_kind({"natural": "glacier", "name": "Ледник"}) is None
+    assert area_poi_kind({"boundary": "protected_area", "name": "Заказник"}) is None
+    assert area_poi_kind({"leisure": "nature_reserve", "name": "Заповедник"}) is None
+
+
+def test_intentionally_hidden_point_categories_stay_hidden_for_areas():
+    assert area_poi_kind({"leisure": "playground"}) is None
+    assert area_poi_kind({"leisure": "sports_centre"}) is None
+    assert area_poi_kind({"leisure": "swimming_pool"}) is None
