@@ -5,6 +5,7 @@ import sys
 
 from .entrypoint import main
 from .interactive import run_interactive
+from .preprocess_pipeline import run_preprocess_pipeline
 
 
 def _interactive_request(argv: list[str]) -> tuple[Path, Path] | None:
@@ -41,6 +42,13 @@ if interactive is not None:
     raise SystemExit(
         run_interactive(manifest_path=manifest_path, host_path=host_path)
     )
+
+# Preprocessing is a composite operation: semantic/tag enrichment first, then
+# deliberate selected area-to-POI synthesis. mkgmap's global area POI generator
+# stays disabled so duplicate suppression and interior placement remain ours.
+if "preprocess" in arguments:
+    preprocess_index = arguments.index("preprocess")
+    raise SystemExit(run_preprocess_pipeline(arguments[preprocess_index + 1 :]))
 
 # All build-product paths deliberately pass through the shared entrypoint so
 # full builds and incremental resumes use the same source policy and final UI.
