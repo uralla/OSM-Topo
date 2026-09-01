@@ -254,7 +254,7 @@ def plan_product_build(
         f"--wanted-admin-level={defaults_splitter.get('wanted_admin_level')}",
         "--output-dir=tiles",
     ]
-    if splitter.get("use_polygon", True):
+    if product.get("extract", True) and splitter.get("use_polygon", True):
         splitter_command.append(f"--polygon-file={polygon}")
     max_threads = splitter.get("max_threads")
     if max_threads is not None:
