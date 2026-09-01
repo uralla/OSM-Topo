@@ -491,6 +491,52 @@ products:
     splitter:
       max_nodes: 1000000
 
+  ural-n:
+    source: russia
+    polygon: poly/ru_ural_polar.poly
+    elevation: elevation/ural_n.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1027
+      product_id: 1
+      overview_mapnumber: "01027000"
+      first_tile_mapid: "01027001"
+      last_reserved_mapid: "01027999"
+    names:
+      family: Topo-Ural-N
+      series: Topo-Ural-N
+      overview: Topo-Ural-N
+      description: Topo-Ural-N
+      output_img: Topo-Ural-N.img
+    splitter:
+      max_nodes: 2000000
+      max_threads: 2
+    mkgmap:
+      dem_dists: 9942
+      dem_poly: true
+
+  ural-s:
+    source: russia
+    polygon: poly/ru_ural.poly
+    elevation: elevation/ural.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1022
+      product_id: 1
+      overview_mapnumber: "01022000"
+      first_tile_mapid: "01022001"
+      last_reserved_mapid: "01022999"
+    names:
+      family: Topo-Ural-S
+      series: Topo-Ural-S
+      overview: Topo-Ural-S
+      description: Topo-Ural-S
+      output_img: Topo-Ural-S.img
+    splitter:
+      max_nodes: 500000
+    mkgmap:
+      dem_poly: true
+
   volga-fed-district:
     source: russia
     polygon: poly/volga-fed-district.poly
