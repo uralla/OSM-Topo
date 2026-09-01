@@ -17,8 +17,13 @@ for pattern, replacement, expected in patterns:
     if count != expected:
         raise SystemExit(f'expected {expected} match for pattern, got {count}: {pattern[:100]}')
 
-if 'Солнышко' in s or 'solnyshko_' in s.lower():
-    raise SystemExit('Solnyshko diagnostic residue remains in preprocessor.py')
+residue = [
+    f'{lineno}: {line}'
+    for lineno, line in enumerate(s.splitlines(), start=1)
+    if 'Солнышко' in line or 'solnyshko_' in line.lower()
+]
+if residue:
+    raise SystemExit('Solnyshko diagnostic residue remains:\n' + '\n'.join(residue))
 
 p.write_text(s, encoding='utf-8')
 
