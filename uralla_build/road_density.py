@@ -46,6 +46,7 @@ THRESHOLDS: dict[str, DensityThreshold] = {
 
 _LOCAL_HIGHWAYS = frozenset(
     {
+        "minor",
         "unclassified",
         "residential",
         "living_street",
