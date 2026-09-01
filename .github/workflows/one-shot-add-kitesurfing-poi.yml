@@ -1,0 +1,32 @@
+name: One-shot add kitesurfing POI
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-add-kitesurfing-poi.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Add kitesurfing POI
+        run: python3 .github/scripts/one_shot_add_kitesurfing_poi.py
+      - name: Verify
+        run: |
+          python3 -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py uralla_build/area_pois.py
+          grep -q 'sport=kitesurfing' styles/uralla/inc/priority_points
+          grep -q 'SubType=0x09' styles/uralla.txt
+          grep -q 'sport:kitesurfing' uralla_build/area_pois.py
+          python3 -m unittest tests.test_area_pois
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 41898282+uralla@users.noreply.github.com
+          git add uralla_build/poi_context.py uralla_build/preprocessor.py uralla_build/area_pois.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_area_pois.py
+          git commit -m 'Add adaptive kitesurfing POI'
+          git push
