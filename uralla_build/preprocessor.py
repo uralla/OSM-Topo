@@ -736,16 +736,6 @@ def preprocess_pbf(
                 lod_class_value = final_tags.get("uralla:poi_lod_class")
                 if lod_class_value in {"H", "M", "L"}:
                     counters[f"poi_lod_class_{lod_class_value}"] += 1
-                    if int(getattr(item, "id", 0)) == 4912997022:
-                        _emit_progress(
-                            "POI LOD named check: 'Солнышко' Ai-Petri; "
-                            f"id={int(item.id)}; priority={final_tags.get('uralla:poi_priority')}; "
-                            f"activity={final_tags.get('uralla:poi_activity_context')}; "
-                            f"screen={final_tags.get('uralla:poi_screen_pressure')}; "
-                            f"lod={lod_class_value}; "
-                            f"screen2km={final_tags.get('uralla:poi_screen_pressure_2km')}; "
-                            f"screen10km={final_tags.get('uralla:poi_screen_pressure_10km')}"
-                        )
 
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 if final_tags == original_tags:
