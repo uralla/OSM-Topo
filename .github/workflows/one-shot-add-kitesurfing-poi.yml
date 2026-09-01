@@ -13,20 +13,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Sync latest main
         run: git pull --rebase origin main
-      - name: Add kitesurfing POI
-        run: python3 .github/scripts/one_shot_add_kitesurfing_poi.py
+      - name: Move area POIs before semantic preprocess
+        run: python3 .github/scripts/one_shot_area_pois_before_semantic.py
       - name: Verify
         run: |
-          python3 -m py_compile uralla_build/poi_context.py uralla_build/preprocessor.py uralla_build/area_pois.py
-          grep -q 'sport=kitesurfing' styles/uralla/inc/priority_points
-          grep -q 'SubType=0x09' styles/uralla.txt
-          grep -q 'sport:kitesurfing' uralla_build/area_pois.py
-          python3 -c "from uralla_build.area_pois import area_poi_kind; assert area_poi_kind({'sport': 'kitesurfing'}) == 'sport:kitesurfing'"
+          python3 -m py_compile uralla_build/preprocessor.py uralla_build/preprocess_pipeline.py uralla_build/area_pois.py
+          ! grep -q 'discover_marketplace_area_pois' uralla_build/preprocessor.py
+          ! grep -q 'synthetic_marketplace_pois' uralla_build/preprocessor.py
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('uralla_build/preprocess_pipeline.py').read_text(encoding='utf-8')
+          assert text.index('area_stats = augment_area_pois') < text.index('preprocess_pbf(') < text.index('road_density_stats = augment_road_density')
+          PY
           git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 41898282+uralla@users.noreply.github.com
-          git add uralla_build/poi_context.py uralla_build/preprocessor.py uralla_build/area_pois.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_area_pois.py
-          git commit -m 'Add adaptive kitesurfing POI'
+          git add uralla_build/preprocessor.py uralla_build/preprocess_pipeline.py uralla_build/area_pois.py
+          git commit -m 'Run area POIs through semantic preprocessing'
           git push
