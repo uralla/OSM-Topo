@@ -12,6 +12,9 @@ leisure=bowling_alley { delete leisure; delete building }
 # for both ordinary nodes and preprocessor-created area POIs.
 amenity=parking { set name='парковка' }
 
+# Unnamed physical block barriers need a useful fallback instead of an empty Garmin label.
+barrier=block & name!=* { set name='преграда' }
+
 # Cities: large regional centres should remain visible on distant zooms.
 place=city & mkgmap:area2poi!=true & population > 999999 [0x0100 resolution 12]
 place=city & mkgmap:area2poi!=true & population > 499999 [0x0200 resolution 14]
