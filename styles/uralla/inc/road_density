@@ -3,9 +3,10 @@
 # intentionally visual-only: road_class, road_speed and access semantics of the
 # near routing carrier stay the same as the ordinary rules in ../lines.
 #
-# Marked hiking/bicycle/MTB route members are deliberately handled before this
-# include by their dedicated rules, so important marked routes keep their
-# existing farther-out visibility even when crossing a dense local road grid.
+# Marked hiking/bicycle/MTB route members stay privileged. Relations have
+# already attached mkgmap:trail_name before line styling, so remove the density
+# hint on those members and let their dedicated marked-route rules win later.
+mkgmap:trail_name=* { delete uralla:road_density; delete uralla:road_density_class }
 
 # ---------------------------------------------------------------------------
 # unclassified — ordinary far hierarchy is 19-21, routing carrier at 22.
