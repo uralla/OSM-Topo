@@ -34,14 +34,15 @@ class DensityThreshold:
     very_dense_km_per_km2: float
 
 
-# Absolute thresholds are intentional.  Percentiles would classify something
-# as "dense" even in a generally sparse map extract.  These values correspond
-# roughly to street grids with spacing of ~110 m (dense) and ~60 m
-# (very_dense), with slightly lower thresholds for forestry tracks.
+# Absolute thresholds are intentional. Percentiles would classify something
+# as "dense" even in a generally sparse map extract. After the first real map
+# test, keep the dense thresholds unchanged and make only the second level a
+# little easier to reach: this suppresses the worst grids without broadening
+# the ordinary dense footprint.
 THRESHOLDS: dict[str, DensityThreshold] = {
-    "local": DensityThreshold(18.0, 32.0),
-    "track": DensityThreshold(14.0, 28.0),
-    "trail": DensityThreshold(20.0, 36.0),
+    "local": DensityThreshold(18.0, 28.0),
+    "track": DensityThreshold(14.0, 24.0),
+    "trail": DensityThreshold(20.0, 32.0),
 }
 
 _LOCAL_HIGHWAYS = frozenset(
