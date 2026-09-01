@@ -1,12 +1,8 @@
-"""Deliberate area-to-POI synthesis for semantic POI categories.
+"""Deliberate area-to-POI synthesis for selected semantic categories.
 
-mkgmap's global add-pois-to-areas option stays disabled. This module creates only
-POIs that correspond to categories intentionally rendered by the point style,
-suppresses them when a real equivalent node already exists inside the polygon,
-and chooses a point guaranteed to be inside a simple closed way.
-
-Multipolygon relations are intentionally out of scope unless a concrete important
-case requires them.
+mkgmap's global add-pois-to-areas option stays disabled. Only explicitly approved
+closed ways become synthetic POIs. Multipolygon relations stay out of scope unless
+a concrete important case requires them.
 """
 
 from __future__ import annotations
@@ -30,10 +26,6 @@ class SyntheticAreaPoi:
     tags: dict[str, str]
 
 
-# Semantic facility/landmark categories from the production point style that may
-# legitimately be mapped as a closed area instead of a separate node. Broad water,
-# wetland, glacier, protected-area and settlement polygons are deliberately absent:
-# their polygon/label rendering is already the intended representation.
 _AMENITY_AREA_POIS = frozenset(
     {
         "airport",
@@ -49,14 +41,10 @@ _AMENITY_AREA_POIS = frozenset(
         "car_rental",
         "car_sharing",
         "car_wash",
-        "casino",
-        "cinema",
         "clinic",
         "college",
         "community_center",
         "community_centre",
-        "concert_hall",
-        "conference_centre",
         "convention_center",
         "courthouse",
         "dentist",
@@ -70,10 +58,8 @@ _AMENITY_AREA_POIS = frozenset(
         "fuel",
         "grave_yard",
         "hospital",
-        "kindergarten",
         "library",
         "marketplace",
-        "nightclub",
         "parking",
         "pharmacy",
         "place_of_worship",
@@ -89,7 +75,6 @@ _AMENITY_AREA_POIS = frozenset(
         "school",
         "shelter",
         "supermarket",
-        "theatre",
         "toilets",
         "townhall",
         "university",
@@ -121,8 +106,6 @@ _SHOP_AREA_POIS = frozenset(
         "sports",
         "supermarket",
         "ticket",
-        "tires",
-        "tyres",
     }
 )
 
@@ -162,54 +145,22 @@ _HISTORIC_AREA_POIS = frozenset(
     }
 )
 
-_LEISURE_AREA_POIS = frozenset(
-    {
-        "bowling_alley",
-        "common",
-        "firepit",
-        "garden",
-        "golf_course",
-        "ice_rink",
-        "marina",
-        "park",
-        "recreation_ground",
-        "stadium",
-        "track",
-        "water_park",
-    }
-)
-
 _MAN_MADE_AREA_POIS = frozenset(
     {
         "antenna",
         "cairn",
         "communications_tower",
-        "geoglyph",
         "lighthouse",
         "mast",
         "survey_point",
         "tower",
-        "wastewater_plant",
         "water_tower",
         "windmill",
     }
 )
 
 _AEROWAY_AREA_POIS = frozenset({"aerodrome", "airport", "helipad", "terminal"})
-_LANDUSE_AREA_POIS = frozenset(
-    {
-        "basin",
-        "cemetary",
-        "cemetery",
-        "forest",
-        "military",
-        "quarry",
-        "reservoir",
-        "retail",
-        "village_green",
-        "wood",
-    }
-)
+_LANDUSE_AREA_POIS = frozenset({"basin", "cemetary", "cemetery", "quarry"})
 
 
 def _point_on_segment(
@@ -251,7 +202,7 @@ def point_in_polygon(point: tuple[float, float], ring: Sequence[tuple[float, flo
 
 
 def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] | None:
-    """Choose a point strictly inside a simple polygon when possible."""
+    """Choose an inside point for a simple closed polygon, including concave ones."""
     if len(ring) < 4 or ring[0] != ring[-1]:
         return None
     ys = [point[1] for point in ring[:-1]]
@@ -260,6 +211,7 @@ def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] |
     unique_y = sorted(set(ys))
     if len(unique_y) == 1:
         return None
+
     candidates = [
         (low + high) / 2.0
         for low, high in zip(unique_y, unique_y[1:])
@@ -267,6 +219,7 @@ def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] |
     ]
     center_y = (min(ys) + max(ys)) / 2.0
     candidates.sort(key=lambda value: abs(value - center_y))
+
     best: tuple[float, float, float] | None = None
     for y in candidates:
         crossings: list[float] = []
@@ -282,13 +235,9 @@ def interior_point(ring: Sequence[tuple[float, float]]) -> tuple[float, float] |
             if width <= 0:
                 continue
             x = (left + right) / 2.0
-            if not point_in_polygon((x, y), ring):
-                continue
-            if best is None or width > best[0]:
+            if point_in_polygon((x, y), ring) and (best is None or width > best[0]):
                 best = (width, x, y)
-    if best is not None:
-        return best[1], best[2]
-    return None
+    return None if best is None else (best[1], best[2])
 
 
 def _tags_dict(tags: Mapping[str, str] | object) -> dict[str, str]:
@@ -297,70 +246,51 @@ def _tags_dict(tags: Mapping[str, str] | object) -> dict[str, str]:
 
 
 def area_poi_kind(tags: Mapping[str, str]) -> str | None:
-    """Return the semantic POI kind for a closed way, or None when area-only.
-
-    The ordering follows the point style closely enough that a multi-tag area gets
-    duplicate suppression against the point category that would visually win.
-    """
+    """Return an approved synthetic-POI semantic kind for a closed way."""
     amenity = tags.get("amenity")
-    shop = tags.get("shop")
-    tourism = tags.get("tourism")
-    historic = tags.get("historic")
-    leisure = tags.get("leisure")
-    man_made = tags.get("man_made")
-    aeroway = tags.get("aeroway")
-    landuse = tags.get("landuse")
-
     if amenity in _AMENITY_AREA_POIS:
         return f"amenity:{amenity}"
+
+    shop = tags.get("shop")
     if shop in _SHOP_AREA_POIS:
         return f"shop:{shop}"
+
+    tourism = tags.get("tourism")
     if tourism in _TOURISM_AREA_POIS:
         return f"tourism:{tourism}"
+
+    historic = tags.get("historic")
     if historic in _HISTORIC_AREA_POIS:
         return f"historic:{historic}"
-    if leisure in _LEISURE_AREA_POIS:
-        if leisure in {"common", "garden", "park"} and not tags.get("name"):
-            return None
-        return f"leisure:{leisure}"
+
     if tags.get("healthcare"):
         return f"healthcare:{tags['healthcare']}"
+
+    man_made = tags.get("man_made")
     if man_made in _MAN_MADE_AREA_POIS:
         return f"man_made:{man_made}"
+
     if tags.get("landmark") == "chimney":
         return "landmark:chimney"
+
+    aeroway = tags.get("aeroway")
     if aeroway in _AEROWAY_AREA_POIS:
         return f"aeroway:{aeroway}"
-    if tags.get("office") == "government":
-        return "office:government"
+
+    landuse = tags.get("landuse")
     if landuse in _LANDUSE_AREA_POIS:
-        if landuse in {"basin", "forest", "military", "reservoir", "retail", "village_green", "wood"} and not tags.get("name"):
+        if landuse == "basin" and not tags.get("name"):
             return None
         return f"landuse:{landuse}"
+
+    if tags.get("office") == "government":
+        return "office:government"
     if tags.get("military") == "bunker":
         return "military:bunker"
-    if tags.get("power") == "generator" and tags.get("generator:source") == "wind":
-        return "power:wind-generator"
     if tags.get("craft") == "beekeeper":
         return "craft:beekeeper"
     if tags.get("railway") == "station":
         return "railway:station"
-    if tags.get("highway") == "services":
-        return "highway:services"
-    if tags.get("sport") == "climbing":
-        return "sport:climbing"
-    if tags.get("natural") == "forest" and tags.get("name"):
-        return "natural:forest"
-    if tags.get("natural") == "wood" and tags.get("name"):
-        return "natural:wood"
-    if tags.get("natural") == "hot_spring":
-        return "natural:hot_spring"
-    if tags.get("natural") == "arch":
-        return "natural:arch"
-    if tags.get("natural") == "rock":
-        return "natural:rock"
-    if tags.get("natural") == "cliff":
-        return "natural:cliff"
     return None
 
 
@@ -369,8 +299,7 @@ def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
     real_nodes: dict[str, list[tuple[float, float]]] = {}
     areas: list[tuple[int, str, list[tuple[float, float]], dict[str, str]]] = []
 
-    processor = osmium.FileProcessor(source).with_locations()
-    for item in processor:
+    for item in osmium.FileProcessor(source).with_locations():
         tags = _tags_dict(item.tags)
         kind = area_poi_kind(tags)
         if kind is None:
@@ -439,8 +368,7 @@ def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
     return result
 
 
-# Compatibility name retained temporarily because the semantic preprocessor still
-# imports the old marketplace-specific symbol. The implementation is now generic.
+# Temporary compatibility for the older preprocessor import.
 discover_marketplace_area_pois = discover_area_pois
 
 
@@ -451,7 +379,7 @@ def augment_area_pois(
     *,
     reporter: Any = None,
 ) -> dict[str, int]:
-    """Copy a preprocessed PBF and prepend missing semantic area-derived POIs."""
+    """Copy a preprocessed PBF and prepend approved missing area-derived POIs."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     candidates = discover_area_pois(str(source), osmium)
@@ -464,7 +392,7 @@ def augment_area_pois(
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             for index, candidate in enumerate(candidates, start=1):
-                synthetic_id = -(9_000_000_000_000_000 + index)
+                synthetic_id = -9_000_000_000_000_000 + index
                 writer.add_node(
                     osmium.osm.mutable.Node(
                         id=synthetic_id,
@@ -475,7 +403,7 @@ def augment_area_pois(
                 created_by_kind[candidate.kind] = created_by_kind.get(candidate.kind, 0) + 1
                 if reporter is not None:
                     reporter(
-                        "[preprocess] area POI "
+                        "area POI "
                         f"{candidate.kind} {candidate.source_type}{candidate.source_id}: "
                         f"{candidate.tags.get('name')!r} -> node{synthetic_id} "
                         f"({candidate.lat:.6f}, {candidate.lon:.6f})"
@@ -487,10 +415,7 @@ def augment_area_pois(
         if temporary.exists():
             temporary.unlink()
 
-    stats: dict[str, int] = {
-        "candidates": len(candidates),
-        "created": len(candidates),
-    }
+    stats: dict[str, int] = {"candidates": len(candidates), "created": len(candidates)}
     for kind, count in sorted(created_by_kind.items()):
         stats[f"created:{kind}"] = count
     return stats
