@@ -29,3 +29,4 @@ jobs:
           git add -A uralla_build/preprocessor.py .github/workflows/debug-solnyshko-accommodation.yml .github/workflows/debug-solnyshko-neighbors.yml
           git commit -m 'Remove Solnyshko-specific diagnostics'
           git push
+# retrigger residue report
