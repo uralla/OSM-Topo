@@ -1,0 +1,57 @@
+name: One-shot capitalize geographic labels
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-capitalize-geographic-labels.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch geographic label capitalization
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('uralla_build/preprocessor.py')
+          text = path.read_text(encoding='utf-8')
+
+          anchor = '''def normalize_text(value: str) -> str:\n    normalized = unicodedata.normalize("NFKC", value).casefold().replace("ё", "е")\n    normalized = re.sub(r"[^0-9a-zа-я]+", " ", normalized, flags=re.IGNORECASE)\n    return " ".join(normalized.split())\n'''
+          helper = '''def normalize_text(value: str) -> str:\n    normalized = unicodedata.normalize("NFKC", value).casefold().replace("ё", "е")\n    normalized = re.sub(r"[^0-9a-zа-я]+", " ", normalized, flags=re.IGNORECASE)\n    return " ".join(normalized.split())\n\n\ndef _capitalize_first_cased_character(value: str) -> str:\n    """Uppercase the first cased character while preserving the rest verbatim."""\n    for index, character in enumerate(value):\n        upper = character.upper()\n        lower = character.lower()\n        if upper != lower:\n            return value[:index] + upper + value[index + 1 :]\n    return value\n'''
+          if helper not in text:
+              if anchor not in text:
+                  raise SystemExit('normalize_text anchor not found')
+              text = text.replace(anchor, helper, 1)
+
+          old = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = stripped\n            break\n'''
+          new = '''    if label_class is not None:\n        for pattern in _GEOGRAPHIC_PREFIX_PATTERNS[label_class]:\n            match = pattern.fullmatch(label)\n            if not match:\n                continue\n            stripped = match.group(1).strip()\n            if stripped:\n                label = _capitalize_first_cased_character(stripped)\n            break\n'''
+          if new not in text:
+              if old not in text:
+                  raise SystemExit('geographic prefix block not found')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Run geographic label tests
+        run: python3 -m unittest tests.test_geographic_labels -v
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uralla_build/preprocessor.py
+          if git diff --cached --quiet; then
+            echo "No source changes needed"
+            exit 0
+          fi
+          git commit -m "Capitalize proper names after geographic prefix stripping"
+          git push
