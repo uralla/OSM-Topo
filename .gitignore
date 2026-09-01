@@ -12,7 +12,6 @@ tools/
 *.typ
 
 # Local/static build inputs. Keep paths stable for config/maps.yaml, but do not version data.
-poly/
 input/
 elevation/
 OSM/
