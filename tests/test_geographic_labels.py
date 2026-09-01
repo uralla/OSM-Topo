@@ -31,6 +31,17 @@ class GeographicDisplayLabelTests(unittest.TestCase):
         self.assert_unchanged({"natural": "peak", "name": "Большая Гора"})
         self.assert_unchanged({"natural": "peak", "name": "Белая Гора"})
 
+    def test_stripped_type_prefix_capitalizes_proper_name(self) -> None:
+        cases = (
+            ({"natural": "peak", "name": "гора иремель"}, "Иремель"),
+            ({"natural": "ridge", "name": "хребет нурали"}, "Нурали"),
+            ({"natural": "water", "water": "lake", "name": "Озеро куркопа"}, "Куркопа"),
+            ({"natural": "waterfall", "name": "водопад кивач"}, "Кивач"),
+        )
+        for tags, expected in cases:
+            with self.subTest(name=tags["name"]):
+                self.assert_label(tags, expected)
+
     def test_ridge_strips_leading_type_token(self) -> None:
         for name in ("Хребет Нурали", "хребет Нурали", "хр. Нурали", "хр Нурали"):
             with self.subTest(name=name):
