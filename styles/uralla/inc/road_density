@@ -9,15 +9,27 @@
 mkgmap:trail_name=* { delete uralla:road_density; delete uralla:road_density_class }
 
 # ---------------------------------------------------------------------------
+# legacy minor — ordinary far hierarchy is 20-22, routing carrier at 23.
+# ---------------------------------------------------------------------------
+highway=minor & uralla:road_density=dense & length()>400 [0x06 resolution 21-22 continue]
+highway=minor & uralla:road_density=dense [0x06 road_class=1 road_speed=5 resolution 23]
+highway=minor & uralla:road_density=very_dense & length()>400 [0x06 resolution 22-22 continue]
+highway=minor & uralla:road_density=very_dense [0x06 road_class=1 road_speed=5 resolution 23]
+
+# ---------------------------------------------------------------------------
 # unclassified — ordinary far hierarchy is 19-21, routing carrier at 22.
 # dense moves the overview start inward by one resolution; very_dense by two.
+# The ordinary non-roundabout rule continues into the generic close carrier at
+# resolution 24, so reproduce that close line here before stopping processing.
 # ---------------------------------------------------------------------------
 highway=unclassified & uralla:road_density=dense & length()>500 [0x07 resolution 20-21 continue]
-highway=unclassified & uralla:road_density=dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22]
+highway=unclassified & uralla:road_density=dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22 continue]
+highway=unclassified & uralla:road_density=dense & junction!=roundabout [0x07 road_class=0 road_speed=0 resolution 24]
 highway=unclassified & uralla:road_density=dense & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
 
 highway=unclassified & uralla:road_density=very_dense & length()>500 [0x07 resolution 21-21 continue]
-highway=unclassified & uralla:road_density=very_dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22]
+highway=unclassified & uralla:road_density=very_dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22 continue]
+highway=unclassified & uralla:road_density=very_dense & junction!=roundabout [0x07 road_class=0 road_speed=0 resolution 24]
 highway=unclassified & uralla:road_density=very_dense & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
 
 # residential — ordinary overview is resolution 22; dense grids lose that
