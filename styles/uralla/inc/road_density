@@ -1,0 +1,78 @@
+# [CUSTOM/АВТОРСКОЕ] Far-zoom decluttering for abnormally dense low-class roads.
+# uralla:road_density is computed by the semantic preprocess. These rules are
+# intentionally visual-only: road_class, road_speed and access semantics of the
+# near routing carrier stay the same as the ordinary rules in ../lines.
+#
+# Marked hiking/bicycle/MTB route members are deliberately handled before this
+# include by their dedicated rules, so important marked routes keep their
+# existing farther-out visibility even when crossing a dense local road grid.
+
+# ---------------------------------------------------------------------------
+# unclassified — ordinary far hierarchy is 19-21, routing carrier at 22.
+# dense moves the overview start inward by one resolution; very_dense by two.
+# ---------------------------------------------------------------------------
+highway=unclassified & uralla:road_density=dense & length()>500 [0x07 resolution 20-21 continue]
+highway=unclassified & uralla:road_density=dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22]
+highway=unclassified & uralla:road_density=dense & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
+
+highway=unclassified & uralla:road_density=very_dense & length()>500 [0x07 resolution 21-21 continue]
+highway=unclassified & uralla:road_density=very_dense & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22]
+highway=unclassified & uralla:road_density=very_dense & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
+
+# residential — ordinary overview is resolution 22; dense grids lose that
+# overview line but keep the normal routable street at resolution 23.
+highway=residential & area!=yes & (uralla:road_density=dense | uralla:road_density=very_dense) [0x0d road_class=0 road_speed=2 resolution 23]
+
+# living_street has no separate overview carrier, so dense grids move its
+# complete line from resolution 23 to close-only resolution 24.
+highway=living_street & (uralla:road_density=dense | uralla:road_density=very_dense) [0x06 road_class=0 road_speed=1 resolution 24]
+
+# pedestrian streets — ordinary far line spans 22-23. Dense keeps only 23;
+# very_dense keeps only the normal close carrier at 24.
+highway=pedestrian & area!=yes & uralla:road_density=dense [0x07 resolution 23-23 continue]
+highway=pedestrian & area!=yes & uralla:road_density=dense [0x0e road_class=0 road_speed=0 resolution 24]
+highway=pedestrian & area!=yes & uralla:road_density=very_dense [0x0e road_class=0 road_speed=0 resolution 24]
+
+# service — ordinary overview is resolution 23 and routing carrier is 24.
+# Dense/very-dense grids suppress only the overview carrier.
+highway=service & (service=alley|service=driveway) & (uralla:road_density=dense | uralla:road_density=very_dense) [0x0d road_class=0 road_speed=0 resolution 24]
+highway=service & service!=alley & service!=driveway & oneway=yes & (uralla:road_density=dense | uralla:road_density=very_dense) [0x0d road_class=0 road_speed=1 resolution 24]
+highway=service & service!=alley & service!=driveway & oneway!=yes & (uralla:road_density=dense | uralla:road_density=very_dense) [0x0d road_class=0 road_speed=2 resolution 24]
+
+# ---------------------------------------------------------------------------
+# Tracks. grade1 normally spans 21-23 + close carrier 24; other tracks span
+# 22-23 + close carrier 24.
+# ---------------------------------------------------------------------------
+highway=track & tracktype=grade1 & uralla:road_density=dense & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 22-23 continue]
+highway=track & tracktype=grade1 & uralla:road_density=dense [0x0a road_class=0 road_speed=1 resolution 24]
+highway=track & tracktype=grade1 & uralla:road_density=very_dense & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 23-23 continue]
+highway=track & tracktype=grade1 & uralla:road_density=very_dense [0x0a road_class=0 road_speed=1 resolution 24]
+
+highway=track & tracktype!=grade1 & uralla:road_density=dense & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 23-23 continue]
+highway=track & tracktype!=grade1 & uralla:road_density=dense [0x13 road_class=0 road_speed=1 resolution 24]
+highway=track & tracktype!=grade1 & uralla:road_density=very_dense [0x13 road_class=0 road_speed=1 resolution 24]
+
+# ---------------------------------------------------------------------------
+# Cycle/foot/path/bridle ways. These are already close-biased; density removes
+# one or both overview resolutions while retaining their normal close carrier.
+# ---------------------------------------------------------------------------
+highway=cycleway & uralla:road_density=dense & length()>200 [0x07 resolution 23-23 continue]
+highway=cycleway & uralla:road_density=dense [0x0e road_class=0 road_speed=1 resolution 24]
+highway=cycleway & uralla:road_density=very_dense [0x0e road_class=0 road_speed=1 resolution 24]
+
+bicycle=yes & highway=path & uralla:road_density=dense & length()>100 [0x0b resolution 23-23 continue]
+bicycle=yes & highway=path & uralla:road_density=dense [0x16 road_class=0 road_speed=1 resolution 24]
+bicycle=yes & highway=path & uralla:road_density=very_dense [0x16 road_class=0 road_speed=1 resolution 24]
+
+highway=footway & (footway=sidewalk | footway=crossing) & uralla:road_density=dense & length()>100 [0x07 resolution 23-23 continue]
+highway=footway & (footway=sidewalk | footway=crossing) & uralla:road_density=dense [0x0e road_class=0 road_speed=0 resolution 24]
+highway=footway & (footway=sidewalk | footway=crossing) & uralla:road_density=very_dense [0x0e road_class=0 road_speed=0 resolution 24]
+
+highway=footway & footway!=sidewalk & footway!=crossing & (uralla:road_density=dense | uralla:road_density=very_dense) [0x16 road_class=0 road_speed=0 resolution 24]
+
+bicycle!=yes & highway=path & (uralla:road_density=dense | uralla:road_density=very_dense) [0x16 road_class=0 road_speed=0 resolution 24]
+
+highway=bridleway & (uralla:road_density=dense | uralla:road_density=very_dense) [0x16 road_class=0 road_speed=0 resolution 24]
+
+# highway=road and other unknown low classes are already close-only (resolution
+# 24) in the generic fallback, so a density tag cannot move them any farther in.
