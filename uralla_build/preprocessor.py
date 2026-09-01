@@ -16,6 +16,7 @@ from uuid import uuid4
 
 import yaml
 
+from .area_pois import discover_marketplace_area_pois
 from .errors import StageError
 from .river_landmarks import (
     DEFAULT_RIVER_CATALOG,
@@ -465,6 +466,10 @@ def preprocess_pbf(
     peak_landmarks = load_peak_landmarks(peak_catalog_path)
     river_landmarks = load_river_landmarks(river_catalog_path)
     osmium = _load_osmium()
+    synthetic_area_pois = discover_marketplace_area_pois(str(source), osmium)
+    _emit_progress(
+        f"Area POI: marketplace candidates to synthesize: {len(synthetic_area_pois):,}"
+    )
     _emit_progress("POI context: indexing node signals in one pass")
     context_started = time.monotonic()
     context_indexes = build_context_indexes(str(source), osmium)
@@ -747,6 +752,28 @@ def preprocess_pbf(
                     writer.add(item)
                 else:
                     writer.add(item.replace(tags=final_tags))
+
+            for synthetic_index, synthetic in enumerate(synthetic_area_pois, start=1):
+                synthetic_decision = filter_tags(synthetic.tags, rules)
+                synthetic_tags, _ = enrich_long_name_tags(synthetic_decision.tags)
+                if synthetic_tags.get("amenity") != "marketplace":
+                    continue
+                synthetic_id = -(9_000_000_000_000_000 + synthetic_index)
+                writer.add_node(
+                    osmium.osm.mutable.Node(
+                        id=synthetic_id,
+                        location=osmium.osm.Location(synthetic.lon, synthetic.lat),
+                        tags=synthetic_tags,
+                    )
+                )
+                counters["synthetic_area_pois"] += 1
+                counters["synthetic_marketplace_pois"] += 1
+                _emit_progress(
+                    "[preprocess] area POI marketplace "
+                    f"{synthetic.source_type}{synthetic.source_id}: "
+                    f"{synthetic_tags.get('name')!r} -> node{synthetic_id} "
+                    f"({synthetic.lat:.6f}, {synthetic.lon:.6f})"
+                )
 
         _progress(counters["objects_seen"], started)
         _emit_progress(
