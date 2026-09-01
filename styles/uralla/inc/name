@@ -31,6 +31,8 @@ name=* { set name='${name|subst:, Гостинично-ресторанный к
                      |subst:взлётно-посадочная полоса=>ВПП
                      |subst:Гостиница =>
                      |subst:гостиница =>
+                     |subst:Магазин =>
+                     |subst:магазин =>
                      |subst:Санаторий имени=>Сан. им.
                      |subst:санаторий имени=>сан. им.
                      |subst:База отдыха =>
@@ -115,31 +117,17 @@ amenity=fuel & fuel:diesel=no
 
 # Both operator and brand given
 #operator=* & brand=* {
-# name '${name}: ${brand} ${ref} (${operator})' |
-#      '${brand}: ${ref} (${operator})' |
-#      '${name}: ${brand} (${operator})' |
-#      '${brand} (${operator})'
+# name '${name}: ${brand} ${ref}' | '${brand}: ${ref}' | '${name}: ${brand}' | '${brand}'
 #}
 
 # One of operator or brand given
 #operator=* & brand!=* & (highway=bus_stop | railway=tram_stop | railway=halt | railway=station) {
-# name '${name}: ${ref} (${operator})' |
-#      '${name} (${operator})' |
-#      '${ref} (${operator})' |
-#      '${operator}'
+# name '${name}: ${ref} (${operator})' | '${name} (${operator})' | '${ref} (${operator})' | '${operator}'
 #}
 #
 #operator=* & brand!=* {
-# name '${name} (${operator}) ${ref}' |
-#      '${name} (${operator})' |
-#      '${operator}: ${ref}' |
-#      '${operator}' |
-#      '${ref}'
+# name '${name} (${operator}) ${ref}' | '${name} (${operator})' | '${operator}: ${ref}' | '${operator}' | '${ref}'
 #}
 #brand=* & operator!=* {
-# name '${name}: ${brand} ${ref}' |
-#      '${name}: ${brand}' |
-#      '${brand}: ${ref}' |
-#      '${brand}' |
-#      '${ref}'
+# name '${name}: ${brand} ${ref}' | '${name}: ${brand}' | '${brand}: ${ref}' | '${brand}' | '${ref}'
 #}
