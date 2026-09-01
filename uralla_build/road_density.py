@@ -36,13 +36,13 @@ class DensityThreshold:
 
 # Absolute thresholds are intentional. Percentiles would classify something
 # as "dense" even in a generally sparse map extract. After the first real map
-# test, keep the dense thresholds unchanged and make only the second level a
+# tests, keep the dense thresholds unchanged and make only the second level a
 # little easier to reach: this suppresses the worst grids without broadening
 # the ordinary dense footprint.
 THRESHOLDS: dict[str, DensityThreshold] = {
-    "local": DensityThreshold(18.0, 28.0),
-    "track": DensityThreshold(14.0, 24.0),
-    "trail": DensityThreshold(20.0, 32.0),
+    "local": DensityThreshold(18.0, 26.0),
+    "track": DensityThreshold(14.0, 22.0),
+    "trail": DensityThreshold(20.0, 30.0),
 }
 
 _LOCAL_HIGHWAYS = frozenset(
