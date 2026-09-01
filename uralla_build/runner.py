@@ -23,7 +23,7 @@ from .history import HistoryStore
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HEARTBEAT_SECONDS = 30.0
 POLL_SECONDS = 1.0
-LIVE_OUTPUT_STAGES = frozenset({"preprocess", "prepare-tiles", "mkgmap"})
+# All pipeline stages stream stdout/stderr live while also writing durable logs.
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,7 +308,7 @@ class StageRunner:
         )
         env = os.environ.copy()
         env.update(env_overlay)
-        live = stage in LIVE_OUTPUT_STAGES
+        live = True
         threads: list[threading.Thread] = []
 
         try:
