@@ -3,6 +3,11 @@
 # A matching Garmin type ends processing for the place node, so each settlement
 # receives exactly one significance class here.
 
+# Agreed removals from point display.
+(amenity=casino | amenity=cinema | amenity=concert_hall | amenity=conference_centre | amenity=kindergarten | amenity=nightclub | amenity=theatre) { delete amenity; delete building }
+(shop=tires | shop=tyres) { delete shop; delete building }
+leisure=bowling_alley { delete leisure; delete building }
+
 # Cities: large regional centres should remain visible on distant zooms.
 place=city & mkgmap:area2poi!=true & population > 999999 [0x0100 resolution 12]
 place=city & mkgmap:area2poi!=true & population > 499999 [0x0200 resolution 14]
