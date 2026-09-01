@@ -25,7 +25,8 @@ jobs:
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config user.email 41898282+uralla@users.noreply.github.com
           git add uralla_build/runner.py tests/test_live_stage_output.py
           git commit -m 'Stream output for all build stages'
           git push
+# retrigger after test harness fix
