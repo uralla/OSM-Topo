@@ -72,6 +72,23 @@ def _format_size(size: int) -> str:
     return f"{size} B"
 
 
+def _last_json_mapping(output: str) -> Mapping[str, object] | None:
+    """Return the final JSON object from mixed human/machine stdout."""
+    decoder = json.JSONDecoder()
+    for index in range(len(output) - 1, -1, -1):
+        if output[index] != "{":
+            continue
+        try:
+            value, end = decoder.raw_decode(output[index:])
+        except json.JSONDecodeError:
+            continue
+        if output[index + end :].strip():
+            continue
+        if isinstance(value, Mapping):
+            return value
+    return None
+
+
 def _build_version(host: HostConfig, build_id: str) -> str:
     history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
     build = history.get_build(build_id)
@@ -267,12 +284,8 @@ def main(argv: list[str] | None = None) -> int:
         print(output)
         return status
 
-    try:
-        payload = json.loads(output)
-    except json.JSONDecodeError:
-        print(output)
-        return status
-    if not isinstance(payload, Mapping):
+    payload = _last_json_mapping(output)
+    if payload is None:
         print(output)
         return status
 
