@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 from uuid import uuid4
 
-from .area_pois import augment_marketplace_area_pois
+from .area_pois import augment_area_pois
 from .errors import StageError
 from .preprocessor import _load_osmium, preprocess_pbf
 
@@ -46,7 +46,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             args.report,
         )
         osmium = _load_osmium()
-        area_stats = augment_marketplace_area_pois(
+        area_stats = augment_area_pois(
             semantic,
             output,
             osmium,
