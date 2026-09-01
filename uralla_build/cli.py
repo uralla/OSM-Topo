@@ -378,10 +378,13 @@ def _build_product(args: argparse.Namespace) -> int:
             source_key = product.get("source")
             if not isinstance(source_key, str):
                 raise StageError(f"product {args.product!r} has no source")
+            live_reporter = None
             if not args.json:
-                print(f"Checking OSM source for {args.product}: {source_key}")
+                def live_reporter(message: str) -> None:
+                    print(message, flush=True)
+                print(f"Checking OSM source for {args.product}: {source_key}", flush=True)
             source_result = refresh_osm_source(
-                manifest, host, source_key, reporter=None if args.json else print
+                manifest, host, source_key, reporter=live_reporter
             )
             if source_result.status == "error":
                 raise StageError(source_result.detail)
