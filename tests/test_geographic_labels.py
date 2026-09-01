@@ -66,6 +66,24 @@ class GeographicDisplayLabelTests(unittest.TestCase):
             {"natural": "water", "water": "lake", "name": "Черное Озеро"}
         )
 
+    def test_compound_lake_prefix_removes_embedded_type_word(self) -> None:
+        cases = (
+            ("Нижнее озеро Сайрам-су", "Н. Сайрам-су"),
+            ("Верхнее озеро Каракуль", "В. Каракуль"),
+            ("Большое озеро Щучье", "Бол. Щучье"),
+            ("Малое озеро Чебачье", "Мал. Чебачье"),
+        )
+        for name, expected in cases:
+            with self.subTest(name=name):
+                self.assert_label(
+                    {"natural": "water", "water": "lake", "name": name},
+                    expected,
+                )
+
+        self.assert_unchanged(
+            {"natural": "water", "water": "lake", "name": "Черное Озеро"}
+        )
+
     def test_waterfall_variants_are_supported(self) -> None:
         for name in (
             "Водопад Кивач",
