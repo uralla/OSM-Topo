@@ -5,8 +5,8 @@
 # better use option --ignore-fixme-values
 ref ~ '(?i)fix[ _]?+me'        { delete ref; }
 operator ~ '(?i)fix[ _]?+me'   { delete operator; }
-brand ~ '(?i)fix[ _]?+me'      { delete brand; }
-name ~ '(?i)fix[ _]?+me'       { delete name; }
+brand ~ '(?i)fix[ _]?+me'       { delete brand; }
+name ~ '(?i)fix[ _]?+me'        { delete name; }
 
 # delete duplicate names
 operator=${brand} { delete operator; }
@@ -20,7 +20,13 @@ uralla:label=* { set name='${uralla:label}' }
 # This include is intentionally used by all three production style entry files.
 name=* { set name='${name|subst:, Гостинично-ресторанный комплекс=>
                      |subst:, гостинично-ресторанный комплекс=>
-                     |subst:Взрослая поликлиника ГБУЗС "Городская больница №9"=>Взр. поликлиника "горбольница 9"
+                     |subst:Взрослая поликлиника=>Взр. поликлиника
+                     |subst:ГБУЗС =>
+                     |subst:ГБУЗС=>
+                     |subst:Городская больница=>горбольница
+                     |subst:№=>
+                     |subst:Туристско-оздоровительный комплекс=>ТОК
+                     |subst:туристско-оздоровительный комплекс=>ТОК
                      |subst:Санаторий имени=>Сан. им.
                      |subst:санаторий имени=>сан. им.
                      |subst:База отдыха =>
