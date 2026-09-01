@@ -1,0 +1,31 @@
+name: One-shot source refresh migration
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-source-refresh.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Apply exact patch
+        run: python3 .github/scripts/one_shot_source_refresh.py
+      - name: Install project
+        run: python3 -m pip install -e .
+      - name: Verify
+        run: |
+          python3 -m py_compile uralla_build/external_data.py uralla_build/cli.py
+          python3 -m unittest tests.test_external_data tests.test_source_extract_policy tests.test_manifest -v
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add uralla_build/external_data.py uralla_build/cli.py config/maps.yaml tests/test_external_data.py tests/test_source_extract_policy.py
+          git commit -m 'Restore automatic OSM source refresh'
+          git push
