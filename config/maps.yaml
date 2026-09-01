@@ -278,6 +278,7 @@ products:
 
   kz:
     source: kazakhstan
+    extract: false
     polygon: poly/KZ.poly
     elevation: elevation/kz.osm.pbf
     geonames: input/cities15000.zip
