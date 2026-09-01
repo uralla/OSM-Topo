@@ -1,4 +1,4 @@
-"""Composite preprocess entry: semantic enrichment followed by deliberate area POIs."""
+"""Composite preprocess entry: semantic enrichment, road density, then area POIs."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from uuid import uuid4
 from .area_pois import augment_area_pois
 from .errors import StageError
 from .preprocessor import _load_osmium, preprocess_pbf
+from .road_density import augment_road_density
 
 
 def _report(message: str) -> None:
@@ -37,7 +38,7 @@ def _run_osmium_rewrite(path: Path, command: list[str], suffix: str) -> None:
         )
         if completed.returncode != 0:
             raise StageError(
-                f"{' '.join(command)} failed for area-POI output "
+                f"{' '.join(command)} failed for preprocess output "
                 f"with exit code {completed.returncode}"
             )
         rewritten.replace(path)
@@ -79,6 +80,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
 
     output = args.output.resolve()
     semantic = output.parent / f".{output.name}.{uuid4().hex}.semantic.osm.pbf"
+    density = output.parent / f".{output.name}.{uuid4().hex}.road-density.osm.pbf"
     try:
         preprocess_pbf(
             args.input,
@@ -88,8 +90,14 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             args.report,
         )
         osmium = _load_osmium()
-        area_stats = augment_area_pois(
+        road_density_stats = augment_road_density(
             semantic,
+            density,
+            osmium,
+            reporter=_report,
+        )
+        area_stats = augment_area_pois(
+            density,
             output,
             osmium,
             reporter=_report,
@@ -100,8 +108,9 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
         try:
             report = json.loads(report_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise StageError(f"cannot update preprocess report with area POIs: {exc}") from exc
+            raise StageError(f"cannot update preprocess report: {exc}") from exc
         if isinstance(report, dict):
+            report["road_density"] = road_density_stats
             report["area_pois"] = area_stats
             report_path.write_text(
                 json.dumps(report, ensure_ascii=False, indent=2) + "\n",
@@ -114,3 +123,5 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
     finally:
         if semantic.exists():
             semantic.unlink()
+        if density.exists():
+            density.unlink()
