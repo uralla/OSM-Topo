@@ -38,10 +38,11 @@ _AMENITY_AREA_POIS = frozenset(
     {
         "airport",
         "arts_centre",
-        "atm",
         "bank",
         "bar",
         "bbq",
+        "bicycle_rental",
+        "bicycle_repair_station",
         "biergarten",
         "border_control",
         "bus_station",
@@ -163,7 +164,9 @@ _HISTORIC_AREA_POIS = frozenset(
 
 _LEISURE_AREA_POIS = frozenset(
     {
+        "bowling_alley",
         "common",
+        "firepit",
         "garden",
         "golf_course",
         "ice_rink",
@@ -194,7 +197,18 @@ _MAN_MADE_AREA_POIS = frozenset(
 
 _AEROWAY_AREA_POIS = frozenset({"aerodrome", "airport", "helipad", "terminal"})
 _LANDUSE_AREA_POIS = frozenset(
-    {"cemetary", "cemetery", "forest", "military", "quarry", "retail", "village_green", "wood"}
+    {
+        "basin",
+        "cemetary",
+        "cemetery",
+        "forest",
+        "military",
+        "quarry",
+        "reservoir",
+        "retail",
+        "village_green",
+        "wood",
+    }
 )
 
 
@@ -314,18 +328,28 @@ def area_poi_kind(tags: Mapping[str, str]) -> str | None:
         return f"healthcare:{tags['healthcare']}"
     if man_made in _MAN_MADE_AREA_POIS:
         return f"man_made:{man_made}"
+    if tags.get("landmark") == "chimney":
+        return "landmark:chimney"
     if aeroway in _AEROWAY_AREA_POIS:
         return f"aeroway:{aeroway}"
     if tags.get("office") == "government":
         return "office:government"
     if landuse in _LANDUSE_AREA_POIS:
-        if landuse in {"forest", "military", "retail", "village_green", "wood"} and not tags.get("name"):
+        if landuse in {"basin", "forest", "military", "reservoir", "retail", "village_green", "wood"} and not tags.get("name"):
             return None
         return f"landuse:{landuse}"
     if tags.get("military") == "bunker":
         return "military:bunker"
     if tags.get("power") == "generator" and tags.get("generator:source") == "wind":
         return "power:wind-generator"
+    if tags.get("craft") == "beekeeper":
+        return "craft:beekeeper"
+    if tags.get("railway") == "station":
+        return "railway:station"
+    if tags.get("highway") == "services":
+        return "highway:services"
+    if tags.get("sport") == "climbing":
+        return "sport:climbing"
     if tags.get("natural") == "forest" and tags.get("name"):
         return "natural:forest"
     if tags.get("natural") == "wood" and tags.get("name"):
