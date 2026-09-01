@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import subprocess
 import sys
 from uuid import uuid4
 
@@ -14,6 +15,8 @@ from .preprocessor import _load_osmium, preprocess_pbf
 
 
 def _report(message: str) -> None:
+    if message.startswith("[preprocess] "):
+        message = message[len("[preprocess] ") :]
     print(message, file=sys.stderr, flush=True)
     if sys.stderr.isatty():
         return
@@ -22,6 +25,24 @@ def _report(message: str) -> None:
             print(message, file=tty, flush=True)
     except OSError:
         pass
+
+
+def _sort_pbf(path: Path) -> None:
+    """Restore canonical OSM object/id ordering after synthetic node insertion."""
+    sorted_path = path.parent / f".{path.name}.{uuid4().hex}.sorted.osm.pbf"
+    try:
+        completed = subprocess.run(
+            ["osmium", "sort", "-O", str(path), "-o", str(sorted_path)],
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise StageError(
+                f"osmium sort failed for area-POI output with exit code {completed.returncode}"
+            )
+        sorted_path.replace(path)
+    finally:
+        if sorted_path.exists():
+            sorted_path.unlink()
 
 
 def run_preprocess_pipeline(argv: list[str]) -> int:
@@ -52,6 +73,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             osmium,
             reporter=_report,
         )
+        _sort_pbf(output)
         report_path = args.report.resolve()
         try:
             report = json.loads(report_path.read_text(encoding="utf-8"))
