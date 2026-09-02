@@ -6,9 +6,10 @@ from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import time
-from typing import Any
+from typing import Any, Sequence
 from uuid import uuid4
 
+from .area_pois import SyntheticAreaPoi
 from .errors import StageError
 from .poi_context_analysis import (
     _CONTEXT_TAGS,
@@ -121,6 +122,29 @@ def _load_poi_hints(path: str | Path) -> dict[int, tuple[dict[str, str], dict[st
     return result
 
 
+def _apply_poi_hint(
+    node_id: int,
+    tags: dict[str, str],
+    poi_hints: dict[int, tuple[dict[str, str], dict[str, str]]],
+    counters: Counter[str],
+) -> dict[str, str]:
+    hint = poi_hints.get(node_id)
+    if hint is None:
+        return tags
+    expected_signature, tag_hints = hint
+    if _signature(tags) != expected_signature:
+        counters["poi_stale_skipped"] += 1
+        return tags
+    changed = False
+    for key, value in tag_hints.items():
+        if tags.get(key) != value:
+            tags[key] = value
+            changed = True
+    if changed:
+        counters["poi_tagged"] += 1
+    return tags
+
+
 def apply_analysis_bundle(
     input_path: str | Path,
     analysis_dir: str | Path,
@@ -129,8 +153,9 @@ def apply_analysis_bundle(
     *,
     reporter: Any = None,
     semantic_transformer: Any = None,
+    synthetic_area_pois: Sequence[SyntheticAreaPoi] = (),
 ) -> dict[str, int]:
-    """Apply reusable artifacts and optional cheap semantics in one PBF writer pass."""
+    """Apply artifacts, synthetic nodes, and cheap semantics in one writer pass."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     root = Path(analysis_dir).resolve()
@@ -143,45 +168,52 @@ def apply_analysis_bundle(
     counters: Counter[str] = Counter()
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
+            # Synthetic nodes were present when poi-context was analyzed. Recreate
+            # those exact stable node IDs before streaming the untouched source.
+            for candidate in synthetic_area_pois:
+                node = osmium.osm.mutable.Node(
+                    id=candidate.synthetic_id,
+                    location=(candidate.lon, candidate.lat),
+                    tags=candidate.tags,
+                )
+                tags = dict(candidate.tags)
+                tags = _apply_poi_hint(candidate.synthetic_id, tags, poi_hints, counters)
+                if semantic_transformer is not None:
+                    tags = semantic_transformer.transform(node, tags)
+                writer.add_node(osmium.osm.mutable.Node(
+                    id=candidate.synthetic_id,
+                    location=(candidate.lon, candidate.lat),
+                    tags=tags,
+                ))
+                counters["synthetic_area_pois"] += 1
+
             for item in osmium.FileProcessor(str(source)):
                 counters["objects_seen"] += 1
                 type_method = getattr(item, "type_str", None)
                 kind = type_method() if callable(type_method) else ""
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 tags = dict(original_tags)
-                analysis_changed = False
                 if kind == "node":
-                    hint = poi_hints.get(int(item.id))
-                    if hint is not None:
-                        expected_signature, tag_hints = hint
-                        if _signature(tags) == expected_signature:
-                            for key, value in tag_hints.items():
-                                if tags.get(key) != value:
-                                    tags[key] = value
-                                    analysis_changed = True
-                            if analysis_changed:
-                                counters["poi_tagged"] += 1
-                        else:
-                            counters["poi_stale_skipped"] += 1
+                    tags = _apply_poi_hint(int(item.id), tags, poi_hints, counters)
                 elif kind == "way":
                     hint = road_hints.get(int(item.id))
                     if hint is not None:
                         expected_class, level = hint
                         if road_density_class(tags) == expected_class and tags.get("area") != "yes":
+                            changed = False
                             if tags.get(ROAD_DENSITY_TAG) != level:
                                 tags[ROAD_DENSITY_TAG] = level
-                                analysis_changed = True
+                                changed = True
                             if tags.get(ROAD_DENSITY_CLASS_TAG) != expected_class:
                                 tags[ROAD_DENSITY_CLASS_TAG] = expected_class
-                                analysis_changed = True
-                            if analysis_changed:
+                                changed = True
+                            if changed:
                                 counters["road_tagged"] += 1
                         else:
                             counters["road_stale_skipped"] += 1
 
                 if semantic_transformer is not None:
                     tags = semantic_transformer.transform(item, tags)
-
                 writer.add(item if tags == original_tags else item.replace(tags=tags))
         temporary.replace(target)
     finally:
@@ -189,6 +221,7 @@ def apply_analysis_bundle(
             temporary.unlink()
     result = {
         "objects_seen": counters["objects_seen"],
+        "synthetic_area_pois": counters["synthetic_area_pois"],
         "road_hints": len(road_hints),
         "road_tagged": counters["road_tagged"],
         "road_stale_skipped": counters["road_stale_skipped"],
@@ -199,6 +232,7 @@ def apply_analysis_bundle(
     if reporter is not None:
         reporter(
             "Analysis bundle applied: "
+            f"area POI {result['synthetic_area_pois']:,}; "
             f"road {result['road_tagged']:,}/{result['road_hints']:,}; "
             f"POI {result['poi_tagged']:,}/{result['poi_hints']:,}; "
             f"stale road={result['road_stale_skipped']:,} poi={result['poi_stale_skipped']:,}"
