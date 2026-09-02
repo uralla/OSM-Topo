@@ -30,3 +30,4 @@ jobs:
           git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
           git commit -m 'Expand kite infrastructure detection'
           git push
+# retrigger 2026-09-02
