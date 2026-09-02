@@ -1,4 +1,9 @@
-from uralla_build.area_pois import area_poi_kind, interior_point, point_in_polygon
+from uralla_build.area_pois import (
+    area_poi_equivalent_kinds,
+    area_poi_kind,
+    interior_point,
+    point_in_polygon,
+)
 
 
 def test_interior_point_stays_inside_l_shaped_polygon():
@@ -38,6 +43,20 @@ def test_common_facility_areas_become_pois():
     assert area_poi_kind({"amenity": "school"}) == "amenity:school"
     assert area_poi_kind({"shop": "supermarket"}) == "shop:supermarket"
     assert area_poi_kind({"amenity": "fuel", "shop": "convenience"}) == "amenity:fuel"
+
+
+def test_multi_tag_real_castle_covers_historic_and_tourism_kinds():
+    tags = {
+        "historic": "castle",
+        "castle_type": "fortress",
+        "tourism": "attraction",
+        "name": "Мангуп Кале",
+    }
+    assert area_poi_kind(tags) == "tourism:attraction"
+    assert area_poi_equivalent_kinds(tags) == (
+        "tourism:attraction",
+        "historic:castle",
+    )
 
 
 def test_named_area_point_rules_keep_their_name_requirement():
