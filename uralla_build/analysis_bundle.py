@@ -128,8 +128,9 @@ def apply_analysis_bundle(
     osmium: Any,
     *,
     reporter: Any = None,
+    semantic_transformer: Any = None,
 ) -> dict[str, int]:
-    """Apply all current reusable artifacts in one non-spatial PBF writer pass."""
+    """Apply reusable artifacts and optional cheap semantics in one PBF writer pass."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     root = Path(analysis_dir).resolve()
@@ -146,8 +147,9 @@ def apply_analysis_bundle(
                 counters["objects_seen"] += 1
                 type_method = getattr(item, "type_str", None)
                 kind = type_method() if callable(type_method) else ""
-                tags = {str(key): str(value) for key, value in item.tags}
-                changed = False
+                original_tags = {str(key): str(value) for key, value in item.tags}
+                tags = dict(original_tags)
+                analysis_changed = False
                 if kind == "node":
                     hint = poi_hints.get(int(item.id))
                     if hint is not None:
@@ -156,8 +158,8 @@ def apply_analysis_bundle(
                             for key, value in tag_hints.items():
                                 if tags.get(key) != value:
                                     tags[key] = value
-                                    changed = True
-                            if changed:
+                                    analysis_changed = True
+                            if analysis_changed:
                                 counters["poi_tagged"] += 1
                         else:
                             counters["poi_stale_skipped"] += 1
@@ -168,15 +170,19 @@ def apply_analysis_bundle(
                         if road_density_class(tags) == expected_class and tags.get("area") != "yes":
                             if tags.get(ROAD_DENSITY_TAG) != level:
                                 tags[ROAD_DENSITY_TAG] = level
-                                changed = True
+                                analysis_changed = True
                             if tags.get(ROAD_DENSITY_CLASS_TAG) != expected_class:
                                 tags[ROAD_DENSITY_CLASS_TAG] = expected_class
-                                changed = True
-                            if changed:
+                                analysis_changed = True
+                            if analysis_changed:
                                 counters["road_tagged"] += 1
                         else:
                             counters["road_stale_skipped"] += 1
-                writer.add(item.replace(tags=tags) if changed else item)
+
+                if semantic_transformer is not None:
+                    tags = semantic_transformer.transform(item, tags)
+
+                writer.add(item if tags == original_tags else item.replace(tags=tags))
         temporary.replace(target)
     finally:
         if temporary.exists():
