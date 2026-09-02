@@ -25,7 +25,7 @@ class FastPreprocessReuseTests(unittest.TestCase):
         (analysis / "poi-context.json.gz").write_bytes(b"poi")
         area_stats = {"created": 7, "candidates": 7}
         area_payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "kind": "area_pois",
             "source": _source_identity(source),
             "stats": area_stats,
@@ -44,13 +44,22 @@ class FastPreprocessReuseTests(unittest.TestCase):
             self.assertEqual(payload["source"], _source_identity(source))
             self.assertTrue((analysis / ANALYSIS_MANIFEST).is_file())
 
-    def test_reuse_rejects_changed_source(self) -> None:
+    def test_reuse_accepts_newer_bytes_for_same_extract_name(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source, analysis, _ = self._prepare(root)
-            source.write_bytes(b"changed-pbf-size")
+            source.write_bytes(b"changed-pbf-size-and-mtime")
+            payload = _validate_reusable_analysis(analysis, source)
+            self.assertEqual(payload["source"]["name"], source.name)
+
+    def test_reuse_rejects_different_extract_name(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, analysis, _ = self._prepare(root)
+            other = root / "another-region.osm.pbf"
+            other.write_bytes(source.read_bytes())
             with self.assertRaises(StageError):
-                _validate_reusable_analysis(analysis, source)
+                _validate_reusable_analysis(analysis, other)
 
     def test_reuse_rejects_missing_area_artifact(self) -> None:
         with TemporaryDirectory() as directory:
@@ -66,6 +75,7 @@ class FastPreprocessReuseTests(unittest.TestCase):
             source, analysis, _ = self._prepare(root)
             payload = json.loads((analysis / ANALYSIS_MANIFEST).read_text(encoding="utf-8"))
             self.assertEqual(payload["source"]["path"], str(source.resolve()))
+            self.assertEqual(payload["reuse_scope"]["source_name"], source.name)
             self.assertEqual(payload["artifacts"]["area_pois"], "area-pois.json.gz")
 
 
