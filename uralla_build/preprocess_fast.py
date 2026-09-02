@@ -19,6 +19,74 @@ from .preprocessor import _load_osmium
 from .semantic_apply import apply_semantic_tags
 
 
+ANALYSIS_MANIFEST = "analysis-manifest.json"
+ANALYSIS_MANIFEST_SCHEMA = 1
+
+
+def _source_identity(path: Path) -> dict[str, object]:
+    stat = path.stat()
+    return {
+        "path": str(path.resolve()),
+        "size": int(stat.st_size),
+        "mtime_ns": int(stat.st_mtime_ns),
+    }
+
+
+def _write_analysis_manifest(
+    analysis_dir: Path,
+    source: Path,
+    area_stats: dict[str, int],
+) -> None:
+    payload = {
+        "schema_version": ANALYSIS_MANIFEST_SCHEMA,
+        "source": _source_identity(source),
+        "area_pois": {
+            "created": int(area_stats.get("created", 0)),
+            "candidates": int(area_stats.get("candidates", 0)),
+        },
+    }
+    target = analysis_dir / ANALYSIS_MANIFEST
+    temporary = analysis_dir / f".{ANALYSIS_MANIFEST}.{uuid4().hex}.partial"
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    temporary.replace(target)
+
+
+def _validate_reusable_analysis(
+    analysis_dir: Path,
+    source: Path,
+    area_stats: dict[str, int],
+) -> dict[str, object]:
+    road_artifact = analysis_dir / "road-density.json.gz"
+    poi_artifact = analysis_dir / "poi-context.json.gz"
+    manifest_path = analysis_dir / ANALYSIS_MANIFEST
+    for path in (road_artifact, poi_artifact, manifest_path):
+        if not path.is_file() or path.stat().st_size == 0:
+            raise StageError(f"reusable analysis is incomplete: missing {path}")
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise StageError(f"cannot read reusable analysis manifest {manifest_path}: {exc}") from exc
+    if not isinstance(payload, dict) or payload.get("schema_version") != ANALYSIS_MANIFEST_SCHEMA:
+        raise StageError("reusable analysis manifest has an unsupported schema")
+    expected_source = payload.get("source")
+    if expected_source != _source_identity(source):
+        raise StageError(
+            "reusable analysis belongs to a different source PBF; run without --reuse-analysis first"
+        )
+    expected_area = payload.get("area_pois")
+    current_area = {
+        "created": int(area_stats.get("created", 0)),
+        "candidates": int(area_stats.get("candidates", 0)),
+    }
+    if expected_area != current_area:
+        raise StageError(
+            "reusable POI analysis no longer matches synthetic area POIs; run without --reuse-analysis first"
+        )
+    return payload
+
+
 def run_fast_preprocess(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="uralla_build preprocess-fast")
     parser.add_argument("--input", required=True, type=Path)
@@ -29,7 +97,15 @@ def run_fast_preprocess(argv: list[str]) -> int:
     parser.add_argument("--analysis-dir", type=Path)
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--keep-analysis", action="store_true")
+    parser.add_argument(
+        "--reuse-analysis",
+        action="store_true",
+        help="Reuse road/POI artifacts only when the source PBF and synthetic-area count match exactly",
+    )
     args = parser.parse_args(argv)
+
+    if args.reuse_analysis and args.analysis_dir is None:
+        parser.error("--reuse-analysis requires a persistent --analysis-dir")
 
     started = time.monotonic()
     output = args.output.resolve()
@@ -51,56 +127,77 @@ def run_fast_preprocess(argv: list[str]) -> int:
     try:
         osmium = _load_osmium()
         workers = max(1, int(args.workers))
-        analysis_started = time.monotonic()
         analysis_stats: dict[str, object] = {}
 
-        # Road density depends only on ways and their geometry, so it can start on
-        # the untouched fresh PBF while area->POI synthesis runs in the main process.
-        # POI context must wait for area synthesis because synthetic area POIs need
-        # to participate in the same rarity/activity model as native OSM nodes.
-        _report(
-            "fast preprocess: road-density ANALYZE starts in parallel with area POI synthesis"
-        )
-        with ProcessPoolExecutor(max_workers=min(workers, 2)) as executor:
-            road_future = executor.submit(
-                _analyze_worker,
-                "road_density",
-                str(source),
-                str(road_artifact),
-            )
-
-            _report("fast preprocess: area POI synthesis")
+        if args.reuse_analysis:
+            _report("fast preprocess: area POI synthesis before analysis compatibility check")
             area_started = time.monotonic()
             area_stats = augment_area_pois(source, area, osmium, reporter=_report)
             area_seconds = time.monotonic() - area_started
-
-            _report("fast preprocess: POI-context ANALYZE starts on area-enriched PBF")
-            poi_future = executor.submit(
-                _analyze_worker,
-                "poi_context",
-                str(area),
-                str(poi_artifact),
+            _validate_reusable_analysis(analysis_dir, source, area_stats)
+            analyze_wall_seconds = 0.0
+            road_seconds = 0.0
+            poi_seconds = 0.0
+            analysis_stats = {
+                "reused": True,
+                "road_density": {"artifact": str(road_artifact)},
+                "poi_context": {"artifact": str(poi_artifact)},
+                "wall_seconds": 0.0,
+            }
+            _report(
+                "fast preprocess: reusable ANALYZE artifacts accepted; spatial analysis skipped"
             )
+        else:
+            analysis_started = time.monotonic()
 
-            road_kind, road_seconds, road_stats = road_future.result()
-            poi_kind, poi_seconds, poi_stats = poi_future.result()
-            analysis_stats[road_kind] = {
-                "seconds": round(road_seconds, 3),
-                "artifact": str(road_artifact),
-                "stats": road_stats,
-            }
-            analysis_stats[poi_kind] = {
-                "seconds": round(poi_seconds, 3),
-                "artifact": str(poi_artifact),
-                "stats": poi_stats,
-            }
+            # Road density depends only on ways and their geometry, so it can start on
+            # the untouched fresh PBF while area->POI synthesis runs in the main process.
+            # POI context must wait for area synthesis because synthetic area POIs need
+            # to participate in the same rarity/activity model as native OSM nodes.
+            _report(
+                "fast preprocess: road-density ANALYZE starts in parallel with area POI synthesis"
+            )
+            with ProcessPoolExecutor(max_workers=min(workers, 2)) as executor:
+                road_future = executor.submit(
+                    _analyze_worker,
+                    "road_density",
+                    str(source),
+                    str(road_artifact),
+                )
 
-        analyze_wall_seconds = time.monotonic() - analysis_started
-        analysis_stats["wall_seconds"] = round(analyze_wall_seconds, 3)
-        _report(
-            "fast preprocess: staged ANALYZE complete; "
-            f"road={road_seconds:.1f}s poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
-        )
+                _report("fast preprocess: area POI synthesis")
+                area_started = time.monotonic()
+                area_stats = augment_area_pois(source, area, osmium, reporter=_report)
+                area_seconds = time.monotonic() - area_started
+
+                _report("fast preprocess: POI-context ANALYZE starts on area-enriched PBF")
+                poi_future = executor.submit(
+                    _analyze_worker,
+                    "poi_context",
+                    str(area),
+                    str(poi_artifact),
+                )
+
+                road_kind, road_seconds, road_stats = road_future.result()
+                poi_kind, poi_seconds, poi_stats = poi_future.result()
+                analysis_stats[road_kind] = {
+                    "seconds": round(road_seconds, 3),
+                    "artifact": str(road_artifact),
+                    "stats": road_stats,
+                }
+                analysis_stats[poi_kind] = {
+                    "seconds": round(poi_seconds, 3),
+                    "artifact": str(poi_artifact),
+                    "stats": poi_stats,
+                }
+
+            analyze_wall_seconds = time.monotonic() - analysis_started
+            analysis_stats["wall_seconds"] = round(analyze_wall_seconds, 3)
+            _write_analysis_manifest(analysis_dir, source, area_stats)
+            _report(
+                "fast preprocess: staged ANALYZE complete; "
+                f"road={road_seconds:.1f}s poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
+            )
 
         _report("fast preprocess: unified APPLY")
         apply_started = time.monotonic()
@@ -127,8 +224,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 2,
-            "mode": "analyze-apply-staged",
+            "schema_version": 3,
+            "mode": "reuse-apply" if args.reuse_analysis else "analyze-apply-staged",
             "input": str(source),
             "output": str(output),
             "timing": {
