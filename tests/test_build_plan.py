@@ -138,6 +138,26 @@ class ProductBuildPlanTests(unittest.TestCase):
                 [stage.name for stage in plan.stages].index("merge"),
             )
 
+    def test_explicit_fast_preprocess_mode_preserves_stage_contract(self) -> None:
+        with TemporaryDirectory() as directory:
+            manifest = deepcopy(self.manifest)
+            manifest["products"]["crimea"]["preprocess_mode"] = "fast"
+            manifest["products"]["crimea"]["preprocess_workers"] = 2
+
+            plan = self._plan(Path(directory), "crimea", manifest)
+            preprocess = next(stage for stage in plan.stages if stage.name == "preprocess")
+
+            self.assertIn("preprocess-fast", preprocess.command)
+            self.assertIn("--workers", preprocess.command)
+            self.assertEqual(preprocess.command[preprocess.command.index("--workers") + 1], "2")
+            self.assertEqual(
+                preprocess.expected_outputs,
+                ("preprocessed.osm.pbf", "report.json"),
+            )
+            self.assertTrue(
+                any("experimental analyze/apply preprocess" in warning for warning in plan.warnings)
+            )
+
     def test_new_product_cut_from_russia_automatically_gets_blacklist(self) -> None:
         with TemporaryDirectory() as directory:
             manifest = deepcopy(self.manifest)
