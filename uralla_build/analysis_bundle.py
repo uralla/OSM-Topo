@@ -155,7 +155,7 @@ def apply_analysis_bundle(
     semantic_transformer: Any = None,
     synthetic_area_pois: Sequence[SyntheticAreaPoi] = (),
 ) -> dict[str, int]:
-    """Apply artifacts, synthetic nodes, and cheap semantics in one writer pass."""
+    """Apply cheap semantics first, then cached hints, in one writer pass."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     root = Path(analysis_dir).resolve()
@@ -168,8 +168,9 @@ def apply_analysis_bundle(
     counters: Counter[str] = Counter()
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
-            # Synthetic nodes were present when poi-context was analyzed. Recreate
-            # those exact stable node IDs before streaming the untouched source.
+            # Synthetic nodes were present in the semantic base used for analysis.
+            # Recreate their stable IDs, run the same semantic transform first, then
+            # apply the cached POI hint against that post-semantic signature.
             for candidate in synthetic_area_pois:
                 node = osmium.osm.mutable.Node(
                     id=candidate.synthetic_id,
@@ -177,9 +178,9 @@ def apply_analysis_bundle(
                     tags=candidate.tags,
                 )
                 tags = dict(candidate.tags)
-                tags = _apply_poi_hint(candidate.synthetic_id, tags, poi_hints, counters)
                 if semantic_transformer is not None:
                     tags = semantic_transformer.transform(node, tags)
+                tags = _apply_poi_hint(candidate.synthetic_id, tags, poi_hints, counters)
                 writer.add_node(osmium.osm.mutable.Node(
                     id=candidate.synthetic_id,
                     location=(candidate.lon, candidate.lat),
@@ -193,6 +194,13 @@ def apply_analysis_bundle(
                 kind = type_method() if callable(type_method) else ""
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 tags = dict(original_tags)
+
+                # Production preprocess performs blacklist/cheap semantic transforms
+                # before both POI-context and road-density calculations. Do the same
+                # here so freshness guards compare like with like.
+                if semantic_transformer is not None:
+                    tags = semantic_transformer.transform(item, tags)
+
                 if kind == "node":
                     tags = _apply_poi_hint(int(item.id), tags, poi_hints, counters)
                 elif kind == "way":
@@ -212,8 +220,6 @@ def apply_analysis_bundle(
                         else:
                             counters["road_stale_skipped"] += 1
 
-                if semantic_transformer is not None:
-                    tags = semantic_transformer.transform(item, tags)
                 writer.add(item if tags == original_tags else item.replace(tags=tags))
         temporary.replace(target)
     finally:
