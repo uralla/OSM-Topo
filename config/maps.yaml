@@ -56,6 +56,7 @@ sources:
 products:
   armenia:
     source: armenia
+    update_interval_days: 14
     extract: false
     polygon: poly/armenia.poly
     elevation: elevation/armenia.osm.pbf
@@ -77,6 +78,7 @@ products:
 
   belarus:
     source: belarus
+    update_interval_days: 14
     extract: false
     polygon: poly/belarus.poly
     elevation: null
@@ -98,6 +100,7 @@ products:
 
   bu-zab-amu:
     source: russia
+    update_interval_days: 9
     polygon: poly/RU-BU_RU-ZAB_RU-AMU.poly
     elevation: elevation/RU-BU_RU-ZAB_RU-AMU.osm.pbf
     geonames: input/cities15000.zip
@@ -119,6 +122,7 @@ products:
 
   central-fed-district:
     source: russia
+    update_interval_days: 7
     polygon: poly/central-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -139,6 +143,7 @@ products:
 
   chu-kam:
     source: russia
+    update_interval_days: 10
     polygon: poly/RU-CHU_RU-KAM.poly
     elevation: elevation/RU-CHU_RU-KAM.osm.pbf
     geonames: input/cities15000.zip
@@ -159,6 +164,7 @@ products:
 
   crimea:
     source: crimea
+    update_interval_days: 7
     extract: false
     preprocess_mode: fast
     preprocess_workers: 2
@@ -182,6 +188,7 @@ products:
 
   georgia:
     source: georgia
+    update_interval_days: 14
     extract: false
     polygon: poly/georgia.poly
     elevation: null
@@ -203,6 +210,7 @@ products:
 
   irk:
     source: russia
+    update_interval_days: 7
     polygon: poly/RU-IRK.poly
     elevation: elevation/RU-IRK.osm.pbf
     geonames: input/cities15000.zip
@@ -223,6 +231,7 @@ products:
 
   kg:
     source: kyrgyzstan
+    update_interval_days: 7
     extract: false
     polygon: poly/KG.poly
     elevation: elevation/kg.osm.pbf
@@ -244,6 +253,7 @@ products:
 
   kya-n:
     source: russia
+    update_interval_days: 9
     polygon: poly/RU-KYA-N.poly
     elevation: elevation/RU-KYA-N.osm.pbf
     geonames: input/cities15000.zip
@@ -264,6 +274,7 @@ products:
 
   kya-s:
     source: russia
+    update_interval_days: 9
     polygon: poly/RU-KYA-S.poly
     elevation: elevation/RU-KYA-S.osm.pbf
     geonames: input/cities15000.zip
@@ -284,6 +295,7 @@ products:
 
   kz:
     source: kazakhstan
+    update_interval_days: 7
     extract: false
     polygon: poly/KZ.poly
     elevation: elevation/kz.osm.pbf
@@ -308,6 +320,7 @@ products:
 
   mag:
     source: russia
+    update_interval_days: 14
     polygon: poly/RU-MAG.poly
     elevation: elevation/RU-MAG.osm.pbf
     geonames: input/cities15000.zip
@@ -328,6 +341,7 @@ products:
 
   mongolia:
     source: mongolia
+    update_interval_days: 14
     extract: false
     polygon: poly/mongolia.poly
     elevation: null
@@ -349,6 +363,7 @@ products:
 
   north-caucasus-fed-district:
     source: russia
+    update_interval_days: 7
     polygon: poly/north-caucasus-fed-district.poly
     elevation: elevation/ele_10_ru_north-caucasus-fed-district.osm.pbf
     geonames: input/cities15000.zip
@@ -369,6 +384,7 @@ products:
 
   northwestern-fed-district:
     source: northwestern
+    update_interval_days: 7
     extract: false
     polygon: poly/northwestern-fed-district.poly
     elevation: elevation/ele_10_ru_northwestern-fed-district.osm.pbf
@@ -393,6 +409,7 @@ products:
 
   pri-kha-yev:
     source: russia
+    update_interval_days: 10
     polygon: poly/RU-PRI_RU-KHA_RU-YEV.poly
     elevation: elevation/pri-kha-yev.osm.pbf
     geonames: input/cities15000.zip
@@ -415,6 +432,7 @@ products:
 
   sa-e:
     source: russia
+    update_interval_days: 10
     polygon: poly/RU-SA-E.poly
     elevation: elevation/RU-SA-E.osm.pbf
     geonames: input/cities15000.zip
@@ -435,6 +453,7 @@ products:
 
   sa-w:
     source: russia
+    update_interval_days: 10
     polygon: poly/RU-SA-W.poly
     elevation: elevation/RU-SA-W.osm.pbf
     geonames: input/cities15000.zip
@@ -455,6 +474,7 @@ products:
 
   sfo:
     source: russia
+    update_interval_days: 7
     polygon: poly/siberian-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -473,8 +493,30 @@ products:
     splitter:
       max_nodes: 1000000
 
+  turkey:
+    source: turkey
+    update_interval_days: 30
+    polygon: poly/turkey.poly
+    elevation: elevation/turkey.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1054
+      product_id: 1
+      overview_mapnumber: "10540000"
+      first_tile_mapid: "10540001"
+      last_reserved_mapid: "10549999"
+    names:
+      family: Turkey.OSM
+      series: Turkey.OSM
+      overview: Turkey.OSM
+      description: Turkey.OSM
+      output_img: Turkey.OSM.img
+    splitter:
+      max_nodes: 800000
+
   ural-fed-district:
     source: russia
+    update_interval_days: 7
     polygon: poly/ural-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -495,6 +537,7 @@ products:
 
   ural-n:
     source: russia
+    update_interval_days: 7
     polygon: poly/ru_ural_polar.poly
     elevation: elevation/ural_n.osm.pbf
     geonames: input/cities15000.zip
@@ -519,6 +562,7 @@ products:
 
   ural-s:
     source: russia
+    update_interval_days: 7
     preprocess_mode: fast
     preprocess_workers: 2
     polygon: poly/ru_ural.poly
@@ -543,6 +587,7 @@ products:
 
   volga-fed-district:
     source: russia
+    update_interval_days: 7
     polygon: poly/volga-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
@@ -563,6 +608,7 @@ products:
 
   yamal:
     source: russia
+    update_interval_days: 9
     polygon: poly/RU-YAN.poly
     elevation: elevation/RU-YAN.osm.pbf
     geonames: input/cities15000.zip
@@ -583,6 +629,7 @@ products:
 
   yakutia:
     source: russia
+    update_interval_days: 14
     polygon: poly/RU-SA.poly
     elevation: elevation/RU-SA.osm.pbf
     geonames: input/cities15000.zip
@@ -603,6 +650,7 @@ products:
 
   yugra:
     source: russia
+    update_interval_days: 9
     polygon: poly/RU-KHM.poly
     elevation: elevation/RU-KHM.osm.pbf
     geonames: input/cities15000.zip
