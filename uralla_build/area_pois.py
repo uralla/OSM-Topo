@@ -157,51 +157,71 @@ def _tags_dict(tags: Mapping[str, str] | object) -> dict[str, str]:
     return {str(key): str(value) for key, value in items}
 
 
-def area_poi_kind(tags: Mapping[str, str]) -> str | None:
-    """Return an approved synthetic-POI semantic kind for a closed way."""
+def area_poi_equivalent_kinds(tags: Mapping[str, str]) -> tuple[str, ...]:
+    """Return every approved semantic kind represented by one real POI.
+
+    A real node may legitimately carry several independent OSM classifications,
+    for example tourism=attraction + historic=castle.  Area synthesis chooses one
+    primary kind, but duplicate suppression must see all equivalent kinds or it
+    can create a second POI on top of the richer real node.
+    """
+    kinds: list[str] = []
+
     amenity = tags.get("amenity")
     if amenity in _AMENITY_AREA_POIS:
-        return f"amenity:{amenity}"
+        kinds.append(f"amenity:{amenity}")
+
     shop = tags.get("shop")
     if shop in _SHOP_AREA_POIS:
-        return f"shop:{shop}"
+        kinds.append(f"shop:{shop}")
+
     tourism = tags.get("tourism")
     if tourism in _TOURISM_AREA_POIS:
-        return f"tourism:{tourism}"
+        kinds.append(f"tourism:{tourism}")
+
     historic = tags.get("historic")
     if historic in _HISTORIC_AREA_POIS:
-        return f"historic:{historic}"
-    # Incomplete but common OSM tagging: a ruined building is still a useful
-    # tourist POI even when historic=ruins is absent. Normalize only the
-    # synthetic point, never the source polygon.
-    if tags.get("building") == "ruins":
-        return "historic:ruins"
-    if tags.get("healthcare"):
-        return f"healthcare:{tags['healthcare']}"
+        kinds.append(f"historic:{historic}")
+    elif tags.get("building") == "ruins":
+        kinds.append("historic:ruins")
+
+    healthcare = tags.get("healthcare")
+    if healthcare:
+        kinds.append(f"healthcare:{healthcare}")
+
     man_made = tags.get("man_made")
     if man_made in _MAN_MADE_AREA_POIS:
-        return f"man_made:{man_made}"
+        kinds.append(f"man_made:{man_made}")
+
     if tags.get("landmark") == "chimney":
-        return "landmark:chimney"
+        kinds.append("landmark:chimney")
+
     aeroway = tags.get("aeroway")
     if aeroway in _AEROWAY_AREA_POIS:
-        return f"aeroway:{aeroway}"
+        kinds.append(f"aeroway:{aeroway}")
+
     landuse = tags.get("landuse")
-    if landuse in _LANDUSE_AREA_POIS:
-        if landuse == "basin" and not tags.get("name"):
-            return None
-        return f"landuse:{landuse}"
+    if landuse in _LANDUSE_AREA_POIS and not (landuse == "basin" and not tags.get("name")):
+        kinds.append(f"landuse:{landuse}")
+
     if is_kite_infrastructure(tags):
-        return "kite:infrastructure"
+        kinds.append("kite:infrastructure")
     if tags.get("office") == "government":
-        return "office:government"
+        kinds.append("office:government")
     if tags.get("military") == "bunker":
-        return "military:bunker"
+        kinds.append("military:bunker")
     if tags.get("craft") == "beekeeper":
-        return "craft:beekeeper"
+        kinds.append("craft:beekeeper")
     if tags.get("railway") == "station":
-        return "railway:station"
-    return None
+        kinds.append("railway:station")
+
+    return tuple(dict.fromkeys(kinds))
+
+
+def area_poi_kind(tags: Mapping[str, str]) -> str | None:
+    """Return the primary approved synthetic-POI semantic kind for a closed way."""
+    kinds = area_poi_equivalent_kinds(tags)
+    return kinds[0] if kinds else None
 
 
 def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
@@ -210,15 +230,18 @@ def discover_area_pois(source: str, osmium: Any) -> list[SyntheticAreaPoi]:
     areas: list[tuple[int, str, list[tuple[float, float]], dict[str, str]]] = []
     for item in osmium.FileProcessor(source).with_locations():
         tags = _tags_dict(item.tags)
-        kind = area_poi_kind(tags)
-        if kind is None:
+        kinds = area_poi_equivalent_kinds(tags)
+        if not kinds:
             continue
+        kind = kinds[0]
         location = getattr(item, "location", None)
         if location is not None:
             valid = getattr(location, "valid", None)
             if not callable(valid) or valid():
                 try:
-                    real_nodes.setdefault(kind, []).append((float(location.lon), float(location.lat)))
+                    point = (float(location.lon), float(location.lat))
+                    for equivalent_kind in kinds:
+                        real_nodes.setdefault(equivalent_kind, []).append(point)
                     continue
                 except (AttributeError, TypeError, ValueError):
                     pass
