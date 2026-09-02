@@ -1,4 +1,4 @@
-name: One-shot expand kite detection
+name: One-shot cave label cleanup
 on:
   push:
     branches: [main]
@@ -13,53 +13,26 @@ jobs:
       - uses: actions/checkout@v4
       - name: Sync latest main
         run: git pull --rebase origin main
-      - name: Install project
-        run: python3 -m pip install -e .
-      - name: Expand kite semantic detection
-        run: python3 .github/scripts/one_shot_expand_kite_detection.py
-      - name: Compile Python
-        run: python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
-      - name: Test kite detector
+      - name: Apply cave label cleanup
+        run: python3 .github/scripts/one_shot_cave_label_cleanup.py
+      - name: Verify cave label
         run: |
+          python3 -m py_compile uralla_build/preprocessor.py
           python3 - <<'PY'
-          from uralla_build.kite import enrich_kite_tags, is_kite_infrastructure
-          positives = [
-              {"brand": "Кайтшкола номер один"},
-              {"description": "Кайт станция и кайт школа ВиндЭкстрим"},
-              {"designation": "Kitesurfing"},
-              {"name": 'Школа кайтсерфинга "Точка отрыва"'},
-              {"operator": "Kite Station"},
-          ]
-          assert all(is_kite_infrastructure(tags) for tags in positives)
-          assert not is_kite_infrastructure({"name": "Nikita"})
-          assert not is_kite_infrastructure({"description": "обычная школа серфинга"})
-          tags, changed = enrich_kite_tags({"description": "kite school"})
-          assert changed and tags["uralla:kite"] == "yes"
+          from uralla_build.preprocessor import enrich_geographic_label_tags
+          tags, changed = enrich_geographic_label_tags({"natural": "cave_entrance", "name": "Малая Аракаевская пещера"})
+          assert changed
+          assert tags["uralla:label"] == "Мал. Аракаевская", tags
+          tags, changed = enrich_geographic_label_tags({"natural": "cave_entrance", "name": "Пещера Сказка"})
+          assert not changed
+          assert "uralla:label" not in tags
           PY
-      - name: Test kite area detection
-        run: |
-          python3 - <<'PY'
-          from uralla_build.area_pois import area_poi_kind
-          samples = [
-              {"sport": "kitesurfing"},
-              {"brand": "Кайтшкола номер один"},
-              {"designation": "Kitesurfing"},
-              {"name": 'Школа кайтсерфинга "Точка отрыва"'},
-              {"description": "Кайт станция и прокат оборудования"},
-          ]
-          assert all(area_poi_kind(tags) == "kite:infrastructure" for tags in samples)
-          PY
-      - name: Verify style and debug cleanup
-        run: |
-          grep -n "uralla:kite=yes" styles/uralla/inc/priority_points
-          ! grep -n "солнышко" uralla_build/preprocessor.py
-      - name: Verify diff
-        run: git diff --check
+          git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 41898282+uralla@users.noreply.github.com
-          git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
-          git commit -m 'Expand kite infrastructure detection'
+          git add uralla_build/preprocessor.py
+          git commit -m 'Strip cave type suffix from display labels'
           git push
-# no-pytest verification 2026-09-02
+# trigger 2026-09-02
