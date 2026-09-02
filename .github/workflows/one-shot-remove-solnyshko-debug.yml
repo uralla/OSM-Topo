@@ -1,4 +1,4 @@
-name: One-shot remove Solnyshko debug
+name: One-shot expand kite detection
 on:
   push:
     branches: [main]
@@ -13,20 +13,20 @@ jobs:
       - uses: actions/checkout@v4
       - name: Sync latest main
         run: git pull --rebase origin main
-      - name: Remove Solnyshko diagnostics
-        run: python3 .github/scripts/one_shot_remove_solnyshko_debug.py
+      - name: Expand kite semantic detection
+        run: python3 .github/scripts/one_shot_expand_kite_detection.py
       - name: Verify
         run: |
-          python3 -m py_compile uralla_build/preprocessor.py
-          ! grep -n "Солнышко\|solnyshko_" uralla_build/preprocessor.py
-          test ! -e .github/workflows/debug-solnyshko-accommodation.yml
-          test ! -e .github/workflows/debug-solnyshko-neighbors.yml
+          python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
+          python3 -m pytest -q tests/test_kite.py tests/test_area_pois.py tests/test_preprocess_pipeline.py
+          grep -n "uralla:kite=yes" styles/uralla/inc/priority_points
+          grep -n "SubType=0x09" styles/uralla.txt >/dev/null
+          ! grep -n "солнышко" uralla_build/preprocessor.py
           git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 41898282+uralla@users.noreply.github.com
-          git add -A uralla_build/preprocessor.py .github/workflows/debug-solnyshko-accommodation.yml .github/workflows/debug-solnyshko-neighbors.yml
-          git commit -m 'Remove Solnyshko-specific diagnostics'
+          git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
+          git commit -m 'Expand kite infrastructure detection'
           git push
-# retrigger cleanup 2026-09-02
