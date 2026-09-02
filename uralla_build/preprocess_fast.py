@@ -14,7 +14,7 @@ from uuid import uuid4
 from .analysis_bundle import _analyze_worker, apply_analysis_bundle
 from .area_poi_analysis import (
     analyze_area_pois,
-    area_poi_candidates_from_analysis,
+    area_poi_reuse_entries_from_analysis,
     validate_area_poi_analysis,
 )
 from .area_pois import write_area_pois
@@ -25,13 +25,14 @@ from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 3
+ANALYSIS_MANIFEST_SCHEMA = 4
 
 
 def _source_identity(path: Path) -> dict[str, object]:
     stat = path.stat()
     return {
         "path": str(path.resolve()),
+        "name": path.name,
         "size": int(stat.st_size),
         "mtime_ns": int(stat.st_mtime_ns),
     }
@@ -45,6 +46,10 @@ def _write_analysis_manifest(
     payload = {
         "schema_version": ANALYSIS_MANIFEST_SCHEMA,
         "source": _source_identity(source),
+        "reuse_scope": {
+            "source_name": source.name,
+            "policy": "same extract name; per-object freshness guards",
+        },
         "semantic_basis": "area-poi + semantic/filter before spatial analysis",
         "artifacts": {
             "area_pois": "area-pois.json.gz",
@@ -83,9 +88,13 @@ def _validate_reusable_analysis(
         raise StageError(
             "reusable analysis manifest has an unsupported schema; rebuild the analysis cache"
         )
-    if payload.get("source") != _source_identity(source):
+    source_metadata = payload.get("source")
+    if not isinstance(source_metadata, dict):
+        raise StageError("reusable analysis manifest has incomplete source metadata")
+    cached_name = str(source_metadata.get("name") or "")
+    if cached_name and cached_name != source.name:
         raise StageError(
-            "reusable analysis belongs to a different source PBF; run without --reuse-analysis first"
+            f"reusable analysis was built for {cached_name}, not {source.name}"
         )
     validate_area_poi_analysis(area_artifact, source)
     return payload
@@ -104,7 +113,10 @@ def run_fast_preprocess(argv: list[str]) -> int:
     parser.add_argument(
         "--reuse-analysis",
         action="store_true",
-        help="Reuse area/road/POI artifacts only when they belong to the exact source PBF",
+        help=(
+            "Reuse area/road/POI artifacts for newer extracts with the same source "
+            "name; stale objects are skipped by cheap per-object guards"
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -135,15 +147,16 @@ def run_fast_preprocess(argv: list[str]) -> int:
         workers = max(1, int(args.workers))
         analysis_stats: dict[str, object] = {}
         semantic_base_seconds = 0.0
+        reusable_area_entries = ()
 
         if args.reuse_analysis:
             area_started = time.monotonic()
-            _validate_reusable_analysis(analysis_dir, source)
-            area_candidates = area_poi_candidates_from_analysis(area_artifact)
+            manifest = _validate_reusable_analysis(analysis_dir, source)
+            reusable_area_entries = tuple(area_poi_reuse_entries_from_analysis(area_artifact))
             area_seconds = time.monotonic() - area_started
             area_stats = {
-                "candidates": len(area_candidates),
-                "created": len(area_candidates),
+                "candidates": len(reusable_area_entries),
+                "created": len(reusable_area_entries),
                 "reused": 1,
             }
             analyze_wall_seconds = 0.0
@@ -151,6 +164,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
             poi_seconds = 0.0
             analysis_stats = {
                 "reused": True,
+                "cache_source": manifest.get("source"),
+                "fresh_source": _source_identity(source),
                 "area_pois": {"artifact": str(area_artifact)},
                 "road_density": {"artifact": str(road_artifact)},
                 "poi_context": {"artifact": str(poi_artifact)},
@@ -158,9 +173,9 @@ def run_fast_preprocess(argv: list[str]) -> int:
             }
             semantic_transformer = SemanticTransformer(args.config, args.profile)
             apply_input = source
-            apply_synthetic_area_pois = area_candidates
             _report(
-                "fast preprocess: reusable post-semantic area/road/POI artifacts accepted; all discovery and spatial analysis skipped"
+                "fast preprocess: reusable post-semantic artifacts accepted for fresh extract; "
+                "spatial analysis skipped, per-object freshness guards enabled"
             )
         else:
             analysis_started = time.monotonic()
@@ -236,7 +251,6 @@ def run_fast_preprocess(argv: list[str]) -> int:
             # apply hints directly without repeating semantics or reinjecting areas.
             semantic_transformer = None
             apply_input = semantic_base
-            apply_synthetic_area_pois = ()
 
         _report("fast preprocess: unified APPLY (semantic first on reuse)")
         apply_started = time.monotonic()
@@ -247,7 +261,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
             osmium,
             reporter=_report,
             semantic_transformer=semantic_transformer,
-            synthetic_area_pois=apply_synthetic_area_pois,
+            reusable_area_entries=reusable_area_entries,
         )
         apply_seconds = time.monotonic() - apply_started
 
@@ -266,8 +280,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 6,
-            "mode": "reuse-apply" if args.reuse_analysis else "parity-analyze-apply",
+            "schema_version": 7,
+            "mode": "reuse-fresh-extract" if args.reuse_analysis else "parity-analyze-apply",
             "input": str(source),
             "output": str(output),
             "timing": {
