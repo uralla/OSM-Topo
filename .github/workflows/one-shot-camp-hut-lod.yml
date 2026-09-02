@@ -20,8 +20,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          # 1) Camp site: TYP 0x2b03 is NoLabel, so ordinary name fallback is safe
-          # and is visible in Garmin object info/hover without permanent map text.
           path = Path('styles/uralla/points')
           text = path.read_text(encoding='utf-8')
           old = '''# Camps keep one dedicated icon across the whole useful range. Named camps show\n# their real name; unnamed camps stay visually clean and expose "кемпинг" on hover.\ntourism=camp_site & name=* { name '${name}' } [0x2b03 resolution 22]\ntourism=camp_site & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='кемпинг' } [0x2b03 resolution 22]\n'''
@@ -30,7 +28,6 @@ jobs:
               raise SystemExit('camp_site rule block not found')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # 2) Wilderness/alpine huts participate in accommodation H/M/L.
           path = Path('styles/uralla/inc/priority_points')
           text = path.read_text(encoding='utf-8')
           old = '''amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]\n(tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23]\n'''
@@ -39,7 +36,6 @@ jobs:
               raise SystemExit('hut rule block not found')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # 3) Include huts in accommodation/adaptive analysis.
           path = Path('uralla_build/poi_context.py')
           text = path.read_text(encoding='utf-8')
           old = 'ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})\n'
@@ -48,7 +44,6 @@ jobs:
               raise SystemExit('ACCOMMODATION_VALUES target not found')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # Candidate semantics changed: invalidate persistent POI-context and bundle caches.
           path = Path('uralla_build/poi_context_analysis.py')
           text = path.read_text(encoding='utf-8')
           old = 'SCHEMA_VERSION = 2\n'
@@ -66,7 +61,7 @@ jobs:
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
 
           test = Path('tests/test_camp_hut_lod.py')
-          test.write_text('''from pathlib import Path\nimport unittest\n\nfrom uralla_build.poi_context import ACCOMMODATION_VALUES, is_accommodation\n\n\nclass CampAndHutLodTests(unittest.TestCase):\n    def test_camp_site_uses_hover_fallback_name(self) -> None:\n        text = Path("styles/uralla/points").read_text(encoding="utf-8")\n        self.assertIn("tourism=camp_site { name '${name}' | 'кемпинг' } [0x2b03 resolution 22]", text)\n        self.assertNotIn("mkgmap:label:2='кемпинг'", text)\n\n    def test_huts_are_accommodation_candidates(self) -> None:\n        self.assertIn("wilderness_hut", ACCOMMODATION_VALUES)\n        self.assertIn("alpine_hut", ACCOMMODATION_VALUES)\n        self.assertTrue(is_accommodation({"tourism": "wilderness_hut"}))\n        self.assertTrue(is_accommodation({"tourism": "alpine_hut"}))\n\n    def test_huts_have_hml_style_rules(self) -> None:\n        text = Path("styles/uralla/inc/priority_points").read_text(encoding="utf-8")\n        for lod, resolution in (("H", 22), ("M", 23), ("L", 24)):\n            self.assertIn(\n                f"uralla:poi_lod_class={lod} & (tourism=wilderness_hut | tourism=alpine_hut) {{ name '${{name}}' | 'избушка' }} [0x2b07 resolution {resolution}]",\n                text,\n            )\n\n\nif __name__ == "__main__":\n    unittest.main()\n''', encoding='utf-8')
+          test.write_text('''from pathlib import Path\nimport unittest\n\nfrom uralla_build.poi_context import ACCOMMODATION_VALUES, is_accommodation\n\n\nclass CampAndHutLodTests(unittest.TestCase):\n    def test_camp_site_uses_hover_fallback_name(self) -> None:\n        text = Path("styles/uralla/points").read_text(encoding="utf-8")\n        self.assertIn("tourism=camp_site { name '${name}' | 'кемпинг' } [0x2b03 resolution 22]", text)\n        self.assertNotIn("mkgmap:label:2='кемпинг'", text)\n\n    def test_huts_are_accommodation_candidates(self) -> None:\n        self.assertIn("wilderness_hut", ACCOMMODATION_VALUES)\n        self.assertIn("alpine_hut", ACCOMMODATION_VALUES)\n        self.assertTrue(is_accommodation({"tourism": "wilderness_hut"}))\n        self.assertTrue(is_accommodation({"tourism": "alpine_hut"}))\n\n    def test_huts_have_hml_style_rules(self) -> None:\n        text = Path("styles/uralla/inc/priority_points").read_text(encoding="utf-8")\n        name_expr = "{ name '$" + "{name}' | 'избушка' }"\n        for lod, resolution in (("H", 22), ("M", 23), ("L", 24)):\n            expected = (\n                f"uralla:poi_lod_class={lod} & (tourism=wilderness_hut | tourism=alpine_hut) "\n                + name_expr\n                + f" [0x2b07 resolution {resolution}]"\n            )\n            self.assertIn(expected, text)\n\n\nif __name__ == "__main__":\n    unittest.main()\n''', encoding='utf-8')
           PY
 
       - name: Run focused tests
