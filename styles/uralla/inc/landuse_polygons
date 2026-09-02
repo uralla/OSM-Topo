@@ -34,7 +34,7 @@ landuse=military [0x04 resolution 21]
 
 landuse=quarry [0x0c resolution 21]
 # Resolution 24 is intentionally reserved for detailed building polygons.
-landuse=industrial [0x0c resolution 21]
+landuse=industrial { name '${name}' | 'промзона' } [0x0c resolution 21]
 
 # Residential landuse stays the residential polygon type at all rendered levels.
 # 0x03 is reserved for actual settlement/place polygons and must not leak the
