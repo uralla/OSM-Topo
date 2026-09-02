@@ -25,7 +25,7 @@ from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 5
+ANALYSIS_MANIFEST_SCHEMA = 6
 
 
 def _source_identity(path: Path) -> dict[str, object]:
