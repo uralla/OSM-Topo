@@ -1,4 +1,5 @@
-; -*- coding: utf-8 -*-
+
+
 [_id]
 ProductCode=1
 FID=1002
@@ -24,6 +25,9 @@ Type=0x00d,4
 Type=0x00f,4
 Type=0x021,4
 Type=0x04e,4
+Type=0x10f12,4
+Type=0x10f13,4
+Type=0x10f14,4
 Type=0x008,5
 Type=0x00a,5
 Type=0x00b,5
@@ -35,9 +39,6 @@ Type=0x10f05,5
 Type=0x10f06,5
 Type=0x10f0b,5
 Type=0x10f10,5
-Type=0x10f12,4
-Type=0x10f13,4
-Type=0x10f14,4
 Type=0x007,6
 Type=0x01a,6
 Type=0x10612,6
@@ -284,46 +285,6 @@ Type=0x0d
 ;GRMN_TYPE: Large Manmade Areas/RESERVATION/Reservation/Non NT
 String1=0x19,площадь
 String2=0x04,flat
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-Xpm="0 0 1 0"
-"1 c #FFCA8B"
-[end]
-
-[_polygon]
-Type=0x10f12
-;GRMN_TYPE: Customizable Areas/PEDESTRIAN_SQUARE/Pedestrian or road area
-String1=0x19,пешеходная зона
-String2=0x04,pedestrian area
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-Xpm="0 0 1 0"
-"1 c #FFCA8B"
-[end]
-
-
-[_polygon]
-Type=0x10f13
-;GRMN_TYPE: Customizable Areas/TOURISM_AREA/Tourism area
-String1=0x19,туристический объект
-String2=0x04,tourism area
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-Xpm="0 0 1 0"
-"1 c #FFCA8B"
-[end]
-
-[_polygon]
-Type=0x10f14
-;GRMN_TYPE: Customizable Areas/PLATFORM_AREA/Railway or public transport platform
-String1=0x19,платформа
-String2=0x04,platform
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -1809,6 +1770,48 @@ Xpm="0 0 1 0"
 
 
 [_polygon]
+Type=0x10f12
+;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_19/Customizable area/Non NT, NT
+String1=0x19,пешеходная зона
+String2=0x04,pedestrian area
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+Xpm="0 0 1 0"
+"1 c #FFCA8B"
+[end]
+
+
+[_polygon]
+Type=0x10f13
+;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_20/Customizable area/Non NT, NT
+String1=0x19,туристический объект
+String2=0x04,tourism area
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+Xpm="0 0 1 0"
+"1 c #FFCA8B"
+[end]
+
+
+[_polygon]
+Type=0x10f14
+;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_21/Customizable area/Non NT, NT
+String1=0x19,платформа
+String2=0x04,platform
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+Xpm="0 0 1 0"
+"1 c #FFCA8B"
+[end]
+
+
+[_polygon]
 Type=0x11100
 ;GRMN_TYPE: //
 String1=0x19,камни
@@ -2303,7 +2306,6 @@ ContourColor=No
 
 [_line]
 Type=0x07
-;URALLA_ROLE: forest-road-good-far + pedestrian-cycleway-far
 ;GRMN_TYPE: Roads/ALLEY, DRIVEWAY/Alleyway, private driveway to residence/Non NT, NT
 UseOrientation=Y
 LineWidth=1
@@ -2318,7 +2320,6 @@ ContourColor=No
 
 [_line]
 Type=0x0a
-;URALLA_ROLE: forest-road-good-near
 ;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
 UseOrientation=N
 Xpm="32 2 2  1"
@@ -2337,7 +2338,6 @@ ContourColor=No
 
 [_line]
 Type=0x0b
-;URALLA_ROLE: foot-bicycle-trail-far
 ;GRMN_TYPE: Roads/MAJOR_CONNECTOR/Major highway connector/Non NT, NT
 UseOrientation=Y
 Xpm="32 1 2  1"
@@ -2373,7 +2373,6 @@ ContourColor=No
 
 [_line]
 Type=0x0e
-;URALLA_ROLE: pedestrian-cycleway-near
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_2/Routable customizable line/Non NT, NT
 UseOrientation=N
 LineWidth=2
@@ -2454,7 +2453,6 @@ ContourColor=No
 
 [_line]
 Type=0x12
-;URALLA_ROLE: forest-road-bad-far
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_6/Routable customizable line/Non NT, NT
 UseOrientation=Y
 Xpm="32 1 2  1"
@@ -2470,7 +2468,6 @@ ExtendedLabels=N
 
 [_line]
 Type=0x13
-;URALLA_ROLE: forest-road-bad-near
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_ROUTE_LINE_7/Routable customizable line/Non NT, NT
 UseOrientation=N
 Xpm="32 2 2  1"
@@ -2489,7 +2486,6 @@ ContourColor=No
 
 [_line]
 Type=0x16
-;URALLA_ROLE: foot-bicycle-trail-near
 ;GRMN_TYPE: Roads/TRAIL/Walkway or trail/Non NT, NT
 UseOrientation=N
 Xpm="32 2 2  1"
@@ -2530,6 +2526,34 @@ ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
+[end]
+
+
+[_line]
+Type=0x1a
+;GRMN_TYPE: Roads/INTERNATIONAL_FERRY/Major water or rail ferry/Non NT, NT
+UseOrientation=N
+LineWidth=6
+BorderWidth=1
+Xpm="0 0 2 0"
+"1 c #FFFFFF"
+"2 c #000000"
+String1=0x19,рулёжная дорожка
+String2=0x04,taxiway
+ExtendedLabels=N
+[end]
+
+
+[_line]
+Type=0x1b
+;GRMN_TYPE: Roads/FERRY/Water or rail ferry/Non NT, NT
+UseOrientation=N
+LineWidth=1
+Xpm="0 0 1 0"
+"1 c #E6E6E6"
+String1=0x19,dummy line
+String2=0x04,dummy line
+ExtendedLabels=N
 [end]
 
 
@@ -3432,33 +3456,6 @@ String2=0x04,marina
 ExtendedLabels=N
 [end]
 
-[_line]
-Type=0x1a
-;GRMN_TYPE: Road/AIRPORT_TAXIWAY/Taxiway
-UseOrientation=N
-LineWidth=6
-BorderWidth=1
-Xpm="0 0 2 0"
-"1 c #FFFFFF"
-"2 c #000000"
-String1=0x19,рулёжная дорожка
-String2=0x04,taxiway
-ExtendedLabels=N
-[end]
-
-[_line]
-Type=0x1b
-;GRMN_TYPE: Roads/FERRY/Water or rail ferry/Non NT, NT
-UseOrientation=N
-LineWidth=1
-Xpm="0 0 1 0"
-"1 c #E6E6E6"
-String1=0x19,dummy line
-String2=0x04,dummy line
-ExtendedLabels=N
-[end]
-
-
 
 [_line]
 Type=0x10f1d
@@ -3513,7 +3510,6 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
 [end]
-
 
 
 [_line]
@@ -3634,14 +3630,6 @@ FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
 [end]
-
-
-
-
-
-
-
-
 
 
 ;====================== POINTS ==========================
@@ -4052,67 +4040,6 @@ DayXpm="14 11 3 1"   Colormode=16
 "!#!!######!!#!"
 "!############!"
 " !!!!!!!!!!!! "
-;12345678901234
-[end]
-
-
-[_point]
-Type=0x02f
-SubType=0x18
-;GRMN_TYPE: Business - Services/Custom bicycle service POI
-String1=0x19,велосипеды
-String2=0x04,bicycle
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-DayXpm="14 14 3 1"   Colormode=16
-"!	c #0000FF"
-"#	c #FFFFFF"
-" 	c none"
-"   ########   "
-" ############ "
-" ############ "
-"###!!!##!!####"
-"####!###!!####"
-"####!!!!!#####"
-"#####!#!!!####"
-"###!!!!##!!###"
-"##!#!!##!!#!##"
-"##!##!##!##!##"
-"###!!####!!###"
-" ############ "
-" ############ "
-"   ########   "
-;12345678901234
-[end]
-                             
-
-
-[_point]
-Type=0x064
-SubType=0x0d
-;GRMN_TYPE: Business - Lodging/CHALET/Detached holiday cottage
-String1=0x19,коттедж
-String2=0x04,chalet
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="14 11 2 1"   Colormode=0
-"!	c #000000"
-"#	c #FFFFFF"
-"!!!!!!!!!!!!!!"
-"!############!"
-"!#!##########!"
-"!#!########!#!"
-"!#!!!!#####!#!"
-"!#!!!!!!!!!!#!"
-"!#!!!!!!!!!!#!"
-"!#!!######!!#!"
-"!#!!######!!#!"
-"!############!"
-"!!!!!!!!!!!!!!"
 ;12345678901234
 [end]
 
@@ -5037,7 +4964,6 @@ DayXpm="14 14 3 1"   Colormode=0
 [end]
 
 
-
 [_point]
 Type=0x02f
 SubType=0x01
@@ -5440,8 +5366,6 @@ DayXpm="16 13 3 1"   Colormode=16
 [end]
 
 
-
-
 [_point]
 Type=0x02f
 SubType=0x15
@@ -5510,6 +5434,96 @@ DayXpm="18 21 3 1"   Colormode=16
 [end]
 
 
+[_point]
+Type=0x02f
+SubType=0x18
+;GRMN_TYPE: //
+String1=0x19,велосипеды
+String2=0x04,bicycle
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="14 14 3 1"   Colormode=16
+"!	c #0000FF"
+"#	c #FFFFFF"
+"  	c none"
+"   ########   "
+" ############ "
+" ############ "
+"###!!!##!!####"
+"####!###!!####"
+"####!!!!!#####"
+"#####!#!!!####"
+"###!!!!##!!###"
+"##!#!!##!!#!##"
+"##!##!##!##!##"
+"###!!####!!###"
+" ############ "
+" ############ "
+"   ########   "
+;12345678901234
+[end]
+
+
+[_point]
+Type=0x02f
+SubType=0x19
+;GRMN_TYPE: //
+String1=0x19,фонтан
+String2=0x04,fountain
+ExtendedLabels=N
+DayXpm="13 12 3 1"   Colormode=16
+"!	c #FFFFFF"
+"#	c #0000FF"
+"  	c none"
+"     ! !     "
+"    !#!#!    "
+"   !!!#!!!   "
+"  !#!!#!!#!  "
+" !#!#!!!#!#! "
+" !#!!#!#!!#! "
+"  !!!#!#!!!  "
+" !##!!#!!##! "
+"!#!!#!#!#!!#!"
+"!#! !###! !#!"
+" !  !###!  ! "
+"     !!!     "
+;1234567890123
+[end]
+
+
+[_point]
+Type=0x02f
+SubType=0x1a
+;GRMN_TYPE: //
+String1=0x19,пасека
+ExtendedLabels=Y
+FontStyle=Default
+CustomColor=No
+ContourColor=No
+DayXpm="13 14 5 1"   Colormode=16
+"!	c #FFFF00"
+"#	c #FFCA00"
+"%	c #BD9541"
+"?	c #FFFFFF"
+"  	c none"
+"    ?????    "
+"   ?!!!!#?   "
+"   ?!####?   "
+"  ?!!!!!!#?  "
+"  ?!######?  "
+" ?!!!!!!!!#? "
+" ?!########? "
+" ?!!!!!!!!#? "
+" ?!########? "
+"  ?!!!%!!#?  "
+"  ?!#%%%##?  "
+"   ?!%%%#?   "
+"   ?!####?   "
+"    ?????    "
+;1234567890123
+[end]
 
 
 [_point]
@@ -5744,6 +5758,40 @@ DayXpm="10 14 32 2"   Colormode=0
 "#9!!!!!!!!!!!!!!!!#9"
 "#9#9#9#9#9#9#9#9#9#9"
 ;1234567890
+[end]
+
+
+[_point]
+Type=0x030
+SubType=0x08
+;GRMN_TYPE: Business - Emergency and Government/FIRE_DEPT/Fire department/Non NT
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="6 16 5 1"   Colormode=16
+"!	c #FF0000"
+"#	c #BD0000"
+"%	c #101010"
+"?	c #FFFFFF"
+"  	c none"
+" ???  "
+"??%?? "
+"?%%%??"
+"??%%%?"
+"??%% ?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"?!!##?"
+"??????"
+;123456
 [end]
 
 
@@ -6075,6 +6123,31 @@ DayXpm="11 8 3 1"   Colormode=16
 
 [_point]
 Type=0x064
+SubType=0x00
+;GRMN_TYPE: //
+String1=0x19,ж/д станция
+String2=0x04,railroad station
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="8 8 2 1"   Colormode=16
+"!	c #101010"
+"#	c #FFFFFF"
+"!!!!!!!!"
+"!!!!!!!!"
+"!!####!!"
+"!!####!!"
+"!!####!!"
+"!!####!!"
+"!!!!!!!!"
+"!!!!!!!!"
+;12345678
+[end]
+
+
+[_point]
+Type=0x064
 SubType=0x01
 ;GRMN_TYPE: Geographical Named Points of Interest/BRIDGE/Bridge/Non NT, NT
 String1=0x19,мост
@@ -6170,6 +6243,37 @@ DayXpm="13 14 5 1"   Colormode=16
 
 [_point]
 Type=0x064
+SubType=0x04
+;GRMN_TYPE: Geographical Named Points of Interest/CHURCH/Church, mosque, etc./Non NT, NT
+String1=0x19,пограничный камень
+String2=0x04,boundary stone
+ExtendedLabels=N
+DayXpm="13 14 5 1"   Colormode=16
+"!	c #006500"
+"#	c #00CA00"
+"%	c #C5C5C5"
+"?	c #FFFFFF"
+"  	c none"
+"    ?????    "
+"   ?!!!!!?   "
+"  ?!%%%%%!?  "
+" ?!%%%%%%%!? "
+" ?!%!!!!!%!? "
+" ?!%%%%%%%!? "
+" ?!%%%%%%%!? "
+" ?!%!!!!!%!? "
+" ?!%%%%%%%!? "
+" ?!%%%%%%%!? "
+" ?!!!!!!!!!? "
+"?!#########!?"
+"?!!!!!!!!!!!?"
+"?????????????"
+;1234567890123
+[end]
+
+
+[_point]
+Type=0x064
 SubType=0x05
 ;GRMN_TYPE: Geographical Named Points of Interest/CIVIL_BUILDING/Civil building/Non NT, NT
 String1=0x19,
@@ -6197,6 +6301,122 @@ CustomColor=No
 ContourColor=No
 DayXpm="8 8 3 1"   Colormode=16
 "!	c #0000FF"
+"#	c #FFFFFF"
+"  	c none"
+"###  ###"
+"#!####!#"
+"##!##!##"
+" ##!!## "
+" ##!!## "
+"##!##!##"
+"#!####!#"
+"###  ###"
+;12345678
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x07
+;GRMN_TYPE: Geographical Named Points of Interest/DAM/Dam/Non NT, NT
+String1=0x01,
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="17 12 2 1"   Colormode=16
+"!	c #7B6541"
+"  	c none"
+"  !              "
+"  !              "
+" !!!             "
+" !!!          !  "
+"!!!!!         !  "
+"!!!!!   !    !!! "
+" !!!    !    !!! "
+"       !!!  !!!!!"
+"       !!!  !!!!!"
+"      !!!!!  !!! "
+"      !!!!!      "
+"       !!!       "
+;12345678901234567
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x08
+;GRMN_TYPE: //
+String1=0x19,урочище
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="15 15 2 1"   Colormode=16
+"!	c #BD6500"
+"  	c none"
+"      !!!      "
+"     !   !     "
+"  !! !   ! !!  "
+"  !         !  "
+"               "
+" !!         !! "
+"!             !"
+"!             !"
+"!             !"
+" !!         !! "
+"               "
+"  !         !  "
+"  !! !   ! !!  "
+"     !   !     "
+"      !!!      "
+;123456789012345
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x09
+;GRMN_TYPE: Geographical Named Points of Interest/LEVEE/Levee/Non NT, NT
+String1=0x19,тура
+String2=0x04,cairn
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 4 1"   Colormode=16
+"!	c #202020"
+"#	c #6F6F6F"
+"%	c #B5B5B5"
+"  	c none"
+"             "
+"      !!     "
+"     !%%!    "
+"    !%%%%!   "
+"     !!!!    "
+"    !####!   "
+"   !######!  "
+"    !!!!!!   "
+"   !%%%%%%!  "
+"  !%%%%%%%%! "
+" !!!!!!!!!!! "
+"             "
+"             "
+;1234567890123
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x0a
+;GRMN_TYPE: Geographical Named Points of Interest/LOCALE/Locale/Non NT, NT
+String1=0x19,перевал
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="8 8 3 1"   Colormode=16
+"!	c #390000"
 "#	c #FFFFFF"
 "  	c none"
 "###  ###"
@@ -6261,6 +6481,104 @@ DayXpm="9 9 2 1"   Colormode=16
 " !     ! "
 "!       !"
 ;123456789
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x0d
+;GRMN_TYPE: Geographical Named Points of Interest/OILFIELD/Oilfield/Non NT, NT
+String1=0x19,коттедж
+String2=0x04,chalet
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="14 11 2 1"   Colormode=0
+"!	c #000000"
+"#	c #FFFFFF"
+"!!!!!!!!!!!!!!"
+"!############!"
+"!#!##########!"
+"!#!########!#!"
+"!#!!!!#####!#!"
+"!#!!!!!!!!!!#!"
+"!#!!!!!!!!!!#!"
+"!#!!######!!#!"
+"!#!!######!!#!"
+"!############!"
+"!!!!!!!!!!!!!!"
+;12345678901234
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x0e
+;GRMN_TYPE: //
+String1=0x19,замок
+String2=0x04,castle
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="16 13 7 1"   Colormode=16
+"!	c #FFFFFF"
+"#	c #993300"
+"%	c #CC6633"
+"?	c #663300"
+"$	c #996633"
+"*	c #FF9900"
+"  	c none"
+"    !      !    "
+"   !#!    !#!   "
+"  !###!  !###!  "
+" !#####!!#####! "
+" !##%##!!##%##! "
+"  !?$?!  !?$?!  "
+"  !?*$$$$$$*?!  "
+"  !?********?!  "
+"  !?*%*??*%*?!  "
+"  !?**?!!?**?!  "
+"  !?**?!!?**?!  "
+"  !????!!????!  "
+"   !!!!  !!!!   "
+;1234567890123456
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x0f
+;GRMN_TYPE: //
+String1=0x19,руины
+String2=0x04,ruins
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="16 16 4 1"   Colormode=16
+"!	c #FFFFFF"
+"#	c #000000"
+"%	c #396520"
+"  	c none"
+"     !!         "
+"    !##!        "
+"   !!##!        "
+"  !####!        "
+"  !####!        "
+"  !#####!       "
+"  !#####!  !!!  "
+"  !####!  !###! "
+"  !###!!  !####!"
+"  !#####! !####!"
+" !######! !####!"
+" !#######!#####!"
+" !#############!"
+"!%%%%%%%%%%%%%%!"
+"!%%%%%%%%%%%%%%!"
+" !!!!!!!!!!!!!! "
+;1234567890123456
 [end]
 
 
@@ -6336,6 +6654,160 @@ DayXpm="11 13 4 1"   Colormode=16
 "  !#####!  "
 "  !!!!!!!  "
 ;12345678901
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x12
+;GRMN_TYPE: Geographical Named Points of Interest/TRAIL/Trailhead/Non NT, NT
+String1=0x19,helipad
+String2=0x04,helipad
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 3 1"   Colormode=16
+"!	c #101010"
+"#	c #FFCA00"
+"%	c #FFFFFF"
+"#############"
+"#####!!!#####"
+"###!!%%%!!###"
+"##!%%%%%%%!##"
+"##!%!%%%!%!##"
+"#!%%!%%%!%%!#"
+"#!%%!!!!!%%!#"
+"#!%%!%%%!%%!#"
+"##!%!%%%!%!##"
+"##!%%%%%%%!##"
+"###!!%%%!!###"
+"#####!!!#####"
+"#############"
+;1234567890123
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x13
+;GRMN_TYPE: Geographical Named Points of Interest/TUNNEL/Tunnel/Non NT, NT
+String1=0x19,тупик
+String2=0x04,dead end
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="5 5 2 1"   Colormode=16
+"!	c #101010"
+"#	c #FFFFFF"
+"!!!!!"
+"!###!"
+"!!!!!"
+"!###!"
+"!!!!!"
+;12345
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x14
+;GRMN_TYPE: Geographical Named Points of Interest/WELL/Well/Non NT, NT
+String1=0x19,пикет
+String2=0x04,picket
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="6 11 3 1"   Colormode=16
+"!	c #101010"
+"#	c #FFFFFF"
+"  	c none"
+"  !!  "
+" !!!! "
+" !!!! "
+" #### "
+" #!!# "
+" ##!# "
+" ##!# "
+" #### "
+" !!!! "
+" !!!! "
+"!!!!!!"
+;123456
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x15
+;GRMN_TYPE: Geographical Named Points of Interest/HISTORICAL_TOWN/Historical (ghost) town/Non NT, NT
+String1=0x19,семафор
+String2=0x04,semaphore
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="8 25 5 1"   Colormode=16
+"!	c #101010"
+"#	c #FF0000"
+"%	c #FFFF00"
+"?	c #00C800"
+"  	c none"
+"  !!!!  "
+" !!!!!! "
+"!!!##!!!"
+"!!####!!"
+"!!####!!"
+"!!!##!!!"
+"!!!!!!!!"
+"!!!!!!!!"
+"!!!%%!!!"
+"!!%%%%!!"
+"!!%%%%!!"
+"!!!%%!!!"
+"!!!!!!!!"
+"!!!!!!!!"
+"!!!??!!!"
+"!!????!!"
+"!!????!!"
+"!!!??!!!"
+" !!!!!! "
+"  !!!!  "
+"   !!   "
+"   !!   "
+"   !!   "
+"   !!   "
+"   !!   "
+;12345678
+[end]
+
+
+[_point]
+Type=0x064
+SubType=0x16
+;GRMN_TYPE: Geographical Named Points of Interest/SUBDIVISION/Non NT, NT/
+String1=0x19,горячий источник
+String2=0x04,hot spring
+ExtendedLabels=N
+DayXpm="12 12 3 1"   Colormode=16
+"!	c #FF0000"
+"#	c #FFFFFF"
+"  	c none"
+"  ########  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  #!!!!!!#  "
+"  ###!!###  "
+"   #!!##    "
+"   ##!!##   "
+"    ##!!#   "
+"   ##!!##   "
+"   #!!##    "
+"   ####     "
+;123456789012
 [end]
 
 
@@ -6601,32 +7073,6 @@ DayXpm="12 19 4 1"   Colormode=16
 "   !##!!    "
 "   !#!!     "
 "   !!!      "
-;123456789012
-[end]
-
-[_point]
-Type=0x064
-SubType=0x16
-;GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT
-String1=0x19,горячий источник
-String2=0x04,hot spring
-ExtendedLabels=N
-DayXpm="12 12 3 1"   Colormode=16
-"!	c #FF0000"
-"#	c #FFFFFF"
-"  	c none"
-"  ########  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  #!!!!!!#  "
-"  ###!!###  "
-"   #!!##    "
-"   ##!!##   "
-"    ##!!#   "
-"   ##!!##   "
-"   #!!##    "
-"   ####     "
 ;123456789012
 [end]
 
@@ -7339,34 +7785,64 @@ DayXpm="13 13 2 1"   Colormode=16
 
 [_point]
 Type=0x066
+SubType=0x08
+;GRMN_TYPE: Geographical Named Points of Interest - Land Related/CRATER/Crater/Non NT, NT
+String1=0x19,пещера
+String2=0x04,cave entrance
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="16 7 3 1"   Colormode=16
+"!	c #101010"
+"#	c #FFFFFF"
+"  	c none"
+"     ######     "
+"    ##!!!!##    "
+"   ##!!##!!##   "
+"   #!!####!!#   "
+"####!##  ##!####"
+"#!!!!#    #!!!!#"
+"######    ######"
+;1234567890123456
+[end]
+
+
+[_point]
+Type=0x066
 SubType=0x09
-; CUSTOM: kitesurfing placeholder. Reserved for final user-drawn icon.
+;GRMN_TYPE: Geographical Named Points of Interest - Land Related/FLAT/Flat/Non NT, NT
 String1=0x19,кайт
 String2=0x04,kitesurfing
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
 ContourColor=No
-DayXpm="16 16 2 1"   Colormode=16
-"  c none"
-"! c #0066FF"
-"                "
-"                "
-"      !!!!      "
-"    !!!!!!!!    "
-"   !!!!!!!!!!   "
-"   !!!!!!!!!!   "
-"  !!!!!!!!!!!!  "
-"  !!!!!!!!!!!!  "
-"  !!!!!!!!!!!!  "
-"  !!!!!!!!!!!!  "
-"   !!!!!!!!!!   "
-"   !!!!!!!!!!   "
-"    !!!!!!!!    "
-"      !!!!      "
-"                "
-"                "
-;1234567890123456
+DayXpm="20 20 3 1"   Colormode=16
+"!	c #0065FF"
+"#	c #FFFFFF"
+"  	c none"
+"   ##############   "
+"  #######!!!!!####  "
+" #######!#####!!### "
+"#######!####!##!!###"
+"######!!###!####!!##"
+"######!!!#!###!##!##"
+"######!!!!###!###!!#"
+"######!#!!!#!#####!#"
+"#########!!!####!#!#"
+"######!###!!!##!##!#"
+"#####!#####!!#!###!#"
+"#####!######!!###!##"
+"####!#######!!#!!!##"
+"####!########!!!####"
+"###!#########!######"
+"###!######!!########"
+"##!#####!!##########"
+" #!###!!########### "
+"  ##!!############  "
+"   ##############   "
+;12345678901234567890
 [end]
 
 
@@ -7578,458 +8054,7 @@ DayXpm="8 7 3 1"   Colormode=16
 "!######!"
 "!!!!!!!!"
 ;12345678
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x04
-;GRMN_TYPE: Geographic/BOUNDARY_STONE/Boundary stone
-String1=0x19,пограничный камень
-String2=0x04,boundary stone
-ExtendedLabels=N
-DayXpm="13 14 5 1"   Colormode=16
-"!	c #006500"
-"#	c #00CA00"
-"%	c #C5C5C5"
-"?	c #FFFFFF"
-"  	c none"
-"    ?????    "
-"   ?!!!!!?   "
-"  ?!%%%%%!?  "
-" ?!%%%%%%%!? "
-" ?!%!!!!!%!? "
-" ?!%%%%%%%!? "
-" ?!%%%%%%%!? "
-" ?!%!!!!!%!? "
-" ?!%%%%%%%!? "
-" ?!%%%%%%%!? "
-" ?!!!!!!!!!? "
-"?!#########!?"
-"?!!!!!!!!!!!?"
-"?????????????"
-;1234567890123
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x07
-;GRMN_TYPE: Man-made/WASTEWATER_PLANT/Wastewater treatment plant
-String1=0x01,
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="17 12 2 1"   Colormode=16
-"!	c #7B6541"
-"  	c none"
-"  !              "
-"  !              "
-" !!!             "
-" !!!          !  "
-"!!!!!         !  "
-"!!!!!   !    !!! "
-" !!!    !    !!! "
-"       !!!  !!!!!"
-"       !!!  !!!!!"
-"      !!!!!  !!! "
-"      !!!!!      "
-"       !!!       "
-;12345678901234567
-[end]
-
-
-[_point]
-Type=0x02f
-SubType=0x19
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_3/User customizable point type/Non NT, NT
-String1=0x19,фонтан
-String2=0x04,fountain
-ExtendedLabels=N
-CustomColor=No
-ContourColor=No
-DayXpm="13 12 3 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #0000FF"
-"  	c none"
-"     ! !     "
-"    !#!#!    "
-"   !!!#!!!   "
-"  !#!!#!!#!  "
-" !#!#!!!#!#! "
-" !#!!#!#!!#! "
-"  !!!#!#!!!  "
-" !##!!#!!##! "
-"!#!!#!#!#!!#!"
-"!#! !###! !#!"
-" !  !###!  ! "
-"     !!!     "
-;1234567890123
-[end]
-
-
-[_point]
-Type=0x030
-SubType=0x08
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_4/User customizable point type/Non NT, NT
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="6 16 5 1"   Colormode=16
-"!	c #FF0000"
-"#	c #BD0000"
-"%	c #101010"
-"?	c #FFFFFF"
-"  	c none"
-" ???  "
-"??%?? "
-"?%%%??"
-"??%%%?"
-"??%% ?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"?!!##?"
-"??????"
-;123456
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x08
-;GRMN_TYPE: Geographic/LOCALITY/Named locality
-String1=0x19,урочище
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="15 15 2 1"   Colormode=16
-"!	c #BD6500"
-"  	c none"
-"      !!!      "
-"     !   !     "
-"  !! !   ! !!  "
-"  !         !  "
-"               "
-" !!         !! "
-"!             !"
-"!             !"
-"!             !"
-" !!         !! "
-"               "
-"  !         !  "
-"  !! !   ! !!  "
-"     !   !     "
-"      !!!      "
-;123456789012345
-[end]
-
-
-[_point]
-Type=0x02f
-SubType=0x1a
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_6/User customizable point type/Non NT, NT
-String1=0x19,пасека
-ExtendedLabels=Y
-FontStyle=Default
-CustomColor=No
-ContourColor=No
-DayXpm="13 14 5 1"   Colormode=16
-"!	c #FFFF00"
-"#	c #FFCA00"
-"%	c #BD9541"
-"?	c #FFFFFF"
-"  	c none"
-"    ?????    "
-"   ?!!!!#?   "
-"   ?!####?   "
-"  ?!!!!!!#?  "
-"  ?!######?  "
-" ?!!!!!!!!#? "
-" ?!########? "
-" ?!!!!!!!!#? "
-" ?!########? "
-"  ?!!!%!!#?  "
-"  ?!#%%%##?  "
-"   ?!%%%#?   "
-"   ?!####?   "
-"    ?????    "
-;1234567890123
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x0a
-;GRMN_TYPE: Geographic/SADDLE_MOUNTAIN_PASS/Saddle or mountain pass
-String1=0x19,перевал
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-DayXpm="8 8 3 1"   Colormode=16
-"!	c #390000"
-"#	c #FFFFFF"
-"  	c none"
-"###  ###"
-"#!####!#"
-"##!##!##"
-" ##!!## "
-" ##!!## "
-"##!##!##"
-"#!####!#"
-"###  ###"
-;12345678
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x00
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_34/User customizable point type/Non NT, NT
-String1=0x19,ж/д станция
-String2=0x04,railroad station
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="8 8 2 1"   Colormode=16
-"!	c #101010"
-"#	c #FFFFFF"
-"!!!!!!!!"
-"!!!!!!!!"
-"!!####!!"
-"!!####!!"
-"!!####!!"
-"!!####!!"
-"!!!!!!!!"
-"!!!!!!!!"
-;12345678
-[end]
-
-
-[_point]
-Type=0x066
-SubType=0x08
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_35/User customizable point type/Non NT, NT
-String1=0x19,пещера
-String2=0x04,cave entrance
-ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=No
-ContourColor=No
-DayXpm="16 7 3 1"   Colormode=16
-"!	c #101010"
-"#	c #FFFFFF"
-"  	c none"
-"     ######     "
-"    ##!!!!##    "
-"   ##!!##!!##   "
-"   #!!####!!#   "
-"####!##  ##!####"
-"#!!!!#    #!!!!#"
-"######    ######"
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x0e
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_37/User customizable point type/Non NT, NT
-String1=0x19,замок
-String2=0x04,castle
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="16 13 7 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #993300"
-"%	c #CC6633"
-"?	c #663300"
-"$	c #996633"
-"*	c #FF9900"
-"  	c none"
-"    !      !    "
-"   !#!    !#!   "
-"  !###!  !###!  "
-" !#####!!#####! "
-" !##%##!!##%##! "
-"  !?$?!  !?$?!  "
-"  !?*$$$$$$*?!  "
-"  !?********?!  "
-"  !?*%*??*%*?!  "
-"  !?**?!!?**?!  "
-"  !?**?!!?**?!  "
-"  !????!!????!  "
-"   !!!!  !!!!   "
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x0f
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_38/User customizable point type/Non NT, NT
-String1=0x19,руины
-String2=0x04,ruins
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="16 16 4 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #000000"
-"%	c #396520"
-"  	c none"
-"     !!         "
-"    !##!        "
-"   !!##!        "
-"  !####!        "
-"  !####!        "
-"  !#####!       "
-"  !#####!  !!!  "
-"  !####!  !###! "
-"  !###!!  !####!"
-"  !#####! !####!"
-" !######! !####!"
-" !#######!#####!"
-" !#############!"
-"!%%%%%%%%%%%%%%!"
-"!%%%%%%%%%%%%%%!"
-" !!!!!!!!!!!!!! "
-;1234567890123456
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x12
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_100/User customizable point type/Non NT, NT
-String1=0x19,helipad
-String2=0x04,helipad
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="13 13 3 1"   Colormode=16
-"!	c #101010"
-"#	c #FFCA00"
-"%	c #FFFFFF"
-"#############"
-"#####!!!#####"
-"###!!%%%!!###"
-"##!%%%%%%%!##"
-"##!%!%%%!%!##"
-"#!%%!%%%!%%!#"
-"#!%%!!!!!%%!#"
-"#!%%!%%%!%%!#"
-"##!%!%%%!%!##"
-"##!%%%%%%%!##"
-"###!!%%%!!###"
-"#####!!!#####"
-"#############"
-;1234567890123
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x13
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1022/User customizable point type/Non NT, NT
-String1=0x19,тупик
-String2=0x04,dead end
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="5 5 2 1"   Colormode=16
-"!	c #101010"
-"#	c #FFFFFF"
-"!!!!!"
-"!###!"
-"!!!!!"
-"!###!"
-"!!!!!"
-;12345
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x14
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1023/User customizable point type/Non NT, NT
-String1=0x19,пикет
-String2=0x04,picket
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="6 11 3 1"   Colormode=16
-"!	c #101010"
-"#	c #FFFFFF"
-"  	c none"
-"  !!  "
-" !!!! "
-" !!!! "
-" #### "
-" #!!# "
-" ##!# "
-" ##!# "
-" #### "
-" !!!! "
-" !!!! "
-"!!!!!!"
-;123456
-[end]
-
-
-[_point]
-Type=0x064
-SubType=0x15
-;GRMN_TYPE: User Customizable Points/CUSTOMIZABLE_POINT_1024/User customizable point type/Non NT, NT
-String1=0x19,семафор
-String2=0x04,semaphore
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="8 25 5 1"   Colormode=16
-"!	c #101010"
-"#	c #FF0000"
-"%	c #FFFF00"
-"?	c #00C800"
-"  	c none"
-"  !!!!  "
-" !!!!!! "
-"!!!##!!!"
-"!!####!!"
-"!!####!!"
-"!!!##!!!"
-"!!!!!!!!"
-"!!!!!!!!"
-"!!!%%!!!"
-"!!%%%%!!"
-"!!%%%%!!"
-"!!!%%!!!"
-"!!!!!!!!"
-"!!!!!!!!"
-"!!!??!!!"
-"!!????!!"
-"!!????!!"
-"!!!??!!!"
-" !!!!!! "
-"  !!!!  "
+[end]  !!!!  "
 "   !!   "
 "   !!   "
 "   !!   "
