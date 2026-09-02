@@ -1,0 +1,118 @@
+name: One-shot map TTL and Turkey restore
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-map-ttl-and-turkey.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply product TTLs and restore Turkey
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import yaml
+
+          path = Path('config/maps.yaml')
+          text = path.read_text(encoding='utf-8')
+
+          ttl = {
+              'armenia': 14,
+              'belarus': 14,
+              'bu-zab-amu': 9,
+              'central-fed-district': 7,
+              'chu-kam': 10,
+              'crimea': 7,
+              'georgia': 14,
+              'irk': 7,
+              'kg': 7,
+              'kya-n': 9,
+              'kya-s': 9,
+              'kz': 7,
+              'mag': 14,
+              'mongolia': 14,
+              'north-caucasus-fed-district': 7,
+              'northwestern-fed-district': 7,
+              'pri-kha-yev': 10,
+              'sa-e': 10,
+              'sa-w': 10,
+              'sfo': 7,
+              'turkey': 30,
+              'ural-fed-district': 7,
+              'ural-n': 7,
+              'ural-s': 7,
+              'volga-fed-district': 7,
+              'yamal': 9,
+              'yakutia': 14,
+              'yugra': 9,
+          }
+
+          if re.search(r'^  turkey:\n', text, flags=re.M) is None:
+              anchor = '  ural-fed-district:\n'
+              if anchor not in text:
+                  raise SystemExit('ural-fed-district anchor not found')
+              turkey = '''  turkey:\n    source: turkey\n    update_interval_days: 30\n    polygon: poly/turkey.poly\n    elevation: elevation/turkey.osm.pbf\n    geonames: input/cities15000.zip\n    identity:\n      family_id: 1054\n      product_id: 1\n      overview_mapnumber: "10540000"\n      first_tile_mapid: "10540001"\n      last_reserved_mapid: "10549999"\n    names:\n      family: Turkey.OSM\n      series: Turkey.OSM\n      overview: Turkey.OSM\n      description: Turkey.OSM\n      output_img: Turkey.OSM.img\n    splitter:\n      max_nodes: 800000\n\n'''
+              text = text.replace(anchor, turkey + anchor, 1)
+
+          products_pos = text.index('\nproducts:\n') + len('\nproducts:\n')
+          prefix = text[:products_pos]
+          products_text = text[products_pos:]
+
+          for product, days in ttl.items():
+              pattern = re.compile(
+                  rf'(^  {re.escape(product)}:\n(?:    .*\n)*?    source: [^\n]+\n)(?:    update_interval_days: \d+\n)?',
+                  flags=re.M,
+              )
+              match = pattern.search(products_text)
+              if not match:
+                  raise SystemExit(f'product not found: {product}')
+              block = match.group(1)
+              if '    update_interval_days:' in block:
+                  block = re.sub(r'    update_interval_days: \d+\n', '', block)
+              replacement = block + f'    update_interval_days: {days}\n'
+              products_text = products_text[:match.start()] + replacement + products_text[match.end():]
+
+          text = prefix + products_text
+          path.write_text(text, encoding='utf-8')
+
+          data = yaml.safe_load(text)
+          products = data['products']
+          if set(products) != set(ttl):
+              missing = sorted(set(ttl) - set(products))
+              extra = sorted(set(products) - set(ttl))
+              raise SystemExit(f'product coverage mismatch missing={missing} extra={extra}')
+          for product, days in ttl.items():
+              actual = products[product].get('update_interval_days')
+              if actual != days:
+                  raise SystemExit(f'{product}: expected TTL {days}, got {actual}')
+          turkey = products['turkey']
+          assert turkey['source'] == 'turkey'
+          assert turkey['identity']['family_id'] == 1054
+          assert turkey['identity']['first_tile_mapid'] == '10540001'
+          assert turkey['splitter']['max_nodes'] == 800000
+          PY
+
+      - name: Validate manifest
+        run: python3 -m uralla_build --manifest config/maps.yaml validate-manifest
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+uralla@users.noreply.github.com"
+          git add config/maps.yaml
+          if git diff --cached --quiet; then
+            echo "No source changes needed"
+            exit 0
+          fi
+          git commit -m "Set map TTLs and restore Turkey product"
+          git push
