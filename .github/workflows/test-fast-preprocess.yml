@@ -6,10 +6,13 @@ on:
       - 'uralla_build/preprocess_fast.py'
       - 'uralla_build/semantic_apply.py'
       - 'uralla_build/analysis_bundle.py'
+      - 'uralla_build/area_pois.py'
+      - 'uralla_build/area_poi_analysis.py'
       - 'uralla_build/road_density_analysis.py'
       - 'uralla_build/poi_context_analysis.py'
       - 'uralla_build/build_plan.py'
       - 'tests/test_preprocess_fast.py'
+      - 'tests/test_area_poi_artifact.py'
       - 'tests/test_build_plan.py'
       - '.github/workflows/test-fast-preprocess.yml'
 permissions:
@@ -25,9 +28,9 @@ jobs:
       - name: Install project
         run: python -m pip install -e .
       - name: Compile fast preprocess modules
-        run: python -m py_compile uralla_build/preprocess_fast.py uralla_build/semantic_apply.py uralla_build/analysis_bundle.py uralla_build/build_plan.py
+        run: python -m py_compile uralla_build/preprocess_fast.py uralla_build/semantic_apply.py uralla_build/analysis_bundle.py uralla_build/area_pois.py uralla_build/area_poi_analysis.py uralla_build/build_plan.py
       - name: Run fast preprocess reuse tests
-        run: python -m unittest tests.test_preprocess_fast -v
+        run: python -m unittest tests.test_preprocess_fast tests.test_area_poi_artifact -v
       - name: Run fast-mode build-plan test
         run: python -m unittest tests.test_build_plan.ProductBuildPlanTests.test_explicit_fast_preprocess_mode_preserves_stage_contract -v
       - name: Verify diff
