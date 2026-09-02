@@ -1,0 +1,70 @@
+name: One-shot locality TYP label fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-locality-typ-label.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable labels for 0x6408 locality
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('styles/uralla.txt')
+          text = path.read_text(encoding='utf-8')
+          start_marker = '[_Point]\nType=0x064\nSubType=0x08\n'
+          # TYP source uses lowercase section names; keep a tolerant fallback only
+          # for the section marker, while requiring the exact type/subtype pair.
+          start = text.find(start_marker)
+          if start < 0:
+              start_marker = '[_point]\nType=0x064\nSubType=0x08\n'
+              start = text.find(start_marker)
+          if start < 0:
+              raise SystemExit('0x6408 point block not found')
+          end = text.find('\n[end]', start)
+          if end < 0:
+              raise SystemExit('0x6408 point block end not found')
+          block = text[start:end]
+          old = 'FontStyle=NoLabel (invisible)'
+          new = 'FontStyle=NormalFont'
+          if new in block:
+              print('0x6408 already allows labels')
+          else:
+              if block.count(old) != 1:
+                  raise SystemExit(f'expected exactly one NoLabel in 0x6408 block, found {block.count(old)}')
+              patched = block.replace(old, new, 1)
+              text = text[:start] + patched + text[end:]
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Run locality label regression test
+        run: python3 -m unittest tests.test_locality_label_typ -v
+
+      - name: Verify only TYP changed
+        shell: bash
+        run: |
+          git diff --check
+          git diff -- styles/uralla.txt
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles/uralla.txt
+          if git diff --cached --quiet; then
+            echo "No source changes needed"
+            exit 0
+          fi
+          git commit -m "Show named locality labels"
+          git push
