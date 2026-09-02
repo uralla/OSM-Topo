@@ -1,0 +1,48 @@
+name: One-shot enable fast preprocess for ural-s
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-enable-fast-ural-s.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable fast preprocess for ural-s
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('config/maps.yaml')
+          text = path.read_text(encoding='utf-8')
+          old = '''  ural-s:\n    source: russia\n    polygon: poly/ru_ural.poly\n'''
+          new = '''  ural-s:\n    source: russia\n    preprocess_mode: fast\n    preprocess_workers: 2\n    polygon: poly/ru_ural.poly\n'''
+          if new not in text:
+              if old not in text:
+                  raise SystemExit('ural-s product anchor not found')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Run build-plan tests
+        run: python3 -m unittest tests.test_build_plan -v
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/maps.yaml
+          if git diff --cached --quiet; then
+            echo "No source changes needed"
+            exit 0
+          fi
+          git commit -m "Enable fast preprocess for ural-s"
+          git push
