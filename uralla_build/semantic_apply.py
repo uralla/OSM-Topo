@@ -28,6 +28,7 @@ from .preprocessor import (
     load_peak_landmarks,
 )
 from .river_landmarks import DEFAULT_RIVER_CATALOG, enrich_river_landmark_tags, load_river_landmarks
+from .sanatorium_labels import enrich_sanatorium_label_tags
 
 
 _LOWERCASE_LAKE_SUFFIX_RE = re.compile(r"^(.+?)\s+озеро\s*$")
@@ -117,7 +118,8 @@ class SemanticTransformer:
         before_label = final_tags.get(DISPLAY_LABEL_TAG)
         final_tags, changed = enrich_geographic_label_tags(final_tags)
         final_tags = _respect_lake_suffix_capitalization(final_tags)
-        if changed or before_label != final_tags.get(DISPLAY_LABEL_TAG):
+        final_tags, sanatorium_changed = enrich_sanatorium_label_tags(final_tags)
+        if changed or sanatorium_changed or before_label != final_tags.get(DISPLAY_LABEL_TAG):
             self.counters["geographic_labels_enriched"] += 1
             _emit_geographic_label_change(item, final_tags)
             if len(self.label_samples) < 100:
