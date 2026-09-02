@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
+from .analysis_cli import run_analyze_road_density, run_apply_road_density
 from .entrypoint import main
 from .interactive import run_interactive
 from .preprocess_pipeline import run_preprocess_pipeline
@@ -42,6 +43,15 @@ if interactive is not None:
     raise SystemExit(
         run_interactive(manifest_path=manifest_path, host_path=host_path)
     )
+
+# Experimental analyze/apply path.  These commands deliberately stay outside
+# the normal build pipeline until a large-map benchmark proves the speedup.
+if "analyze-road-density" in arguments:
+    command_index = arguments.index("analyze-road-density")
+    raise SystemExit(run_analyze_road_density(arguments[command_index + 1 :]))
+if "apply-road-density" in arguments:
+    command_index = arguments.index("apply-road-density")
+    raise SystemExit(run_apply_road_density(arguments[command_index + 1 :]))
 
 # Preprocessing is a composite operation: semantic/tag enrichment first, then
 # deliberate selected area-to-POI synthesis. mkgmap's global area POI generator
