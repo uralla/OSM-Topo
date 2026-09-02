@@ -20,7 +20,22 @@ jobs:
       - name: Compile Python
         run: python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
       - name: Test kite detector
-        run: python3 -m pytest -q tests/test_kite.py
+        run: |
+          python3 - <<'PY'
+          from uralla_build.kite import enrich_kite_tags, is_kite_infrastructure
+          positives = [
+              {"brand": "Кайтшкола номер один"},
+              {"description": "Кайт станция и кайт школа ВиндЭкстрим"},
+              {"designation": "Kitesurfing"},
+              {"name": 'Школа кайтсерфинга "Точка отрыва"'},
+              {"operator": "Kite Station"},
+          ]
+          assert all(is_kite_infrastructure(tags) for tags in positives)
+          assert not is_kite_infrastructure({"name": "Nikita"})
+          assert not is_kite_infrastructure({"description": "обычная школа серфинга"})
+          tags, changed = enrich_kite_tags({"description": "kite school"})
+          assert changed and tags["uralla:kite"] == "yes"
+          PY
       - name: Test kite area detection
         run: |
           python3 - <<'PY'
@@ -47,4 +62,4 @@ jobs:
           git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
           git commit -m 'Expand kite infrastructure detection'
           git push
-# split verification 2026-09-02
+# no-pytest verification 2026-09-02
