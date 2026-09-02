@@ -10,10 +10,11 @@ surface=paved { set surface=asphalt }
 surface=snow { add winter_road=yes }
 surface=ice { add ice_road=yes }
 
-# Nordic ski routes use the same visual class as skitour, but only when the way
-# is not a real motor-road. highway=unclassified/service/track/etc. keeps its road visual;
-# piste:type describes seasonal winter use there rather than the physical way class.
-piste:type=nordic & (highway!=* | highway=path | highway=footway | highway=cycleway | highway=bridleway | highway=pedestrian | highway=steps) & is_closed()=false & area!=yes [0x10101 resolution 22]
+# Nordic ski routes use the same visual class as skitour only when there is no
+# physical highway classification. If highway=* exists (including path/footway/
+# cycleway/track), the physical way class owns the Garmin visual and piste:type
+# remains seasonal metadata only.
+piste:type=nordic & highway!=* & is_closed()=false & area!=yes [0x10101 resolution 22]
 
 # Active railway bridges use the same structural overlay as road bridges.
 # Keep lifecycle/hidden-rail filters here because this include runs before the main railway ownership rules.

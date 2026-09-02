@@ -26,6 +26,7 @@ from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
 ANALYSIS_MANIFEST_SCHEMA = 6
+ANALYSIS_CACHE_MAX_AGE_DAYS = 30
 
 
 def _source_identity(path: Path) -> dict[str, object]:
@@ -69,6 +70,18 @@ def _write_analysis_manifest(
     temporary.replace(target)
 
 
+def _validate_analysis_cache_age(manifest_path: Path, *, now: float | None = None) -> None:
+    current = time.time() if now is None else float(now)
+    age_seconds = max(0.0, current - manifest_path.stat().st_mtime)
+    max_age_seconds = ANALYSIS_CACHE_MAX_AGE_DAYS * 24 * 60 * 60
+    if age_seconds >= max_age_seconds:
+        age_days = age_seconds / (24 * 60 * 60)
+        raise StageError(
+            f"reusable analysis cache is {age_days:.1f} days old; "
+            f"maximum is {ANALYSIS_CACHE_MAX_AGE_DAYS} days"
+        )
+
+
 def _validate_reusable_analysis(
     analysis_dir: Path,
     source: Path,
@@ -80,6 +93,7 @@ def _validate_reusable_analysis(
     for path in (area_artifact, road_artifact, poi_artifact, manifest_path):
         if not path.is_file() or path.stat().st_size == 0:
             raise StageError(f"reusable analysis is incomplete: missing {path}")
+    _validate_analysis_cache_age(manifest_path)
     try:
         payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
