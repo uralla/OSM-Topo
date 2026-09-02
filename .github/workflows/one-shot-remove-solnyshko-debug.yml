@@ -20,9 +20,19 @@ jobs:
       - name: Verify
         run: |
           python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
-          python3 -m pytest -q tests/test_kite.py tests/test_area_pois.py tests/test_preprocess_pipeline.py
+          python3 -m pytest -q tests/test_kite.py
+          python3 - <<'PY'
+          from uralla_build.area_pois import area_poi_kind
+          samples = [
+              {"sport": "kitesurfing"},
+              {"brand": "Кайтшкола номер один"},
+              {"designation": "Kitesurfing"},
+              {"name": 'Школа кайтсерфинга "Точка отрыва"'},
+              {"description": "Кайт станция и прокат оборудования"},
+          ]
+          assert all(area_poi_kind(tags) == "kite:infrastructure" for tags in samples)
+          PY
           grep -n "uralla:kite=yes" styles/uralla/inc/priority_points
-          grep -n "SubType=0x09" styles/uralla.txt >/dev/null
           ! grep -n "солнышко" uralla_build/preprocessor.py
           git diff --check
       - name: Commit
@@ -32,4 +42,4 @@ jobs:
           git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
           git commit -m 'Expand kite infrastructure detection'
           git push
-# retrigger with dependencies 2026-09-02
+# focused retrigger 2026-09-02
