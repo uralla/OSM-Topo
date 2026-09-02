@@ -77,7 +77,10 @@ uralla:poi_lod_class=M & tourism=hostel { name '${name}' } [0x2b02 resolution 23
 uralla:poi_lod_class=L & tourism=hostel { name '${name}' } [0x2b02 resolution 24]
 tourism=hostel { name '${name}' } [0x2b02 resolution 24]
 amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
-(tourism=wilderness_hut | tourism=alpine_hut) [0x2b07 resolution 23]
+uralla:poi_lod_class=H & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 22]
+uralla:poi_lod_class=M & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 23]
+uralla:poi_lod_class=L & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 24]
+(tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 23]
 
 # Antennas are useful terrain landmarks but noisy in dense built-up areas.
 # Consume the universal POI LOD class; the old generic point rule remains a

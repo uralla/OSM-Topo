@@ -25,7 +25,7 @@ from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 6
+ANALYSIS_MANIFEST_SCHEMA = 7
 ANALYSIS_CACHE_MAX_AGE_DAYS = 30
 
 

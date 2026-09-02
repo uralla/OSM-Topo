@@ -40,7 +40,7 @@ from .poi_context import (
 )
 from .poi_lod import POI_LOD_CLASS_TAG
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 ANALYSIS_KIND = "poi_context"
 
 # Keys that determine whether a cached context result is still semantically safe

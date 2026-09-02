@@ -225,10 +225,10 @@ tourism=attraction [0x2c04 resolution 24 continue]
 tourism=artwork [0x2c04 resolution 24]
 tourism=aquarium [0x2c07 resolution 24]
 
-# Camps keep one dedicated icon across the whole useful range. Named camps show
-# their real name; unnamed camps stay visually clean and expose "кемпинг" on hover.
-tourism=camp_site & name=* { name '${name}' } [0x2b03 resolution 22]
-tourism=camp_site & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='кемпинг' } [0x2b03 resolution 22]
+# Camps keep one dedicated NoLabel icon across the whole useful range. The TYP
+# suppresses permanent map text, so an ordinary fallback remains available in
+# Garmin object info/hover for unnamed camps.
+tourism=camp_site { name '${name}' | 'кемпинг' } [0x2b03 resolution 22]
 tourism=chalet [0x640d resolution 21]
 # Legacy tourism=lean_to fallback; amenity=shelter is handled in inc/priority_points.
 tourism=lean_to [0x2b05 resolution 24]

@@ -18,7 +18,7 @@ from .kite import is_kite_infrastructure
 from .poi_lod import POI_LOD_CLASS_TAG, classify_poi_lod, intrinsic_floor_for_poi
 
 
-ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house"})
+ACCOMMODATION_VALUES = frozenset({"hotel", "hostel", "guest_house", "wilderness_hut", "alpine_hut"})
 TRANSIT_STOP_HIGHWAYS = frozenset({"bus_stop"})
 PICNIC_SITE_VALUES = frozenset({"picnic_site"})
 OUTDOOR_FURNITURE_VALUES = frozenset({"bench", "picnic_table"})
