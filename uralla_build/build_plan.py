@@ -181,11 +181,17 @@ def plan_product_build(
         _text(preprocessor.get("blacklist"), "defaults.preprocessor.blacklist"),
     )
     semantic_input = build_root / "preprocess" / "preprocessed.osm.pbf"
+    preprocess_mode = str(product.get("preprocess_mode", "standard"))
+    if preprocess_mode not in {"standard", "fast"}:
+        raise StageError(
+            f"products.{product_key}.preprocess_mode must be 'standard' or 'fast'"
+        )
+    preprocess_subcommand = "preprocess-fast" if preprocess_mode == "fast" else "preprocess"
     preprocess_command = [
         sys.executable,
         "-m",
         "uralla_build",
-        "preprocess",
+        preprocess_subcommand,
         "--input",
         str(preprocess_input),
         "--output",
@@ -195,6 +201,16 @@ def plan_product_build(
         "--report",
         "report.json",
     ]
+    if preprocess_mode == "fast":
+        raw_workers = product.get("preprocess_workers", 2)
+        if not isinstance(raw_workers, int) or raw_workers < 1:
+            raise StageError(
+                f"products.{product_key}.preprocess_workers must be a positive integer"
+            )
+        preprocess_command.extend(("--workers", str(raw_workers)))
+        warnings.append(
+            f"experimental analyze/apply preprocess enabled ({raw_workers} workers)"
+        )
     for profile in profiles:
         preprocess_command.extend(("--profile", profile))
     stages.append(
@@ -254,10 +270,6 @@ def plan_product_build(
         f"--wanted-admin-level={defaults_splitter.get('wanted_admin_level')}",
         "--output-dir=tiles",
     ]
-    # Splitter 654 is systematically unreliable with our .poly files. The source
-    # is already clipped by osmium extract when extract=true, and whole-extract
-    # products do not need an additional splitter polygon either. Keep .poly use
-    # confined to extraction and optional mkgmap DEM clipping.
     max_threads = splitter.get("max_threads")
     if max_threads is not None:
         splitter_command.append(f"--max-threads={max_threads}")
