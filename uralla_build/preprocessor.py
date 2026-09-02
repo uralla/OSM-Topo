@@ -338,9 +338,20 @@ def enrich_geographic_label_tags(
                 label = stripped
             break
 
-    size_abbreviated = False
+    # For lakes, a lowercase trailing ``озеро`` is a generic type marker.
+    # Strip it before abbreviation so a one-word name such as ``Верхнее озеро``
+    # becomes ``Верхнее`` rather than the meaningless ``В.``.  Capitalized
+    # ``Озеро`` is deliberately preserved as part of the proper name.
+    if label_class == "lake":
+        lake_suffix_match = re.fullmatch(r"(.+?)\s+озеро\s*", label)
+        if lake_suffix_match:
+            stripped = lake_suffix_match.group(1).strip()
+            if stripped:
+                label = stripped
+
     # Compact directional/size adjectives on ordinary natural features and lakes.
-    # Prominent peak/volcano landmarks keep their full display names.
+    # Prominent peak/volcano landmarks keep their full display names.  The regexes
+    # require a remaining second word, so single-word lake labels stay intact.
     if (label_class == "lake" or natural is not None) and result.get(PEAK_LANDMARK_TAG) != "yes":
         for pattern, prefix in _GEOGRAPHIC_LEADING_ABBREVIATIONS:
             match = pattern.fullmatch(label)
@@ -349,18 +360,7 @@ def enrich_geographic_label_tags(
             tail = match.group(1).strip()
             if tail:
                 label = prefix + tail
-                size_abbreviated = True
             break
-
-    # When a lake name already contains an explicitly generic size/directional
-    # adjective, the trailing type word is redundant with water=lake.  Keep the
-    # suffix for ordinary proper names such as "Черное Озеро".
-    if label_class == "lake" and size_abbreviated:
-        lake_suffix_match = re.fullmatch(r"(.+?)\s+озеро\s*", label, re.IGNORECASE)
-        if lake_suffix_match:
-            stripped = lake_suffix_match.group(1).strip()
-            if stripped:
-                label = stripped
 
     if label == name:
         return result, False
