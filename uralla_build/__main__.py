@@ -13,17 +13,11 @@ from .analysis_cli import (
 )
 from .entrypoint import main
 from .interactive import run_interactive
+from .preprocess_fast import run_fast_preprocess
 from .preprocess_pipeline import run_preprocess_pipeline
 
 
 def _interactive_request(argv: list[str]) -> tuple[Path, Path] | None:
-    """Return global config paths when argv contains no actual subcommand.
-
-    The generated workspace launcher always injects ``--host <path>`` even when
-    the user runs ``start`` without arguments, so checking only ``len(argv)``
-    would miss the normal interactive entry path.
-    """
-
     host = Path("config/host.yaml")
     manifest = Path("config/maps.yaml")
     index = 0
@@ -47,8 +41,9 @@ if interactive is not None:
     manifest_path, host_path = interactive
     raise SystemExit(run_interactive(manifest_path=manifest_path, host_path=host_path))
 
-# Experimental analyze/apply path. These commands deliberately stay outside
-# the normal build pipeline until a real-map benchmark proves the speedup.
+if "preprocess-fast" in arguments:
+    command_index = arguments.index("preprocess-fast")
+    raise SystemExit(run_fast_preprocess(arguments[command_index + 1 :]))
 if "analyze-bundle" in arguments:
     command_index = arguments.index("analyze-bundle")
     raise SystemExit(run_analyze_bundle(arguments[command_index + 1 :]))
@@ -67,7 +62,6 @@ if "analyze-poi-context" in arguments:
 if "apply-poi-context" in arguments:
     command_index = arguments.index("apply-poi-context")
     raise SystemExit(run_apply_poi_context(arguments[command_index + 1 :]))
-
 if "preprocess" in arguments:
     preprocess_index = arguments.index("preprocess")
     raise SystemExit(run_preprocess_pipeline(arguments[preprocess_index + 1 :]))
