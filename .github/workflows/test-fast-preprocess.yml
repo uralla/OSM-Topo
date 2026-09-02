@@ -10,13 +10,18 @@ on:
       - 'uralla_build/area_pois.py'
       - 'uralla_build/area_poi_analysis.py'
       - 'uralla_build/road_density_analysis.py'
+      - 'uralla_build/poi_context.py'
       - 'uralla_build/poi_context_analysis.py'
+      - 'uralla_build/poi_lod.py'
       - 'uralla_build/build_plan.py'
+      - 'styles/uralla/inc/priority_points'
+      - 'styles/uralla/inc/landuse_polygons'
       - 'tests/test_preprocess_fast.py'
       - 'tests/test_area_poi_artifact.py'
       - 'tests/test_area_pois.py'
       - 'tests/test_semantic_lake_labels.py'
       - 'tests/test_sanatorium_labels.py'
+      - 'tests/test_antenna_lod.py'
       - 'tests/test_build_plan.py'
       - '.github/workflows/test-fast-preprocess.yml'
 permissions:
@@ -32,9 +37,9 @@ jobs:
       - name: Install project
         run: python -m pip install -e .
       - name: Compile fast preprocess modules
-        run: python -m py_compile uralla_build/preprocess_fast.py uralla_build/semantic_apply.py uralla_build/sanatorium_labels.py uralla_build/analysis_bundle.py uralla_build/area_pois.py uralla_build/area_poi_analysis.py uralla_build/build_plan.py
+        run: python -m py_compile uralla_build/preprocess_fast.py uralla_build/semantic_apply.py uralla_build/sanatorium_labels.py uralla_build/analysis_bundle.py uralla_build/area_pois.py uralla_build/area_poi_analysis.py uralla_build/poi_context.py uralla_build/poi_context_analysis.py uralla_build/poi_lod.py uralla_build/build_plan.py
       - name: Run fast preprocess reuse tests
-        run: python -m unittest tests.test_preprocess_fast tests.test_area_poi_artifact tests.test_area_pois tests.test_semantic_lake_labels tests.test_sanatorium_labels -v
+        run: python -m unittest tests.test_preprocess_fast tests.test_area_poi_artifact tests.test_area_pois tests.test_semantic_lake_labels tests.test_sanatorium_labels tests.test_antenna_lod -v
       - name: Run fast-mode build-plan test
         run: python -m unittest tests.test_build_plan.ProductBuildPlanTests.test_explicit_fast_preprocess_mode_preserves_stage_contract -v
       - name: Verify diff
