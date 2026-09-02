@@ -145,6 +145,13 @@ natural=shrub & name!=* { delete natural }
 # rule in inc/landuse_points instead of being consumed as a generic saddle.
 natural=saddle & mountain_pass!=yes [0x640a resolution 23]
 natural=arch [0x6601 resolution 23]
+# Kitesurfing spots must precede viewpoint and other overlapping source
+# categories so a semantically detected kite spot receives its dedicated icon.
+uralla:poi_lod_class=H & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 22]
+uralla:poi_lod_class=M & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 23]
+uralla:poi_lod_class=L & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
+uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
+
 # Viewpoints: no synthetic permanent map text. Named viewpoints keep their real name.
 # Unnamed viewpoints keep an empty primary Garmin label and a secondary explanatory
 # label for object information/hover, so the icon stays clean but remains understandable.
@@ -169,12 +176,6 @@ emergency=first_aid_kit { name '${name}' | 'аптечка' } [0x3002 resolution
 
 # Bicycle repair station shares the dedicated bicycle-service POI at the closest detail level.
 amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]
-
-# Kitesurfing spots: dedicated adaptive POI. Unnamed spots use a compact designation.
-uralla:poi_lod_class=H & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 22]
-uralla:poi_lod_class=M & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 23]
-uralla:poi_lod_class=L & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
-uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
 
 # Small tourist infrastructure.
 leisure=picnic_table [0x4a01 resolution 24]

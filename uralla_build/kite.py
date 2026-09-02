@@ -8,18 +8,23 @@ from typing import Mapping
 
 KITE_POI_TAG = "uralla:kite"
 
-# Match the root at the beginning of a word so common forms such as
-# "кайт", "кайтстанция", "кайтсерфинг", "kite", "kitesurfing" and
-# "kite-school" are accepted without depending on one particular OSM schema.
-_KITE_VALUE_RE = re.compile(r"(?<![0-9a-zа-яё])(?:кайт|kite)", re.IGNORECASE)
+# Match the distinctive Russian/English root wherever it occurs.  Besides
+# suffix forms such as "кайтспот" and "kitesurfing", this deliberately accepts
+# prefixed forms such as "snowkite" and "landkite".  OSM tagging is inconsistent,
+# so both keys and values are inspected below.
+_KITE_TEXT_RE = re.compile(r"(?:кайт|kite)", re.IGNORECASE)
 
 
 def is_kite_infrastructure(tags: Mapping[str, str] | object) -> bool:
-    """Return True when any tag value identifies kite-related infrastructure."""
+    """Return True when any tag key or value identifies kite infrastructure."""
     items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
-    for _key, raw_value in items:
+    for raw_key, raw_value in items:
+        key = str(raw_key)
         value = str(raw_value)
-        if value and _KITE_VALUE_RE.search(value):
+        # Do not let our own derived tag make this semantic detector self-fulfilling.
+        if key != KITE_POI_TAG and _KITE_TEXT_RE.search(key):
+            return True
+        if value and _KITE_TEXT_RE.search(value):
             return True
     return False
 
