@@ -1,0 +1,39 @@
+name: Analysis artifact smoke checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'uralla_build/road_density_analysis.py'
+      - 'uralla_build/poi_context_analysis.py'
+      - 'uralla_build/analysis_cli.py'
+      - 'uralla_build/__main__.py'
+      - '.github/workflows/test-analysis-artifacts.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install project
+        run: python3 -m pip install -e .
+      - name: Compile analysis modules
+        run: python3 -m py_compile uralla_build/road_density_analysis.py uralla_build/poi_context_analysis.py uralla_build/analysis_cli.py uralla_build/__main__.py
+      - name: Exercise artifact serialization
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from uralla_build.poi_context_analysis import save_poi_context_analysis, load_poi_context_analysis
+          from uralla_build.road_density_analysis import save_road_density_analysis, load_road_density_analysis
+          with TemporaryDirectory() as td:
+              root = Path(td)
+              poi = root / 'poi.json.gz'
+              road = root / 'road.json.gz'
+              save_poi_context_analysis(poi, {'schema_version': 1, 'kind': 'poi_context', 'nodes': {}})
+              save_road_density_analysis(road, {'schema_version': 1, 'kind': 'road_density', 'ways': {}})
+              assert load_poi_context_analysis(poi)['nodes'] == {}
+              assert load_road_density_analysis(road)['ways'] == {}
+          PY
+      - name: Verify diff
+        run: git diff --check
