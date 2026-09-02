@@ -17,10 +17,12 @@ jobs:
         run: python3 -m pip install -e .
       - name: Expand kite semantic detection
         run: python3 .github/scripts/one_shot_expand_kite_detection.py
-      - name: Verify
+      - name: Compile Python
+        run: python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
+      - name: Test kite detector
+        run: python3 -m pytest -q tests/test_kite.py
+      - name: Test kite area detection
         run: |
-          python3 -m py_compile uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py
-          python3 -m pytest -q tests/test_kite.py
           python3 - <<'PY'
           from uralla_build.area_pois import area_poi_kind
           samples = [
@@ -32,9 +34,12 @@ jobs:
           ]
           assert all(area_poi_kind(tags) == "kite:infrastructure" for tags in samples)
           PY
+      - name: Verify style and debug cleanup
+        run: |
           grep -n "uralla:kite=yes" styles/uralla/inc/priority_points
           ! grep -n "солнышко" uralla_build/preprocessor.py
-          git diff --check
+      - name: Verify diff
+        run: git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
@@ -42,4 +47,4 @@ jobs:
           git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
           git commit -m 'Expand kite infrastructure detection'
           git push
-# focused retrigger 2026-09-02
+# split verification 2026-09-02
