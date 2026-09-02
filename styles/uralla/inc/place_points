@@ -48,7 +48,10 @@ place=neighbourhood & mkgmap:area2poi!=true [0x0900 resolution 22]
 # Very small settlements and named localities are deliberately close-zoom.
 place=hamlet & mkgmap:area2poi!=true            [0x0b00 resolution 22]
 place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]
-place=locality & mkgmap:area2poi!=true          [0x6408 resolution 24]
+# Locality: show the real OSM name when present. Unnamed localities keep the
+# symbol but suppress Garmin's synthetic/type label ("урочище").
+place=locality & name=* & mkgmap:area2poi!=true { name '${name}' } [0x6408 resolution 24]
+place=locality & name!=* & mkgmap:area2poi!=true { set mkgmap:label:1=' ' } [0x6408 resolution 24]
 
 # Islands are geographic labels rather than settlements; retain their existing
 # visual identity but separate large islands from islets by one zoom level.
