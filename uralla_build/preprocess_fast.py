@@ -114,14 +114,24 @@ def run_fast_preprocess(argv: list[str]) -> int:
         "--reuse-analysis",
         action="store_true",
         help=(
-            "Reuse area/road/POI artifacts for newer extracts with the same source "
+            "Strictly require reuse of area/road/POI artifacts for the same extract "
             "name; stale objects are skipped by cheap per-object guards"
+        ),
+    )
+    parser.add_argument(
+        "--auto-reuse-analysis",
+        action="store_true",
+        help=(
+            "Reuse a compatible persistent analysis cache when available; rebuild it "
+            "automatically when missing or schema-incompatible"
         ),
     )
     args = parser.parse_args(argv)
 
-    if args.reuse_analysis and args.analysis_dir is None:
-        parser.error("--reuse-analysis requires a persistent --analysis-dir")
+    if args.reuse_analysis and args.auto_reuse_analysis:
+        parser.error("--reuse-analysis and --auto-reuse-analysis are mutually exclusive")
+    if (args.reuse_analysis or args.auto_reuse_analysis) and args.analysis_dir is None:
+        parser.error("analysis reuse requires a persistent --analysis-dir")
 
     started = time.monotonic()
     output = args.output.resolve()
@@ -148,10 +158,24 @@ def run_fast_preprocess(argv: list[str]) -> int:
         analysis_stats: dict[str, object] = {}
         semantic_base_seconds = 0.0
         reusable_area_entries = ()
+        manifest: dict[str, object] | None = None
+        use_reuse = bool(args.reuse_analysis)
 
-        if args.reuse_analysis:
-            area_started = time.monotonic()
+        if args.auto_reuse_analysis:
+            try:
+                manifest = _validate_reusable_analysis(analysis_dir, source)
+            except StageError as exc:
+                _report(f"fast preprocess: analysis cache refresh required: {exc}")
+                use_reuse = False
+            else:
+                use_reuse = True
+        elif use_reuse:
             manifest = _validate_reusable_analysis(analysis_dir, source)
+
+        if use_reuse:
+            area_started = time.monotonic()
+            if manifest is None:
+                manifest = _validate_reusable_analysis(analysis_dir, source)
             reusable_area_entries = tuple(area_poi_reuse_entries_from_analysis(area_artifact))
             area_seconds = time.monotonic() - area_started
             area_stats = {
@@ -265,7 +289,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         )
         apply_seconds = time.monotonic() - apply_started
 
-        if args.reuse_analysis:
+        if use_reuse:
             assert semantic_transformer is not None
             semantic_report = semantic_transformer.report(input_path=source, output_path=output)
             semantic_seconds = float(semantic_report.get("seconds", apply_seconds))
@@ -280,8 +304,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 7,
-            "mode": "reuse-fresh-extract" if args.reuse_analysis else "parity-analyze-apply",
+            "schema_version": 8,
+            "mode": "reuse-fresh-extract" if use_reuse else "parity-analyze-apply",
             "input": str(source),
             "output": str(output),
             "timing": {
