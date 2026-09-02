@@ -12,7 +12,12 @@ import time
 from uuid import uuid4
 
 from .analysis_bundle import _analyze_worker, apply_analysis_bundle
-from .area_pois import augment_area_pois
+from .area_poi_analysis import (
+    analyze_area_pois,
+    area_poi_candidates_from_analysis,
+    validate_area_poi_analysis,
+)
+from .area_pois import write_area_pois
 from .errors import StageError
 from .preprocess_pipeline import _renumber_nodes, _report, _sort_pbf
 from .preprocessor import _load_osmium
@@ -20,7 +25,7 @@ from .semantic_apply import SemanticTransformer
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 1
+ANALYSIS_MANIFEST_SCHEMA = 2
 
 
 def _source_identity(path: Path) -> dict[str, object]:
@@ -40,6 +45,11 @@ def _write_analysis_manifest(
     payload = {
         "schema_version": ANALYSIS_MANIFEST_SCHEMA,
         "source": _source_identity(source),
+        "artifacts": {
+            "area_pois": "area-pois.json.gz",
+            "road_density": "road-density.json.gz",
+            "poi_context": "poi-context.json.gz",
+        },
         "area_pois": {
             "created": int(area_stats.get("created", 0)),
             "candidates": int(area_stats.get("candidates", 0)),
@@ -56,12 +66,12 @@ def _write_analysis_manifest(
 def _validate_reusable_analysis(
     analysis_dir: Path,
     source: Path,
-    area_stats: dict[str, int],
 ) -> dict[str, object]:
+    area_artifact = analysis_dir / "area-pois.json.gz"
     road_artifact = analysis_dir / "road-density.json.gz"
     poi_artifact = analysis_dir / "poi-context.json.gz"
     manifest_path = analysis_dir / ANALYSIS_MANIFEST
-    for path in (road_artifact, poi_artifact, manifest_path):
+    for path in (area_artifact, road_artifact, poi_artifact, manifest_path):
         if not path.is_file() or path.stat().st_size == 0:
             raise StageError(f"reusable analysis is incomplete: missing {path}")
     try:
@@ -69,21 +79,14 @@ def _validate_reusable_analysis(
     except (OSError, json.JSONDecodeError) as exc:
         raise StageError(f"cannot read reusable analysis manifest {manifest_path}: {exc}") from exc
     if not isinstance(payload, dict) or payload.get("schema_version") != ANALYSIS_MANIFEST_SCHEMA:
-        raise StageError("reusable analysis manifest has an unsupported schema")
-    expected_source = payload.get("source")
-    if expected_source != _source_identity(source):
+        raise StageError(
+            "reusable analysis manifest has an unsupported schema; rebuild the analysis cache"
+        )
+    if payload.get("source") != _source_identity(source):
         raise StageError(
             "reusable analysis belongs to a different source PBF; run without --reuse-analysis first"
         )
-    expected_area = payload.get("area_pois")
-    current_area = {
-        "created": int(area_stats.get("created", 0)),
-        "candidates": int(area_stats.get("candidates", 0)),
-    }
-    if expected_area != current_area:
-        raise StageError(
-            "reusable POI analysis no longer matches synthetic area POIs; run without --reuse-analysis first"
-        )
+    validate_area_poi_analysis(area_artifact, source)
     return payload
 
 
@@ -100,7 +103,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
     parser.add_argument(
         "--reuse-analysis",
         action="store_true",
-        help="Reuse road/POI artifacts only when the source PBF and synthetic-area count match exactly",
+        help="Reuse area/road/POI artifacts only when they belong to the exact source PBF",
     )
     args = parser.parse_args(argv)
 
@@ -120,6 +123,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         else args.analysis_dir.resolve()
     )
     analysis_dir.mkdir(parents=True, exist_ok=True)
+    area_artifact = analysis_dir / "area-pois.json.gz"
     road_artifact = analysis_dir / "road-density.json.gz"
     poi_artifact = analysis_dir / "poi-context.json.gz"
 
@@ -129,27 +133,32 @@ def run_fast_preprocess(argv: list[str]) -> int:
         analysis_stats: dict[str, object] = {}
 
         if args.reuse_analysis:
-            _report("fast preprocess: area POI synthesis before analysis compatibility check")
             area_started = time.monotonic()
-            area_stats = augment_area_pois(source, area, osmium, reporter=_report)
+            _validate_reusable_analysis(analysis_dir, source)
+            area_candidates = area_poi_candidates_from_analysis(area_artifact)
             area_seconds = time.monotonic() - area_started
-            _validate_reusable_analysis(analysis_dir, source, area_stats)
+            area_stats = {
+                "candidates": len(area_candidates),
+                "created": len(area_candidates),
+                "reused": 1,
+            }
             analyze_wall_seconds = 0.0
             road_seconds = 0.0
             poi_seconds = 0.0
             analysis_stats = {
                 "reused": True,
+                "area_pois": {"artifact": str(area_artifact)},
                 "road_density": {"artifact": str(road_artifact)},
                 "poi_context": {"artifact": str(poi_artifact)},
                 "wall_seconds": 0.0,
             }
             _report(
-                "fast preprocess: reusable ANALYZE artifacts accepted; spatial analysis skipped"
+                "fast preprocess: reusable area/road/POI artifacts accepted; all discovery and spatial analysis skipped"
             )
         else:
             analysis_started = time.monotonic()
             _report(
-                "fast preprocess: road-density ANALYZE starts in parallel with area POI synthesis"
+                "fast preprocess: road-density ANALYZE starts in parallel with area POI discovery"
             )
             with ProcessPoolExecutor(max_workers=min(workers, 2)) as executor:
                 road_future = executor.submit(
@@ -159,9 +168,10 @@ def run_fast_preprocess(argv: list[str]) -> int:
                     str(road_artifact),
                 )
 
-                _report("fast preprocess: area POI synthesis")
+                _report("fast preprocess: area POI ANALYZE + materialize")
                 area_started = time.monotonic()
-                area_stats = augment_area_pois(source, area, osmium, reporter=_report)
+                area_candidates, area_stats = analyze_area_pois(source, area_artifact, osmium)
+                write_area_pois(source, area, area_candidates, osmium, reporter=_report)
                 area_seconds = time.monotonic() - area_started
 
                 _report("fast preprocess: POI-context ANALYZE starts on area-enriched PBF")
@@ -174,6 +184,11 @@ def run_fast_preprocess(argv: list[str]) -> int:
 
                 road_kind, road_seconds, road_stats = road_future.result()
                 poi_kind, poi_seconds, poi_stats = poi_future.result()
+                analysis_stats["area_pois"] = {
+                    "seconds": round(area_seconds, 3),
+                    "artifact": str(area_artifact),
+                    "stats": area_stats,
+                }
                 analysis_stats[road_kind] = {
                     "seconds": round(road_seconds, 3),
                     "artifact": str(road_artifact),
@@ -190,22 +205,24 @@ def run_fast_preprocess(argv: list[str]) -> int:
             _write_analysis_manifest(analysis_dir, source, area_stats)
             _report(
                 "fast preprocess: staged ANALYZE complete; "
-                f"road={road_seconds:.1f}s poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
+                f"area={area_seconds:.1f}s road={road_seconds:.1f}s "
+                f"poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
             )
 
-        _report("fast preprocess: unified APPLY + lightweight semantics")
+        _report("fast preprocess: unified area injection + APPLY + lightweight semantics")
         apply_started = time.monotonic()
         semantic_transformer = SemanticTransformer(args.config, args.profile)
         apply_stats = apply_analysis_bundle(
-            area,
+            source,
             analysis_dir,
             output,
             osmium,
             reporter=_report,
             semantic_transformer=semantic_transformer,
+            synthetic_area_pois=area_candidates,
         )
         apply_seconds = time.monotonic() - apply_started
-        semantic_report = semantic_transformer.report(input_path=area, output_path=output)
+        semantic_report = semantic_transformer.report(input_path=source, output_path=output)
         semantic_seconds = float(semantic_report.get("seconds", apply_seconds))
 
         sort_started = time.monotonic()
@@ -216,7 +233,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 4,
+            "schema_version": 5,
             "mode": "reuse-apply" if args.reuse_analysis else "analyze-apply-staged",
             "input": str(source),
             "output": str(output),
