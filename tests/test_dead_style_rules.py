@@ -33,7 +33,7 @@ class DeadStyleRuleTests(unittest.TestCase):
     def test_residential_polygon_has_no_unreachable_duplicate(self) -> None:
         landuse = (STYLE / "inc" / "landuse_polygons").read_text(encoding="utf-8")
         self.assertIn("landuse=residential [0x10 resolution 21-21 continue]", landuse)
-        self.assertIn("landuse=residential [0x03 resolution 22]", landuse)
+        self.assertIn("landuse=residential [0x10 resolution 22]", landuse)
         self.assertNotIn("boundary=administrative & landuse=residential [0x03", landuse)
 
     def test_boundary_name_is_assigned_once(self) -> None:

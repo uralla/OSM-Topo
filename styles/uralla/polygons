@@ -15,45 +15,28 @@ leisure=* & sport=* & name=* { set name='${name} (${sport})' }
 leisure=fitness_station & sport=* { set leisure=playground }
 
 # [CUSTOM/АВТОРСКОЕ] Both current logging and legacy clearcut tagging use the
-# same scrub/clearcut visual class below. For man_made=clearcut this also lets
-# the generic man_made cleanup remove only the obsolete man_made tag without
-# losing the intended polygon classification.
+# same scrub/clearcut visual class below. The physical classification is added
+# before the late generic man_made fallback so the scrub rendering wins.
 (man_made=clearcut | landuse=logging) { add natural=scrub }
-
-# Все бесхозные man_made до зданий
-man_made=* & landuse=* {delete man_made}
-man_made=* & natural=* {delete man_made}
 
 man_made=water_works [0x0c resolution 22]
 man_made=wastewater_plant [0x1321d resolution 24]
 
-man_made=geoglyph { name '${name}' | 'геоглиф' } [0x1181b resolution 24]
-
 # Пирсы и волнорезы: один и тот же серый polygon. Это правило должно быть
-# раньше широкого man_made=* & area=yes, иначе breakwater станет зданием 0x13.
+# раньше широкого man_made=* fallback, иначе breakwater станет зданием 0x13.
 (man_made=pier | man_made=breakwater) [0x10f11 resolution 24]
 
-# Для видимой подписи реальное имя важнее адреса. Адресные поля отдельно
-# формируются в inc/address и остаются доступны для поиска Garmin.
-tourism=attraction & natural=water {delete tourism}
+# A bridge area is a transport structure, not a building footprint.
+bridge=yes & area=yes 	{name '${name}' | 'мост' } [0x10f19 resolution 24]
 
-man_made=* & area=yes 			{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
 # Ruined buildings are represented by the dedicated ruins POI. Do not also
 # paint the footprint as an ordinary building polygon.
-building=* & building!=ruins & historic!=ruins 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | 'здание' } [0x13 resolution 24]
-bridge=yes & area=yes 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x13 resolution 24]
-tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
-# Theme parks have an intentional earlier overview polygon than the generic tourism fallback.
-tourism=theme_park [0x10f13 resolution 21]
-tourism=* & building!=* & leisure!=* {name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
+building=* & building!=no & building!=ruins & historic!=ruins 	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' | 'здание' } [0x13 resolution 24]
 
-# man_made can be used on areas or lines
-man_made=* & area!=no
-& (man_made!=door & man_made!=embankment & man_made!=breakwater
-   & man_made!=cable_line & man_made!=cutline & man_made!=cutting
-   & man_made!=levee & man_made!=trench
-   & man_made!=groyne & man_made!=reinforced_slope)
-	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' }[0x13 resolution 24]
+# Named islands must be emitted before their physical landcover consumes the
+# object. Continue keeps the forest/rock/water detail available at closer zooms.
+place=island & name=* [0x53 resolution 18 continue]
+place=islet & name=* [0x53 resolution 19 continue]
 
 include 'inc/name';
 include 'inc/water_polygons';
@@ -70,9 +53,8 @@ amenity=cafe & building!=* | amenity=fast_food & building!=* | amenity=restauran
 amenity=college & building!=* [0x0a resolution 22]
 parking=underground | parking=multi-storey [0x06 resolution 24]
 amenity=parking | parking=surface [0x05 resolution 24]
-amenity=prison & building!=* [0x04 resolution 22]
+amenity=prison & building!=* { name '${name}' | 'тюрьма' } [0x10f18 resolution 22]
 amenity=school & building!=* [0x0a resolution 22 continue]
-amenity=baby_hatch [0x0a resolution 22 continue]
 # amenity=supermarket is superceded by shop=supermarket or landuse=retail
 amenity=supermarket & building!=* [0x08 resolution 22]
 # Marketplaces are retail areas; keep both overview and close-detail fills.
@@ -80,10 +62,10 @@ amenity=marketplace & building!=* [0x08 resolution 22-23 continue]
 amenity=marketplace & building!=* [0x10909 resolution 24]
 amenity=university & building!=* [0x0a resolution 22 continue]
 
-amenity=fountain [0x13 resolution 24]
+amenity=fountain & building!=* [0x3b resolution 24]
 
-(healthcare=* | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x0b resolution 22-23 continue]
-(healthcare=* | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x10908 resolution 24]
+(healthcare=hospital | healthcare=clinic | healthcare=doctor | healthcare=dentist | healthcare=nursing_home | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x0b resolution 22-23 continue]
+(healthcare=hospital | healthcare=clinic | healthcare=doctor | healthcare=dentist | healthcare=nursing_home | amenity=dentist | amenity=doctors | amenity=nursing_home | amenity=hospital | amenity=clinic) & building!=* [0x10908 resolution 24]
 
 landuse=retail & building!=* [0x08 resolution 22-23 continue]
 landuse=retail & building!=* [0x10909 resolution 24]
@@ -93,7 +75,7 @@ landuse=commercial [0x10f0b resolution 22]
 amenity=fire_station & building!=* [0x10f05 resolution 22-23 continue]
 amenity=fire_station & building!=* [0x10f06 resolution 24]
 
-power=station [0x0c resolution 23]
+(power=plant | power=substation | power=station) [0x0c resolution 23]
 
 leisure=common [0x18 resolution 23]
 leisure=garden [0x17 resolution 23]
@@ -116,49 +98,51 @@ leisure=swimming_pool { set sport=swimming }
 leisure=swimming_pool { name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x19 resolution 24]
 leisure=track { name '${name}' } [0x19 resolution 24]
 leisure=water_park [0x19 resolution 23]
-# Nature reserves intentionally lose polygon fill after resolution 22; private
-# access must not reintroduce a generic leisure fill at close zoom.
-leisure=* & access=private & leisure!=nature_reserve & leisure!=natural_reserve [0x19 resolution 23]
 leisure=dog_park { name '${name}' | 'площадка для собак' } [0x20 resolution 24]
 leisure=bleachers [0x1331a resolution 24]
 
-place=town & building!=* [0x01 resolution 19]
-place=city & building!=* [0x02 resolution 18]
+place=city & building!=* [0x01 resolution 18]
+place=town & building!=* [0x02 resolution 19]
 place=suburb & building!=* [0x02 resolution 22]
 place=village & building!=* [0x03 resolution 21]
 place=hamlet & building!=* [0x03 resolution 21]
 place=locality & building!=* [0x03 resolution 21]
 place=isolated_dwelling & building!=* [0x03 resolution 21]
 
-# Fuel is the primary area classification. A convenience shop on the same OSM
-# polygon must not turn the whole filling-station area into a retail polygon.
-shop=* & building!=* & amenity!=fuel [0x08 resolution 21]
+# Fuel is the primary area classification. It must run before generic retail
+# without rewriting a legitimate highway tag on the source object.
+amenity=fuel & building!=* [0x10f0c resolution 24]
+shop=* & building!=* [0x08 resolution 21]
 
-## Площадки на заправках
-(highway=* & amenity=fuel) | (amenity=fuel & area=yes)
-	{delete highway; set highway=rest_area; set area=yes}
-highway=rest_area {set area=yes}
-amenity=fuel {set area=yes}
-amenity=fuel & area=yes [0x10f0c resolution 24]
-
-# squares and plazas
+# Pedestrian squares and plazas.
 highway=pedestrian & (area=yes | mkgmap:mp_created=true)
-	| highway=footway & (area=yes | mkgmap:mp_created=true)
-	| highway=rest_area & (area=yes | mkgmap:mp_created=true)
-	| highway=living_street & (area=yes | mkgmap:mp_created=true)
-	| highway=residential & (area=yes | mkgmap:mp_created=true)
-	| highway=unclassified & (area=yes | mkgmap:mp_created=true) [0x10f12 resolution 21]
+	| highway=footway & (area=yes | mkgmap:mp_created=true) [0x10f12 resolution 21]
+
+# Motor-road areas retain the former neutral fill but use truthful object semantics.
+highway=rest_area & (area=yes | mkgmap:mp_created=true) { name '${name}' | 'зона отдыха' } [0x10f15 resolution 21]
+(highway=living_street | highway=residential | highway=unclassified)
+	& (area=yes | mkgmap:mp_created=true) { name '${name}' | 'дорожная зона' } [0x10f16 resolution 21]
 
 # ж/д платформы как площади
 (public_transport=platform & area=yes & mkgmap:area2poi!=true | railway=platform & area=yes & mkgmap:area2poi!=true) & !(layer<0) { name '${name}' | 'платформа' } [0x10f14 resolution 21]
 
-historic=museum | historic=memorial [0x1e resolution 21]
-# Archaeological sites keep their area fill; ruins are point-only (0x640f).
-historic=archaeological_site [0x1e resolution 21]
+# Museum and memorial areas are represented by their POIs. Archaeological sites
+# retain a dedicated neutral area because their physical extent is meaningful.
+historic=archaeological_site { name '${name}' | 'археологический объект' } [0x10f17 resolution 21]
 
-# render named islands
-place=island & name=* [0x53 resolution 18]
-place=islet & name=* [0x53 resolution 19]
+# Generic tourism and man_made fallbacks deliberately come after physical and
+# functional areas. They must not destroy source tags merely to avoid an early
+# broad rule intercepting more specific landcover.
+tourism=attraction & building!=* & leisure!=* & natural!=*	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
+tourism=theme_park & building!=* & leisure!=* & natural!=* [0x10f13 resolution 21]
+tourism=* & building!=* & leisure!=* & natural!=* {name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' } [0x10f13 resolution 22]
+
+man_made=* & area!=no
+& (man_made!=door & man_made!=embankment & man_made!=breakwater & man_made!=geoglyph
+   & man_made!=cable_line & man_made!=cutline & man_made!=cutting
+   & man_made!=levee & man_made!=trench
+   & man_made!=groyne & man_made!=reinforced_slope)
+	{name '${name}' | '${addr:street} ${addr:housenumber}' | '${addr:housenumber}' }[0x13 resolution 24]
 
 <finalize>
 # The finalizer section is executed for each element when a rule with an element type matches

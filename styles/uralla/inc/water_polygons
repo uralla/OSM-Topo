@@ -4,7 +4,9 @@
 # Отрисовываем их только как polygon, без дополнительной линии.
 uralla:pier_polygon=yes [0x10f11 resolution 24]
 
-waterway=riverbank & mkgmap:area2poi!=true | landuse=basin & mkgmap:area2poi!=true | landuse=reservoir & mkgmap:area2poi!=true | water=reservoir & mkgmap:area2poi!=true {add natural=water}
+waterway=riverbank & mkgmap:area2poi!=true | landuse=reservoir & mkgmap:area2poi!=true | water=reservoir & mkgmap:area2poi!=true {add natural=water}
+# A basin can be dry or intermittent; only explicit water semantics may turn it blue.
+landuse=basin & water=* & mkgmap:area2poi!=true { add natural=water }
 
 natural=bay [0x32 resolution 18]
 
@@ -47,7 +49,6 @@ natural=wetland & mkgmap:area2poi!=true { name '${name}' | 'болото' } [0x1
 
 
 
-natural=waterfall & mkgmap:area2poi!=true | waterway=waterfall & mkgmap:area2poi!=true [0x3f resolution 21]
 natural=sea { add mkgmap:skipSizeFilter=true; set mkgmap:drawLevel=2 } [0x32 resolution 16 continue]
 
 

@@ -16,7 +16,8 @@ class FootwayPolygonStyleTests(unittest.TestCase):
             "highway=footway & (area=yes | mkgmap:mp_created=true)",
             self.text,
         )
-        self.assertIn("[0x0d resolution 21]", self.text)
+        self.assertIn("[0x10f12 resolution 21]", self.text)
+        self.assertNotIn("[0x0d resolution 21]", self.text)
 
     def test_generic_highway_area_is_not_forced_to_parking(self) -> None:
         self.assertNotIn(

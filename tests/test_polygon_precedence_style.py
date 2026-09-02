@@ -11,11 +11,11 @@ class PolygonPrecedenceStyleTests(unittest.TestCase):
         self.text = POLYGONS.read_text(encoding="utf-8")
 
     def test_fuel_area_is_not_consumed_by_generic_shop_polygon(self) -> None:
-        shop_rule = "shop=* & building!=* & amenity!=fuel [0x08 resolution 21]"
-        fuel_rule = "amenity=fuel & area=yes [0x10f0c resolution 24]"
+        shop_rule = "shop=* & building!=* [0x08 resolution 21]"
+        fuel_rule = "amenity=fuel & building!=* [0x10f0c resolution 24]"
         self.assertIn(shop_rule, self.text)
         self.assertIn(fuel_rule, self.text)
-        self.assertNotIn("shop=* & building!=* [0x08 resolution 21]", self.text)
+        self.assertLess(self.text.index(fuel_rule), self.text.index(shop_rule))
 
     def test_legacy_swimming_pool_normalizes_to_rendered_leisure_polygon(self) -> None:
         normalize = "amenity=swimming_pool & leisure!=* { add leisure=swimming_pool }"
@@ -28,21 +28,15 @@ class PolygonPrecedenceStyleTests(unittest.TestCase):
         self.assertLess(self.text.index(sport), self.text.index(render))
         self.assertNotIn("leisure=swimming_pool | amenity=swimming_pool {set sport=swimming}", self.text)
 
-    def test_private_nature_reserve_does_not_regain_close_zoom_fill(self) -> None:
+    def test_private_leisure_catchall_is_absent(self) -> None:
         reserve = (
             "(leisure=nature_reserve | leisure=natural_reserve | "
             "landuse=nature_reserve | landuse=natural_reserve)\n"
             "    & area_size()>50000 & boundary!=protected_area & boundary!=national_park\n"
             "    [0x16 resolution 19-22 continue]"
         )
-        private_fallback = (
-            "leisure=* & access=private & leisure!=nature_reserve "
-            "& leisure!=natural_reserve [0x19 resolution 23]"
-        )
         self.assertIn(reserve, self.text)
-        self.assertIn(private_fallback, self.text)
-        self.assertNotIn("leisure=* & access=private [0x19 resolution 23]", self.text)
-        self.assertLess(self.text.index(reserve), self.text.index(private_fallback))
+        self.assertNotIn("leisure=* & access=private", self.text)
 
 
 if __name__ == "__main__":

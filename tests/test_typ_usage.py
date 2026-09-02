@@ -133,6 +133,17 @@ class TypUsageTests(unittest.TestCase):
                 leftovers.append(line)
         self.assertEqual([], leftovers)
 
+    def test_every_used_polygon_type_has_draw_order(self) -> None:
+        text = typ_text()
+        matches = list(DRAW_RE.finditer(text))
+        self.assertEqual(1, len(matches))
+        drawn = {
+            int(match.group(1), 16)
+            for line in matches[0].group(0).splitlines()
+            if (match := re.match(r"(?i)^\s*Type\s*=\s*0x([0-9a-f]+)\s*,", line))
+        }
+        self.assertEqual([], sorted(used("polygons") - drawn))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -128,7 +128,7 @@ _HISTORIC_AREA_POIS = frozenset(
 )
 
 _MAN_MADE_AREA_POIS = frozenset(
-    {"antenna", "cairn", "communications_tower", "lighthouse", "mast", "survey_point", "tower", "water_tower", "windmill"}
+    {"antenna", "cairn", "communications_tower", "geoglyph", "lighthouse", "mast", "survey_point", "tower", "water_tower", "windmill"}
 )
 
 _AEROWAY_AREA_POIS = frozenset({"aerodrome", "airport", "helipad", "terminal"})

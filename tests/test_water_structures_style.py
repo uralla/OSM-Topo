@@ -22,7 +22,7 @@ class WaterStructuresStyleTests(unittest.TestCase):
         )
         self.assertLess(
             polygons.index("(man_made=pier | man_made=breakwater) [0x10f11 resolution 24]"),
-            polygons.index("\nman_made=* & area=yes"),
+            polygons.index("\nman_made=* & area!=no"),
         )
 
     def test_open_breakwater_uses_pier_line_class(self) -> None:

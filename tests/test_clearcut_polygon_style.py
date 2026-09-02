@@ -13,8 +13,8 @@ class ClearcutPolygonStyleTests(unittest.TestCase):
         normalize = "(man_made=clearcut | landuse=logging) { add natural=scrub }"
         self.assertIn(normalize, text)
         self.assertNotIn("(man_made=clearcut | landuse=logging) {add natural=heath}", text)
-        self.assertLess(text.index(normalize), text.index("man_made=* & natural=* {delete man_made}"))
         self.assertLess(text.index(normalize), text.index("include 'inc/landuse_polygons';"))
+        self.assertNotIn("man_made=* & natural=* {delete man_made}", text)
 
     def test_clearcut_has_one_scrub_rendering_branch(self) -> None:
         text = LANDUSE.read_text(encoding="utf-8")
