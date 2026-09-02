@@ -94,6 +94,13 @@ _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
         re.compile(r"^\s*вод(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
         re.compile(r"^\s*вдп(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
     ),
+    # Cave type words are normally written as a suffix in Russian OSM names.
+    # Strip only the trailing type marker; a leading "Пещера ..." may be an
+    # established proper name and is deliberately left untouched.
+    "cave": (
+        re.compile(r"^\s*(.+?)\s+пещера\s*$", re.IGNORECASE),
+        re.compile(r"^\s*(.+?)\s+пещ(?:\.|\s*)$", re.IGNORECASE),
+    ),
 }
 
 
@@ -273,6 +280,8 @@ def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
         return "ridge"
     if natural == "waterfall":
         return "waterfall"
+    if natural == "cave_entrance":
+        return "cave"
     water = tags.get("water")
     if water in {"lake", "reservoir", "pond"}:
         return "lake"
