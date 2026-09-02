@@ -16,7 +16,7 @@ from .area_pois import augment_area_pois
 from .errors import StageError
 from .preprocess_pipeline import _renumber_nodes, _report, _sort_pbf
 from .preprocessor import _load_osmium
-from .semantic_apply import apply_semantic_tags
+from .semantic_apply import SemanticTransformer
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
@@ -113,7 +113,6 @@ def run_fast_preprocess(argv: list[str]) -> int:
     root = output.parent
     run_token = uuid4().hex
     area = root / f".{output.name}.{run_token}.area-pois.osm.pbf"
-    applied = root / f".{output.name}.{run_token}.analysis-applied.osm.pbf"
     owned_analysis_dir = args.analysis_dir is None
     analysis_dir = (
         root / f".{output.name}.{run_token}.analysis"
@@ -149,11 +148,6 @@ def run_fast_preprocess(argv: list[str]) -> int:
             )
         else:
             analysis_started = time.monotonic()
-
-            # Road density depends only on ways and their geometry, so it can start on
-            # the untouched fresh PBF while area->POI synthesis runs in the main process.
-            # POI context must wait for area synthesis because synthetic area POIs need
-            # to participate in the same rarity/activity model as native OSM nodes.
             _report(
                 "fast preprocess: road-density ANALYZE starts in parallel with area POI synthesis"
             )
@@ -199,22 +193,20 @@ def run_fast_preprocess(argv: list[str]) -> int:
                 f"road={road_seconds:.1f}s poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
             )
 
-        _report("fast preprocess: unified APPLY")
+        _report("fast preprocess: unified APPLY + lightweight semantics")
         apply_started = time.monotonic()
-        apply_stats = apply_analysis_bundle(area, analysis_dir, applied, osmium, reporter=_report)
-        apply_seconds = time.monotonic() - apply_started
-
-        _report("fast preprocess: lightweight semantic pass")
-        semantic_started = time.monotonic()
-        semantic_report = apply_semantic_tags(
-            applied,
+        semantic_transformer = SemanticTransformer(args.config, args.profile)
+        apply_stats = apply_analysis_bundle(
+            area,
+            analysis_dir,
             output,
-            args.config,
-            args.profile,
-            args.report,
             osmium,
+            reporter=_report,
+            semantic_transformer=semantic_transformer,
         )
-        semantic_seconds = time.monotonic() - semantic_started
+        apply_seconds = time.monotonic() - apply_started
+        semantic_report = semantic_transformer.report(input_path=area, output_path=output)
+        semantic_seconds = float(semantic_report.get("seconds", apply_seconds))
 
         sort_started = time.monotonic()
         _sort_pbf(output)
@@ -224,7 +216,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 3,
+            "schema_version": 4,
             "mode": "reuse-apply" if args.reuse_analysis else "analyze-apply-staged",
             "input": str(source),
             "output": str(output),
@@ -233,8 +225,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
                 "analyze_wall": round(analyze_wall_seconds, 3),
                 "road_analyze": round(road_seconds, 3),
                 "poi_analyze": round(poi_seconds, 3),
-                "apply": round(apply_seconds, 3),
-                "semantic": round(semantic_seconds, 3),
+                "apply_semantic": round(apply_seconds, 3),
+                "semantic_inside_apply": round(semantic_seconds, 3),
                 "sort_renumber": round(finalize_seconds, 3),
                 "total": round(total_seconds, 3),
             },
@@ -249,7 +241,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         _report(
             "fast preprocess complete: "
             f"area={area_seconds:.1f}s analyze-wall={analyze_wall_seconds:.1f}s "
-            f"apply={apply_seconds:.1f}s semantic={semantic_seconds:.1f}s "
+            f"apply+semantic={apply_seconds:.1f}s "
             f"sort/renumber={finalize_seconds:.1f}s total={total_seconds:.1f}s"
         )
         return 0
@@ -257,8 +249,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         print(f"ERROR fast preprocess: {exc}", file=sys.stderr)
         return 1
     finally:
-        for path in (area, applied):
-            if path.exists():
-                path.unlink()
+        if area.exists():
+            area.unlink()
         if owned_analysis_dir and not args.keep_analysis and analysis_dir.exists():
             shutil.rmtree(analysis_dir, ignore_errors=True)
