@@ -4,8 +4,10 @@ from pathlib import Path
 import sys
 
 from .analysis_cli import (
+    run_analyze_bundle,
     run_analyze_poi_context,
     run_analyze_road_density,
+    run_apply_bundle,
     run_apply_poi_context,
     run_apply_road_density,
 )
@@ -35,8 +37,6 @@ def _interactive_request(argv: list[str]) -> tuple[Path, Path] | None:
             manifest = Path(argv[index + 1])
             index += 2
             continue
-        # Any remaining token is a real CLI request (or an invalid one), which
-        # must continue through argparse rather than being swallowed by the UI.
         return None
     return manifest, host
 
@@ -45,12 +45,16 @@ arguments = sys.argv[1:]
 interactive = _interactive_request(arguments)
 if interactive is not None:
     manifest_path, host_path = interactive
-    raise SystemExit(
-        run_interactive(manifest_path=manifest_path, host_path=host_path)
-    )
+    raise SystemExit(run_interactive(manifest_path=manifest_path, host_path=host_path))
 
 # Experimental analyze/apply path. These commands deliberately stay outside
-# the normal build pipeline until a large-map benchmark proves the speedup.
+# the normal build pipeline until a real-map benchmark proves the speedup.
+if "analyze-bundle" in arguments:
+    command_index = arguments.index("analyze-bundle")
+    raise SystemExit(run_analyze_bundle(arguments[command_index + 1 :]))
+if "apply-analysis" in arguments:
+    command_index = arguments.index("apply-analysis")
+    raise SystemExit(run_apply_bundle(arguments[command_index + 1 :]))
 if "analyze-road-density" in arguments:
     command_index = arguments.index("analyze-road-density")
     raise SystemExit(run_analyze_road_density(arguments[command_index + 1 :]))
@@ -64,13 +68,8 @@ if "apply-poi-context" in arguments:
     command_index = arguments.index("apply-poi-context")
     raise SystemExit(run_apply_poi_context(arguments[command_index + 1 :]))
 
-# Preprocessing is a composite operation: semantic/tag enrichment first, then
-# deliberate selected area-to-POI synthesis. mkgmap's global area POI generator
-# stays disabled so duplicate suppression and interior placement remain ours.
 if "preprocess" in arguments:
     preprocess_index = arguments.index("preprocess")
     raise SystemExit(run_preprocess_pipeline(arguments[preprocess_index + 1 :]))
 
-# All build-product paths deliberately pass through the shared entrypoint so
-# full builds and incremental resumes use the same source policy and final UI.
 raise SystemExit(main(arguments))
