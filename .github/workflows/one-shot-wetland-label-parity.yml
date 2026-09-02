@@ -1,0 +1,59 @@
+name: One-shot wetland label parity
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-wetland-label-parity.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extend geographic label logic to wetlands
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('uralla_build/preprocessor.py')
+          text = path.read_text(encoding='utf-8')
+
+          old_class = '''    if natural == "cave_entrance":\n        return "cave"\n    water = tags.get("water")\n'''
+          new_class = '''    if natural == "cave_entrance":\n        return "cave"\n    if natural == "wetland":\n        return "wetland"\n    water = tags.get("water")\n'''
+          if old_class not in text:
+              raise SystemExit('wetland class insertion target not found')
+          text = text.replace(old_class, new_class, 1)
+
+          old_patterns = '''    "lake": (\n        re.compile(r"^\\s*озеро\\s+(.+?)\\s*$", re.IGNORECASE),\n        re.compile(r"^\\s*оз(?:\\.\\s*|\\s+)(.+?)\\s*$", re.IGNORECASE),\n    ),\n    "waterfall": (\n'''
+          new_patterns = '''    "lake": (\n        re.compile(r"^\\s*озеро\\s+(.+?)\\s*$", re.IGNORECASE),\n        re.compile(r"^\\s*оз(?:\\.\\s*|\\s+)(.+?)\\s*$", re.IGNORECASE),\n    ),\n    "wetland": (\n        re.compile(r"^\\s*болото\\s+(.+?)\\s*$", re.IGNORECASE),\n        re.compile(r"^\\s*бол(?:\\.\\s*|\\s+)(.+?)\\s*$", re.IGNORECASE),\n    ),\n    "waterfall": (\n'''
+          if old_patterns not in text:
+              raise SystemExit('geographic prefix patterns target not found')
+          text = text.replace(old_patterns, new_patterns, 1)
+
+          old_suffix = '''    # For lakes, a lowercase trailing ``озеро`` is a generic type marker.\n    # Strip it before abbreviation so a one-word name such as ``Верхнее озеро``\n    # becomes ``Верхнее`` rather than the meaningless ``В.``.  Capitalized\n    # ``Озеро`` is deliberately preserved as part of the proper name.\n    if label_class == "lake":\n        lake_suffix_match = re.fullmatch(r"(.+?)\\s+озеро\\s*", label)\n        if lake_suffix_match:\n            stripped = lake_suffix_match.group(1).strip()\n            if stripped:\n                label = stripped\n\n'''
+          new_suffix = '''    # Lowercase trailing type words are generic markers already represented by\n    # OSM tags. Strip them before abbreviation so one-word names remain readable.\n    # Capitalized suffixes (``Озеро``, ``Болото``) are preserved as proper-name text.\n    generic_suffix = {"lake": "озеро", "wetland": "болото"}.get(label_class or "")\n    if generic_suffix is not None:\n        suffix_match = re.fullmatch(rf"(.+?)\\s+{generic_suffix}\\s*", label)\n        if suffix_match:\n            stripped = suffix_match.group(1).strip()\n            if stripped:\n                label = stripped\n\n'''
+          if old_suffix not in text:
+              raise SystemExit('generic suffix target not found')
+          text = text.replace(old_suffix, new_suffix, 1)
+          path.write_text(text, encoding='utf-8')
+
+          test_path = Path('tests/test_semantic_wetland_labels.py')
+          test_path.write_text('''from __future__ import annotations\n\nimport unittest\n\nfrom uralla_build.preprocessor import enrich_geographic_label_tags\n\n\nclass SemanticWetlandLabelTests(unittest.TestCase):\n    def test_single_word_wetland_names_are_not_abbreviated(self) -> None:\n        cases = {\n            "Верхнее болото": "Верхнее",\n            "Нижнее болото": "Нижнее",\n            "Большое болото": "Большое",\n        }\n        for name, expected in cases.items():\n            with self.subTest(name=name):\n                tags, changed = enrich_geographic_label_tags(\n                    {"natural": "wetland", "wetland": "swamp", "name": name}\n                )\n                self.assertTrue(changed)\n                self.assertEqual(tags["uralla:label"], expected)\n\n    def test_multiword_size_wetland_name_is_compacted(self) -> None:\n        tags, changed = enrich_geographic_label_tags(\n            {\n                "natural": "wetland",\n                "wetland": "marsh",\n                "name": "Большое Клюквенное болото",\n            }\n        )\n        self.assertTrue(changed)\n        self.assertEqual(tags["uralla:label"], "Бол. Клюквенное")\n\n    def test_leading_generic_wetland_type_is_removed(self) -> None:\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "wetland", "name": "Болото Клюквенное"}\n        )\n        self.assertTrue(changed)\n        self.assertEqual(tags["uralla:label"], "Клюквенное")\n\n    def test_capitalized_wetland_suffix_is_preserved(self) -> None:\n        tags, changed = enrich_geographic_label_tags(\n            {"natural": "wetland", "name": "Чёрное Болото"}\n        )\n        self.assertFalse(changed)\n        self.assertNotIn("uralla:label", tags)\n\n\nif __name__ == "__main__":\n    unittest.main()\n''', encoding='utf-8')
+          PY
+
+      - name: Run focused tests
+        run: python -m unittest tests.test_semantic_lake_labels tests.test_semantic_wetland_labels -v
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+uralla@users.noreply.github.com"
+          git add uralla_build/preprocessor.py tests/test_semantic_wetland_labels.py
+          git commit -m "Apply geographic label cleanup to wetlands"
+          git push
