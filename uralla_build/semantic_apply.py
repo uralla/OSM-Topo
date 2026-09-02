@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 import json
 from pathlib import Path
+import re
 import time
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
@@ -27,6 +28,39 @@ from .preprocessor import (
     load_peak_landmarks,
 )
 from .river_landmarks import DEFAULT_RIVER_CATALOG, enrich_river_landmark_tags, load_river_landmarks
+
+
+_LOWERCASE_LAKE_SUFFIX_RE = re.compile(r"^(.+?)\s+озеро\s*$")
+_CAPITAL_LAKE_SUFFIX_RE = re.compile(r"^(.+?)\s+Озеро\s*$")
+
+
+def _respect_lake_suffix_capitalization(tags: Mapping[str, str]) -> dict[str, str]:
+    """Treat lowercase ``озеро`` as a type marker and capital ``Озеро`` as name text."""
+    result = {str(key): str(value) for key, value in tags.items()}
+    if result.get("water") not in {"lake", "reservoir", "pond"}:
+        return result
+    name = result.get("name")
+    if not name:
+        return result
+
+    lowercase = _LOWERCASE_LAKE_SUFFIX_RE.fullmatch(name.strip())
+    if lowercase:
+        label = result.get(DISPLAY_LABEL_TAG, name).strip()
+        label_match = re.fullmatch(r"(.+?)\s+озеро\s*", label, re.IGNORECASE)
+        if label_match:
+            label = label_match.group(1).strip()
+        elif label == name:
+            label = lowercase.group(1).strip()
+        if label:
+            result[DISPLAY_LABEL_TAG] = label
+        return result
+
+    capital = _CAPITAL_LAKE_SUFFIX_RE.fullmatch(name.strip())
+    if capital:
+        label = result.get(DISPLAY_LABEL_TAG)
+        if label and not label.endswith(" Озеро"):
+            result[DISPLAY_LABEL_TAG] = label.rstrip() + " Озеро"
+    return result
 
 
 class SemanticTransformer:
@@ -82,6 +116,7 @@ class SemanticTransformer:
             self.counters["peak_landmarks_enriched"] += 1
         before_label = final_tags.get(DISPLAY_LABEL_TAG)
         final_tags, changed = enrich_geographic_label_tags(final_tags)
+        final_tags = _respect_lake_suffix_capitalization(final_tags)
         if changed or before_label != final_tags.get(DISPLAY_LABEL_TAG):
             self.counters["geographic_labels_enriched"] += 1
             _emit_geographic_label_change(item, final_tags)
