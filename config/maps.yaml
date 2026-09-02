@@ -160,6 +160,8 @@ products:
   crimea:
     source: crimea
     extract: false
+    preprocess_mode: fast
+    preprocess_workers: 2
     polygon: poly/crimean-fed-district.poly
     elevation: elevation/ele_10_ru_crimean-fed-district.osm.pbf
     geonames: input/cities15000.zip
