@@ -21,11 +21,11 @@ from .area_pois import write_area_pois
 from .errors import StageError
 from .preprocess_pipeline import _renumber_nodes, _report, _sort_pbf
 from .preprocessor import _load_osmium
-from .semantic_apply import SemanticTransformer
+from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 2
+ANALYSIS_MANIFEST_SCHEMA = 3
 
 
 def _source_identity(path: Path) -> dict[str, object]:
@@ -45,6 +45,7 @@ def _write_analysis_manifest(
     payload = {
         "schema_version": ANALYSIS_MANIFEST_SCHEMA,
         "source": _source_identity(source),
+        "semantic_basis": "area-poi + semantic/filter before spatial analysis",
         "artifacts": {
             "area_pois": "area-pois.json.gz",
             "road_density": "road-density.json.gz",
@@ -116,6 +117,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
     root = output.parent
     run_token = uuid4().hex
     area = root / f".{output.name}.{run_token}.area-pois.osm.pbf"
+    semantic_base = root / f".{output.name}.{run_token}.semantic-base.osm.pbf"
+    semantic_base_report_path = root / f".{output.name}.{run_token}.semantic-base.json"
     owned_analysis_dir = args.analysis_dir is None
     analysis_dir = (
         root / f".{output.name}.{run_token}.analysis"
@@ -131,6 +134,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         osmium = _load_osmium()
         workers = max(1, int(args.workers))
         analysis_stats: dict[str, object] = {}
+        semantic_base_seconds = 0.0
 
         if args.reuse_analysis:
             area_started = time.monotonic()
@@ -152,78 +156,107 @@ def run_fast_preprocess(argv: list[str]) -> int:
                 "poi_context": {"artifact": str(poi_artifact)},
                 "wall_seconds": 0.0,
             }
+            semantic_transformer = SemanticTransformer(args.config, args.profile)
+            apply_input = source
+            apply_synthetic_area_pois = area_candidates
             _report(
-                "fast preprocess: reusable area/road/POI artifacts accepted; all discovery and spatial analysis skipped"
+                "fast preprocess: reusable post-semantic area/road/POI artifacts accepted; all discovery and spatial analysis skipped"
             )
         else:
             analysis_started = time.monotonic()
-            _report(
-                "fast preprocess: road-density ANALYZE starts in parallel with area POI discovery"
+
+            _report("fast preprocess: area POI ANALYZE + materialize")
+            area_started = time.monotonic()
+            area_candidates, area_stats = analyze_area_pois(source, area_artifact, osmium)
+            write_area_pois(source, area, area_candidates, osmium, reporter=_report)
+            area_seconds = time.monotonic() - area_started
+
+            # Match the production order exactly: area synthesis, then blacklist and
+            # cheap semantic enrichment, then POI-context and road-density analysis.
+            _report("fast preprocess: materialize semantic/filter base before spatial ANALYZE")
+            semantic_base_started = time.monotonic()
+            semantic_report = apply_semantic_tags(
+                area,
+                semantic_base,
+                args.config,
+                args.profile,
+                semantic_base_report_path,
+                osmium,
             )
+            semantic_base_seconds = time.monotonic() - semantic_base_started
+
+            _report("fast preprocess: road-density + POI-context ANALYZE in parallel on semantic base")
             with ProcessPoolExecutor(max_workers=min(workers, 2)) as executor:
                 road_future = executor.submit(
                     _analyze_worker,
                     "road_density",
-                    str(source),
+                    str(semantic_base),
                     str(road_artifact),
                 )
-
-                _report("fast preprocess: area POI ANALYZE + materialize")
-                area_started = time.monotonic()
-                area_candidates, area_stats = analyze_area_pois(source, area_artifact, osmium)
-                write_area_pois(source, area, area_candidates, osmium, reporter=_report)
-                area_seconds = time.monotonic() - area_started
-
-                _report("fast preprocess: POI-context ANALYZE starts on area-enriched PBF")
                 poi_future = executor.submit(
                     _analyze_worker,
                     "poi_context",
-                    str(area),
+                    str(semantic_base),
                     str(poi_artifact),
                 )
-
                 road_kind, road_seconds, road_stats = road_future.result()
                 poi_kind, poi_seconds, poi_stats = poi_future.result()
-                analysis_stats["area_pois"] = {
-                    "seconds": round(area_seconds, 3),
-                    "artifact": str(area_artifact),
-                    "stats": area_stats,
-                }
-                analysis_stats[road_kind] = {
-                    "seconds": round(road_seconds, 3),
-                    "artifact": str(road_artifact),
-                    "stats": road_stats,
-                }
-                analysis_stats[poi_kind] = {
-                    "seconds": round(poi_seconds, 3),
-                    "artifact": str(poi_artifact),
-                    "stats": poi_stats,
-                }
+
+            analysis_stats["area_pois"] = {
+                "seconds": round(area_seconds, 3),
+                "artifact": str(area_artifact),
+                "stats": area_stats,
+            }
+            analysis_stats["semantic_base"] = {
+                "seconds": round(semantic_base_seconds, 3),
+                "stats": semantic_report,
+            }
+            analysis_stats[road_kind] = {
+                "seconds": round(road_seconds, 3),
+                "artifact": str(road_artifact),
+                "stats": road_stats,
+            }
+            analysis_stats[poi_kind] = {
+                "seconds": round(poi_seconds, 3),
+                "artifact": str(poi_artifact),
+                "stats": poi_stats,
+            }
 
             analyze_wall_seconds = time.monotonic() - analysis_started
             analysis_stats["wall_seconds"] = round(analyze_wall_seconds, 3)
             _write_analysis_manifest(analysis_dir, source, area_stats)
             _report(
-                "fast preprocess: staged ANALYZE complete; "
-                f"area={area_seconds:.1f}s road={road_seconds:.1f}s "
-                f"poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
+                "fast preprocess: parity ANALYZE complete; "
+                f"area={area_seconds:.1f}s semantic-base={semantic_base_seconds:.1f}s "
+                f"road={road_seconds:.1f}s poi={poi_seconds:.1f}s wall={analyze_wall_seconds:.1f}s"
             )
 
-        _report("fast preprocess: unified area injection + APPLY + lightweight semantics")
+            # The semantic base already contains synthetic nodes and all cheap
+            # semantic/filter transformations, so the initial cache-building run can
+            # apply hints directly without repeating semantics or reinjecting areas.
+            semantic_transformer = None
+            apply_input = semantic_base
+            apply_synthetic_area_pois = ()
+
+        _report("fast preprocess: unified APPLY (semantic first on reuse)")
         apply_started = time.monotonic()
-        semantic_transformer = SemanticTransformer(args.config, args.profile)
         apply_stats = apply_analysis_bundle(
-            source,
+            apply_input,
             analysis_dir,
             output,
             osmium,
             reporter=_report,
             semantic_transformer=semantic_transformer,
-            synthetic_area_pois=area_candidates,
+            synthetic_area_pois=apply_synthetic_area_pois,
         )
         apply_seconds = time.monotonic() - apply_started
-        semantic_report = semantic_transformer.report(input_path=source, output_path=output)
-        semantic_seconds = float(semantic_report.get("seconds", apply_seconds))
+
+        if args.reuse_analysis:
+            assert semantic_transformer is not None
+            semantic_report = semantic_transformer.report(input_path=source, output_path=output)
+            semantic_seconds = float(semantic_report.get("seconds", apply_seconds))
+        else:
+            semantic_seconds = semantic_base_seconds
 
         sort_started = time.monotonic()
         _sort_pbf(output)
@@ -233,17 +266,18 @@ def run_fast_preprocess(argv: list[str]) -> int:
         total_seconds = time.monotonic() - started
         report_path = args.report.resolve()
         report = {
-            "schema_version": 5,
-            "mode": "reuse-apply" if args.reuse_analysis else "analyze-apply-staged",
+            "schema_version": 6,
+            "mode": "reuse-apply" if args.reuse_analysis else "parity-analyze-apply",
             "input": str(source),
             "output": str(output),
             "timing": {
                 "area_pois": round(area_seconds, 3),
+                "semantic_base": round(semantic_base_seconds, 3),
                 "analyze_wall": round(analyze_wall_seconds, 3),
                 "road_analyze": round(road_seconds, 3),
                 "poi_analyze": round(poi_seconds, 3),
                 "apply_semantic": round(apply_seconds, 3),
-                "semantic_inside_apply": round(semantic_seconds, 3),
+                "semantic": round(semantic_seconds, 3),
                 "sort_renumber": round(finalize_seconds, 3),
                 "total": round(total_seconds, 3),
             },
@@ -257,7 +291,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
         )
         _report(
             "fast preprocess complete: "
-            f"area={area_seconds:.1f}s analyze-wall={analyze_wall_seconds:.1f}s "
+            f"area={area_seconds:.1f}s semantic-base={semantic_base_seconds:.1f}s "
+            f"analyze-wall={analyze_wall_seconds:.1f}s "
             f"apply+semantic={apply_seconds:.1f}s "
             f"sort/renumber={finalize_seconds:.1f}s total={total_seconds:.1f}s"
         )
@@ -266,7 +301,8 @@ def run_fast_preprocess(argv: list[str]) -> int:
         print(f"ERROR fast preprocess: {exc}", file=sys.stderr)
         return 1
     finally:
-        if area.exists():
-            area.unlink()
+        for path in (area, semantic_base, semantic_base_report_path):
+            if path.exists():
+                path.unlink()
         if owned_analysis_dir and not args.keep_analysis and analysis_dir.exists():
             shutil.rmtree(analysis_dir, ignore_errors=True)
