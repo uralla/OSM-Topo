@@ -89,6 +89,10 @@ _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
         re.compile(r"^\s*озеро\s+(.+?)\s*$", re.IGNORECASE),
         re.compile(r"^\s*оз(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
     ),
+    "wetland": (
+        re.compile(r"^\s*болото\s+(.+?)\s*$", re.IGNORECASE),
+        re.compile(r"^\s*бол(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
+    ),
     "waterfall": (
         re.compile(r"^\s*водопад\s+(.+?)\s*$", re.IGNORECASE),
         re.compile(r"^\s*вод(?:\.\s*|\s+)(.+?)\s*$", re.IGNORECASE),
@@ -292,6 +296,8 @@ def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
         return "waterfall"
     if natural == "cave_entrance":
         return "cave"
+    if natural == "wetland":
+        return "wetland"
     water = tags.get("water")
     if water in {"lake", "reservoir", "pond"}:
         return "lake"
@@ -338,14 +344,14 @@ def enrich_geographic_label_tags(
                 label = stripped
             break
 
-    # For lakes, a lowercase trailing ``озеро`` is a generic type marker.
-    # Strip it before abbreviation so a one-word name such as ``Верхнее озеро``
-    # becomes ``Верхнее`` rather than the meaningless ``В.``.  Capitalized
-    # ``Озеро`` is deliberately preserved as part of the proper name.
-    if label_class == "lake":
-        lake_suffix_match = re.fullmatch(r"(.+?)\s+озеро\s*", label)
-        if lake_suffix_match:
-            stripped = lake_suffix_match.group(1).strip()
+    # Lowercase trailing type words are generic markers already represented by
+    # OSM tags. Strip them before abbreviation so one-word names remain readable.
+    # Capitalized suffixes (``Озеро``, ``Болото``) are preserved as proper-name text.
+    generic_suffix = {"lake": "озеро", "wetland": "болото"}.get(label_class or "")
+    if generic_suffix is not None:
+        suffix_match = re.fullmatch(rf"(.+?)\s+{generic_suffix}\s*", label)
+        if suffix_match:
+            stripped = suffix_match.group(1).strip()
             if stripped:
                 label = stripped
 
