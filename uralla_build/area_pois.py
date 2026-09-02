@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
+from .kite import is_kite_infrastructure
+
 
 SYNTHETIC_AREA_POI_TAG = "uralla:synthetic_area_poi"
 
@@ -283,8 +285,8 @@ def area_poi_kind(tags: Mapping[str, str]) -> str | None:
             return None
         return f"landuse:{landuse}"
 
-    if tags.get("sport") == "kitesurfing":
-        return "sport:kitesurfing"
+    if is_kite_infrastructure(tags):
+        return "kite:infrastructure"
 
     if tags.get("office") == "government":
         return "office:government"

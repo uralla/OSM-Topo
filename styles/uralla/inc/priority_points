@@ -161,10 +161,10 @@ emergency=first_aid_kit { name '${name}' | 'аптечка' } [0x3002 resolution
 amenity=bicycle_repair_station { name '${name}' | 'велосипеды' } [0x2f18 resolution 24]
 
 # Kitesurfing spots: dedicated adaptive POI. Unnamed spots use a compact designation.
-uralla:poi_lod_class=H & sport=kitesurfing { name '${name}' | 'кайты' } [0x6609 resolution 22]
-uralla:poi_lod_class=M & sport=kitesurfing { name '${name}' | 'кайты' } [0x6609 resolution 23]
-uralla:poi_lod_class=L & sport=kitesurfing { name '${name}' | 'кайты' } [0x6609 resolution 24]
-sport=kitesurfing { name '${name}' | 'кайты' } [0x6609 resolution 24]
+uralla:poi_lod_class=H & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 22]
+uralla:poi_lod_class=M & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 23]
+uralla:poi_lod_class=L & uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
+uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
 
 # Small tourist infrastructure.
 leisure=picnic_table [0x4a01 resolution 24]

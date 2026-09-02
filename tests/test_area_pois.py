@@ -61,7 +61,9 @@ def test_intentionally_hidden_point_categories_stay_hidden_for_areas():
     assert area_poi_kind({"leisure": "swimming_pool"}) is None
 
 
-def test_kitesurfing_area_is_eligible_for_poi():
-    from uralla_build.area_pois import area_poi_kind
-
-    assert area_poi_kind({"sport": "kitesurfing"}) == "sport:kitesurfing"
+def test_kite_areas_are_eligible_across_inconsistent_tagging():
+    assert area_poi_kind({"sport": "kitesurfing"}) == "kite:infrastructure"
+    assert area_poi_kind({"brand": "Кайтшкола номер один"}) == "kite:infrastructure"
+    assert area_poi_kind({"designation": "Kitesurfing"}) == "kite:infrastructure"
+    assert area_poi_kind({"name": 'Школа кайтсерфинга "Точка отрыва"'}) == "kite:infrastructure"
+    assert area_poi_kind({"description": "Кайт станция и прокат оборудования"}) == "kite:infrastructure"

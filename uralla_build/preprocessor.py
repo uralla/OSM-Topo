@@ -17,6 +17,7 @@ from uuid import uuid4
 import yaml
 
 from .errors import StageError
+from .kite import enrich_kite_tags
 from .river_landmarks import (
     DEFAULT_RIVER_CATALOG,
     enrich_river_landmark_tags,
@@ -579,6 +580,9 @@ def preprocess_pbf(
                 if place_admin_added:
                     counters["place_admin_enriched"] += 1
                 final_tags, _long_name_added = enrich_long_name_tags(final_tags)
+                final_tags, kite_added = enrich_kite_tags(final_tags)
+                if kite_added:
+                    counters["kite_infrastructure_enriched"] += 1
                 final_tags, peak_added = enrich_peak_landmark_tags(
                     final_tags, peak_landmarks
                 )
@@ -649,10 +653,7 @@ def preprocess_pbf(
                     if (
                         accommodation_sample is not None
                         and accommodation_sample.get("name")
-                        and (
-                            accommodation_priority != "common"
-                            or normalize_text(str(accommodation_sample.get("name"))) == "солнышко"
-                        )
+                        and accommodation_priority != "common"
                     ):
                         _emit_progress(
                             "POI accommodation: "

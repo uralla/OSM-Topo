@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from math import asin, cos, floor, radians, sin, sqrt
 from typing import Any, Iterable, Mapping
 
+from .kite import is_kite_infrastructure
 from .poi_lod import POI_LOD_CLASS_TAG, classify_poi_lod, intrinsic_floor_for_poi
 
 
@@ -148,9 +149,10 @@ def is_tourist_retail(tags: Mapping[str, str] | object) -> bool:
 
 
 def is_kitesurfing(tags: Mapping[str, str] | object) -> bool:
-    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
-    values = {str(key): str(value) for key, value in items}
-    return values.get("sport") == "kitesurfing"
+    # Compatibility name for the adaptive outdoor-context branch. Detection is
+    # deliberately semantic because real OSM kite spots/stations are tagged very
+    # inconsistently (sport, name, brand, description, designation, etc.).
+    return is_kite_infrastructure(tags)
 
 
 def is_spring(tags: Mapping[str, str] | object) -> bool:

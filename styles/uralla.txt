@@ -7341,7 +7341,7 @@ DayXpm="13 13 2 1"   Colormode=16
 Type=0x066
 SubType=0x09
 ; CUSTOM: kitesurfing placeholder. Reserved for final user-drawn icon.
-String1=0x19,кайты
+String1=0x19,кайт
 String2=0x04,kitesurfing
 ExtendedLabels=Y
 FontStyle=SmallFont
