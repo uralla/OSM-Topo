@@ -48,7 +48,7 @@ class BlacklistPreprocessorTests(unittest.TestCase):
                 self.assertTrue(changed)
                 self.assertEqual(tags["admin_level"], level)
                 self.assertEqual(tags["boundary"], "administrative")
-                self.assertEqual(tags["type"], "boundary")
+                self.assertNotIn("type", tags)
                 self.assertEqual(tags["name"], "Test")
 
         tags, changed = enrich_place_admin_tags({"place": "suburb", "name": "Test"})
