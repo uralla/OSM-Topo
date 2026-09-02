@@ -25,11 +25,12 @@ class FastPreprocessReuseTests(unittest.TestCase):
         (analysis / "poi-context.json.gz").write_bytes(b"poi")
         area_stats = {"created": 7, "candidates": 7}
         area_payload = {
-            "schema_version": 2,
+            "schema_version": 3,
             "kind": "area_pois",
             "source": _source_identity(source),
             "stats": area_stats,
             "nodes": [],
+            "enrichments": [],
         }
         with gzip.open(analysis / "area-pois.json.gz", "wt", encoding="utf-8") as handle:
             json.dump(area_payload, handle)

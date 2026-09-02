@@ -14,6 +14,7 @@ from uuid import uuid4
 from .analysis_bundle import _analyze_worker, apply_analysis_bundle
 from .area_poi_analysis import (
     analyze_area_pois,
+    area_poi_enrichments_from_analysis,
     area_poi_reuse_entries_from_analysis,
     validate_area_poi_analysis,
 )
@@ -25,7 +26,7 @@ from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
 ANALYSIS_MANIFEST = "analysis-manifest.json"
-ANALYSIS_MANIFEST_SCHEMA = 7
+ANALYSIS_MANIFEST_SCHEMA = 8
 ANALYSIS_CACHE_MAX_AGE_DAYS = 30
 
 
@@ -60,6 +61,8 @@ def _write_analysis_manifest(
         "area_pois": {
             "created": int(area_stats.get("created", 0)),
             "candidates": int(area_stats.get("candidates", 0)),
+            "matched_areas": int(area_stats.get("matched_areas", 0)),
+            "ambiguous_areas": int(area_stats.get("ambiguous_areas", 0)),
         },
     }
     target = analysis_dir / ANALYSIS_MANIFEST
@@ -172,6 +175,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
         analysis_stats: dict[str, object] = {}
         semantic_base_seconds = 0.0
         reusable_area_entries = ()
+        reusable_area_enrichments = ()
         manifest: dict[str, object] | None = None
         use_reuse = bool(args.reuse_analysis)
 
@@ -191,10 +195,14 @@ def run_fast_preprocess(argv: list[str]) -> int:
             if manifest is None:
                 manifest = _validate_reusable_analysis(analysis_dir, source)
             reusable_area_entries = tuple(area_poi_reuse_entries_from_analysis(area_artifact))
+            reusable_area_enrichments = tuple(
+                area_poi_enrichments_from_analysis(area_artifact)
+            )
             area_seconds = time.monotonic() - area_started
             area_stats = {
                 "candidates": len(reusable_area_entries),
                 "created": len(reusable_area_entries),
+                "matched_areas": len(reusable_area_enrichments),
                 "reused": 1,
             }
             analyze_wall_seconds = 0.0
@@ -220,8 +228,16 @@ def run_fast_preprocess(argv: list[str]) -> int:
 
             _report("fast preprocess: area POI ANALYZE + materialize")
             area_started = time.monotonic()
-            area_candidates, area_stats = analyze_area_pois(source, area_artifact, osmium)
-            write_area_pois(source, area, area_candidates, osmium, reporter=_report)
+            area_plan, area_stats = analyze_area_pois(source, area_artifact, osmium)
+            write_area_pois(
+                source,
+                area,
+                area_plan.synthetic,
+                osmium,
+                reporter=_report,
+                enrichments=area_plan.enrichments,
+                ambiguous=area_plan.ambiguous,
+            )
             area_seconds = time.monotonic() - area_started
 
             # Match the production order exactly: area synthesis, then blacklist and
@@ -300,6 +316,7 @@ def run_fast_preprocess(argv: list[str]) -> int:
             reporter=_report,
             semantic_transformer=semantic_transformer,
             reusable_area_entries=reusable_area_entries,
+            reusable_area_enrichments=reusable_area_enrichments,
         )
         apply_seconds = time.monotonic() - apply_started
 

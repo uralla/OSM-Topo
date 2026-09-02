@@ -8,11 +8,16 @@ from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
 
-from .area_pois import SyntheticAreaPoi, discover_area_pois
+from .area_pois import (
+    AreaPoiEnrichment,
+    AreaPoiPlan,
+    SyntheticAreaPoi,
+    discover_area_poi_plan,
+)
 from .errors import StageError
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 ANALYSIS_KIND = "area_pois"
 
 
@@ -36,6 +41,21 @@ def _candidate_payload(candidate: SyntheticAreaPoi, source_version: int | None) 
         "lon": candidate.lon,
         "lat": candidate.lat,
         "tags": dict(candidate.tags),
+    }
+
+
+def _enrichment_payload(enrichment: AreaPoiEnrichment) -> dict[str, object]:
+    return {
+        "source_id": enrichment.source_id,
+        "source_version": enrichment.source_version,
+        "node_id": enrichment.node_id,
+        "node_version": enrichment.node_version,
+        "area_kind": enrichment.area_kind,
+        "node_kind": enrichment.node_kind,
+        "family": enrichment.family,
+        "match": enrichment.match,
+        "distance_metres": enrichment.distance_metres,
+        "added_tags": dict(enrichment.added_tags),
     }
 
 
@@ -76,20 +96,34 @@ def analyze_area_pois(
     input_path: str | Path,
     output_path: str | Path,
     osmium: Any,
-) -> tuple[list[SyntheticAreaPoi], dict[str, int]]:
-    """Discover synthetic area POIs once and persist them as a gzip JSON artifact."""
+) -> tuple[AreaPoiPlan, dict[str, int]]:
+    """Discover the area POI merge/synthesis plan and persist it."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     if not source.is_file() or source.stat().st_size == 0:
         raise StageError(f"area POI analysis input is missing or empty: {source}")
-    candidates = discover_area_pois(str(source), osmium)
+    plan = discover_area_poi_plan(str(source), osmium)
+    candidates = list(plan.synthetic)
     versions = _source_versions(source, candidates, osmium)
     by_kind: dict[str, int] = {}
     for candidate in candidates:
         by_kind[candidate.kind] = by_kind.get(candidate.kind, 0) + 1
-    stats: dict[str, int] = {"candidates": len(candidates), "created": len(candidates)}
+    stats: dict[str, int] = {
+        "candidates": len(candidates),
+        "created": len(candidates),
+        "matched_areas": len(plan.enrichments),
+        "enriched_areas": sum(bool(entry.added_tags) for entry in plan.enrichments),
+        "ambiguous_areas": len(plan.ambiguous),
+        "near_matches": sum(entry.match == "near" for entry in plan.enrichments),
+    }
     for kind, count in sorted(by_kind.items()):
         stats[f"created:{kind}"] = count
+    for enrichment in plan.enrichments:
+        key = f"matched:{enrichment.family}"
+        stats[key] = stats.get(key, 0) + 1
+    for ambiguity in plan.ambiguous:
+        key = f"ambiguous:{ambiguity.family}"
+        stats[key] = stats.get(key, 0) + 1
     payload = {
         "schema_version": SCHEMA_VERSION,
         "kind": ANALYSIS_KIND,
@@ -99,6 +133,7 @@ def analyze_area_pois(
             _candidate_payload(candidate, versions.get(candidate.source_id))
             for candidate in candidates
         ],
+        "enrichments": [_enrichment_payload(entry) for entry in plan.enrichments],
     }
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.parent / f".{target.name}.{uuid4().hex}.partial"
@@ -109,7 +144,7 @@ def analyze_area_pois(
     finally:
         if temporary.exists():
             temporary.unlink()
-    return candidates, stats
+    return plan, stats
 
 
 def load_area_poi_analysis(path: str | Path) -> dict[str, object]:
@@ -128,7 +163,9 @@ def load_area_poi_analysis(path: str | Path) -> dict[str, object]:
     source = payload.get("source")
     if not isinstance(source, dict) or not isinstance(source.get("name"), str):
         raise StageError("area POI artifact has incomplete source metadata")
-    if not isinstance(payload.get("nodes"), list):
+    if not isinstance(payload.get("nodes"), list) or not isinstance(
+        payload.get("enrichments"), list
+    ):
         raise StageError("area POI artifact is incomplete")
     return payload
 
@@ -188,4 +225,41 @@ def area_poi_reuse_entries_from_analysis(
             source_version = None
         result.append((candidate, source_version))
     result.sort(key=lambda entry: entry[0].source_id)
+    return result
+
+
+def area_poi_enrichments_from_analysis(path: str | Path) -> list[AreaPoiEnrichment]:
+    """Load cached real-node enrichment with node and source-way freshness guards."""
+    payload = load_area_poi_analysis(path)
+    raw_entries = payload.get("enrichments")
+    assert isinstance(raw_entries, list)
+    result: list[AreaPoiEnrichment] = []
+    for raw in raw_entries:
+        if not isinstance(raw, Mapping):
+            continue
+        added_tags = raw.get("added_tags")
+        if not isinstance(added_tags, Mapping):
+            continue
+        try:
+            source_version_raw = raw.get("source_version")
+            node_version_raw = raw.get("node_version")
+            result.append(
+                AreaPoiEnrichment(
+                    source_id=int(raw["source_id"]),
+                    source_version=(
+                        None if source_version_raw is None else int(source_version_raw)
+                    ),
+                    node_id=int(raw["node_id"]),
+                    node_version=None if node_version_raw is None else int(node_version_raw),
+                    area_kind=str(raw["area_kind"]),
+                    node_kind=str(raw["node_kind"]),
+                    family=str(raw["family"]),
+                    match=str(raw["match"]),
+                    distance_metres=float(raw.get("distance_metres", 0.0)),
+                    added_tags={str(key): str(value) for key, value in added_tags.items()},
+                )
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    result.sort(key=lambda entry: (entry.node_id, entry.source_id))
     return result

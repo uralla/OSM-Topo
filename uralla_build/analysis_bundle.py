@@ -9,7 +9,7 @@ import time
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
-from .area_pois import SyntheticAreaPoi
+from .area_pois import AreaPoiEnrichment, SyntheticAreaPoi
 from .errors import StageError
 from .poi_context_analysis import (
     _CONTEXT_TAGS,
@@ -172,6 +172,52 @@ def _write_synthetic_area_poi(
     counters["synthetic_area_pois"] += 1
 
 
+def _validated_area_enrichments(
+    source: Path,
+    enrichments: Sequence[AreaPoiEnrichment],
+    osmium: Any,
+    counters: Counter[str],
+) -> dict[int, list[AreaPoiEnrichment]]:
+    """Validate both cached objects before changing an existing real node."""
+    if not enrichments:
+        return {}
+    wanted_nodes = {entry.node_id for entry in enrichments}
+    wanted_ways = {entry.source_id for entry in enrichments}
+    node_versions: dict[int, int | None] = {}
+    way_versions: dict[int, int | None] = {}
+    for item in osmium.FileProcessor(str(source)):
+        kind = getattr(item, "type_str", lambda: "")()
+        item_id = int(item.id)
+        if kind in {"n", "node"}:
+            target, wanted = node_versions, wanted_nodes
+        elif kind in {"w", "way"}:
+            target, wanted = way_versions, wanted_ways
+        else:
+            continue
+        if item_id not in wanted:
+            continue
+        try:
+            target[item_id] = int(item.version)
+        except (AttributeError, TypeError, ValueError):
+            target[item_id] = None
+        if len(node_versions) == len(wanted_nodes) and len(way_versions) == len(wanted_ways):
+            break
+
+    result: dict[int, list[AreaPoiEnrichment]] = {}
+    for entry in enrichments:
+        valid = (
+            entry.node_version is not None
+            and entry.source_version is not None
+            and node_versions.get(entry.node_id) == entry.node_version
+            and way_versions.get(entry.source_id) == entry.source_version
+        )
+        if valid:
+            result.setdefault(entry.node_id, []).append(entry)
+        else:
+            counters["area_enrichment_stale_skipped"] += 1
+    return result
+
+
 def apply_analysis_bundle(
     input_path: str | Path,
     analysis_dir: str | Path,
@@ -182,6 +228,7 @@ def apply_analysis_bundle(
     semantic_transformer: Any = None,
     synthetic_area_pois: Sequence[SyntheticAreaPoi] = (),
     reusable_area_entries: Sequence[tuple[SyntheticAreaPoi, int | None]] = (),
+    reusable_area_enrichments: Sequence[AreaPoiEnrichment] = (),
 ) -> dict[str, int]:
     """Apply cheap semantics first, then compatible cached hints, in one writer pass.
 
@@ -205,6 +252,9 @@ def apply_analysis_bundle(
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.parent / f".{target.name}.{uuid4().hex}.bundle-apply.partial.osm.pbf"
     counters: Counter[str] = Counter()
+    valid_area_enrichments = _validated_area_enrichments(
+        source, reusable_area_enrichments, osmium, counters
+    )
     try:
         with osmium.SimpleWriter(str(temporary)) as writer:
             # Current-source candidates (cache-building path) are already known to be
@@ -221,6 +271,26 @@ def apply_analysis_bundle(
                 item_id = int(item.id)
                 original_tags = {str(key): str(value) for key, value in item.tags}
                 tags = dict(original_tags)
+
+                if kind in {"node", "n"} and item_id in valid_area_enrichments:
+                    changed = False
+                    for enrichment in valid_area_enrichments[item_id]:
+                        counters["area_enrichment_matches"] += 1
+                        added: list[str] = []
+                        for key, value in enrichment.added_tags.items():
+                            if key not in tags:
+                                tags[key] = value
+                                added.append(key)
+                                changed = True
+                        if reporter is not None and added:
+                            reporter(
+                                f"area POI merge {enrichment.family}: "
+                                f"node{enrichment.node_id} {enrichment.node_kind} <- "
+                                f"way{enrichment.source_id} {enrichment.area_kind}; "
+                                f"added={','.join(sorted(added))}"
+                            )
+                    if changed:
+                        counters["area_enriched_nodes"] += 1
 
                 # When reusing area artifacts, validate the source way before
                 # recreating its synthetic node.  OSM version changes on geometry or
@@ -280,6 +350,9 @@ def apply_analysis_bundle(
         "synthetic_area_pois": counters["synthetic_area_pois"],
         "area_stale_skipped": counters["area_stale_skipped"],
         "area_missing_skipped": counters["area_missing_skipped"],
+        "area_enrichment_matches": counters["area_enrichment_matches"],
+        "area_enriched_nodes": counters["area_enriched_nodes"],
+        "area_enrichment_stale_skipped": counters["area_enrichment_stale_skipped"],
         "road_hints": len(road_hints),
         "road_tagged": counters["road_tagged"],
         "road_stale_skipped": counters["road_stale_skipped"],
@@ -292,6 +365,8 @@ def apply_analysis_bundle(
             "Analysis bundle applied: "
             f"area POI {result['synthetic_area_pois']:,}; "
             f"area stale={result['area_stale_skipped']:,} missing={result['area_missing_skipped']:,}; "
+            f"area merge={result['area_enriched_nodes']:,}/{result['area_enrichment_matches']:,} "
+            f"stale={result['area_enrichment_stale_skipped']:,}; "
             f"road {result['road_tagged']:,}/{result['road_hints']:,}; "
             f"POI {result['poi_tagged']:,}/{result['poi_hints']:,}; "
             f"stale road={result['road_stale_skipped']:,} poi={result['poi_stale_skipped']:,}"
