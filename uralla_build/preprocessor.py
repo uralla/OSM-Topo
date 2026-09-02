@@ -272,6 +272,16 @@ def enrich_long_name_tags(
     return result, changed
 
 
+def _is_sanatorium_context(tags: Mapping[str, str]) -> bool:
+    if tags.get("healthcare") in {"sanatorium", "rehabilitation"}:
+        return True
+    if tags.get("amenity") in {"clinic", "hospital", "nursing_home"}:
+        return True
+    if tags.get("tourism") in {"hotel", "resort", "guest_house", "motel", "hostel"}:
+        return True
+    return tags.get("leisure") == "resort"
+
+
 def _geographic_label_class(tags: Mapping[str, str]) -> str | None:
     natural = tags.get("natural")
     if natural in PEAK_NATURAL_TYPES:
@@ -295,13 +305,22 @@ def enrich_geographic_label_tags(
     result = {str(key): str(value) for key, value in items}
     label_class = _geographic_label_class(result)
     natural = result.get("natural")
-    if label_class is None and natural is None:
+    if label_class is None and natural is None and not _is_sanatorium_context(result):
         return result, False
     name = result.get("name")
     if not name:
         return result, False
 
     label = name.strip()
+
+    # Compact the generic Russian facility type when the object's tags confirm
+    # a sanatorium / resort / accommodation / healthcare context.
+    sanatorium_match = re.fullmatch(r"\s*санаторий\s+(.+?)\s*", label, re.IGNORECASE)
+    if sanatorium_match and _is_sanatorium_context(result):
+        tail = sanatorium_match.group(1).strip()
+        if tail:
+            label = "Сан. " + tail
+
     if result.get("ele"):
         elevation_match = _ELEVATION_NAME_SUFFIX_RE.fullmatch(label)
         if elevation_match:
