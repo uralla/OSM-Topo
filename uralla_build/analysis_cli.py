@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from .errors import StageError
+from .poi_context_analysis import analyze_poi_context, apply_poi_context_analysis
 from .preprocessor import _load_osmium
 from .road_density_analysis import analyze_road_density, apply_road_density_analysis
 
@@ -44,4 +45,37 @@ def run_apply_road_density(argv: list[str]) -> int:
         return 0
     except (StageError, OSError, ValueError) as exc:
         print(f"ERROR road-density apply: {exc}")
+        return 1
+
+
+def run_analyze_poi_context(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="uralla_build analyze-poi-context")
+    parser.add_argument("--input", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args(argv)
+    try:
+        analyze_poi_context(args.input, args.output, _load_osmium(), reporter=_report)
+        return 0
+    except (StageError, OSError, ValueError) as exc:
+        print(f"ERROR POI-context analysis: {exc}")
+        return 1
+
+
+def run_apply_poi_context(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="uralla_build apply-poi-context")
+    parser.add_argument("--input", required=True, type=Path)
+    parser.add_argument("--analysis", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args(argv)
+    try:
+        apply_poi_context_analysis(
+            args.input,
+            args.analysis,
+            args.output,
+            _load_osmium(),
+            reporter=_report,
+        )
+        return 0
+    except (StageError, OSError, ValueError) as exc:
+        print(f"ERROR POI-context apply: {exc}")
         return 1
