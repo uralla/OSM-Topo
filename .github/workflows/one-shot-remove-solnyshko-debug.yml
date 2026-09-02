@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Sync latest main
         run: git pull --rebase origin main
+      - name: Install project
+        run: python3 -m pip install -e .
       - name: Expand kite semantic detection
         run: python3 .github/scripts/one_shot_expand_kite_detection.py
       - name: Verify
@@ -30,4 +32,4 @@ jobs:
           git add uralla_build/kite.py uralla_build/poi_context.py uralla_build/area_pois.py uralla_build/preprocessor.py styles/uralla/inc/priority_points styles/uralla.txt tests/test_kite.py tests/test_area_pois.py
           git commit -m 'Expand kite infrastructure detection'
           git push
-# retrigger 2026-09-02
+# retrigger with dependencies 2026-09-02
