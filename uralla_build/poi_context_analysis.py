@@ -40,7 +40,7 @@ from .poi_context import (
 )
 from .poi_lod import POI_LOD_CLASS_TAG
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 ANALYSIS_KIND = "poi_context"
 
 # Keys that determine whether a cached context result is still semantically safe
@@ -56,6 +56,7 @@ _SIGNATURE_KEYS = (
     "trolleybus",
     "leisure",
     "natural",
+    "man_made",
     "sport",
     "designation",
     "brand",
@@ -103,8 +104,12 @@ def _signature(tags: Mapping[str, str]) -> dict[str, str]:
     return {key: tags[key] for key in _SIGNATURE_KEYS if tags.get(key)}
 
 
+def _is_antenna(tags: Mapping[str, str]) -> bool:
+    return tags.get("man_made") == "antenna"
+
+
 def _is_adaptive(tags: Mapping[str, str]) -> bool:
-    return any(
+    return _is_antenna(tags) or any(
         predicate(tags)
         for predicate in (
             is_food_shop,
@@ -164,6 +169,14 @@ def _enrich_one(item: object, tags: dict[str, str], indexes: Any, activity_thres
         (indexes.spring, "spring"),
     ):
         result, _, _ = enrich_outdoor_context(item, result, index, kind=kind)
+
+    # Antennas are numerous in cities but valuable landmarks in sparse terrain.
+    # They join the universal activity/screen-pressure H/M/L model without an
+    # intrinsic promotion: urban/common -> L, sparse context -> M, remote and
+    # visually isolated locations can rise to H.
+    if _is_antenna(result) and POI_PRIORITY_TAG not in result:
+        result[POI_PRIORITY_TAG] = "common"
+
     result, _, _ = enrich_activity_diagnostics(
         item,
         result,
