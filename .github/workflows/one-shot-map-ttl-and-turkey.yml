@@ -56,29 +56,27 @@ jobs:
               'yugra': 9,
           }
 
-          if re.search(r'^  turkey:\n', text, flags=re.M) is None:
-              anchor = '  ural-fed-district:\n'
-              if anchor not in text:
-                  raise SystemExit('ural-fed-district anchor not found')
-              turkey = '''  turkey:\n    source: turkey\n    update_interval_days: 30\n    polygon: poly/turkey.poly\n    elevation: elevation/turkey.osm.pbf\n    geonames: input/cities15000.zip\n    identity:\n      family_id: 1054\n      product_id: 1\n      overview_mapnumber: "10540000"\n      first_tile_mapid: "10540001"\n      last_reserved_mapid: "10549999"\n    names:\n      family: Turkey.OSM\n      series: Turkey.OSM\n      overview: Turkey.OSM\n      description: Turkey.OSM\n      output_img: Turkey.OSM.img\n    splitter:\n      max_nodes: 800000\n\n'''
-              text = text.replace(anchor, turkey + anchor, 1)
-
-          products_pos = text.index('\nproducts:\n') + len('\nproducts:\n')
+          products_marker = '\nproducts:\n'
+          products_pos = text.index(products_marker) + len(products_marker)
           prefix = text[:products_pos]
           products_text = text[products_pos:]
 
+          if re.search(r'^  turkey:\n', products_text, flags=re.M) is None:
+              anchor = '  ural-fed-district:\n'
+              if anchor not in products_text:
+                  raise SystemExit('ural-fed-district product anchor not found')
+              turkey = '''  turkey:\n    source: turkey\n    update_interval_days: 30\n    polygon: poly/turkey.poly\n    elevation: elevation/turkey.osm.pbf\n    geonames: input/cities15000.zip\n    identity:\n      family_id: 1054\n      product_id: 1\n      overview_mapnumber: "10540000"\n      first_tile_mapid: "10540001"\n      last_reserved_mapid: "10549999"\n    names:\n      family: Turkey.OSM\n      series: Turkey.OSM\n      overview: Turkey.OSM\n      description: Turkey.OSM\n      output_img: Turkey.OSM.img\n    splitter:\n      max_nodes: 800000\n\n'''
+              products_text = products_text.replace(anchor, turkey + anchor, 1)
+
           for product, days in ttl.items():
               pattern = re.compile(
-                  rf'(^  {re.escape(product)}:\n(?:    .*\n)*?    source: [^\n]+\n)(?:    update_interval_days: \d+\n)?',
+                  rf'(^  {re.escape(product)}:\n    source: [^\n]+\n)(?:    update_interval_days: \d+\n)?',
                   flags=re.M,
               )
               match = pattern.search(products_text)
               if not match:
                   raise SystemExit(f'product not found: {product}')
-              block = match.group(1)
-              if '    update_interval_days:' in block:
-                  block = re.sub(r'    update_interval_days: \d+\n', '', block)
-              replacement = block + f'    update_interval_days: {days}\n'
+              replacement = match.group(1) + f'    update_interval_days: {days}\n'
               products_text = products_text[:match.start()] + replacement + products_text[match.end():]
 
           text = prefix + products_text
