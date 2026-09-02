@@ -5,6 +5,7 @@ on:
     paths:
       - 'uralla_build/road_density_analysis.py'
       - 'uralla_build/poi_context_analysis.py'
+      - 'uralla_build/analysis_bundle.py'
       - 'uralla_build/analysis_cli.py'
       - 'uralla_build/__main__.py'
       - '.github/workflows/test-analysis-artifacts.yml'
@@ -18,7 +19,7 @@ jobs:
       - name: Install project
         run: python3 -m pip install -e .
       - name: Compile analysis modules
-        run: python3 -m py_compile uralla_build/road_density_analysis.py uralla_build/poi_context_analysis.py uralla_build/analysis_cli.py uralla_build/__main__.py
+        run: python3 -m py_compile uralla_build/road_density_analysis.py uralla_build/poi_context_analysis.py uralla_build/analysis_bundle.py uralla_build/analysis_cli.py uralla_build/__main__.py
       - name: Exercise artifact serialization
         run: |
           python3 - <<'PY'
