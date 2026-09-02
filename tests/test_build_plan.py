@@ -56,7 +56,6 @@ class ProductBuildPlanTests(unittest.TestCase):
                 [stage.name for stage in plan.stages],
                 [
                     "extract",
-                    "transform",
                     "preprocess",
                     "merge",
                     "splitter",
