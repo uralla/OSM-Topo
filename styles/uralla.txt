@@ -6349,7 +6349,7 @@ SubType=0x08
 ;GRMN_TYPE: //
 String1=0x19,урочище
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=NormalFont
 CustomColor=No
 ContourColor=No
 DayXpm="15 15 2 1"   Colormode=16
