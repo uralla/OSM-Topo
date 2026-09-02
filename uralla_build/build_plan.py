@@ -207,9 +207,18 @@ def plan_product_build(
             raise StageError(
                 f"products.{product_key}.preprocess_workers must be a positive integer"
             )
-        preprocess_command.extend(("--workers", str(raw_workers)))
+        analysis_cache = host.paths.work_root / "analysis-cache" / product_key
+        preprocess_command.extend(
+            (
+                "--workers",
+                str(raw_workers),
+                "--analysis-dir",
+                str(analysis_cache),
+                "--auto-reuse-analysis",
+            )
+        )
         warnings.append(
-            f"experimental analyze/apply preprocess enabled ({raw_workers} workers)"
+            f"fast analyze/apply preprocess enabled ({raw_workers} workers; persistent cache {analysis_cache})"
         )
     for profile in profiles:
         preprocess_command.extend(("--profile", profile))
