@@ -548,7 +548,6 @@ def preprocess_pbf(
     activity_500m_values: list[int] = []
     activity_2km_values: list[int] = []
     activity_10km_values: list[int] = []
-    solnyshko_accommodation_sample: dict[str, object] | None = None
     started = time.monotonic()
     _emit_progress(
         f"[preprocess] start: {source.name} ({source.stat().st_size / (1024 ** 2):.1f} MiB)"
@@ -649,11 +648,6 @@ def preprocess_pbf(
                         accommodation_context_samples.append(accommodation_sample)
                     if (
                         accommodation_sample is not None
-                        and accommodation_sample.get("name") == "Солнышко"
-                    ):
-                        solnyshko_accommodation_sample = dict(accommodation_sample)
-                    if (
-                        accommodation_sample is not None
                         and accommodation_sample.get("name")
                         and (
                             accommodation_priority != "common"
@@ -719,18 +713,6 @@ def preprocess_pbf(
                         activity_10km_values.append(int(activity_sample["activity_10km"]))
                     if activity_sample is not None:
                         activity_context_samples.append(activity_sample)
-                    if (
-                        activity_sample is not None
-                        and activity_sample.get("name") == "Солнышко"
-                        and solnyshko_accommodation_sample is not None
-                        and activity_sample.get("id") == solnyshko_accommodation_sample.get("id")
-                    ):
-                        solnyshko_accommodation_sample["activity_500m"] = activity_sample["activity_500m"]
-                        solnyshko_accommodation_sample["activity_2km"] = activity_sample["activity_2km"]
-                        solnyshko_accommodation_sample["activity_10km"] = activity_sample["activity_10km"]
-                        solnyshko_accommodation_sample["screen_pressure_2km"] = activity_sample["screen_pressure_2km"]
-                        solnyshko_accommodation_sample["screen_pressure_10km"] = activity_sample["screen_pressure_10km"]
-                        solnyshko_accommodation_sample["screen_pressure"] = activity_sample["screen_pressure"]
 
                 activity_context_value = final_tags.get(POI_ACTIVITY_CONTEXT_TAG)
                 if activity_context_value in {"remote", "settlement", "urban"}:
@@ -784,17 +766,6 @@ def preprocess_pbf(
                 f"10km p25={screen_thresholds['10km_p25']} p50={_activity_percentile(candidate_screen_10km, 0.50)} p75={screen_thresholds['10km_p75']} p90={_activity_percentile(candidate_screen_10km, 0.90)}; "
                 f"low={screen_counts['low']:,}; medium={screen_counts['medium']:,}; high={screen_counts['high']:,}"
             )
-            if solnyshko_accommodation_sample is not None:
-                _emit_progress(
-                    "POI screen pressure named check: 'Солнышко'; "
-                    f"id={solnyshko_accommodation_sample.get('id')}; "
-                    f"priority={solnyshko_accommodation_sample.get('priority')}; "
-                    f"2km={solnyshko_accommodation_sample.get('screen_pressure_2km')}; "
-                    f"10km={solnyshko_accommodation_sample.get('screen_pressure_10km')}; "
-                    f"pressure={solnyshko_accommodation_sample.get('screen_pressure')}; "
-                    f"activity2km={solnyshko_accommodation_sample.get('activity_2km')}; "
-                    f"activity10km={solnyshko_accommodation_sample.get('activity_10km')}"
-                )
 
         if activity_500m_values:
             activity_2km_p25 = _activity_percentile(activity_2km_values, 0.25)
@@ -923,22 +894,6 @@ def preprocess_pbf(
             f"sparse {counters['accommodation_priority_sparse']:,}; "
             f"isolated {counters['accommodation_priority_isolated']:,}"
         )
-        if solnyshko_accommodation_sample is None:
-            _emit_progress("POI accommodation check: 'Солнышко' not enriched")
-        else:
-            _emit_progress(
-                "POI accommodation check: "
-                f"'Солнышко'; id={solnyshko_accommodation_sample['id']}; "
-                f"lat={float(solnyshko_accommodation_sample['lat']):.6f}; "
-                f"lon={float(solnyshko_accommodation_sample['lon']):.6f}; "
-                f"2km={solnyshko_accommodation_sample['objects_2km']}; "
-                f"10km={solnyshko_accommodation_sample['objects_10km']}; "
-                f"activity500m={solnyshko_accommodation_sample.get('activity_500m', 'n/a')}; "
-                f"activity2km={solnyshko_accommodation_sample.get('activity_2km', 'n/a')}; "
-                f"activity10km={solnyshko_accommodation_sample.get('activity_10km', 'n/a')}; "
-                f"activity_context={classify_activity_context(activity_2km=int(solnyshko_accommodation_sample.get('activity_2km', 0)), activity_10km=int(solnyshko_accommodation_sample.get('activity_10km', 0)), local_p25=activity_2km_p25, local_p75=activity_2km_p75, background_p25=activity_10km_p25, background_p75=activity_10km_p75) if activity_500m_values else 'n/a'}; "
-                f"priority={solnyshko_accommodation_sample['priority']}"
-            )
         _emit_progress(
             f"POI context: activity nodes {activity_index.shop_count:,}; "
             f"enriched POIs {counters['activity_context_enriched']:,}"
