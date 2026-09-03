@@ -94,6 +94,12 @@ def _interrupt_running_builds(history: HistoryStore, reason: str) -> int:
         return len(build_ids)
 
 
+def _recover_if_idle(history: HistoryStore, work_root: Path, reason: str) -> int:
+    if not history.running_products() or not _pipeline_is_idle(work_root):
+        return 0
+    return _interrupt_running_builds(history, reason)
+
+
 def _select_due(
     items: list[QueueItem],
     retry_not_before: dict[str, float],
@@ -186,19 +192,26 @@ def run_daemon(
     previous_int = signal.signal(signal.SIGINT, request_stop)
     try:
         with _exclusive_lock(daemon_lock, "build daemon"):
-            if _pipeline_is_idle(host.paths.work_root):
-                recovered = _interrupt_running_builds(
-                    history,
-                    "recovered by daemon startup after previous process stopped",
-                )
-                if recovered:
-                    _log(f"recovered {recovered} stale running build(s) as interrupted")
+            recovered = _recover_if_idle(
+                history,
+                host.paths.work_root,
+                "recovered by daemon startup after previous process stopped",
+            )
+            if recovered:
+                _log(f"recovered {recovered} stale running build(s) as interrupted")
             elif history.running_products():
                 _log("active product pipeline detected; stale-build recovery deferred")
 
             retry_not_before: dict[str, float] = {}
             _log("started")
             while not stop_event.is_set():
+                recovered = _recover_if_idle(
+                    history,
+                    host.paths.work_root,
+                    "recovered by daemon after abandoned product pipeline",
+                )
+                if recovered:
+                    _log(f"recovered {recovered} stale running build(s) as interrupted")
                 try:
                     manifest = load_manifest(manifest_path)
                     issues = validate_manifest(manifest)
