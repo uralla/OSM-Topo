@@ -13,15 +13,18 @@ ROOT = Path(__file__).resolve().parents[1]
 class ManifestTests(unittest.TestCase):
     def test_project_manifest_is_valid(self) -> None:
         manifest = load_manifest(ROOT / "config" / "maps.yaml")
-        self.assertEqual(len(manifest["products"]), 27)
+        self.assertEqual(len(manifest["products"]), 28)
         self.assertEqual(validate_manifest(manifest), [])
 
     def test_overlap_is_rejected(self) -> None:
         manifest = load_manifest(ROOT / "config" / "maps.yaml")
         broken = deepcopy(manifest)
-        broken["products"]["zap-sib"]["identity"].update(
-            overview_mapnumber="01010999",
-            first_tile_mapid="01011000",
+        armenia = broken["products"]["armenia"]["identity"]
+        belarus = broken["products"]["belarus"]["identity"]
+        armenia.update(
+            overview_mapnumber=belarus["overview_mapnumber"],
+            first_tile_mapid=belarus["first_tile_mapid"],
+            last_reserved_mapid=belarus["last_reserved_mapid"],
         )
         issues = validate_manifest(broken)
         self.assertTrue(any("overlaps" in issue.message for issue in issues))
