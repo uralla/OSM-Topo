@@ -25,7 +25,10 @@ from .road_density import (
     road_density_class,
 )
 
-SCHEMA_VERSION = 1
+# v2 changes density class semantics from broad local/track/trail families to
+# concrete same-class road networks.  Old artifacts must not be applied because
+# a v1 "local" hint could incorrectly suppress a different local road class.
+SCHEMA_VERSION = 2
 ANALYSIS_KIND = "road_density"
 
 
