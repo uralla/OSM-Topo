@@ -2648,8 +2648,11 @@ Xpm="0 0 1 0"
 "1 c #E6E6E6"
 String1=0x19,dummy line
 String2=0x04,dummy line
-ExtendedLabels=N
-[end]
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+[end] 
 
 
 [_line]
@@ -3261,16 +3264,16 @@ ContourColor=No
 
 
 [_line]
-Type=0x10e04
+Type=0x08
 ;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_5/Non-routable customizable line/Non NT, NT
 UseOrientation=N
-LineWidth=3
+LineWidth=7
 Xpm="0 0 1 0"
 "1 c #626262"
 String1=0x19,туннель
 String2=0x04,tunnel
 ExtendedLabels=Y
-FontStyle=SmallFont
+FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
 [end]
