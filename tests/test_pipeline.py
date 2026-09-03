@@ -3,9 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
+import threading
+import time
 import unittest
 
-from uralla_build.pipeline import PipelineRunner, PipelineStage
+from uralla_build.pipeline import PipelineRunner, PipelineStage, _PipelineResourceLease
 from uralla_build.runner import StageRunner
 
 
@@ -128,6 +130,48 @@ class PipelineRunnerTests(unittest.TestCase):
             )
 
             self.assertEqual(result.status, "success")
+
+    def test_light_resource_leases_can_overlap(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory) / "work"
+            first = _PipelineResourceLease(root)
+            second = _PipelineResourceLease(root)
+            first.__enter__()
+            try:
+                second.__enter__()
+                try:
+                    self.assertFalse(first.exclusive)
+                    self.assertFalse(second.exclusive)
+                finally:
+                    second.__exit__(None, None, None)
+            finally:
+                first.__exit__(None, None, None)
+
+    def test_heavy_upgrade_waits_for_other_light_phase(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory) / "work"
+            first = _PipelineResourceLease(root)
+            second = _PipelineResourceLease(root)
+            first.__enter__()
+            second.__enter__()
+            upgraded = threading.Event()
+
+            def upgrade() -> None:
+                first.upgrade()
+                upgraded.set()
+
+            worker = threading.Thread(target=upgrade)
+            worker.start()
+            time.sleep(0.1)
+            self.assertFalse(upgraded.is_set())
+
+            second.__exit__(None, None, None)
+            worker.join(timeout=2.0)
+            try:
+                self.assertTrue(upgraded.is_set())
+                self.assertTrue(first.exclusive)
+            finally:
+                first.__exit__(None, None, None)
 
 
 if __name__ == "__main__":

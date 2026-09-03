@@ -181,6 +181,7 @@ publication:
 
 resources:
   product_concurrency: 1
+  preprocess_concurrency: 3
   minimum_free_gib: 20
 EOF
 else

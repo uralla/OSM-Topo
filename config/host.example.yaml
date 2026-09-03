@@ -29,6 +29,9 @@ publication:
   split_zip_volumes: false
 
 resources:
+  # Heavy splitter/mkgmap tail remains exclusive.
   product_concurrency: 1
+  # Extract/preprocess/merge may prepare several products in parallel.
+  preprocess_concurrency: 3
   minimum_free_gib: 20
 

@@ -26,6 +26,12 @@ class DaemonTests(unittest.TestCase):
         self.assertIsNotNone(selected)
         self.assertEqual(selected.product, "second")
 
+    def test_select_due_skips_already_active_product(self) -> None:
+        items = [self._item("first"), self._item("second")]
+        selected = _select_due(items, {}, 100.0, excluded={"first"})
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.product, "second")
+
     def test_sleep_timeout_uses_earliest_retry(self) -> None:
         items = [self._item("first"), self._item("second")]
         timeout = _sleep_timeout(

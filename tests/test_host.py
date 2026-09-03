@@ -9,8 +9,19 @@ from unittest.mock import patch
 from uralla_build.host import load_host_config, resolve_host_config_path, validate_host_config
 
 
-def _write_host(path: Path, root: Path, *, split_zip_volumes: bool = False) -> None:
+def _write_host(
+    path: Path,
+    root: Path,
+    *,
+    split_zip_volumes: bool = False,
+    preprocess_concurrency: int | None = None,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    preprocess_line = (
+        f"  preprocess_concurrency: {preprocess_concurrency}\n"
+        if preprocess_concurrency is not None
+        else ""
+    )
     path.write_text(
         f"""schema_version: 1
 paths:
@@ -27,7 +38,7 @@ publication:
   split_zip_volumes: {'true' if split_zip_volumes else 'false'}
 resources:
   product_concurrency: 1
-  minimum_free_gib: 0
+{preprocess_line}  minimum_free_gib: 0
 """,
         encoding="utf-8",
     )
@@ -54,6 +65,7 @@ publication:
   split_zip_volumes: false
 resources:
   product_concurrency: 1
+  preprocess_concurrency: 3
   minimum_free_gib: 0
 """,
                 encoding="utf-8",
@@ -62,6 +74,24 @@ resources:
                 host = load_host_config(config, root)
             self.assertEqual(host.paths.data_root, root / "data")
             self.assertEqual(host.paths.tools_root, root / "tools")
+            self.assertEqual(host.preprocess_concurrency, 3)
+            self.assertEqual(validate_host_config(host), [])
+
+    def test_missing_preprocess_concurrency_defaults_to_one(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "host.yaml"
+            _write_host(config, root)
+            host = load_host_config(config, root)
+            self.assertEqual(host.preprocess_concurrency, 1)
+
+    def test_explicit_preprocess_concurrency_is_loaded(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "host.yaml"
+            _write_host(config, root, preprocess_concurrency=3)
+            host = load_host_config(config, root)
+            self.assertEqual(host.preprocess_concurrency, 3)
             self.assertEqual(validate_host_config(host), [])
 
     def test_default_host_can_use_environment_override(self) -> None:
