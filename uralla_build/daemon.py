@@ -26,6 +26,7 @@ from .scheduler import QueueItem, build_queue
 
 DEFAULT_IDLE_SECONDS = 300.0
 DEFAULT_FAILURE_RETRY_SECONDS = 900.0
+ACTIVE_POLL_SECONDS = 1.0
 
 
 def _log(message: str) -> None:
@@ -105,12 +106,16 @@ def _select_due(
     items: list[QueueItem],
     retry_not_before: dict[str, float],
     now_monotonic: float,
+    excluded: set[str] | None = None,
 ) -> QueueItem | None:
+    skipped = excluded or set()
     return next(
         (
             item
             for item in items
-            if item.due and retry_not_before.get(item.product, 0.0) <= now_monotonic
+            if item.product not in skipped
+            and item.due
+            and retry_not_before.get(item.product, 0.0) <= now_monotonic
         ),
         None,
     )
@@ -158,6 +163,16 @@ def _build_command(
     ]
 
 
+def _interrupt_children(children: Mapping[str, subprocess.Popen[bytes]]) -> None:
+    for child in children.values():
+        if child.poll() is not None:
+            continue
+        try:
+            os.killpg(child.pid, signal.SIGINT)
+        except ProcessLookupError:
+            pass
+
+
 def run_daemon(
     *,
     repo_root: Path,
@@ -176,7 +191,11 @@ def run_daemon(
     history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
     daemon_lock = host.paths.work_root / "state" / "daemon.lock"
     stop_event = threading.Event()
-    child: subprocess.Popen[bytes] | None = None
+    children: dict[str, subprocess.Popen[bytes]] = {}
+    retry_not_before: dict[str, float] = {}
+    once_started = False
+    once_exit: int | None = None
+    last_running_snapshot: frozenset[str] = frozenset()
 
     def publish_status(manifest: Mapping[str, object]) -> None:
         try:
@@ -187,15 +206,12 @@ def run_daemon(
             _log(f"public status updated: {target}")
 
     def request_stop(signum: int, _frame: object) -> None:
-        nonlocal child
         if not stop_event.is_set():
-            _log(f"received signal {signum}; stopping after current build interruption")
+            _log(
+                f"received signal {signum}; interrupting {len(children)} active product(s)"
+            )
         stop_event.set()
-        if child is not None and child.poll() is None:
-            try:
-                os.killpg(child.pid, signal.SIGINT)
-            except ProcessLookupError:
-                pass
+        _interrupt_children(children)
 
     previous_term = signal.signal(signal.SIGTERM, request_stop)
     previous_int = signal.signal(signal.SIGINT, request_stop)
@@ -211,87 +227,139 @@ def run_daemon(
             elif history.running_products():
                 _log("active product pipeline detected; stale-build recovery deferred")
 
-            retry_not_before: dict[str, float] = {}
-            _log("started")
-            while not stop_event.is_set():
-                recovered = _recover_if_idle(
-                    history,
-                    host.paths.work_root,
-                    "recovered by daemon after abandoned product pipeline",
-                )
-                if recovered:
-                    _log(f"recovered {recovered} stale running build(s) as interrupted")
+            _log(
+                "started; light product slots="
+                f"{host.preprocess_concurrency}; splitter/mkgmap phase=exclusive"
+            )
+            while True:
+                # Reap finished children first so their slots are immediately reusable.
+                for product, child in list(children.items()):
+                    exit_code = child.poll()
+                    if exit_code is None:
+                        continue
+                    del children[product]
+                    if exit_code == 0:
+                        retry_not_before.pop(product, None)
+                        _log(f"product {product} completed successfully")
+                    else:
+                        retry_not_before[product] = time.monotonic() + failure_retry_seconds
+                        _log(
+                            f"product {product} failed with exit {exit_code}; "
+                            f"retry in {int(failure_retry_seconds)}s"
+                        )
+                    if once_started:
+                        once_exit = int(exit_code)
+
+                if stop_event.is_set():
+                    if children:
+                        _interrupt_children(children)
+                        time.sleep(0.1)
+                        continue
+                    _log("stopped")
+                    return 0
+
+                if once_started and not children:
+                    return int(once_exit or 0)
+
+                # Never run stale-build recovery while children owned by this daemon
+                # are alive: pipelines briefly release their shared lock while
+                # upgrading to the exclusive splitter/mkgmap phase.
+                if not children:
+                    recovered = _recover_if_idle(
+                        history,
+                        host.paths.work_root,
+                        "recovered by daemon after abandoned product pipeline",
+                    )
+                    if recovered:
+                        _log(f"recovered {recovered} stale running build(s) as interrupted")
+
                 try:
                     manifest = load_manifest(manifest_path)
                     issues = validate_manifest(manifest)
                     if issues:
                         raise ManifestError("; ".join(str(issue) for issue in issues))
+                    running_products = history.running_products()
                     items = build_queue(
                         manifest,
                         history.latest_success_by_product(),
-                        history.running_products(),
+                        running_products,
                     )
-                    publish_status(manifest)
                 except (ManifestError, OSError) as exc:
                     _log(f"scheduler error: {exc}")
-                    if once:
+                    if once and not children:
                         return 1
-                    stop_event.wait(failure_retry_seconds)
+                    if children:
+                        time.sleep(ACTIVE_POLL_SECONDS)
+                    else:
+                        stop_event.wait(failure_retry_seconds)
                     continue
 
-                now = time.monotonic()
-                item = _select_due(items, retry_not_before, now)
-                if item is None:
-                    if once:
-                        _log("no due products")
-                        return 0
-                    timeout = _sleep_timeout(items, retry_not_before, now, idle_seconds)
-                    stop_event.wait(timeout)
-                    continue
+                running_snapshot = frozenset(running_products)
+                if running_snapshot != last_running_snapshot:
+                    publish_status(manifest)
+                    last_running_snapshot = running_snapshot
 
-                _log(f"starting product {item.product}")
-                command = _build_command(
-                    repo_root=repo_root,
-                    manifest_path=manifest_path,
-                    host_path=host_path,
-                    tools_lock_path=tools_lock_path,
-                    product=item.product,
-                )
-                try:
-                    child = subprocess.Popen(command, cwd=repo_root, start_new_session=True)
-                    # The child creates its history row immediately after entering the
-                    # pipeline. Wait briefly for that state so the public table can show
-                    # "собирается" while the long build is actually running.
-                    deadline = time.monotonic() + 5.0
-                    while child.poll() is None and time.monotonic() < deadline:
-                        if item.product in history.running_products():
-                            publish_status(manifest)
-                            break
-                        time.sleep(0.05)
-                    exit_code = child.wait()
-                except OSError as exc:
-                    _log(f"cannot start product {item.product}: {exc}")
-                    exit_code = 1
-                finally:
-                    child = None
-
-                publish_status(manifest)
-                if stop_event.is_set():
-                    _log("stopped")
-                    return 0
-                if exit_code == 0:
-                    retry_not_before.pop(item.product, None)
-                    _log(f"product {item.product} completed successfully")
-                else:
-                    retry_not_before[item.product] = time.monotonic() + failure_retry_seconds
-                    _log(
-                        f"product {item.product} failed with exit {exit_code}; "
-                        f"retry in {int(failure_retry_seconds)}s"
+                active_products = set(children)
+                launched = False
+                max_children = 1 if once else host.preprocess_concurrency
+                while len(children) < max_children and not once_started:
+                    item = _select_due(
+                        items,
+                        retry_not_before,
+                        time.monotonic(),
+                        excluded=active_products,
                     )
+                    if item is None:
+                        break
+                    command = _build_command(
+                        repo_root=repo_root,
+                        manifest_path=manifest_path,
+                        host_path=host_path,
+                        tools_lock_path=tools_lock_path,
+                        product=item.product,
+                    )
+                    try:
+                        child = subprocess.Popen(
+                            command,
+                            cwd=repo_root,
+                            start_new_session=True,
+                        )
+                    except OSError as exc:
+                        _log(f"cannot start product {item.product}: {exc}")
+                        retry_not_before[item.product] = (
+                            time.monotonic() + failure_retry_seconds
+                        )
+                        active_products.add(item.product)
+                        continue
+                    children[item.product] = child
+                    active_products.add(item.product)
+                    launched = True
+                    _log(
+                        f"starting product {item.product}; active slots "
+                        f"{len(children)}/{max_children}"
+                    )
+                    if once:
+                        once_started = True
+                        break
+
+                if launched:
+                    publish_status(manifest)
+
+                if children:
+                    time.sleep(min(ACTIVE_POLL_SECONDS, idle_seconds))
+                    continue
+
                 if once:
-                    return 0 if exit_code == 0 else exit_code
-            _log("stopped")
-            return 0
+                    _log("no due products")
+                    return 0
+
+                timeout = _sleep_timeout(
+                    items,
+                    retry_not_before,
+                    time.monotonic(),
+                    idle_seconds,
+                )
+                stop_event.wait(timeout)
     finally:
         signal.signal(signal.SIGTERM, previous_term)
         signal.signal(signal.SIGINT, previous_int)
