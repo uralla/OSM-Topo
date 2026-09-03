@@ -38,8 +38,8 @@ class HostConfig:
     paths: HostPaths
     publication: PublicationPolicy
     product_concurrency: int
-    preprocess_concurrency: int
     minimum_free_gib: int
+    preprocess_concurrency: int = 1
 
 
 def _expanded_path(value: object, base: Path) -> Path:
@@ -132,8 +132,8 @@ def load_host_config(path: str | Path, repo_root: str | Path) -> HostConfig:
         host_paths,
         policy,
         concurrency,
-        preprocess_concurrency,
         minimum_free,
+        preprocess_concurrency,
     )
 
 
