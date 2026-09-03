@@ -64,13 +64,13 @@ class ProductBuildPlanTests(unittest.TestCase):
                 ],
             )
             splitter = next(stage for stage in plan.stages if stage.name == "splitter")
-            self.assertIn("--mapid=01018001", splitter.command)
+            self.assertIn("--mapid=01027001", splitter.command)
             self.assertIn("--max-nodes=2000000", splitter.command)
             self.assertEqual(splitter.prepare_directories, ("tiles",))
             mkgmap = next(stage for stage in plan.stages if stage.name == "mkgmap")
-            self.assertIn("--family-id=1018", mkgmap.command)
+            self.assertIn("--family-id=1027", mkgmap.command)
             self.assertIn("--product-id=1", mkgmap.command)
-            self.assertIn("--overview-mapnumber=01018000", mkgmap.command)
+            self.assertIn("--overview-mapnumber=01027000", mkgmap.command)
             self.assertIn("--dem-dists=9942", mkgmap.command)
             self.assertIn(
                 f"--dem-poly={(root / 'data/poly/ru_ural_polar.poly').resolve()}",
@@ -92,7 +92,7 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertNotIn("extract", [stage.name for stage in northwestern.stages])
             self.assertIn("preprocess", [stage.name for stage in northwestern.stages])
             self.assertIn("merge", [stage.name for stage in northwestern.stages])
-            self.assertIn("extract", [stage.name for stage in belarus.stages])
+            self.assertNotIn("extract", [stage.name for stage in belarus.stages])
             self.assertIn("preprocess", [stage.name for stage in belarus.stages])
             self.assertNotIn("merge", [stage.name for stage in belarus.stages])
 
@@ -217,7 +217,7 @@ class ProductBuildPlanTests(unittest.TestCase):
                 for product in self.manifest["products"]
             }
 
-            self.assertEqual(len(plans), 27)
+            self.assertEqual(len(plans), 28)
             for product, plan in plans.items():
                 self.assertIn("preprocess", [stage.name for stage in plan.stages], product)
                 self.assertEqual(plan.stages[-2].name, "validate-areas", product)
