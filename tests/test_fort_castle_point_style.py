@@ -12,10 +12,10 @@ class FortCastlePointStyleTests(unittest.TestCase):
             line for line in points.splitlines() if not line.lstrip().startswith('#')
         )
 
-        unified = '(historic=fort | historic=castle) [0x11604 resolution 22]'
+        unified = '(historic=fort | historic=castle) [0x640e resolution 22]'
         self.assertIn(unified, active_points)
-        self.assertNotIn('historic=fort [0x11604 resolution 21]', active_points)
-        self.assertNotIn('historic=castle [0x11604 resolution 21]', active_points)
+        self.assertNotIn('historic=fort [0x640e resolution 21]', active_points)
+        self.assertNotIn('historic=castle [0x640e resolution 21]', active_points)
 
 
 if __name__ == '__main__':
