@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
 from pathlib import Path
 from typing import Mapping
@@ -100,7 +100,8 @@ def render_map_update_status(
         last_text = last_success.get(product)
 
         if is_running:
-            # A running product is intentionally absent from scheduler.build_queue.
+            # Running products are intentionally absent from scheduler.build_queue,
+            # so reconstruct only their TTL columns from the same manifest values.
             interval = None
             if isinstance(raw_product, Mapping):
                 interval = raw_product.get("update_interval_days")
@@ -108,11 +109,7 @@ def render_map_update_status(
                 interval = defaults.get("update_interval_days")
             if last_text and isinstance(interval, int) and interval > 0:
                 last_dt = _parse_timestamp(last_text)
-                due_at = (
-                    last_dt.replace(microsecond=0) + __import__("datetime").timedelta(days=interval)
-                    if last_dt is not None
-                    else None
-                )
+                due_at = last_dt.replace(microsecond=0) + timedelta(days=interval) if last_dt else None
                 due_text = due_at.isoformat() if due_at is not None else None
                 overdue_seconds = (current - due_at).total_seconds() if due_at is not None else None
                 never = False
