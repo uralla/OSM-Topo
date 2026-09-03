@@ -14,12 +14,13 @@ import subprocess
 import sys
 import threading
 import time
-from typing import Iterator
+from typing import Iterator, Mapping
 
 from .errors import ManifestError, StageError
 from .history import HistoryStore, utc_now
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
+from .public_status import write_map_update_status
 from .scheduler import QueueItem, build_queue
 
 
@@ -177,6 +178,14 @@ def run_daemon(
     stop_event = threading.Event()
     child: subprocess.Popen[bytes] | None = None
 
+    def publish_status(manifest: Mapping[str, object]) -> None:
+        try:
+            target = write_map_update_status(manifest, host)
+        except (OSError, ValueError, ManifestError) as exc:
+            _log(f"cannot update public status table: {exc}")
+        else:
+            _log(f"public status updated: {target}")
+
     def request_stop(signum: int, _frame: object) -> None:
         nonlocal child
         if not stop_event.is_set():
@@ -222,6 +231,7 @@ def run_daemon(
                         history.latest_success_by_product(),
                         history.running_products(),
                     )
+                    publish_status(manifest)
                 except (ManifestError, OSError) as exc:
                     _log(f"scheduler error: {exc}")
                     if once:
@@ -249,6 +259,15 @@ def run_daemon(
                 )
                 try:
                     child = subprocess.Popen(command, cwd=repo_root, start_new_session=True)
+                    # The child creates its history row immediately after entering the
+                    # pipeline. Wait briefly for that state so the public table can show
+                    # "собирается" while the long build is actually running.
+                    deadline = time.monotonic() + 5.0
+                    while child.poll() is None and time.monotonic() < deadline:
+                        if item.product in history.running_products():
+                            publish_status(manifest)
+                            break
+                        time.sleep(0.05)
                     exit_code = child.wait()
                 except OSError as exc:
                     _log(f"cannot start product {item.product}: {exc}")
@@ -256,6 +275,7 @@ def run_daemon(
                 finally:
                     child = None
 
+                publish_status(manifest)
                 if stop_event.is_set():
                     _log("stopped")
                     return 0
