@@ -61,7 +61,10 @@ natural=forest { set natural=wood }
 
 natural=wood & area_size()>5500000 [0x1181b resolution 17-18 continue]
 natural=wood [0x1321e resolution 19-21 continue]
+# Keep every forest visible through the medium zooms. Coniferous forest keeps
+# its dedicated fill; broadleaved/mixed/unspecified forest uses the generic fill.
 natural=wood & (leaf_type=needleleaved | wood=coniferous) [0x1321f resolution 22-23 continue]
+natural=wood & !(leaf_type=needleleaved | wood=coniferous) [0x1321e resolution 22-23 continue]
 
 # Prefer modern leaf_type, but preserve legacy wood=* classification at resolution 24.
 natural=wood & leaf_type=needleleaved [0x10100 resolution 24]
