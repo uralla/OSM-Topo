@@ -122,9 +122,9 @@ highway=path & (horse=designated|horse=official) {set highway=bridleway }
 highway=path & (foot=designated|foot=official) {set highway=footway }
 #####
 
-# [CUSTOM/АВТОРСКОЕ] Add the tunnel overlay only after lifecycle/access filters,
-# so proposed, removed or hidden highway tunnels cannot leave an orphan line.
-highway=* & tunnel=yes | railway=* & tunnel=yes & !(railway=light_rail & layer<0) [0x10e04 resolution 24 continue]
+# Railway tunnels retain their existing overlay behavior. Highway tunnels are
+# handled later by inc/tunnels after generic routing modifiers are known.
+railway=* & tunnel=yes & !(railway=light_rail & layer<0) [0x10e04 resolution 24 continue]
 
 # Disable dead-end-checks for unaccessible oneways
 highway=* & oneway=yes & (access=private|access=no)
@@ -202,6 +202,9 @@ highway!=construction & highway=* & construction=* [0x10f19 resolution 22 contin
 # Active roads under construction remain routable, but should be less attractive to routing.
 highway!=construction & highway=* & construction=* & maxspeed!=*
 { add mkgmap:road-speed = '-1' }
+
+# Highway tunnels stop here before ordinary road types can emit a second visible line.
+include 'inc/tunnels';
 
 highway=primary_link & length()>500 | highway=primary & junction=roundabout & length()>500 [0x03 resolution 20-21 continue]
 highway=primary_link | highway=primary & junction=roundabout [0x03 road_class=3 road_speed=5 resolution 22]
@@ -390,6 +393,3 @@ highway=* & reg_ref=* { addlabel '${reg_ref}' }
 # грунтовка
 (highway=track | highway=service | highway=unclassified) & (surface=ground|surface=dirt|surface=earth|surface=woodchips|surface=unpaved|surface=mud|surface=grass|surface=sand|surface=clay)
 	{ name '${ref|highway-symbol:oval}'; addlabel '${name} (грунтовка)' | '${name} (грунтовка)' | 'грунтовка' }
-
-# Working fallback for unnamed tunnels: add only if name is still absent.
-highway=* & tunnel=yes { add name='туннель' }
