@@ -17,6 +17,10 @@ def _manifest():
                 "names": {"family": "Failed.OSM"},
                 "update_interval_days": 7,
             },
+            "interrupted": {
+                "names": {"family": "Interrupted.OSM"},
+                "update_interval_days": 7,
+            },
             "running": {
                 "names": {"family": "Running.OSM"},
                 "update_interval_days": 7,
@@ -54,6 +58,14 @@ def test_public_status_uses_success_ttl_and_latest_build_state(tmp_path):
     )
     _insert_build(
         history,
+        "interrupted-build",
+        "interrupted",
+        "interrupted",
+        "2026-09-03T09:15:00+00:00",
+        "2026-09-03T09:16:00+00:00",
+    )
+    _insert_build(
+        history,
         "running-build",
         "running",
         "running",
@@ -73,6 +85,8 @@ def test_public_status_uses_success_ttl_and_latest_build_state(tmp_path):
     assert "актуальна" in text
     assert "Failed.OSM" in text
     assert "ошибка" in text
+    assert "Interrupted.OSM" in text
+    assert "прервано" in text
     assert "Running.OSM" in text
     assert "собирается" in text
     assert "первая сборка" in text
