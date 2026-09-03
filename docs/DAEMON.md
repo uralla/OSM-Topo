@@ -11,6 +11,16 @@
 - after a failed product build, that product receives an in-memory 15 minute backoff by default so another due product can run instead of entering a tight failure loop;
 - only a successfully published pipeline updates successful-build history.
 
+## Public update status
+
+The daemon atomically maintains `map-update-status.txt` in the configured publication root (`output` in the normal workspace). The file is UTF-8 text intended to sit beside the published maps.
+
+Each enabled product shows its last successful publication, approximate next due time, remaining/overdue time and current state (`актуальна`, `ожидает обновления`, `собирается`, `ошибка`, `прервано`). The timestamp header is explicitly UTC and the file explains that future dates are approximate.
+
+The table does not have its own scheduler. It is rendered from the same manifest, successful-build history, update intervals and deterministic queue used by the daemon. Failed or interrupted builds may change the displayed state but never move the last-success timestamp or the next-update TTL basis.
+
+The file is replaced through a temporary file plus atomic rename, so readers never see a partially written table. It is refreshed during normal daemon scheduling, when a daemon-started build becomes running, and after that build terminates.
+
 ## Crash and stop behavior
 
 The daemon owns `state/daemon.lock`, so a second daemon instance exits instead of creating a competing scheduler.
