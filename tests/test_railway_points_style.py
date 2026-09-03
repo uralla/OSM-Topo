@@ -18,33 +18,33 @@ class RailwayPointsStyleTests(unittest.TestCase):
             self.text,
         )
         self.assertIn(
-            "railway=station & !(layer<0) [0x11601 resolution 21-23]",
+            "railway=station & !(layer<0) [0x6400 resolution 21-23]",
             self.text,
         )
         self.assertNotIn(
-            "railway=station & !(layer<0) [0x11601 resolution 21]",
+            "railway=station & !(layer<0) [0x6400 resolution 21]",
             self.text,
         )
 
     def test_halt_overview_and_detailed_icons_do_not_overlap(self) -> None:
         detailed = "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x2f17 resolution 24 continue]"
-        overview = "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19-23]"
+        overview = "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x6400 resolution 19-23]"
         self.assertIn(detailed, self.text)
         self.assertIn(overview, self.text)
         self.assertNotIn(
-            "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x11601 resolution 19]",
+            "( public_transport=platform & rail=yes & mkgmap:area2poi!=true) | railway=halt [0x6400 resolution 19]",
             self.text,
         )
 
     def test_milestone_keeps_details_but_hides_permanent_label(self) -> None:
         self.assertRegex(
             self.text,
-            r"railway=milestone\s+\{name '\$\{distance\} \(\$\{ref\}\)' \| '\$\{distance\}'\} \[0x1341e resolution 24\]",
+            r"railway=milestone\s+\{name '\$\{distance\} \(\$\{ref\}\)' \| '\$\{distance\}'\} \[0x6414 resolution 24\]",
         )
 
         typ = TYP.read_text(encoding="utf-8")
         match = re.search(
-            r"(?ms)^\[_point\]\nType=0x134\nSubType=0x1e\n.*?^\[end\]",
+            r"(?ms)^\[_point\]\nType=0x064\nSubType=0x14\n.*?^\[end\]",
             typ,
         )
         self.assertIsNotNone(match)
@@ -53,13 +53,13 @@ class RailwayPointsStyleTests(unittest.TestCase):
         self.assertIn("FontStyle=NoLabel (invisible)", section)
 
     def test_signal_and_buffer_stop_are_close_zoom_and_unlabelled(self) -> None:
-        self.assertIn("railway=buffer_stop [0x1341d resolution 24]", self.text)
-        self.assertIn("railway=signal [0x1341f resolution 24]", self.text)
+        self.assertIn("railway=buffer_stop [0x6413 resolution 24]", self.text)
+        self.assertIn("railway=signal [0x6415 resolution 24]", self.text)
 
         typ = TYP.read_text(encoding="utf-8")
-        for subtype, designation in (("1d", "тупик"), ("1f", "семафор")):
+        for subtype, designation in (("13", "тупик"), ("15", "семафор")):
             match = re.search(
-                rf"(?ms)^\[_point\]\nType=0x134\nSubType=0x{subtype}\n.*?^\[end\]",
+                rf"(?ms)^\[_point\]\nType=0x064\nSubType=0x{subtype}\n.*?^\[end\]",
                 typ,
             )
             self.assertIsNotNone(match)
