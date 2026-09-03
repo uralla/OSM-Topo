@@ -9,17 +9,17 @@ TYP = PROJECT_ROOT / "styles/uralla.txt"
 
 
 class HotSpringStyleTests(unittest.TestCase):
-    def test_hot_spring_uses_historical_type_at_resolution_22(self) -> None:
+    def test_hot_spring_uses_device_safe_type_at_resolution_22(self) -> None:
         text = WATER_POINTS.read_text(encoding="utf-8")
         self.assertIn(
-            "natural=hot_spring & mkgmap:area2poi!=true [0x13703 resolution 22]",
+            "natural=hot_spring & mkgmap:area2poi!=true [0x6416 resolution 22]",
             text,
         )
 
-    def test_hot_spring_typ_matches_original_design(self) -> None:
+    def test_hot_spring_typ_keeps_original_design_after_remap(self) -> None:
         text = TYP.read_text(encoding="utf-8")
         match = re.search(
-            r"(?ms)^\[_point\]\nType=0x137\nSubType=0x03\n(.*?)^\[end\]",
+            r"(?ms)^\[_point\]\nType=0x064\nSubType=0x16\n(.*?)^\[end\]",
             text,
         )
         self.assertIsNotNone(match)
