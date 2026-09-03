@@ -38,6 +38,7 @@ class HostConfig:
     paths: HostPaths
     publication: PublicationPolicy
     product_concurrency: int
+    preprocess_concurrency: int
     minimum_free_gib: int
 
 
@@ -119,12 +120,21 @@ def load_host_config(path: str | Path, repo_root: str | Path) -> HostConfig:
         split_zip_volumes=bool(publication.get("split_zip_volumes", False)),
     )
     concurrency = resources.get("product_concurrency", 1)
+    preprocess_concurrency = resources.get("preprocess_concurrency", 1)
     minimum_free = resources.get("minimum_free_gib", 20)
     if not isinstance(concurrency, int) or concurrency < 1:
         raise ManifestError("resources.product_concurrency must be a positive integer")
+    if not isinstance(preprocess_concurrency, int) or preprocess_concurrency < 1:
+        raise ManifestError("resources.preprocess_concurrency must be a positive integer")
     if not isinstance(minimum_free, int) or minimum_free < 0:
         raise ManifestError("resources.minimum_free_gib must be a non-negative integer")
-    return HostConfig(host_paths, policy, concurrency, minimum_free)
+    return HostConfig(
+        host_paths,
+        policy,
+        concurrency,
+        preprocess_concurrency,
+        minimum_free,
+    )
 
 
 def validate_host_config(config: HostConfig) -> list[ValidationIssue]:
@@ -142,7 +152,7 @@ def validate_host_config(config: HostConfig) -> list[ValidationIssue]:
         issues.append(
             ValidationIssue(
                 "host.resources.product_concurrency",
-                "initial reserve-host policy requires one product at a time",
+                "heavy splitter/mkgmap phase must remain one product at a time",
             )
         )
     return issues
