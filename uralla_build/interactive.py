@@ -18,7 +18,15 @@ from .errors import ManifestError
 from .history import HistoryStore
 from .host import load_host_config
 from .manifest import load_manifest
+from .public_status import render_map_update_status
 from .scheduler import build_queue
+from .service_control import (
+    SERVICE_NAME,
+    run_service_action,
+    run_service_log,
+    run_service_status,
+    service_state,
+)
 
 
 _WIDTH = 92
@@ -156,8 +164,61 @@ def _show_products(manifest: Mapping[str, object], history: HistoryStore) -> lis
             f"{states.get(key, '—'):<10} {last:<17} {age:>6}  {status:<11}"
         )
     print("  " + "─" * (_WIDTH - 4))
-    print("  u  update from GitHub    a  add map    q  quit")
+    print("  s  map status    d  daemon    u  update from GitHub    a  add map    q  quit")
     return keys
+
+
+def _show_map_status(manifest: Mapping[str, object], history: HistoryStore) -> None:
+    _header("MAP UPDATE STATUS")
+    print(render_map_update_status(manifest, history).rstrip())
+    input("\nPress Enter to return…")
+
+
+def _daemon_menu(repo_root: Path) -> None:
+    while True:
+        state = service_state()
+        _header("DAEMON")
+        print(f"  Service: {SERVICE_NAME}")
+        print(f"  State:   {state.state}")
+        if not state.available:
+            print("\n  systemd/systemctl is not available on this host.")
+            input("\nPress Enter to return…")
+            return
+        if not state.installed:
+            print("\n  Service is not installed.")
+            print(f"  Install: {repo_root / 'scripts' / 'install-daemon-service.sh'}")
+            input("\nPress Enter to return…")
+            return
+
+        print("\n  1. Start")
+        print("  2. Stop")
+        print("  3. Restart")
+        print("  4. Status")
+        print("  5. Show recent log")
+        print("  6. Follow log")
+        print("  0. Back")
+        choice = input("\nSelect: ").strip().lower()
+        if choice in {"0", "q", ""}:
+            return
+        if choice in {"1", "2", "3"}:
+            action = {"1": "start", "2": "stop", "3": "restart"}[choice]
+            code = run_service_action(action)
+            print(f"\n{action} finished with exit code {code}.")
+            input("Press Enter…")
+        elif choice == "4":
+            print()
+            run_service_status()
+            input("\nPress Enter…")
+        elif choice == "5":
+            print()
+            run_service_log()
+            input("\nPress Enter…")
+        elif choice == "6":
+            print("\nFollowing daemon log; Ctrl+C returns to this menu.\n")
+            try:
+                run_service_log(follow=True)
+            except KeyboardInterrupt:
+                print()
 
 
 def _git_head(repo_root: Path) -> str | None:
@@ -419,6 +480,12 @@ def run_interactive(
         choice = input("\nSelect map: ").strip().lower()
         if choice in {"q", "quit", "exit"}:
             return 0
+        if choice == "s":
+            _show_map_status(manifest, history)
+            continue
+        if choice == "d":
+            _daemon_menu(repo)
+            continue
         if choice == "u":
             _update_repository(repo, host_file, manifest_file)
             continue
