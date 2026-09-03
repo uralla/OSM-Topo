@@ -3,9 +3,33 @@ schema_version: 1
 # Shared OSM source downloads used by build-product --apply.
 # Keep URLs and refresh policy here instead of hard-coding them in Python.
 sources:
-  russia:
-    url: https://download.geofabrik.de/russia-latest.osm.pbf
+  armenia:
+    url: https://download.geofabrik.de/asia/armenia-latest.osm.pbf
+    refresh_days: 1
+  belarus:
+    url: https://download.geofabrik.de/europe/belarus-latest.osm.pbf
     refresh_days: 1
   crimea:
     url: https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf
+    refresh_days: 1
+  georgia:
+    url: https://download.geofabrik.de/europe/georgia-latest.osm.pbf
+    refresh_days: 1
+  kazakhstan:
+    url: https://download.geofabrik.de/asia/kazakhstan-latest.osm.pbf
+    refresh_days: 1
+  kyrgyzstan:
+    url: https://download.geofabrik.de/asia/kyrgyzstan-latest.osm.pbf
+    refresh_days: 1
+  mongolia:
+    url: https://download.geofabrik.de/asia/mongolia-latest.osm.pbf
+    refresh_days: 1
+  northwestern:
+    url: https://download.geofabrik.de/russia/northwestern-fed-district-latest.osm.pbf
+    refresh_days: 1
+  russia:
+    url: https://download.geofabrik.de/russia-latest.osm.pbf
+    refresh_days: 1
+  turkey:
+    url: https://download.geofabrik.de/europe/turkey-latest.osm.pbf
     refresh_days: 1
