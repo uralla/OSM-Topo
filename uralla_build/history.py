@@ -309,6 +309,21 @@ class HistoryStore:
             ).fetchall()
         return {str(row["product"]): str(row["finished_at"]) for row in rows}
 
+    def latest_build_by_product(self) -> dict[str, dict[str, Any]]:
+        """Return the newest build row for each product, regardless of status."""
+
+        with self.connect() as connection:
+            rows = connection.execute(
+                """SELECT b.* FROM builds AS b
+                   WHERE b.rowid = (
+                       SELECT b2.rowid FROM builds AS b2
+                       WHERE b2.product = b.product
+                       ORDER BY b2.created_at DESC, b2.rowid DESC
+                       LIMIT 1
+                   )"""
+            ).fetchall()
+        return {str(row["product"]): dict(row) for row in rows}
+
     def running_products(self) -> set[str]:
         with self.connect() as connection:
             rows = connection.execute(
