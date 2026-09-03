@@ -142,7 +142,7 @@ def _build_command(
     return [
         sys.executable,
         "-m",
-        "uralla_build.entrypoint",
+        "uralla_build",
         "--manifest",
         str(manifest_path),
         "--host",
