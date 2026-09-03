@@ -32,7 +32,7 @@ class TopoMarkerPointTests(unittest.TestCase):
         water = WATER_POINTS.read_text(encoding='utf-8')
         self.assertNotIn('natural=hot_spring [0x6511 resolution 22]', landuse)
         self.assertIn(
-            'natural=hot_spring & mkgmap:area2poi!=true [0x13703 resolution 22]',
+            'natural=hot_spring & mkgmap:area2poi!=true [0x6416 resolution 22]',
             water,
         )
 
