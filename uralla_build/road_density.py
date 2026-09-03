@@ -1,10 +1,12 @@
 """Detect abnormally dense low-class road networks for far-zoom decluttering.
 
-The analysis is deliberately cartographic rather than semantic: only highway
-classes below tertiary participate, and nearby ways are grouped by the visual
-family that can create a screen-density problem.  Nothing is removed and no
-routing/access tag is changed.  Ways are only marked so the mkgmap style can
-move their far overview representation inward by one or two resolutions.
+The analysis is deliberately cartographic rather than semantic.  It only
+considers road classes that can realistically create long, repeated line grids
+on far zooms.  Density is accounted per concrete visual road class, so a dense
+service grid cannot suppress a lone living_street or residential road nearby.
+Nothing is removed and no routing/access tag is changed.  Ways are only marked
+so the mkgmap style can move their far overview representation inward by one or
+two resolutions.
 """
 
 from __future__ import annotations
@@ -35,41 +37,39 @@ class DensityThreshold:
 
 
 # Absolute thresholds are intentional. Percentiles would classify something
-# as "dense" even in a generally sparse map extract. After the first real map
-# tests, keep the dense thresholds unchanged and make only the second level a
-# little easier to reach: this suppresses the worst grids without broadening
-# the ordinary dense footprint.
+# as "dense" even in a generally sparse map extract.  Keep the established
+# sensitivity, but apply it independently to each concrete road class.
+# Track keeps its previously tested, slightly more sensitive thresholds because
+# mapped grids of field/unfinished-settlement tracks can otherwise dominate
+# overview zooms.  Path/footway/cycleway/bridleway/pedestrian are intentionally
+# excluded: their normal close-biased LOD and length filters already declutter
+# them before they become a far-zoom problem.
 THRESHOLDS: dict[str, DensityThreshold] = {
-    "local": DensityThreshold(18.0, 26.0),
+    "minor": DensityThreshold(18.0, 26.0),
+    "unclassified": DensityThreshold(18.0, 26.0),
+    "residential": DensityThreshold(18.0, 26.0),
+    "living_street": DensityThreshold(18.0, 26.0),
+    "service": DensityThreshold(18.0, 26.0),
+    "road": DensityThreshold(18.0, 26.0),
     "track": DensityThreshold(14.0, 22.0),
-    "trail": DensityThreshold(20.0, 30.0),
 }
 
-_LOCAL_HIGHWAYS = frozenset(
-    {
-        "minor",
-        "unclassified",
-        "residential",
-        "living_street",
-        "service",
-        "road",
-        "pedestrian",
-    }
-)
-_TRACK_HIGHWAYS = frozenset({"track", "unsurfaced", "byway"})
-_TRAIL_HIGHWAYS = frozenset({"path", "footway", "cycleway", "bridleway"})
+_TRACK_ALIASES = frozenset({"track", "unsurfaced", "byway"})
 
 
 def road_density_class(tags: Mapping[str, str]) -> str | None:
-    """Return the low-road render family used for density accounting."""
+    """Return the concrete road class used for density accounting.
+
+    Only equivalent visual classes may contribute to each other's density.
+    Legacy unsurfaced/byway tagging is normalized to track because the line
+    style already converts both to highway=track before rendering.
+    """
 
     highway = tags.get("highway")
-    if highway in _LOCAL_HIGHWAYS:
-        return "local"
-    if highway in _TRACK_HIGHWAYS:
+    if highway in _TRACK_ALIASES:
         return "track"
-    if highway in _TRAIL_HIGHWAYS:
-        return "trail"
+    if highway in THRESHOLDS:
+        return highway
     return None
 
 
@@ -260,7 +260,7 @@ def augment_road_density(
     *,
     reporter: Any = None,
 ) -> dict[str, object]:
-    """Rewrite a PBF with density hints on low-class road ways."""
+    """Rewrite a PBF with density hints on selected low-class road ways."""
 
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
