@@ -14,7 +14,14 @@ operator=${name}  { delete operator; }
 brand=${name}     { delete brand; }
 
 # Semantic preprocessor keeps raw OSM name=* and puts the cartographic label here.
+# If no semantic label was produced, prefer a name readable to Russian-speaking
+# Garmin users: Russian first, then conventional Latin OSM alternatives, then
+# the original local-script name as the final fallback.
 uralla:label=* { set name='${uralla:label}' }
+uralla:label!=* & name:ru=* { set name='${name:ru}' }
+uralla:label!=* & name:ru!=* & name:en=* { set name='${name:en}' }
+uralla:label!=* & name:ru!=* & name:en!=* & int_name=* { set name='${int_name}' }
+uralla:label!=* & name:ru!=* & name:en!=* & int_name!=* & name:latin=* { set name='${name:latin}' }
 
 # [CUSTOM/АВТОРСКОЕ] Global compact labels for points, lines and polygons.
 # This include is intentionally used by all three production style entry files.
