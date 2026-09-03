@@ -21,7 +21,7 @@ class AirportPointStyleTests(unittest.TestCase):
 
     def test_terminal_and_helipad_keep_separate_rules(self) -> None:
         points = POINTS.read_text(encoding='utf-8')
-        self.assertIn('aeroway=helipad [0x11803 resolution 23]', points)
+        self.assertIn('aeroway=helipad [0x6412 resolution 23]', points)
         self.assertIn('aeroway=terminal [0x2f04 resolution 22]', points)
 
 
