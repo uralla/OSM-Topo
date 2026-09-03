@@ -11,6 +11,7 @@ from .analysis_cli import (
     run_apply_poi_context,
     run_apply_road_density,
 )
+from .daemon import main as run_daemon
 from .entrypoint import main
 from .interactive import run_interactive
 from .preprocess_fast import run_fast_preprocess
@@ -41,6 +42,9 @@ if interactive is not None:
     manifest_path, host_path = interactive
     raise SystemExit(run_interactive(manifest_path=manifest_path, host_path=host_path))
 
+if "daemon" in arguments:
+    command_index = arguments.index("daemon")
+    raise SystemExit(run_daemon(arguments[:command_index] + arguments[command_index + 1 :]))
 if "preprocess-fast" in arguments:
     command_index = arguments.index("preprocess-fast")
     raise SystemExit(run_fast_preprocess(arguments[command_index + 1 :]))
