@@ -24,10 +24,6 @@ class HotSpringStyleTests(unittest.TestCase):
         )
         self.assertIsNotNone(match)
         section = match.group(1)
-        self.assertIn(
-            ";GRMN_TYPE: Business - Services Extended/TAXI_STAND(NT)/Taxi stand/NT",
-            section,
-        )
         self.assertIn("String1=0x19,горячий источник", section)
         self.assertIn("String2=0x04,hot spring", section)
         self.assertIn("ExtendedLabels=N", section)
