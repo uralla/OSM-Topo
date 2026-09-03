@@ -12,7 +12,7 @@ class HighwayTunnelTests(unittest.TestCase):
     def _text(self) -> str:
         return TUNNELS.read_text(encoding="utf-8")
 
-    def test_highway_tunnels_use_only_tunnel_visual_and_invisible_carrier(self) -> None:
+    def test_highway_tunnels_use_only_tunnel_visual_and_0x1b_carrier(self) -> None:
         text = self._text()
         self.assertIn("0x10e04", text)
         self.assertIn("0x1b road_class=", text)
@@ -54,15 +54,15 @@ class HighwayTunnelTests(unittest.TestCase):
         for rule in expected:
             self.assertIn(rule, text)
 
-    def test_routing_carrier_type_0x1b_remains_explicitly_invisible(self) -> None:
+    def test_routing_carrier_uses_existing_0x1b_dummy_line_contract(self) -> None:
         typ = TYP.read_text(encoding="utf-8")
         match = re.search(r"\[_line\]\nType=0x1b\n.*?\n\[end\]", typ, re.S)
         self.assertIsNotNone(match)
         assert match is not None
         block = match.group(0)
-        self.assertIn('"1 c none"', block)
-        self.assertNotIn("LineWidth=", block)
-        self.assertNotIn("BorderWidth=", block)
+        self.assertIn("String1=0x19,dummy line", block)
+        self.assertIn("ExtendedLabels=N", block)
+        self.assertNotIn("FontStyle=", block)
 
 
 if __name__ == "__main__":
