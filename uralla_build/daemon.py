@@ -17,7 +17,7 @@ import time
 from typing import Iterator
 
 from .errors import ManifestError, StageError
-from .history import HistoryStore
+from .history import HistoryStore, utc_now
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
 from .scheduler import QueueItem, build_queue
@@ -66,6 +66,32 @@ def _pipeline_is_idle(work_root: Path) -> bool:
         return True
     finally:
         handle.close()
+
+
+def _interrupt_running_builds(history: HistoryStore, reason: str) -> int:
+    """Close stale DB state only when the caller has proved no pipeline is active."""
+
+    finished_at = utc_now()
+    with history.connect() as connection:
+        rows = connection.execute(
+            "SELECT build_id FROM builds WHERE status = 'running'"
+        ).fetchall()
+        build_ids = [str(row["build_id"]) for row in rows]
+        if not build_ids:
+            return 0
+        for build_id in build_ids:
+            connection.execute(
+                """UPDATE stage_attempts
+                   SET status = 'interrupted', finished_at = ?, exit_code = 130, error = ?
+                   WHERE build_id = ? AND status = 'running'""",
+                (finished_at, reason, build_id),
+            )
+            connection.execute(
+                """UPDATE builds SET status = 'interrupted', finished_at = ?
+                   WHERE build_id = ? AND status = 'running'""",
+                (finished_at, build_id),
+            )
+        return len(build_ids)
 
 
 def _select_due(
@@ -161,8 +187,9 @@ def run_daemon(
     try:
         with _exclusive_lock(daemon_lock, "build daemon"):
             if _pipeline_is_idle(host.paths.work_root):
-                recovered = history.interrupt_running_builds(
-                    "recovered by daemon startup after previous process stopped"
+                recovered = _interrupt_running_builds(
+                    history,
+                    "recovered by daemon startup after previous process stopped",
                 )
                 if recovered:
                     _log(f"recovered {recovered} stale running build(s) as interrupted")
