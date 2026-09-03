@@ -69,29 +69,18 @@ def exclusive_product_lock(work_root: Path, product: str) -> Iterator[None]:
 
 
 class _PipelineResourceLease:
-    """Shared for extract/preprocess/merge, upgraded to exclusive before splitter.
-
-    A separate turnstile lock prevents fresh shared users from entering once a
-    product is waiting to upgrade.  This gives splitter/mkgmap the whole host
-    after already-running light phases reach their boundary.
-    """
+    """Share the host for light stages, then take it exclusively for heavy stages."""
 
     def __init__(self, work_root: Path):
         state = work_root / "state"
         state.mkdir(parents=True, exist_ok=True)
-        self.resource_path = state / "pipeline.lock"
-        self.gate_path = state / "pipeline-gate.lock"
-        self.resource = self.resource_path.open("a+b")
-        self.gate = self.gate_path.open("a+b")
+        self.path = state / "pipeline.lock"
+        self.handle = self.path.open("a+b")
         self.exclusive = False
         self.entered = False
 
     def __enter__(self) -> "_PipelineResourceLease":
-        fcntl.flock(self.gate.fileno(), fcntl.LOCK_SH)
-        try:
-            fcntl.flock(self.resource.fileno(), fcntl.LOCK_SH)
-        finally:
-            fcntl.flock(self.gate.fileno(), fcntl.LOCK_UN)
+        fcntl.flock(self.handle.fileno(), fcntl.LOCK_SH)
         self.entered = True
         return self
 
@@ -101,23 +90,21 @@ class _PipelineResourceLease:
         if not self.entered:
             raise RuntimeError("pipeline resource lease was not entered")
 
-        # Close the entrance for new light phases before releasing our shared
-        # resource lock. Existing light phases may finish, then we take the host.
-        fcntl.flock(self.gate.fileno(), fcntl.LOCK_EX)
-        try:
-            fcntl.flock(self.resource.fileno(), fcntl.LOCK_UN)
-            fcntl.flock(self.resource.fileno(), fcntl.LOCK_EX)
-            self.exclusive = True
-        finally:
-            fcntl.flock(self.gate.fileno(), fcntl.LOCK_UN)
+        # Drop our reader slot before waiting for the writer slot. This avoids a
+        # deadlock when several products finish preprocessing at nearly the same
+        # time and all want to enter splitter. The daemon caps active products,
+        # so a waiting heavy phase cannot be starved by an unbounded stream of
+        # newly started light products.
+        fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
+        fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX)
+        self.exclusive = True
 
     def __exit__(self, _exc_type: object, _exc: object, _tb: object) -> None:
         try:
             if self.entered:
-                fcntl.flock(self.resource.fileno(), fcntl.LOCK_UN)
+                fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
         finally:
-            self.resource.close()
-            self.gate.close()
+            self.handle.close()
 
 
 class PipelineRunner:
@@ -161,7 +148,7 @@ class PipelineRunner:
                 results: list[StageResult] = []
                 try:
                     for stage in resolved_stages:
-                        if stage.exclusive_host:
+                        if stage.exclusive_host or stage.name in {"splitter", "mkgmap"}:
                             resources.upgrade()
                         stage_root = self.runner.builds_root / identifier / stage.name
                         for raw_directory in stage.prepare_directories:
