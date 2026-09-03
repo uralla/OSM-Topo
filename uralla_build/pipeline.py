@@ -80,14 +80,9 @@ class PipelineRunner:
         metadata: Mapping[str, object] | None = None,
         resume: bool = True,
         finalize: Callable[[str], object] | None = None,
-        status_changed: Callable[[str, str], None] | None = None,
     ) -> PipelineResult:
         if not callable(stages) and not stages:
             raise StageError("product pipeline must contain at least one stage")
-
-        def notify(status: str) -> None:
-            if status_changed is not None:
-                status_changed(product, status)
 
         with exclusive_pipeline_lock(self.runner.work_root):
             identifier = build_id or self.runner.create_build(product, metadata)
@@ -102,12 +97,10 @@ class PipelineRunner:
                 raise StageError(
                     f"build {identifier} is {build['status']}, not running"
                 )
-            notify("running")
 
             resolved_stages = tuple(stages(identifier) if callable(stages) else stages)
             if not resolved_stages:
                 self.runner.history.set_build_status(identifier, "failed")
-                notify("failed")
                 raise StageError("product pipeline must contain at least one stage")
             results: list[StageResult] = []
             try:
@@ -141,22 +134,18 @@ class PipelineRunner:
                     results.append(result)
                     if result.status not in {"success", "skipped"}:
                         self.runner.history.set_build_status(identifier, "failed")
-                        notify("failed")
                         return PipelineResult(
                             identifier, product, "failed", tuple(results)
                         )
                 final_result = finalize(identifier) if finalize is not None else None
             except KeyboardInterrupt:
                 self.runner.history.set_build_status(identifier, "interrupted")
-                notify("interrupted")
                 raise
             except Exception:
                 self.runner.history.set_build_status(identifier, "failed")
-                notify("failed")
                 raise
 
             self.runner.history.set_build_status(identifier, "success")
-            notify("success")
             return PipelineResult(
                 identifier, product, "success", tuple(results), final_result
             )
