@@ -63,6 +63,8 @@ def _state(item: QueueItem | None, latest_status: str | None, *, running: bool) 
         return "собирается"
     if latest_status == "failed":
         return "ошибка"
+    if latest_status == "interrupted":
+        return "прервано"
     if item is None:
         return "—"
     return "ожидает обновления" if item.due else "актуальна"
