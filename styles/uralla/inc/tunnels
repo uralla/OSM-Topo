@@ -17,9 +17,9 @@
 (highway=secondary_link | highway=secondary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 20]
 (highway=secondary_link | highway=secondary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 22]
 
-# Tertiary links and roundabouts.
-(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=1 road_speed=4 resolution 21]
-(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 23]
+# Tertiary links and roundabouts keep the restored tertiary routing class.
+(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 21]
+(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 23]
 
 # Major roads without length generalisation at their normal overview level.
 highway=motorway & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 16]
@@ -36,9 +36,10 @@ highway=primary & tunnel=yes [0x08 road_class=3 road_speed=5 resolution 17]
 highway=secondary & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 18]
 highway=secondary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]
 
-# Tertiary: same softer 250 m threshold.
-highway=tertiary & tunnel=yes & length()>250 [0x08 road_class=1 road_speed=4 resolution 19]
-highway=tertiary & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 23]
+# Tertiary: restored ordinary overview starts at 18 above 500 m and carrier at 20;
+# tunnels keep the softer 250 m threshold but the same class/speed and LOD anchors.
+highway=tertiary & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 18]
+highway=tertiary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]
 
 # Legacy minor and referenced unclassified roads use the higher local-road class.
 highway=minor & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 22]

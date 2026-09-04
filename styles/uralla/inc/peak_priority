@@ -1,0 +1,37 @@
+# [IMPORTANT/ВАЖНО] Distant-zoom peak anchors must run before broad point fallbacks.
+# The same landmark set is still documented in landuse_points; matching here gives
+# priority peaks ownership before tourism/other generic POI rules can consume them.
+
+# Static catalogue enrichment from the semantic preprocessor.
+uralla:peak_landmark=yes {add note=great-peak}
+
+natural=peak & name='Ослянка'
+| natural=peak & name='Конжаковский Камень'
+| natural=peak & name='Большой Иремель'
+| natural=peak & name='Ямантау' & wikidata=Q1514176
+| natural=volcano & name='Эльбрус Западный'
+| natural=peak & name='Фишт'
+| natural=volcano & name:ru='Казбек'
+| natural=peak & name='Юдычвумчорр'
+| natural=peak & name='Белуха'
+| natural=peak & name='пик Семенова-Тян-Шанского'
+| natural=peak & name='Талғар шыңы'
+| natural=peak & name='Чок-Тал'
+| natural=peak & name='пик Меридиан'
+| natural=peak & name='Данков чокусу'
+| natural=peak & name='Хан Тәңірі - Хан-Теңири - 汗腾格里峰'
+| natural=peak & name='Сосьвинский'
+| natural=peak & name='Денежкин Камень'
+| natural=peak & name='Отортен'
+| natural=peak & name='Кожимзиз'
+| natural=peak & name='Толпоз-Из'
+| natural=peak & name='Неройка'
+| natural=peak & name='Сабля'
+| natural=peak & name='Манарага'
+| natural=peak & name='Пай-Ер'
+| natural=volcano & name:en='Mount Ararat'
+| natural=peak & name='Райиз' {add note=great-peak}
+
+note=great-peak {name "${name}"} [0x6616 resolution 16-22 continue]
+note=great-peak & ele=* {name "${name} (${ele} м)"} [0x6616 resolution 23-24]
+note=great-peak & ele!=* {name "${name}"} [0x6616 resolution 23-24]
