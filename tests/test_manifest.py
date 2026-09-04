@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class ManifestTests(unittest.TestCase):
     def test_project_manifest_is_valid(self) -> None:
         manifest = load_manifest(ROOT / "config" / "maps.yaml")
-        self.assertEqual(len(manifest["products"]), 28)
+        self.assertEqual(len(manifest["products"]), 27)
         self.assertEqual(validate_manifest(manifest), [])
 
     def test_overlap_is_rejected(self) -> None:
@@ -32,7 +32,7 @@ class ManifestTests(unittest.TestCase):
     def test_unquoted_map_id_is_rejected(self) -> None:
         manifest = load_manifest(ROOT / "config" / "maps.yaml")
         broken = deepcopy(manifest)
-        broken["products"]["ural-n"]["identity"]["first_tile_mapid"] = 1018001
+        broken["products"]["ural-n"]["identity"]["first_tile_mapid"] = 1027001
         issues = validate_manifest(broken)
         self.assertTrue(any("quoted eight-digit" in issue.message for issue in issues))
 
