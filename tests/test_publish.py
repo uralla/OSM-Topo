@@ -54,7 +54,31 @@ class PublicationTests(unittest.TestCase):
                 self.assertTrue(
                     all(item.compress_type == zipfile.ZIP_STORED for item in archive.infolist())
                 )
-                self.assertIn("Topo-Ural-N.gmap/Contents/Info.xml", archive.namelist())
+                names = archive.namelist()
+                self.assertIn("Topo-Ural-N.gmap/Contents/Info.xml", names)
+                for installer in (
+                    "install-map.cmd",
+                    "uninstall-map.cmd",
+                    "map-install.ps1",
+                    "README-INSTALL.txt",
+                ):
+                    self.assertIn(installer, names)
+
+                script = archive.read("map-install.ps1").decode("utf-8")
+                self.assertIn("$env:APPDATA", script)
+                self.assertIn("'Garmin\\Maps'", script)
+                self.assertIn("Copy-Item", script)
+                self.assertIn("Move-Item", script)
+                self.assertIn(".installing-$PID", script)
+                self.assertNotIn("HKLM", script)
+                self.assertNotIn("HKCU", script)
+                self.assertNotIn("reg.exe", script.lower())
+                self.assertNotIn("Set-ItemProperty", script)
+
+                readme = archive.read("README-INSTALL.txt").decode("utf-8")
+                self.assertIn("Topo-Ural-N.gmap", readme)
+                self.assertIn("Garmin BaseCamp", readme)
+                self.assertIn("%APPDATA%\\Garmin\\Maps", readme)
 
     def test_invalid_new_release_does_not_replace_previous_files(self) -> None:
         with TemporaryDirectory() as directory:
