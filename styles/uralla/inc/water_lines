@@ -52,6 +52,12 @@ uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
 # Water routing was intentionally removed. A routable 0x0f carrier could be
 # reoriented by mkgmap/Garmin and made flow-direction arrows disagree with the
 # source OSM way direction. Waterways are visual map features only.
+#
+# Restore flow direction separately with the existing non-routable directional
+# 0x10f11 TYP line. Emit it before the visual water line so intermittent and
+# ordinary waterways can still own their normal width/dash style afterwards.
+(waterway=river | waterway=stream | waterway=drain | waterway=canal)
+ & area!=yes & tunnel!=yes [0x10f11 resolution 24 continue]
 
 # Статический справочник опорных рек. Ранг выставляет semantic preprocessor.
 # Landmark rivers keep a progressive visual hierarchy: thin 0x18 at far zoom,
