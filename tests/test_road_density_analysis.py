@@ -10,6 +10,7 @@ from uralla_build.road_density_analysis import (
     ANALYSIS_KIND,
     SCHEMA_VERSION,
     _dense_components,
+    _select_connected_backbone,
     load_road_density_analysis,
     save_road_density_analysis,
 )
@@ -53,13 +54,13 @@ class RoadDensityAnalysisTests(unittest.TestCase):
             with self.assertRaises(StageError):
                 load_road_density_analysis(path)
 
-    def test_schema_v3_rejects_v2_artifact(self) -> None:
+    def test_schema_v5_rejects_old_artifact(self) -> None:
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "old.json.gz"
             save_road_density_analysis(
                 path,
                 {
-                    "schema_version": 2,
+                    "schema_version": 4,
                     "kind": ANALYSIS_KIND,
                     "ways": {},
                 },
@@ -80,6 +81,31 @@ class RoadDensityAnalysisTests(unittest.TestCase):
         self.assertNotEqual(
             components[("service", 11, 11)], components[("residential", 11, 11)]
         )
+
+    def test_connected_backbone_keeps_long_unambiguous_chain(self) -> None:
+        candidates = [
+            ((10.0, 0, 10.0, -101), 101, frozenset({1, 2})),
+            ((20.0, 0, 20.0, -102), 102, frozenset({2, 3})),
+            ((30.0, 1, 30.0, -103), 103, frozenset({3, 4})),
+            ((20.0, 0, 20.0, -104), 104, frozenset({4, 5})),
+            ((10.0, 0, 10.0, -105), 105, frozenset({5, 6})),
+            ((5.0, 0, 5.0, -106), 106, frozenset({6, 7})),
+        ]
+
+        self.assertEqual(
+            _select_connected_backbone(candidates),
+            {101, 102, 103, 104, 105, 106},
+        )
+
+    def test_connected_backbone_stops_at_real_branch(self) -> None:
+        candidates = [
+            ((30.0, 1, 30.0, -201), 201, frozenset({10, 11})),
+            ((20.0, 0, 20.0, -202), 202, frozenset({9, 10})),
+            ((15.0, 0, 15.0, -203), 203, frozenset({11, 12})),
+            ((14.0, 0, 14.0, -204), 204, frozenset({11, 13})),
+        ]
+
+        self.assertEqual(_select_connected_backbone(candidates), {201, 202})
 
     def test_density_classes_are_concrete_and_independent(self) -> None:
         expected = {
