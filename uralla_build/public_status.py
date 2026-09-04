@@ -117,10 +117,6 @@ _STATE_LABELS = {
 }
 
 
-def _state(item: QueueItem | None, latest_status: str | None, *, running: bool) -> str:
-    return _STATE_LABELS[_state_code(item, latest_status, running=running)]
-
-
 def _relative_public_path(subdir: str, filename: str) -> str:
     base = PurePosixPath(subdir)
     if str(base) in {"", "."}:
@@ -130,12 +126,19 @@ def _relative_public_path(subdir: str, filename: str) -> str:
 
 def _artifact_info(root: Path, relative_path: str) -> dict[str, object]:
     path = root / Path(relative_path)
-    available = path.is_file() and path.stat().st_size > 0
+    if not path.is_file():
+        return {
+            "filename": path.name,
+            "url": relative_path,
+            "available": False,
+            "size": None,
+        }
+    size = path.stat().st_size
     return {
         "filename": path.name,
         "url": relative_path,
-        "available": available,
-        "size": path.stat().st_size if available else None,
+        "available": size > 0,
+        "size": size if size > 0 else None,
     }
 
 
@@ -227,16 +230,12 @@ def build_public_status_snapshot(
             "overdue_seconds": overdue_seconds,
         }
 
-        if isinstance(raw_product, Mapping):
-            names = raw_product.get("names")
-        else:
-            names = None
+        names = raw_product.get("names") if isinstance(raw_product, Mapping) else None
         output_img = names.get("output_img") if isinstance(names, Mapping) else None
         if host is not None and isinstance(output_img, str) and output_img:
             img_relative = _relative_public_path(host.publication.img_subdir, output_img)
-            basecamp_name = gmapi_zip_name(output_img)
             basecamp_relative = _relative_public_path(
-                host.publication.gmapi_subdir, basecamp_name
+                host.publication.gmapi_subdir, gmapi_zip_name(output_img)
             )
             row["img"] = _artifact_info(host.paths.publish_root, img_relative)
             row["basecamp"] = _artifact_info(host.paths.publish_root, basecamp_relative)
@@ -251,18 +250,12 @@ def build_public_status_snapshot(
     }
 
 
-def render_map_update_status(
-    manifest: Mapping[str, object],
-    history: HistoryStore,
-    *,
-    now: datetime | None = None,
-) -> str:
-    """Render one UTF-8 table from the canonical public status snapshot."""
-
-    snapshot = build_public_status_snapshot(manifest, history, now=now)
-    generated_at = _parse_timestamp(str(snapshot["generated_at"]))
+def _render_snapshot_text(snapshot: Mapping[str, object]) -> str:
+    generated_at = _parse_timestamp(str(snapshot.get("generated_at", "")))
+    raw_products = snapshot.get("products")
+    products = raw_products if isinstance(raw_products, list) else []
     rows: list[tuple[str, str, str, str, str]] = []
-    for raw_row in snapshot["products"]:  # type: ignore[index]
+    for raw_row in products:
         row = raw_row if isinstance(raw_row, Mapping) else {}
         never = bool(row.get("never_built"))
         next_update = row.get("next_update")
@@ -308,6 +301,54 @@ def render_map_update_status(
     return "\n".join(lines)
 
 
+def render_map_update_status(
+    manifest: Mapping[str, object],
+    history: HistoryStore,
+    *,
+    now: datetime | None = None,
+) -> str:
+    """Render one UTF-8 table from the canonical public status snapshot."""
+
+    return _render_snapshot_text(build_public_status_snapshot(manifest, history, now=now))
+
+
+def _public_json(snapshot: Mapping[str, object]) -> dict[str, object]:
+    raw_products = snapshot.get("products")
+    products = raw_products if isinstance(raw_products, list) else []
+    visible: list[dict[str, object]] = []
+    for raw_row in products:
+        if not isinstance(raw_row, Mapping) or raw_row.get("web_visible") is not True:
+            continue
+        row = dict(raw_row)
+        row.pop("web_visible", None)
+        row.pop("web_order", None)
+        visible.append(row)
+    visible.sort(
+        key=lambda row: (
+            _web_sort_order(snapshot, str(row.get("product", ""))),
+            str(row.get("title", "")).casefold(),
+        )
+    )
+    return {
+        "schema_version": snapshot.get("schema_version"),
+        "generated_at": snapshot.get("generated_at"),
+        "timezone": snapshot.get("timezone"),
+        "note": snapshot.get("note"),
+        "products": visible,
+    }
+
+
+def _web_sort_order(snapshot: Mapping[str, object], product: str) -> int:
+    raw_products = snapshot.get("products")
+    products = raw_products if isinstance(raw_products, list) else []
+    for row in products:
+        if isinstance(row, Mapping) and row.get("product") == product:
+            order = row.get("web_order")
+            if isinstance(order, int) and not isinstance(order, bool):
+                return order
+    return 1_000_000
+
+
 def _atomic_write(path: Path, payload: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{uuid4().hex}.partial")
@@ -330,23 +371,12 @@ def write_map_update_status(
 
     history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
     snapshot = build_public_status_snapshot(manifest, history, host, now=now)
-    text = render_map_update_status(manifest, history, now=now)
-
     text_target = host.paths.publish_root / STATUS_FILENAME
     json_target = host.paths.publish_root / STATUS_JSON_FILENAME
-    _atomic_write(text_target, text.encode("utf-8"))
+
+    _atomic_write(text_target, _render_snapshot_text(snapshot).encode("utf-8"))
     json_payload = json.dumps(
-        {
-            **snapshot,
-            "products": sorted(
-                (
-                    row
-                    for row in snapshot["products"]  # type: ignore[index]
-                    if isinstance(row, Mapping) and row.get("web_visible") is True
-                ),
-                key=lambda row: (int(row["web_order"]), str(row["title"]).casefold()),
-            ),
-        },
+        _public_json(snapshot),
         ensure_ascii=False,
         indent=2,
         sort_keys=False,
