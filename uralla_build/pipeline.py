@@ -12,6 +12,7 @@ from pathlib import PurePosixPath
 from typing import Callable, Iterator, Mapping, Sequence
 
 from .errors import StageError
+from .map_recipe import map_recipe_from_manifest_file
 from .runner import StageResult, StageRunner
 
 
@@ -126,9 +127,14 @@ class PipelineRunner:
         if not callable(stages) and not stages:
             raise StageError("product pipeline must contain at least one stage")
 
+        build_metadata = dict(metadata or {})
+        manifest_path = build_metadata.get("manifest")
+        if build_id is None and "map_recipe" not in build_metadata and isinstance(manifest_path, str):
+            build_metadata["map_recipe"] = map_recipe_from_manifest_file(product, manifest_path)
+
         with exclusive_product_lock(self.runner.work_root, product):
             with _PipelineResourceLease(self.runner.work_root) as resources:
-                identifier = build_id or self.runner.create_build(product, metadata)
+                identifier = build_id or self.runner.create_build(product, build_metadata)
                 build = self.runner.history.get_build(identifier)
                 if build is None:
                     raise StageError(f"unknown build id: {identifier}")
