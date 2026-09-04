@@ -9,6 +9,7 @@ from uralla_build.road_density import THRESHOLDS, road_density_class
 from uralla_build.road_density_analysis import (
     ANALYSIS_KIND,
     SCHEMA_VERSION,
+    _dense_components,
     load_road_density_analysis,
     save_road_density_analysis,
 )
@@ -23,10 +24,11 @@ class RoadDensityAnalysisTests(unittest.TestCase):
                 "kind": ANALYSIS_KIND,
                 "source": {"path": "ural-s.osm.pbf"},
                 "parameters": {},
-                "stats": {"tagged_ways": 2},
+                "stats": {"tagged_ways": 3, "kept_ways": 1},
                 "ways": {
                     "16879369": ["service", "very_dense"],
                     "13796096": ["residential", "dense"],
+                    "13796097": ["residential", "keep"],
                 },
             }
 
@@ -50,6 +52,34 @@ class RoadDensityAnalysisTests(unittest.TestCase):
 
             with self.assertRaises(StageError):
                 load_road_density_analysis(path)
+
+    def test_schema_v3_rejects_v2_artifact(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "old.json.gz"
+            save_road_density_analysis(
+                path,
+                {
+                    "schema_version": 2,
+                    "kind": ANALYSIS_KIND,
+                    "ways": {},
+                },
+            )
+            with self.assertRaisesRegex(StageError, "unsupported road-density"):
+                load_road_density_analysis(path)
+
+    def test_dense_components_connect_diagonals_but_not_other_classes(self) -> None:
+        levels = {
+            ("service", 10, 10): "dense",
+            ("service", 11, 11): "very_dense",
+            ("service", 20, 20): "dense",
+            ("residential", 11, 11): "dense",
+        }
+        components = _dense_components(levels)
+        self.assertEqual(components[("service", 10, 10)], components[("service", 11, 11)])
+        self.assertNotEqual(components[("service", 10, 10)], components[("service", 20, 20)])
+        self.assertNotEqual(
+            components[("service", 11, 11)], components[("residential", 11, 11)]
+        )
 
     def test_density_classes_are_concrete_and_independent(self) -> None:
         expected = {
