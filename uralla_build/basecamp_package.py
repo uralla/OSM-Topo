@@ -61,31 +61,54 @@ if ($Action -eq 'Install') {
     }
 
     $temporary = "$target.installing-$PID"
+    $backup = "$target.previous-$PID"
+    $oldMoved = $false
     try {
         if (Test-Path -LiteralPath $temporary) {
             Remove-Item -LiteralPath $temporary -Recurse -Force
         }
+        if (Test-Path -LiteralPath $backup) {
+            Remove-Item -LiteralPath $backup -Recurse -Force
+        }
 
-        # Copy the complete GMAPI product first. Only replace the installed map
-        # after the new copy has succeeded, so an interrupted copy does not
-        # destroy a previously working installation.
+        # Copy the complete GMAPI product first. Only swap directories after the
+        # copy succeeds, so an interrupted copy cannot damage the installed map.
         Copy-Item -LiteralPath $source.FullName -Destination $temporary -Recurse -Force
 
         if (Test-Path -LiteralPath $target) {
-            Remove-Item -LiteralPath $target -Recurse -Force
+            Move-Item -LiteralPath $target -Destination $backup
+            $oldMoved = $true
         }
-        Move-Item -LiteralPath $temporary -Destination $target
+
+        try {
+            Move-Item -LiteralPath $temporary -Destination $target
+        }
+        catch {
+            if ($oldMoved -and (Test-Path -LiteralPath $backup) -and -not (Test-Path -LiteralPath $target)) {
+                Move-Item -LiteralPath $backup -Destination $target
+                $oldMoved = $false
+            }
+            throw
+        }
+
+        if ($oldMoved -and (Test-Path -LiteralPath $backup)) {
+            Remove-Item -LiteralPath $backup -Recurse -Force
+            $oldMoved = $false
+        }
     }
     finally {
         if (Test-Path -LiteralPath $temporary) {
             Remove-Item -LiteralPath $temporary -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if ($oldMoved -and (Test-Path -LiteralPath $backup) -and -not (Test-Path -LiteralPath $target)) {
+            Move-Item -LiteralPath $backup -Destination $target -ErrorAction SilentlyContinue
         }
     }
 
     Write-Host "Map installed for Garmin BaseCamp:"
     Write-Host $target
     Write-Host 'Restart BaseCamp if it was already running.'
-    Start-Process explorer.exe -ArgumentList $mapsRoot
+    Start-Process explorer.exe -ArgumentList ('"{0}"' -f $mapsRoot)
     exit 0
 }
 
@@ -102,7 +125,7 @@ if (Test-Path -LiteralPath $target) {
 }
 
 if (Test-Path -LiteralPath $mapsRoot) {
-    Start-Process explorer.exe -ArgumentList $mapsRoot
+    Start-Process explorer.exe -ArgumentList ('"{0}"' -f $mapsRoot)
 }
 exit 0
 """
