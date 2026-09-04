@@ -28,48 +28,13 @@ natural=cliff {name "${name}"} [0x6607 resolution 24]
 # No name/elevation label is drawn for these low summits.
 (natural=peak | natural=hill) & ele < 200 [0x6615 resolution 24]
 
-# Static catalogue enrichment from the semantic preprocessor.
-uralla:peak_landmark=yes {add note=great-peak}
-
-natural=peak & name='Ослянка'
-| natural=peak & name='Конжаковский Камень'
-| natural=peak & name='Большой Иремель'
-| natural=peak & name='Ямантау' & wikidata=Q1514176
-| natural=volcano & name='Эльбрус Западный'
-| natural=peak & name='Фишт'
-| natural=volcano & name:ru='Казбек'
-| natural=peak & name='Юдычвумчорр'
-| natural=peak & name='Белуха'
-| natural=peak & name='пик Семенова-Тян-Шанского'
-| natural=peak & name='Талғар шыңы'
-| natural=peak & name='Чок-Тал'
-| natural=peak & name='пик Меридиан'
-| natural=peak & name='Данков чокусу'
-| natural=peak & name='Хан Тәңірі - Хан-Теңири - 汗腾格里峰'
-| natural=peak & name='Сосьвинский'
-| natural=peak & name='Денежкин Камень'
-| natural=peak & name='Отортен'
-| natural=peak & name='Кожимзиз'
-| natural=peak & name='Толпоз-Из'
-| natural=peak & name='Неройка'
-| natural=peak & name='Сабля'
-| natural=peak & name='Манарага'
-| natural=peak & name='Пай-Ер'
-| natural=volcano & name:en='Mount Ararat'
-| natural=peak & name='Райиз' {add note=great-peak}
-
-note=great-peak {name "${name}"} [0x6616 resolution 16-22 continue] 
-note=great-peak & ele=* {name "${name} (${ele} м)"} [0x6616 resolution 23-24]
-note=great-peak & ele!=* {name "${name}"} [0x6616 resolution 23-24]
-
-
-natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name}"} [0x6619 resolution 21-22 continue]
-
+# Distant peak anchors are owned exclusively by inc/peak_priority. Generic named
+# peaks/hills intentionally start only at resolution 23 so nearby secondary
+# summits cannot compete with the curated overview anchors.
 natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 23-24 continue]
 
-# Named summits without an elevation are still useful landmarks. Keep the same
-# LOD/icon hierarchy as named summits with ele=*, but omit the unavailable height.
-(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6619 resolution 21-22 continue]
+# Named summits without an elevation remain useful on close zooms, but do not
+# enter the overview-anchor range.
 (natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6614 resolution 23-24 continue]
 
 natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 23-24 continue]
