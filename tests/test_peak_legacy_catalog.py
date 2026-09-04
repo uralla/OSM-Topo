@@ -61,3 +61,41 @@ def test_unconfirmed_hardcoded_peak_names_remain_explicitly_tracked() -> None:
         "Сабля",
         "Райиз",
     }
+
+
+def test_every_hardcoded_peak_anchor_is_in_catalog_or_pending_inventory() -> None:
+    catalog_text = CATALOG.read_text(encoding="utf-8")
+    pending_text = PENDING.read_text(encoding="utf-8")
+    inventory = catalog_text + "\n" + pending_text
+
+    hardcoded_names = {
+        "Ослянка",
+        "Конжаковский Камень",
+        "Большой Иремель",
+        "Ямантау",
+        "Эльбрус Западный",
+        "Фишт",
+        "Казбек",
+        "Юдычвумчорр",
+        "Белуха",
+        "пик Семенова-Тян-Шанского",
+        "Талғар шыңы",
+        "Чок-Тал",
+        "пик Меридиан",
+        "Данков чокусу",
+        "Хан Тәңірі - Хан-Теңири - 汗腾格里峰",
+        "Сосьвинский",
+        "Денежкин Камень",
+        "Отортен",
+        "Кожимзиз",
+        "Толпоз-Из",
+        "Неройка",
+        "Сабля",
+        "Манарага",
+        "Пай-Ер",
+        "Mount Ararat",
+        "Райиз",
+    }
+
+    missing = sorted(name for name in hardcoded_names if name not in inventory)
+    assert missing == []
