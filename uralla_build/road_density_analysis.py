@@ -27,12 +27,14 @@ from .road_density import (
 )
 
 # v2 changed density class semantics from broad local/track/trail families to
-# concrete same-class road networks. v3 adds a deterministic representative
-# "keep" hint for each connected dense cluster, so decluttering cannot erase
-# an entire same-class branch from far zooms.
-SCHEMA_VERSION = 3
+# concrete same-class road networks. v3 added one deterministic representative
+# keep per connected dense cluster. v4 keeps a very small node-connected
+# backbone around that representative so split OSM ways do not become isolated
+# far-zoom stubs while dense grids remain strongly decluttered.
+SCHEMA_VERSION = 4
 ANALYSIS_KIND = "road_density"
 _VALID_LEVELS = frozenset({"dense", "very_dense", "keep"})
+BACKBONE_MAX_WAYS = 3
 
 
 def _parameters() -> dict[str, object]:
@@ -40,7 +42,9 @@ def _parameters() -> dict[str, object]:
         "cell_degrees": CELL_DEGREES,
         "segment_sample_metres": SEGMENT_SAMPLE_METRES,
         "way_dense_share": WAY_DENSE_SHARE,
-        "representative_keep": "one per connected dense same-class cell cluster",
+        "representative_keep": (
+            f"up to {BACKBONE_MAX_WAYS} node-connected ways per dense same-class cell cluster"
+        ),
         "thresholds": {
             name: {
                 "dense_km_per_km2": value.dense_km_per_km2,
@@ -111,19 +115,67 @@ def _dense_components(
     return result
 
 
+def _way_node_refs(item: object) -> frozenset[int]:
+    """Return OSM node refs so backbone continuation uses real road connectivity."""
+
+    nodes = getattr(item, "nodes", None)
+    if nodes is None:
+        return frozenset()
+    result: set[int] = set()
+    try:
+        for node_ref in nodes:
+            ref = getattr(node_ref, "ref", None)
+            if ref is not None:
+                result.add(int(ref))
+    except (TypeError, ValueError):
+        return frozenset()
+    return frozenset(result)
+
+
+def _select_connected_backbone(
+    candidates: list[tuple[tuple[float, int, float, int], int, frozenset[int]]],
+    *,
+    limit: int = BACKBONE_MAX_WAYS,
+) -> set[int]:
+    """Keep the best way plus a tiny chain of ways connected by shared OSM nodes."""
+
+    if not candidates or limit <= 0:
+        return set()
+
+    remaining = list(candidates)
+    seed = max(remaining, key=lambda candidate: candidate[0])
+    remaining.remove(seed)
+    keep_ids = {seed[1]}
+    connected_nodes = set(seed[2])
+
+    while remaining and len(keep_ids) < limit and connected_nodes:
+        connected = [candidate for candidate in remaining if candidate[2] & connected_nodes]
+        if not connected:
+            break
+        chosen = max(connected, key=lambda candidate: candidate[0])
+        remaining.remove(chosen)
+        keep_ids.add(chosen[1])
+        connected_nodes.update(chosen[2])
+
+    return keep_ids
+
+
 def _representative_keep_ids(
     source: Path,
     osmium: Any,
     levels: Mapping[tuple[str, int, int], str],
 ) -> tuple[dict[int, tuple[str, str]], set[int], Counter[tuple[str, str]]]:
-    """Classify dense ways and keep one deterministic stem per dense cluster."""
+    """Classify dense ways and keep a small connected backbone per dense cluster."""
 
     components = _dense_components(levels)
     raw: dict[int, tuple[str, str]] = {}
     tagged: Counter[tuple[str, str]] = Counter()
-    # (class, component) -> (rank, way_id). Rank prefers the greatest length
-    # inside the component, then a named road, then total length, then lower OSM id.
-    best: dict[tuple[str, int], tuple[tuple[float, int, float, int], int]] = {}
+    # (class, component) -> candidates. Rank prefers the greatest length inside
+    # the component, then a named road, then total length, then lower OSM id.
+    candidates: dict[
+        tuple[str, int],
+        list[tuple[tuple[float, int, float, int], int, frozenset[int]]],
+    ] = defaultdict(list)
 
     for item in osmium.FileProcessor(str(source)).with_locations():
         tags = _tags_dict(item.tags)
@@ -148,14 +200,15 @@ def _representative_keep_ids(
                 by_component[component_id] += metres
 
         named = 1 if bool(tags.get("name")) else 0
+        node_refs = _way_node_refs(item)
         for component_id, overlap_metres in by_component.items():
             rank = (overlap_metres, named, total_metres, -way_id)
-            key = (render_class, component_id)
-            current = best.get(key)
-            if current is None or rank > current[0]:
-                best[key] = (rank, way_id)
+            candidates[(render_class, component_id)].append((rank, way_id, node_refs))
 
-    keep_ids = {way_id for _rank, way_id in best.values()}
+    keep_ids: set[int] = set()
+    for component_candidates in candidates.values():
+        keep_ids.update(_select_connected_backbone(component_candidates))
+
     for way_id, (render_class, level) in raw.items():
         final_level = "keep" if way_id in keep_ids else level
         raw[way_id] = (render_class, final_level)
@@ -207,7 +260,7 @@ def analyze_road_density(
     if reporter is not None:
         reporter(
             f"Road-density analysis saved; hints {len(ways):,}; "
-            f"representative keeps {len(keep_ids):,}"
+            f"backbone keeps {len(keep_ids):,}"
         )
     return stats
 
