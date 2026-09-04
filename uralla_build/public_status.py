@@ -1,18 +1,26 @@
-"""Public human-readable map update schedule derived from manifest/history/scheduler."""
+"""Public map update status derived from manifest/history/scheduler."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Mapping
 from uuid import uuid4
 
 from .history import HistoryStore
 from .host import HostConfig
+from .publish import gmapi_zip_name
 from .scheduler import QueueItem, build_queue
 
 STATUS_FILENAME = "map-update-status.txt"
+STATUS_JSON_FILENAME = "map-update-status.json"
+STATUS_JSON_SCHEMA_VERSION = 1
+_STATUS_NOTE = (
+    "Время следующего обновления ориентировочное: очередь может сдвигаться из-за "
+    "длительности сборок, обновления исходных OSM-данных, ручного приоритета или ошибки."
+)
 
 
 def _parse_timestamp(value: str | None) -> datetime | None:
@@ -22,6 +30,13 @@ def _parse_timestamp(value: str | None) -> datetime | None:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
+
+
+def _iso_timestamp(value: str | None) -> str | None:
+    parsed = _parse_timestamp(value)
+    if parsed is None:
+        return None
+    return parsed.isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _format_timestamp(value: str | None) -> str:
@@ -50,6 +65,11 @@ def _format_delta(seconds: float | None, *, never: bool) -> str:
 
 def _display_name(product_key: str, raw_product: object) -> str:
     if isinstance(raw_product, Mapping):
+        web = raw_product.get("web")
+        if isinstance(web, Mapping):
+            title = web.get("title")
+            if isinstance(title, str) and title.strip():
+                return title.strip()
         names = raw_product.get("names")
         if isinstance(names, Mapping):
             family = names.get("family")
@@ -58,25 +78,110 @@ def _display_name(product_key: str, raw_product: object) -> str:
     return product_key
 
 
-def _state(item: QueueItem | None, latest_status: str | None, *, running: bool) -> str:
+def _web_visible(raw_product: object) -> bool:
+    if not isinstance(raw_product, Mapping):
+        return False
+    web = raw_product.get("web")
+    return isinstance(web, Mapping) and web.get("visible") is True
+
+
+def _web_order(raw_product: object, fallback: int) -> int:
+    if isinstance(raw_product, Mapping):
+        web = raw_product.get("web")
+        if isinstance(web, Mapping):
+            value = web.get("order")
+            if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                return value
+    return fallback
+
+
+def _state_code(item: QueueItem | None, latest_status: str | None, *, running: bool) -> str:
     if running:
-        return "собирается"
+        return "building"
     if latest_status == "failed":
-        return "ошибка"
+        return "error"
     if latest_status == "interrupted":
-        return "прервано"
+        return "interrupted"
     if item is None:
-        return "—"
-    return "ожидает обновления" if item.due else "актуальна"
+        return "unknown"
+    return "due" if item.due else "current"
 
 
-def render_map_update_status(
+_STATE_LABELS = {
+    "building": "собирается",
+    "error": "ошибка",
+    "interrupted": "прервано",
+    "due": "ожидает обновления",
+    "current": "актуальна",
+    "unknown": "—",
+}
+
+
+def _state(item: QueueItem | None, latest_status: str | None, *, running: bool) -> str:
+    return _STATE_LABELS[_state_code(item, latest_status, running=running)]
+
+
+def _relative_public_path(subdir: str, filename: str) -> str:
+    base = PurePosixPath(subdir)
+    if str(base) in {"", "."}:
+        return filename
+    return (base / filename).as_posix()
+
+
+def _artifact_info(root: Path, relative_path: str) -> dict[str, object]:
+    path = root / Path(relative_path)
+    available = path.is_file() and path.stat().st_size > 0
+    return {
+        "filename": path.name,
+        "url": relative_path,
+        "available": available,
+        "size": path.stat().st_size if available else None,
+    }
+
+
+def _schedule_values(
+    raw_product: object,
+    defaults: object,
+    item: QueueItem | None,
+    *,
+    is_running: bool,
+    last_text: str | None,
+    current: datetime,
+) -> tuple[str | None, float | None, bool]:
+    if is_running:
+        # Running products are intentionally absent from scheduler.build_queue,
+        # so reconstruct only their TTL columns from the same manifest values.
+        interval = None
+        if isinstance(raw_product, Mapping):
+            interval = raw_product.get("update_interval_days")
+        if interval is None and isinstance(defaults, Mapping):
+            interval = defaults.get("update_interval_days")
+        if last_text and isinstance(interval, int) and interval > 0:
+            last_dt = _parse_timestamp(last_text)
+            due_at = (
+                last_dt.replace(microsecond=0) + timedelta(days=interval)
+                if last_dt
+                else None
+            )
+            due_text = due_at.isoformat() if due_at is not None else None
+            overdue_seconds = (
+                (current - due_at).total_seconds() if due_at is not None else None
+            )
+            return due_text, overdue_seconds, False
+        return None, None, last_text is None
+    if item is not None:
+        return item.due_at, item.overdue_seconds, item.never_built
+    return None, None, last_text is None
+
+
+def build_public_status_snapshot(
     manifest: Mapping[str, object],
     history: HistoryStore,
+    host: HostConfig | None = None,
     *,
     now: datetime | None = None,
-) -> str:
-    """Render one UTF-8 table from the canonical scheduler/history snapshot."""
+) -> dict[str, object]:
+    """Build the canonical public status snapshot used by TXT and JSON views."""
 
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     last_success = history.latest_success_by_product()
@@ -90,8 +195,8 @@ def render_map_update_status(
     raw_products = products if isinstance(products, Mapping) else {}
     default_enabled = defaults.get("enabled", True) if isinstance(defaults, Mapping) else True
 
-    rows: list[tuple[str, str, str, str, str]] = []
-    for product_key, raw_product in raw_products.items():
+    rows: list[dict[str, object]] = []
+    for manifest_index, (product_key, raw_product) in enumerate(raw_products.items()):
         product = str(product_key)
         if isinstance(raw_product, Mapping) and not raw_product.get("enabled", default_enabled):
             continue
@@ -100,42 +205,81 @@ def render_map_update_status(
         latest_row = latest.get(product, {})
         latest_status = str(latest_row.get("status")) if latest_row else None
         last_text = last_success.get(product)
+        due_text, overdue_seconds, never = _schedule_values(
+            raw_product,
+            defaults,
+            item,
+            is_running=is_running,
+            last_text=last_text,
+            current=current,
+        )
+        state_code = _state_code(item, latest_status, running=is_running)
+        row: dict[str, object] = {
+            "product": product,
+            "title": _display_name(product, raw_product),
+            "web_visible": _web_visible(raw_product),
+            "web_order": _web_order(raw_product, 1_000_000 + manifest_index),
+            "state": state_code,
+            "state_label": _STATE_LABELS[state_code],
+            "last_publication": _iso_timestamp(last_text),
+            "next_update": None if never else _iso_timestamp(due_text),
+            "never_built": never,
+            "overdue_seconds": overdue_seconds,
+        }
 
-        if is_running:
-            # Running products are intentionally absent from scheduler.build_queue,
-            # so reconstruct only their TTL columns from the same manifest values.
-            interval = None
-            if isinstance(raw_product, Mapping):
-                interval = raw_product.get("update_interval_days")
-            if interval is None and isinstance(defaults, Mapping):
-                interval = defaults.get("update_interval_days")
-            if last_text and isinstance(interval, int) and interval > 0:
-                last_dt = _parse_timestamp(last_text)
-                due_at = last_dt.replace(microsecond=0) + timedelta(days=interval) if last_dt else None
-                due_text = due_at.isoformat() if due_at is not None else None
-                overdue_seconds = (current - due_at).total_seconds() if due_at is not None else None
-                never = False
-            else:
-                due_text = None
-                overdue_seconds = None
-                never = last_text is None
-        elif item is not None:
-            due_text = item.due_at
-            overdue_seconds = item.overdue_seconds
-            never = item.never_built
+        if isinstance(raw_product, Mapping):
+            names = raw_product.get("names")
         else:
-            due_text = None
-            overdue_seconds = None
-            never = last_text is None
+            names = None
+        output_img = names.get("output_img") if isinstance(names, Mapping) else None
+        if host is not None and isinstance(output_img, str) and output_img:
+            img_relative = _relative_public_path(host.publication.img_subdir, output_img)
+            basecamp_name = gmapi_zip_name(output_img)
+            basecamp_relative = _relative_public_path(
+                host.publication.gmapi_subdir, basecamp_name
+            )
+            row["img"] = _artifact_info(host.paths.publish_root, img_relative)
+            row["basecamp"] = _artifact_info(host.paths.publish_root, basecamp_relative)
+        rows.append(row)
 
-        next_text = "первая сборка" if never else _format_timestamp(due_text)
+    return {
+        "schema_version": STATUS_JSON_SCHEMA_VERSION,
+        "generated_at": current.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "timezone": "UTC",
+        "note": _STATUS_NOTE,
+        "products": rows,
+    }
+
+
+def render_map_update_status(
+    manifest: Mapping[str, object],
+    history: HistoryStore,
+    *,
+    now: datetime | None = None,
+) -> str:
+    """Render one UTF-8 table from the canonical public status snapshot."""
+
+    snapshot = build_public_status_snapshot(manifest, history, now=now)
+    generated_at = _parse_timestamp(str(snapshot["generated_at"]))
+    rows: list[tuple[str, str, str, str, str]] = []
+    for raw_row in snapshot["products"]:  # type: ignore[index]
+        row = raw_row if isinstance(raw_row, Mapping) else {}
+        never = bool(row.get("never_built"))
+        next_update = row.get("next_update")
+        next_text = "первая сборка" if never else _format_timestamp(
+            str(next_update) if next_update else None
+        )
+        overdue = row.get("overdue_seconds")
+        overdue_seconds = float(overdue) if isinstance(overdue, (int, float)) else None
         rows.append(
             (
-                _display_name(product, raw_product),
-                _format_timestamp(last_text),
+                str(row.get("title", "—")),
+                _format_timestamp(
+                    str(row.get("last_publication")) if row.get("last_publication") else None
+                ),
                 next_text,
                 _format_delta(overdue_seconds, never=never),
-                _state(item, latest_status, running=is_running),
+                str(row.get("state_label", "—")),
             )
         )
 
@@ -149,9 +293,10 @@ def render_map_update_status(
         return "  ".join(value.ljust(widths[index]) for index, value in enumerate(values)).rstrip()
 
     separator = "  ".join("─" * width for width in widths)
+    generated_text = generated_at.strftime("%d.%m.%Y %H:%M") if generated_at else "—"
     lines = [
         "Сроки обновления Garmin-карт",
-        f"Сформировано: {current.strftime('%d.%m.%Y %H:%M')} UTC",
+        f"Сформировано: {generated_text} UTC",
         "Время следующего обновления ориентировочное: очередь может сдвигаться из-за длительности сборок,",
         "обновления исходных OSM-данных, ручного приоритета или ошибки.",
         "",
@@ -163,24 +308,48 @@ def render_map_update_status(
     return "\n".join(lines)
 
 
+def _atomic_write(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{uuid4().hex}.partial")
+    try:
+        temporary.write_bytes(payload)
+        with temporary.open("rb") as handle:
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def write_map_update_status(
     manifest: Mapping[str, object],
     host: HostConfig,
     *,
     now: datetime | None = None,
 ) -> Path:
-    """Atomically replace output/map-update-status.txt."""
+    """Atomically replace public TXT and JSON status files."""
 
     history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
-    target = host.paths.publish_root / STATUS_FILENAME
-    target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_name(f".{target.name}.{uuid4().hex}.partial")
+    snapshot = build_public_status_snapshot(manifest, history, host, now=now)
     text = render_map_update_status(manifest, history, now=now)
-    try:
-        temporary.write_text(text, encoding="utf-8")
-        with temporary.open("rb") as handle:
-            os.fsync(handle.fileno())
-        os.replace(temporary, target)
-    finally:
-        temporary.unlink(missing_ok=True)
-    return target
+
+    text_target = host.paths.publish_root / STATUS_FILENAME
+    json_target = host.paths.publish_root / STATUS_JSON_FILENAME
+    _atomic_write(text_target, text.encode("utf-8"))
+    json_payload = json.dumps(
+        {
+            **snapshot,
+            "products": sorted(
+                (
+                    row
+                    for row in snapshot["products"]  # type: ignore[index]
+                    if isinstance(row, Mapping) and row.get("web_visible") is True
+                ),
+                key=lambda row: (int(row["web_order"]), str(row["title"]).casefold()),
+            ),
+        },
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=False,
+    ) + "\n"
+    _atomic_write(json_target, json_payload.encode("utf-8"))
+    return text_target
