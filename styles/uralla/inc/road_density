@@ -49,10 +49,9 @@ highway=service & service!=alley & service!=driveway & oneway=yes & (uralla:road
 highway=service & service!=alley & service!=driveway & oneway!=yes & (uralla:road_density=dense | uralla:road_density=very_dense) [0x0d road_class=0 road_speed=2 resolution 24]
 
 # ---------------------------------------------------------------------------
-# Tracks. grade1 normally spans 21-23 + close carrier 24; other tracks span
-# 22-23 + close carrier 24. Track is still density-managed because OSM sometimes
-# contains complete grids of future-settlement/field tracks which survive the
-# ordinary length filter and clutter overview zooms.
+# Tracks. Dense/very-dense clusters are still strongly suppressed here. Sparse
+# and explicitly kept tracks are handled later in this include without a raw
+# per-way length threshold so an OSM road split into short ways stays continuous.
 # ---------------------------------------------------------------------------
 highway=track & tracktype=grade1 & uralla:road_density=dense & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 22-23 continue]
 highway=track & tracktype=grade1 & uralla:road_density=dense [0x0a road_class=0 road_speed=1 resolution 24]
@@ -62,6 +61,22 @@ highway=track & tracktype=grade1 & uralla:road_density=very_dense [0x0a road_cla
 highway=track & tracktype!=grade1 & uralla:road_density=dense & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 23-23 continue]
 highway=track & tracktype!=grade1 & uralla:road_density=dense [0x13 road_class=0 road_speed=1 resolution 24]
 highway=track & tracktype!=grade1 & uralla:road_density=very_dense [0x13 road_class=0 road_speed=1 resolution 24]
+
+# Marked tracks keep their one-resolution overview priority, but no longer require
+# each individual OSM way to exceed 100 m. The close carrier consumes the way so
+# the legacy track block later in ../lines cannot duplicate it.
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 {add mkgmap:display_name = '${name}'} [0x12 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=2 resolution 23-24]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 {add mkgmap:display_name = '${name}'} [0x07 resolution 20-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=2 resolution 23-24]
+
+# Any track reaching this point is sparse, unclassified by density, or selected
+# as a v5 backbone keep. Do not apply length()>100 here: density already protects
+# busy grids, while sparse forest-road continuity is more useful than way-length pruning.
+highway=track & tracktype!=grade1 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]
+highway=track & tracktype=grade1 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]
+highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=1 resolution 24]
+highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]
 
 # highway=road is included in density accounting so it cannot inflate another
 # class, but its generic rendering is already close-only (resolution 24), so a
