@@ -285,6 +285,30 @@ def validate_manifest(data: Mapping[str, Any]) -> list[ValidationIssue]:
                 else:
                     seen_output_img[folded] = key
 
+        web = _mapping(product.get("web"))
+        if "web" in product and web is None:
+            issues.append(ValidationIssue(f"{location}.web", "must be a mapping"))
+        elif web is not None:
+            visible = web.get("visible", False)
+            if not isinstance(visible, bool):
+                issues.append(ValidationIssue(f"{location}.web.visible", "must be a boolean"))
+            title = web.get("title")
+            if title is not None and (not isinstance(title, str) or not title.strip()):
+                issues.append(ValidationIssue(f"{location}.web.title", "must be a non-empty string"))
+            if visible is True and (not isinstance(title, str) or not title.strip()):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.web.title", "is required when web.visible is true"
+                    )
+                )
+            order = web.get("order")
+            if order is not None and not _valid_non_negative_int(order):
+                issues.append(
+                    ValidationIssue(
+                        f"{location}.web.order", "must be a non-negative integer"
+                    )
+                )
+
         splitter = _mapping(product.get("splitter"))
         if splitter is None:
             issues.append(ValidationIssue(f"{location}.splitter", "must be a mapping"))
