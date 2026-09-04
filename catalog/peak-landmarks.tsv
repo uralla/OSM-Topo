@@ -1,5 +1,6 @@
 # Static landmark catalogue for distant-zoom peaks and volcanoes.
-# Matching is by wikidata=Q... only. Names are for human review.
+# Matching is by wikidata=Q... only. Names are for human review and retain
+# legacy style aliases so the manual anchor inventory can be audited directly.
 # This file is intentionally maintained manually and may be refreshed infrequently.
 # Existing hard-coded style rules remain authoritative until catalogue integration is visually validated.
 #
@@ -8,22 +9,22 @@ Q919151	Ослянка	legacy
 Q4230794	Конжаковский Камень	legacy
 Q2669289	Большой Иремель	legacy
 Q1514176	Ямантау	legacy
-Q43105	Эльбрус	legacy
+Q43105	Эльбрус / Эльбрус Западный	legacy
 Q2392222	Фишт	legacy
 Q207680	Казбек	legacy
 Q167044	Юдычвумчорр	legacy
 Q724367	Белуха	legacy
 Q20619813	пик Семенова-Тян-Шанского	legacy
-Q608494	Талгар	legacy
+Q608494	Талгар / Талғар шыңы	legacy
 Q13174519	Чок-Тал	legacy
 Q20625014	Пик Данкова / Данков чокусу	legacy
-Q211529	Хан-Тенгри	legacy
+Q211529	Хан-Тенгри / Хан Тәңірі - Хан-Теңири - 汗腾格里峰	legacy
 Q4429818	Сосьвинский Камень / Сосьвинский	legacy
 Q2709826	Денежкин Камень	legacy
 Q4339903	Отортен	legacy
 Q1963840	Манарага	legacy
 Q4342241	Пай-Ер / Пайер	legacy
-Q72303	Арарат	legacy
+Q72303	Арарат / Mount Ararat	legacy
 Q513	Эверест	extended
 Q43512	K2	extended
 Q82019	Канченджанга	extended
