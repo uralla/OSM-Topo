@@ -12,6 +12,7 @@ from typing import Mapping
 from uuid import uuid4
 import zipfile
 
+from .basecamp_package import basecamp_installer_files
 from .errors import StageError
 from .host import HostConfig, validate_host_config
 
@@ -38,6 +39,8 @@ def gmapi_zip_name(output_img: str) -> str:
     name = Path(output_img).name
     if not name.lower().endswith(".img"):
         raise StageError(f"output_img must end in .img: {output_img!r}")
+    # Keep the legacy public filename so existing download links remain valid.
+    # The archive itself is now a BaseCamp-oriented GMAPI package.
     return f"{name[:-4]}-ms.zip"
 
 
@@ -98,6 +101,8 @@ def _validate_img(path: Path) -> None:
 def _gmapi_files(source: Path) -> list[Path]:
     if not source.is_dir():
         raise StageError(f"GMAPI source directory is missing: {source}")
+    if not source.name.lower().endswith(".gmap"):
+        raise StageError(f"GMAPI source directory must end in .gmap: {source}")
     files: list[Path] = []
     for entry in sorted(source.rglob("*")):
         if entry.is_symlink():
@@ -111,12 +116,20 @@ def _gmapi_files(source: Path) -> list[Path]:
 
 def _write_store_zip(source: Path, target: Path) -> None:
     files = _gmapi_files(source)
+    installer_files = basecamp_installer_files(source.name)
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
         for path in files:
             archive.write(path, (Path(source.name) / path.relative_to(source)).as_posix())
+        for name, payload in installer_files.items():
+            archive.writestr(name, payload, compress_type=zipfile.ZIP_STORED)
     with zipfile.ZipFile(target, "r") as archive:
         if archive.testzip() is not None:
             raise StageError(f"GMAPI ZIP validation failed: {target}")
+        names = set(archive.namelist())
+        required = set(installer_files)
+        if not required.issubset(names):
+            missing = ", ".join(sorted(required - names))
+            raise StageError(f"GMAPI ZIP is missing BaseCamp installer files: {missing}")
         if not archive.infolist() or any(
             item.compress_type != zipfile.ZIP_STORED for item in archive.infolist()
         ):
