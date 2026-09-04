@@ -42,12 +42,12 @@ Type=0x10f0b,5
 Type=0x10f10,5
 Type=0x10f17,5
 Type=0x007,6
-Type=0x00e,7
 Type=0x01a,6
 Type=0x10612,6
 Type=0x10f0c,6
 Type=0x005,7
 Type=0x006,7
+Type=0x00e,7
 Type=0x04d,7
 Type=0x050,7
 Type=0x10100,7
@@ -75,10 +75,10 @@ Type=0x03f,9
 Type=0x004,10
 Type=0x016,10
 Type=0x054,10
-Type=0x10f18,10
 Type=0x061,10
 Type=0x062,10
 Type=0x10102,10
+Type=0x10f18,10
 Type=0x1171d,10
 Type=0x013,11
 Type=0x10f11,11
@@ -2414,6 +2414,22 @@ ContourColor=No
 
 
 [_line]
+Type=0x08
+;GRMN_TYPE: Roads/LOW_SPEED_RAMP/Highway ramp which is to be driven at low speeds/Non NT, NT
+UseOrientation=N
+LineWidth=7
+Xpm="0 0 1 0"
+"1 c #626262"
+String1=0x19,туннель
+String2=0x04,tunnel
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+[end]
+
+
+[_line]
 Type=0x0a
 ;GRMN_TYPE: Roads/UNPAVED_ROAD/Gravel or dirt road/Non NT, NT
 UseOrientation=N
@@ -2652,7 +2668,7 @@ ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
-[end] 
+[end]
 
 
 [_line]
@@ -2676,13 +2692,13 @@ ContourColor=No
 [_line]
 Type=0x1d
 ;GRMN_TYPE: Political Borders/MNR_PLTCL_BDRY/Minor political boundary (typically used for county/parish borders)
-UseOrientation=Y
+UseOrientation=N
 Xpm="32 3 2  1"
-"! c #000000"
+"! c #626262"
 "  c none"
-"!    !  !    !  !    !  !    !  "
+"        !    !          !    !  "
 "!!!!!!  !!!!!!  !!!!!!  !!!!!!  "
-"!    !  !    !  !    !  !    !  "
+"!    !          !    !          "
 ;12345678901234567890123456789012
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3256,22 +3272,6 @@ Xpm="32 12 2  1"
 ;12345678901234567890123456789012
 String1=0x19,овраг
 String2=0x1F,gully
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-[end]
-
-
-[_line]
-Type=0x08
-;GRMN_TYPE: Customizable Line Types/CUSTOMIZABLE_LINE_5/Non-routable customizable line/Non NT, NT
-UseOrientation=N
-LineWidth=7
-Xpm="0 0 1 0"
-"1 c #626262"
-String1=0x19,туннель
-String2=0x04,tunnel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -6522,6 +6522,38 @@ DayXpm="13 13 4 1"   Colormode=16
 
 [_point]
 Type=0x064
+SubType=0x09
+;GRMN_TYPE: Geographical Named Points of Interest/LEVEE/Levee/Non NT, NT
+String1=0x19,тура
+String2=0x04,cairn
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="13 13 4 1"   Colormode=16
+"!	c #202020"
+"#	c #6F6F6F"
+"%	c #B5B5B5"
+"  	c none"
+"             "
+"      !!     "
+"     !%%!    "
+"    !%%%%!   "
+"     !!!!    "
+"    !####!   "
+"   !######!  "
+"    !!!!!!   "
+"   !%%%%%%!  "
+"  !%%%%%%%%! "
+" !!!!!!!!!!! "
+"             "
+"             "
+;1234567890123
+[end]
+
+
+[_point]
+Type=0x064
 SubType=0x0a
 ;GRMN_TYPE: Geographical Named Points of Interest/LOCALE/Locale/Non NT, NT
 String1=0x19,перевал
@@ -8168,40 +8200,7 @@ DayXpm="8 7 3 1"   Colormode=16
 "!######!"
 "!!!!!!!!"
 ;12345678
-[end]  !!!!  "
-"   !!   "
-"   !!   "
-"   !!   "
-"   !!   "
-"   !!   "
-;12345678
-[end]
-
-;===================== TOPO MARKERS =====================
-
-[_point]
-Type=0x064
-SubType=0x09
-; CUSTOM: cairn / stone navigation marker
-String1=0x19,тура
-String2=0x04,cairn
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="13 13 4 1"   Colormode=16
-"!	c #202020"
-"#	c #6F6F6F"
-"%	c #B5B5B5"
-"  	c none"
-"             "
-"      !!     "
-"     !%%!    "
-"    !%%%%!   "
-"     !!!!    "
-"    !####!   "
-"   !######!  "
-"    !!!!!!   "
+[end]   !!!!!!   "
 "   !%%%%%%!  "
 "  !%%%%%%%%! "
 " !!!!!!!!!!! "
