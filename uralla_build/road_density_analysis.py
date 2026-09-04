@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from datetime import datetime, timezone
 import gzip
 import json
@@ -28,13 +28,12 @@ from .road_density import (
 
 # v2 changed density class semantics from broad local/track/trail families to
 # concrete same-class road networks. v3 added one deterministic representative
-# keep per connected dense cluster. v4 keeps a very small node-connected
-# backbone around that representative so split OSM ways do not become isolated
-# far-zoom stubs while dense grids remain strongly decluttered.
-SCHEMA_VERSION = 4
+# keep per connected dense cluster. v4 kept up to three connected ways. v5
+# follows the complete unambiguous endpoint-connected trunk from the best seed
+# and stops when a real branch offers more than one continuation.
+SCHEMA_VERSION = 5
 ANALYSIS_KIND = "road_density"
 _VALID_LEVELS = frozenset({"dense", "very_dense", "keep"})
-BACKBONE_MAX_WAYS = 3
 
 
 def _parameters() -> dict[str, object]:
@@ -42,9 +41,7 @@ def _parameters() -> dict[str, object]:
         "cell_degrees": CELL_DEGREES,
         "segment_sample_metres": SEGMENT_SAMPLE_METRES,
         "way_dense_share": WAY_DENSE_SHARE,
-        "representative_keep": (
-            f"up to {BACKBONE_MAX_WAYS} node-connected ways per dense same-class cell cluster"
-        ),
+        "representative_keep": "unambiguous endpoint-connected trunk from best seed; stop at branches",
         "thresholds": {
             name: {
                 "dense_km_per_km2": value.dense_km_per_km2,
@@ -115,47 +112,59 @@ def _dense_components(
     return result
 
 
-def _way_node_refs(item: object) -> frozenset[int]:
-    """Return OSM node refs so backbone continuation uses real road connectivity."""
+def _way_endpoint_refs(item: object) -> frozenset[int]:
+    """Return only first/last OSM node refs used for linear continuation."""
 
     nodes = getattr(item, "nodes", None)
     if nodes is None:
         return frozenset()
-    result: set[int] = set()
     try:
-        for node_ref in nodes:
-            ref = getattr(node_ref, "ref", None)
-            if ref is not None:
-                result.add(int(ref))
+        refs = [int(node_ref.ref) for node_ref in nodes if getattr(node_ref, "ref", None) is not None]
     except (TypeError, ValueError):
         return frozenset()
-    return frozenset(result)
+    if not refs:
+        return frozenset()
+    return frozenset((refs[0], refs[-1]))
 
 
 def _select_connected_backbone(
     candidates: list[tuple[tuple[float, int, float, int], int, frozenset[int]]],
-    *,
-    limit: int = BACKBONE_MAX_WAYS,
 ) -> set[int]:
-    """Keep the best way plus a tiny chain of ways connected by shared OSM nodes."""
+    """Keep the best way and follow every unambiguous endpoint continuation.
 
-    if not candidates or limit <= 0:
+    A long road may be split into any number of OSM ways. We therefore do not
+    cap the number of kept ways. At an endpoint with exactly one unused
+    continuation the trunk continues; at a real branch (two or more unused
+    continuations) expansion stops so a dense grid cannot be restored wholesale.
+    """
+
+    if not candidates:
         return set()
 
-    remaining = list(candidates)
-    seed = max(remaining, key=lambda candidate: candidate[0])
-    remaining.remove(seed)
+    seed = max(candidates, key=lambda candidate: candidate[0])
     keep_ids = {seed[1]}
-    connected_nodes = set(seed[2])
+    by_node: dict[int, list[tuple[tuple[float, int, float, int], int, frozenset[int]]]] = defaultdict(list)
+    for candidate in candidates:
+        for node_ref in candidate[2]:
+            by_node[node_ref].append(candidate)
 
-    while remaining and len(keep_ids) < limit and connected_nodes:
-        connected = [candidate for candidate in remaining if candidate[2] & connected_nodes]
-        if not connected:
-            break
-        chosen = max(connected, key=lambda candidate: candidate[0])
-        remaining.remove(chosen)
+    frontier = deque(seed[2])
+    visited_nodes: set[int] = set()
+    while frontier:
+        node_ref = frontier.popleft()
+        if node_ref in visited_nodes:
+            continue
+        visited_nodes.add(node_ref)
+
+        unused = [candidate for candidate in by_node[node_ref] if candidate[1] not in keep_ids]
+        if len(unused) != 1:
+            continue
+
+        chosen = unused[0]
         keep_ids.add(chosen[1])
-        connected_nodes.update(chosen[2])
+        for endpoint in chosen[2]:
+            if endpoint != node_ref and endpoint not in visited_nodes:
+                frontier.append(endpoint)
 
     return keep_ids
 
@@ -165,13 +174,11 @@ def _representative_keep_ids(
     osmium: Any,
     levels: Mapping[tuple[str, int, int], str],
 ) -> tuple[dict[int, tuple[str, str]], set[int], Counter[tuple[str, str]]]:
-    """Classify dense ways and keep a small connected backbone per dense cluster."""
+    """Classify dense ways and keep an unambiguous connected trunk per cluster."""
 
     components = _dense_components(levels)
     raw: dict[int, tuple[str, str]] = {}
     tagged: Counter[tuple[str, str]] = Counter()
-    # (class, component) -> candidates. Rank prefers the greatest length inside
-    # the component, then a named road, then total length, then lower OSM id.
     candidates: dict[
         tuple[str, int],
         list[tuple[tuple[float, int, float, int], int, frozenset[int]]],
@@ -200,10 +207,10 @@ def _representative_keep_ids(
                 by_component[component_id] += metres
 
         named = 1 if bool(tags.get("name")) else 0
-        node_refs = _way_node_refs(item)
+        endpoint_refs = _way_endpoint_refs(item)
         for component_id, overlap_metres in by_component.items():
             rank = (overlap_metres, named, total_metres, -way_id)
-            candidates[(render_class, component_id)].append((rank, way_id, node_refs))
+            candidates[(render_class, component_id)].append((rank, way_id, endpoint_refs))
 
     keep_ids: set[int] = set()
     for component_candidates in candidates.values():
