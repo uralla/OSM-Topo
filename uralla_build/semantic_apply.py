@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from .errors import StageError
 from .kite import enrich_kite_tags
+from .peak_landmark_ids import enrich_peak_landmark_item, load_peak_landmark_node_ids
 from .preprocessor import (
     DEFAULT_PEAK_CATALOG,
     DISPLAY_LABEL_TAG,
@@ -21,7 +22,6 @@ from .preprocessor import (
     _progress,
     enrich_geographic_label_tags,
     enrich_long_name_tags,
-    enrich_peak_landmark_tags,
     enrich_place_admin_tags,
     filter_tags,
     load_blacklist_rules,
@@ -77,6 +77,7 @@ class SemanticTransformer:
     ) -> None:
         self.rules = load_blacklist_rules(config_path, profile_names)
         self.peak_landmarks = load_peak_landmarks(peak_catalog_path)
+        self.peak_landmark_nodes = load_peak_landmark_node_ids(peak_catalog_path)
         self.river_landmarks = load_river_landmarks(river_catalog_path)
         self.counters: Counter[str] = Counter()
         self.rule_hits: Counter[str] = Counter()
@@ -112,7 +113,12 @@ class SemanticTransformer:
         final_tags, changed = enrich_kite_tags(final_tags)
         if changed:
             self.counters["kite_infrastructure_enriched"] += 1
-        final_tags, changed = enrich_peak_landmark_tags(final_tags, self.peak_landmarks)
+        final_tags, changed = enrich_peak_landmark_item(
+            item,
+            final_tags,
+            self.peak_landmarks,
+            self.peak_landmark_nodes,
+        )
         if changed:
             self.counters["peak_landmarks_enriched"] += 1
         before_label = final_tags.get(DISPLAY_LABEL_TAG)
