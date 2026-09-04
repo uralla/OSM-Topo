@@ -1,13 +1,14 @@
 # Static landmark catalogue for distant-zoom peaks and volcanoes.
-# Matching is by wikidata=Q... only. Names are for human review and retain
-# legacy style aliases so the manual anchor inventory can be audited directly.
+# Matching uses wikidata=Q... and, where a stable OSM object is explicitly recorded,
+# that exact object reference. Names are for human review and retain legacy style
+# aliases so the manual anchor inventory can be audited directly.
 # This file is intentionally maintained manually and may be refreshed infrequently.
 # Existing hard-coded style rules remain authoritative until catalogue integration is visually validated.
 #
-# qid	name	origin
+# qid	name	origin	osm_ref
 Q919151	Ослянка	legacy
 Q4230794	Конжаковский Камень	legacy
-Q2669289	Большой Иремель	legacy
+Q2669289	Большой Иремель	legacy	node/365668953
 Q1514176	Ямантау	legacy
 Q43105	Эльбрус / Эльбрус Западный	legacy
 Q2392222	Фишт	legacy
