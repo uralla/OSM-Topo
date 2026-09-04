@@ -40,12 +40,16 @@ from .poi_context import (
 )
 from .poi_lod import POI_LOD_CLASS_TAG
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 ANALYSIS_KIND = "poi_context"
+SMALL_SETTLEMENT_VALUES = frozenset(
+    {"village", "hamlet", "isolated_dwelling", "locality", "farm"}
+)
 
 # Keys that determine whether a cached context result is still semantically safe
 # to apply to a newer OSM object. Names deliberately do not participate: a rename
-# should not invalidate density/context classification.
+# should not invalidate density/context classification. Place/population do matter
+# for settlement LOD because they determine its visual priority.
 _SIGNATURE_KEYS = (
     "amenity",
     "shop",
@@ -62,6 +66,8 @@ _SIGNATURE_KEYS = (
     "brand",
     "operator",
     "craft",
+    "place",
+    "population",
 )
 
 _CONTEXT_TAGS = frozenset(
@@ -108,8 +114,14 @@ def _is_antenna(tags: Mapping[str, str]) -> bool:
     return tags.get("man_made") == "antenna"
 
 
+def _is_small_settlement(tags: Mapping[str, str]) -> bool:
+    if tags.get("place") not in SMALL_SETTLEMENT_VALUES:
+        return False
+    return bool(tags.get("name") or tags.get("name:ru"))
+
+
 def _is_adaptive(tags: Mapping[str, str]) -> bool:
-    return _is_antenna(tags) or any(
+    return _is_antenna(tags) or _is_small_settlement(tags) or any(
         predicate(tags)
         for predicate in (
             is_food_shop,
@@ -170,11 +182,10 @@ def _enrich_one(item: object, tags: dict[str, str], indexes: Any, activity_thres
     ):
         result, _, _ = enrich_outdoor_context(item, result, index, kind=kind)
 
-    # Antennas are numerous in cities but valuable landmarks in sparse terrain.
-    # They join the universal activity/screen-pressure H/M/L model without an
-    # intrinsic promotion: urban/common -> L, sparse context -> M, remote and
-    # visually isolated locations can rise to H.
-    if _is_antenna(result) and POI_PRIORITY_TAG not in result:
+    # Antennas and small settlements join the universal activity/screen-pressure
+    # model without inventing a separate density engine. Settlement style consumes
+    # screen pressure directly; population remains an independent priority signal.
+    if (_is_antenna(result) or _is_small_settlement(result)) and POI_PRIORITY_TAG not in result:
         result[POI_PRIORITY_TAG] = "common"
 
     result, _, _ = enrich_activity_diagnostics(
@@ -230,6 +241,7 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
     activity_thresholds, screen_thresholds = _thresholds(indexes)
     nodes: dict[str, dict[str, object]] = {}
     lod_counts: Counter[str] = Counter()
+    settlement_pressure: Counter[str] = Counter()
     for item in osmium.FileProcessor(str(source)):
         raw = _tags_dict(item.tags)
         if not _is_adaptive(raw):
@@ -242,6 +254,10 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
         lod = hints.get(POI_LOD_CLASS_TAG)
         if lod:
             lod_counts[str(lod)] += 1
+        if _is_small_settlement(raw):
+            pressure = hints.get(POI_SCREEN_PRESSURE_TAG) or enriched.get(POI_SCREEN_PRESSURE_TAG)
+            if pressure:
+                settlement_pressure[str(pressure)] += 1
     stat = source.stat()
     payload: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
@@ -256,17 +272,22 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
             "screen_nodes": indexes.screen_pressure.point_count,
             "hint_nodes": len(nodes),
             "lod": dict(lod_counts),
+            "settlement_pressure": dict(settlement_pressure),
         },
         "nodes": nodes,
     }
     save_poi_context_analysis(output_path, payload)
     if reporter is not None:
-        reporter(f"POI context analysis saved; hint nodes {len(nodes):,}")
+        reporter(
+            f"POI context analysis saved; hint nodes {len(nodes):,}; "
+            f"settlements low={settlement_pressure['low']:,} "
+            f"medium={settlement_pressure['medium']:,} high={settlement_pressure['high']:,}"
+        )
     return payload["stats"]  # type: ignore[return-value]
 
 
 def apply_poi_context_analysis(input_path: str | Path, analysis_path: str | Path, output_path: str | Path, osmium: Any, *, reporter: Any = None) -> dict[str, int]:
-    """Apply cached POI context hints to a fresh PBF in one non-spatial pass."""
+    """Apply cached POI context hints to a fresh PBF in one cheap non-spatial pass."""
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
     if source == target:
