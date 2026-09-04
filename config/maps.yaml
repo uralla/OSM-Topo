@@ -434,7 +434,7 @@ products:
       series: North-Caucasus.OSM
       overview: North-Caucasus.OSM
       description: North-Caucasus_OSM
-      output_img: North-Caucasus-fed-district.img
+      output_img: North-Caucasus.OSM.img
     web:
       title: "Северокавказский федеральный округ"
       order: 50
@@ -548,10 +548,35 @@ products:
     splitter:
       max_nodes: 1000000
 
-  sfo:
+  sak:
+    source: russia
+    update_interval_days: 9
+    polygon: poly/RU-SAK.poly
+    elevation: elevation/RU-SAK.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1017
+      product_id: 1
+      overview_mapnumber: "01017000"
+      first_tile_mapid: "01017001"
+      last_reserved_mapid: "01017999"
+    names:
+      family: topo-sak
+      series: topo-sak
+      overview: topo-sak
+      description: topo-sak
+      output_img: topo-sak.img
+    web:
+      title: "Сахалин и острова"
+      order: 160
+      visible: true
+    splitter:
+      max_nodes: 2000000
+
+  south-fed-district:
     source: russia
     update_interval_days: 7
-    polygon: poly/siberian-fed-district.poly
+    polygon: poly/south-fed-district.poly
     elevation: null
     geonames: input/cities15000.zip
     identity:
@@ -561,15 +586,17 @@ products:
       first_tile_mapid: "10020001"
       last_reserved_mapid: "10029999"
     names:
-      family: Siberian.OSM
-      series: Siberian.OSM
-      overview: Siberian.OSM
-      description: Siberian OSM
-      output_img: Siberian-fed-district.img
+      family: South.OSM
+      series: South.OSM
+      overview: South.OSM
+      description: South_OSM
+      output_img: South-fed-district.img
     web:
-      visible: false
+      title: "Южный федеральный округ"
+      order: 70
+      visible: true
     splitter:
-      max_nodes: 1000000
+      max_nodes: 2000000
 
   turkey:
     source: turkey
@@ -704,34 +731,11 @@ products:
     splitter:
       max_nodes: 1000000
 
-  yamal:
+  zap-sib:
     source: russia
-    update_interval_days: 9
-    polygon: poly/RU-YAN.poly
-    elevation: elevation/RU-YAN.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1017
-      product_id: 1
-      overview_mapnumber: "01017000"
-      first_tile_mapid: "01017001"
-      last_reserved_mapid: "01017999"
-    names:
-      family: topo-yamal
-      series: topo-yamal
-      overview: topo-yamal
-      description: topo-yamal
-      output_img: topo-yamal.img
-    web:
-      visible: false
-    splitter:
-      max_nodes: 1000000
-
-  yakutia:
-    source: russia
-    update_interval_days: 14
-    polygon: poly/RU-SA.poly
-    elevation: elevation/RU-SA.osm.pbf
+    update_interval_days: 7
+    polygon: poly/zap-sib.poly
+    elevation: elevation/zap-sib.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1011
@@ -740,35 +744,16 @@ products:
       first_tile_mapid: "01011001"
       last_reserved_mapid: "01011999"
     names:
-      family: topo-yakutia
-      series: topo-yakutia
-      overview: topo-yakutia
-      description: topo-yakutia
-      output_img: topo-yakutia.img
+      family: topo-zap-sib
+      series: topo-zap-sib
+      overview: topo-zap-sib
+      description: topo-zap-sib
+      output_img: topo-zap-sib.img
     web:
-      visible: false
-    splitter:
-      max_nodes: 2000000
-
-  yugra:
-    source: russia
-    update_interval_days: 9
-    polygon: poly/RU-KHM.poly
-    elevation: elevation/RU-KHM.osm.pbf
-    geonames: input/cities15000.zip
-    identity:
-      family_id: 1018
-      product_id: 1
-      overview_mapnumber: "01018000"
-      first_tile_mapid: "01018001"
-      last_reserved_mapid: "01018999"
-    names:
-      family: topo-yugra
-      series: topo-yugra
-      overview: topo-yugra
-      description: topo-yugra
-      output_img: topo-yugra.img
-    web:
-      visible: false
+      title: "Западная Сибирь"
+      order: 100
+      visible: true
     splitter:
       max_nodes: 1000000
+    mkgmap:
+      dem_dists: 15000
