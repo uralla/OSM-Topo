@@ -20,8 +20,10 @@ from .area_poi_analysis import (
 )
 from .area_pois import write_area_pois
 from .errors import StageError
+from .poi_context_analysis import load_poi_context_analysis
 from .preprocess_pipeline import _renumber_nodes, _report, _sort_pbf
 from .preprocessor import _load_osmium
+from .road_density_analysis import load_road_density_analysis
 from .semantic_apply import SemanticTransformer, apply_semantic_tags
 
 
@@ -113,7 +115,13 @@ def _validate_reusable_analysis(
         raise StageError(
             f"reusable analysis was built for {cached_name}, not {source.name}"
         )
+
+    # Validate every artifact with the same loader used by APPLY.  In auto-reuse
+    # mode a schema change must select a fresh ANALYZE here, not fail later after
+    # the cache has already been announced as reusable.
     validate_area_poi_analysis(area_artifact, source)
+    load_road_density_analysis(road_artifact)
+    load_poi_context_analysis(poi_artifact)
     return payload
 
 
