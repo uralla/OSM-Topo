@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from .history import HistoryStore
 from .host import HostConfig
+from .map_recipe import map_recipe_fingerprint
 from .publish import gmapi_zip_name
 from .scheduler import QueueItem, build_queue
 
@@ -142,6 +143,41 @@ def _artifact_info(root: Path, relative_path: str) -> dict[str, object]:
     }
 
 
+def _latest_success_recipes(history: HistoryStore) -> dict[str, str | None]:
+    with history.connect() as connection:
+        rows = connection.execute(
+            """SELECT b.product, b.metadata_json
+               FROM builds AS b
+               WHERE b.status = 'success'
+                 AND b.finished_at IS NOT NULL
+                 AND b.rowid = (
+                     SELECT b2.rowid FROM builds AS b2
+                     WHERE b2.product = b.product
+                       AND b2.status = 'success'
+                       AND b2.finished_at IS NOT NULL
+                     ORDER BY b2.finished_at DESC, b2.rowid DESC
+                     LIMIT 1
+                 )"""
+        ).fetchall()
+    result: dict[str, str | None] = {}
+    for row in rows:
+        try:
+            metadata = json.loads(str(row["metadata_json"]))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            metadata = {}
+        recipe = metadata.get("map_recipe") if isinstance(metadata, dict) else None
+        result[str(row["product"])] = recipe if isinstance(recipe, str) and recipe else None
+    return result
+
+
+def _recipe_state(current_recipe: str, previous_recipe: str | None, *, never: bool) -> str:
+    if never:
+        return "legacy"
+    if previous_recipe is None:
+        return "legacy"
+    return "current" if previous_recipe == current_recipe else "stale"
+
+
 def _schedule_values(
     raw_product: object,
     defaults: object,
@@ -188,6 +224,7 @@ def build_public_status_snapshot(
 
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     last_success = history.latest_success_by_product()
+    last_recipes = _latest_success_recipes(history)
     running = history.running_products()
     latest = history.latest_build_by_product()
     queue = build_queue(manifest, last_success, running, now=current)
@@ -217,6 +254,7 @@ def build_public_status_snapshot(
             current=current,
         )
         state_code = _state_code(item, latest_status, running=is_running)
+        current_recipe = map_recipe_fingerprint(manifest, product)
         row: dict[str, object] = {
             "product": product,
             "title": _display_name(product, raw_product),
@@ -224,6 +262,7 @@ def build_public_status_snapshot(
             "web_order": _web_order(raw_product, 1_000_000 + manifest_index),
             "state": state_code,
             "state_label": _STATE_LABELS[state_code],
+            "recipe_state": _recipe_state(current_recipe, last_recipes.get(product), never=never),
             "last_publication": _iso_timestamp(last_text),
             "next_update": None if never else _iso_timestamp(due_text),
             "never_built": never,
