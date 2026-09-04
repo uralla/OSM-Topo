@@ -15,6 +15,7 @@ _RECIPE_CODE_FILES = (
     "uralla_build/area_pois.py",
     "uralla_build/build_plan.py",
     "uralla_build/kite.py",
+    "uralla_build/peak_landmark_ids.py",
     "uralla_build/poi_context.py",
     "uralla_build/poi_context_analysis.py",
     "uralla_build/poi_lod.py",
