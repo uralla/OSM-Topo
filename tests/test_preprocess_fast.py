@@ -7,11 +7,21 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from uralla_build.errors import StageError
+from uralla_build.poi_context_analysis import (
+    ANALYSIS_KIND as POI_ANALYSIS_KIND,
+    SCHEMA_VERSION as POI_SCHEMA_VERSION,
+    save_poi_context_analysis,
+)
 from uralla_build.preprocess_fast import (
     ANALYSIS_MANIFEST,
     _source_identity,
     _validate_reusable_analysis,
     _write_analysis_manifest,
+)
+from uralla_build.road_density_analysis import (
+    ANALYSIS_KIND as ROAD_ANALYSIS_KIND,
+    SCHEMA_VERSION as ROAD_SCHEMA_VERSION,
+    save_road_density_analysis,
 )
 
 
@@ -21,8 +31,22 @@ class FastPreprocessReuseTests(unittest.TestCase):
         source.write_bytes(b"test-pbf")
         analysis = root / "analysis"
         analysis.mkdir()
-        (analysis / "road-density.json.gz").write_bytes(b"road")
-        (analysis / "poi-context.json.gz").write_bytes(b"poi")
+        save_road_density_analysis(
+            analysis / "road-density.json.gz",
+            {
+                "schema_version": ROAD_SCHEMA_VERSION,
+                "kind": ROAD_ANALYSIS_KIND,
+                "ways": {},
+            },
+        )
+        save_poi_context_analysis(
+            analysis / "poi-context.json.gz",
+            {
+                "schema_version": POI_SCHEMA_VERSION,
+                "kind": POI_ANALYSIS_KIND,
+                "nodes": {},
+            },
+        )
         area_stats = {"created": 7, "candidates": 7}
         area_payload = {
             "schema_version": 3,
@@ -37,7 +61,7 @@ class FastPreprocessReuseTests(unittest.TestCase):
         _write_analysis_manifest(analysis, source, area_stats)
         return source, analysis, area_stats
 
-    def test_reuse_accepts_exact_source_and_area_artifact(self) -> None:
+    def test_reuse_accepts_exact_source_and_all_current_artifacts(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
             source, analysis, _ = self._prepare(root)
@@ -68,6 +92,36 @@ class FastPreprocessReuseTests(unittest.TestCase):
             source, analysis, _ = self._prepare(root)
             (analysis / "area-pois.json.gz").unlink()
             with self.assertRaises(StageError):
+                _validate_reusable_analysis(analysis, source)
+
+    def test_reuse_rejects_stale_road_density_schema_before_apply(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, analysis, _ = self._prepare(root)
+            save_road_density_analysis(
+                analysis / "road-density.json.gz",
+                {
+                    "schema_version": ROAD_SCHEMA_VERSION - 1,
+                    "kind": ROAD_ANALYSIS_KIND,
+                    "ways": {},
+                },
+            )
+            with self.assertRaisesRegex(StageError, "unsupported road-density"):
+                _validate_reusable_analysis(analysis, source)
+
+    def test_reuse_rejects_stale_poi_context_schema_before_apply(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, analysis, _ = self._prepare(root)
+            save_poi_context_analysis(
+                analysis / "poi-context.json.gz",
+                {
+                    "schema_version": POI_SCHEMA_VERSION - 1,
+                    "kind": POI_ANALYSIS_KIND,
+                    "nodes": {},
+                },
+            )
+            with self.assertRaisesRegex(StageError, "unsupported POI-context"):
                 _validate_reusable_analysis(analysis, source)
 
     def test_manifest_is_plain_json_for_manual_inspection(self) -> None:
