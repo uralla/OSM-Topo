@@ -1,4 +1,4 @@
-"""Composite preprocess entry: area POIs, semantic enrichment, then road density."""
+"""Composite preprocess entry: area POIs, semantic enrichment, settlement LOD, then road density."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from .area_pois import augment_area_pois
 from .errors import StageError
 from .preprocessor import _load_osmium, preprocess_pbf
 from .road_density import augment_road_density
+from .settlement_lod import augment_settlement_lods
 
 
 def _report(message: str) -> None:
@@ -81,6 +82,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
     output = args.output.resolve()
     area = output.parent / f".{output.name}.{uuid4().hex}.area-pois.osm.pbf"
     semantic = output.parent / f".{output.name}.{uuid4().hex}.semantic.osm.pbf"
+    settlement = output.parent / f".{output.name}.{uuid4().hex}.settlement.osm.pbf"
     try:
         osmium = _load_osmium()
         area_stats = augment_area_pois(
@@ -96,8 +98,14 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             args.profile,
             args.report,
         )
-        road_density_stats = augment_road_density(
+        settlement_stats = augment_settlement_lods(
             semantic,
+            settlement,
+            osmium,
+            reporter=_report,
+        )
+        road_density_stats = augment_road_density(
+            settlement,
             output,
             osmium,
             reporter=_report,
@@ -111,6 +119,7 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             raise StageError(f"cannot update preprocess report: {exc}") from exc
         if isinstance(report, dict):
             report["road_density"] = road_density_stats
+            report["settlement_lod"] = settlement_stats
             report["area_pois"] = area_stats
             report_path.write_text(
                 json.dumps(report, ensure_ascii=False, indent=2) + "\n",
@@ -125,3 +134,5 @@ def run_preprocess_pipeline(argv: list[str]) -> int:
             area.unlink()
         if semantic.exists():
             semantic.unlink()
+        if settlement.exists():
+            settlement.unlink()
