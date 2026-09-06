@@ -39,12 +39,14 @@ from .poi_context import (
     is_transit_stop,
 )
 from .poi_lod import POI_LOD_CLASS_TAG
-
-SCHEMA_VERSION = 4
-ANALYSIS_KIND = "poi_context"
-SMALL_SETTLEMENT_VALUES = frozenset(
-    {"village", "hamlet", "isolated_dwelling", "locality", "farm"}
+from .settlement_lod import (
+    SETTLEMENT_LOD_TAG,
+    SMALL_SETTLEMENT_VALUES,
+    analyze_settlement_lods,
 )
+
+SCHEMA_VERSION = 5
+ANALYSIS_KIND = "poi_context"
 
 # Keys that determine whether a cached context result is still semantically safe
 # to apply to a newer OSM object. Names deliberately do not participate: a rename
@@ -84,6 +86,7 @@ _CONTEXT_TAGS = frozenset(
         POI_SCREEN_PRESSURE_2KM_TAG,
         POI_SCREEN_PRESSURE_10KM_TAG,
         POI_LOD_CLASS_TAG,
+        SETTLEMENT_LOD_TAG,
         "uralla:poi_accommodation_2km",
         "uralla:poi_accommodation_10km",
         "uralla:poi_transit_2km",
@@ -182,9 +185,8 @@ def _enrich_one(item: object, tags: dict[str, str], indexes: Any, activity_thres
     ):
         result, _, _ = enrich_outdoor_context(item, result, index, kind=kind)
 
-    # Antennas and small settlements join the universal activity/screen-pressure
-    # model without inventing a separate density engine. Settlement style consumes
-    # screen pressure directly; population remains an independent priority signal.
+    # Small settlements still participate in generic diagnostics, but their map
+    # appearance LOD is now calculated independently by settlement_lod.py.
     if (_is_antenna(result) or _is_small_settlement(result)) and POI_PRIORITY_TAG not in result:
         result[POI_PRIORITY_TAG] = "common"
 
@@ -239,6 +241,7 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
         reporter("POI context analysis: building spatial indexes")
     indexes = build_context_indexes(str(source), osmium)
     activity_thresholds, screen_thresholds = _thresholds(indexes)
+    settlement_lods, settlement_lod_stats = analyze_settlement_lods(source, osmium)
     nodes: dict[str, dict[str, object]] = {}
     lod_counts: Counter[str] = Counter()
     settlement_pressure: Counter[str] = Counter()
@@ -247,6 +250,10 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
         if not _is_adaptive(raw):
             continue
         enriched = _enrich_one(item, raw, indexes, activity_thresholds, screen_thresholds)
+        if _is_small_settlement(raw):
+            settlement_lod = settlement_lods.get(int(item.id))
+            if settlement_lod is not None:
+                enriched[SETTLEMENT_LOD_TAG] = str(settlement_lod)
         hints = {key: value for key, value in enriched.items() if key in _CONTEXT_TAGS and raw.get(key) != value}
         if not hints:
             continue
@@ -273,6 +280,7 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
             "hint_nodes": len(nodes),
             "lod": dict(lod_counts),
             "settlement_pressure": dict(settlement_pressure),
+            "settlement_lod": settlement_lod_stats,
         },
         "nodes": nodes,
     }
@@ -280,8 +288,9 @@ def analyze_poi_context(input_path: str | Path, output_path: str | Path, osmium:
     if reporter is not None:
         reporter(
             f"POI context analysis saved; hint nodes {len(nodes):,}; "
-            f"settlements low={settlement_pressure['low']:,} "
-            f"medium={settlement_pressure['medium']:,} high={settlement_pressure['high']:,}"
+            f"settlement LOD 19={settlement_lod_stats['lod19']:,} "
+            f"20={settlement_lod_stats['lod20']:,} 21={settlement_lod_stats['lod21']:,} "
+            f"22={settlement_lod_stats['lod22']:,} 23={settlement_lod_stats['lod23']:,}"
         )
     return payload["stats"]  # type: ignore[return-value]
 
