@@ -27,6 +27,7 @@ _RECIPE_CODE_FILES = (
     "uralla_build/road_density_analysis.py",
     "uralla_build/sanatorium_labels.py",
     "uralla_build/semantic_apply.py",
+    "uralla_build/settlement_lod.py",
 )
 _RECIPE_CONFIG_FILES = (
     "config/preprocessor-blacklist.yaml",
