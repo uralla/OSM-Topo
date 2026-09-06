@@ -37,45 +37,53 @@ place=town & mkgmap:area2poi!=true & population > 4999  [0x0900 resolution 19]
 place=town & mkgmap:area2poi!=true & population > 0     [0x0a00 resolution 20]
 place=town & mkgmap:area2poi!=true                       [0x0a00 resolution 20]
 
-# Small settlements are topo anchors. In sparse screen context every named small
-# settlement may appear from resolution 19. As screen pressure rises, population
-# and formal place class decide which labels survive on overview zooms.
-# Villages keep their existing visual types; only their appearance LOD changes.
-place=village & mkgmap:area2poi!=true & population > 4999 [0x0900 resolution 19]
-place=village & mkgmap:area2poi!=true & population > 999 & uralla:poi_screen_pressure=medium [0x0900 resolution 19]
-place=village & mkgmap:area2poi!=true & population > 999 & uralla:poi_screen_pressure=high [0x0900 resolution 20]
-place=village & mkgmap:area2poi!=true & uralla:poi_screen_pressure=low [0x0a00 resolution 19]
-place=village & mkgmap:area2poi!=true & uralla:poi_screen_pressure=medium [0x0a00 resolution 20]
-place=village & mkgmap:area2poi!=true & uralla:poi_screen_pressure=high [0x0a00 resolution 21]
-# Conservative fallback when no reusable context hint is available.
+# Small settlements use a dedicated local rank from the semantic preprocessor.
+# Strict hierarchy: village > hamlet > isolated_dwelling = farm = locality.
+# Within one class population wins, then a stable OSM-id tie break. The best local
+# anchor may appear at 19; progressively lower-ranked neighbours move to 20-23.
+# Generic POI screen pressure is diagnostic only and no longer controls settlement LOD.
+
+# Villages keep their existing population-dependent visual type while LOD comes
+# exclusively from uralla:settlement_lod.
+place=village & mkgmap:area2poi!=true & population > 4999 & uralla:settlement_lod=19 [0x0900 resolution 19]
+place=village & mkgmap:area2poi!=true & population > 4999 & uralla:settlement_lod=20 [0x0900 resolution 20]
+place=village & mkgmap:area2poi!=true & population > 4999 & uralla:settlement_lod=21 [0x0900 resolution 21]
+place=village & mkgmap:area2poi!=true & population > 4999 & uralla:settlement_lod=22 [0x0900 resolution 22]
+place=village & mkgmap:area2poi!=true & population > 4999 & uralla:settlement_lod=23 [0x0900 resolution 23]
+place=village & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0a00 resolution 19]
+place=village & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0a00 resolution 20]
+place=village & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0a00 resolution 21]
+place=village & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0a00 resolution 22]
+place=village & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0a00 resolution 23]
+# Conservative fallback when no compatible analysis hint is available.
 place=village & mkgmap:area2poi!=true [0x0a00 resolution 21]
 
 # Urban subdivisions are useful inside cities, not on regional overview maps.
 place=suburb & mkgmap:area2poi!=true        [0x0600 resolution 21]
 place=neighbourhood & mkgmap:area2poi!=true [0x0900 resolution 22]
 
-# Hamlet: sparse terrain promotes it to the same overview level as a village;
-# dense surroundings progressively defer it.
-place=hamlet & mkgmap:area2poi!=true & population > 999 [0x0b00 resolution 19]
-place=hamlet & mkgmap:area2poi!=true & uralla:poi_screen_pressure=low [0x0b00 resolution 19]
-place=hamlet & mkgmap:area2poi!=true & uralla:poi_screen_pressure=medium [0x0b00 resolution 20]
-place=hamlet & mkgmap:area2poi!=true & uralla:poi_screen_pressure=high [0x0b00 resolution 21]
+# Hamlets are the second settlement-priority tier.
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 19]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 20]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0b00 resolution 21]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0b00 resolution 22]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resolution 23]
 place=hamlet & mkgmap:area2poi!=true [0x0b00 resolution 22]
 
-# Isolated dwellings and named farms are valuable remote anchors, but are kept
-# later than hamlets where screen pressure is high.
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & population > 499 [0x0b00 resolution 19]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:poi_screen_pressure=low [0x0b00 resolution 19]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:poi_screen_pressure=medium [0x0b00 resolution 21]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:poi_screen_pressure=high [0x0b00 resolution 22]
+# isolated_dwelling / farm / locality are one equal lowest-priority tier.
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 19]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 20]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0b00 resolution 21]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0b00 resolution 22]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resolution 23]
 place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]
 place=farm & mkgmap:area2poi!=true [0x0b00 resolution 23]
 
-# Named localities are also remote orientation anchors. Unnamed localities keep
-# the old close-only symbol with the synthetic/type label suppressed.
-place=locality & name=* & mkgmap:area2poi!=true & uralla:poi_screen_pressure=low { name '${name}' } [0x6408 resolution 19]
-place=locality & name=* & mkgmap:area2poi!=true & uralla:poi_screen_pressure=medium { name '${name}' } [0x6408 resolution 21]
-place=locality & name=* & mkgmap:area2poi!=true & uralla:poi_screen_pressure=high { name '${name}' } [0x6408 resolution 23]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19 { name '${name}' } [0x6408 resolution 19]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=20 { name '${name}' } [0x6408 resolution 20]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=21 { name '${name}' } [0x6408 resolution 21]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=22 { name '${name}' } [0x6408 resolution 22]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=23 { name '${name}' } [0x6408 resolution 23]
 place=locality & name=* & mkgmap:area2poi!=true { name '${name}' } [0x6408 resolution 24]
 place=locality & name!=* & mkgmap:area2poi!=true { set mkgmap:label:1=' ' } [0x6408 resolution 24]
 
