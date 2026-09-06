@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import math
 from pathlib import Path
 from typing import Any, Mapping
+from uuid import uuid4
 
 
 SETTLEMENT_LOD_TAG = "uralla:settlement_lod"
@@ -192,3 +193,56 @@ def analyze_settlement_lods(
         "lod23": counts[23],
     }
     return lods, stats
+
+
+def augment_settlement_lods(
+    input_path: str | Path,
+    output_path: str | Path,
+    osmium: Any,
+    *,
+    reporter: Any = None,
+) -> dict[str, int]:
+    """Apply the same settlement ranking used by fast ANALYZE/APPLY to a PBF."""
+    source = Path(input_path).resolve()
+    target = Path(output_path).resolve()
+    if source == target:
+        raise ValueError("settlement LOD input and output must be different files")
+    lods, stats = analyze_settlement_lods(source, osmium)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.parent / f".{target.name}.{uuid4().hex}.settlement-lod.partial.osm.pbf"
+    tagged = 0
+    try:
+        with osmium.SimpleWriter(str(temporary)) as writer:
+            for item in osmium.FileProcessor(str(source)):
+                type_method = getattr(item, "type_str", None)
+                kind = type_method() if callable(type_method) else ""
+                if kind not in {"node", "n"}:
+                    writer.add(item)
+                    continue
+                lod = lods.get(int(item.id))
+                if lod is None:
+                    writer.add(item)
+                    continue
+                tags = _tags_dict(item.tags)
+                value = str(lod)
+                if tags.get(SETTLEMENT_LOD_TAG) != value:
+                    tags[SETTLEMENT_LOD_TAG] = value
+                    writer.add(item.replace(tags=tags))
+                    tagged += 1
+                else:
+                    writer.add(item)
+        temporary.replace(target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+    result = dict(stats)
+    result["tagged"] = tagged
+    if reporter is not None:
+        reporter(
+            "Settlement LOD applied: "
+            f"candidates {stats['candidates']:,}; 19={stats['lod19']:,} "
+            f"20={stats['lod20']:,} 21={stats['lod21']:,} "
+            f"22={stats['lod22']:,} 23={stats['lod23']:,}"
+        )
+    return result
