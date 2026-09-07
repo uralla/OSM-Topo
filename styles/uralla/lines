@@ -111,8 +111,11 @@ highway=steps [0x07 road_class=0 road_speed=0 resolution 24]
 
 # брод
 ford=yes & highway!=pedestrian & highway!=footway & highway!=path & area!=yes [0x11002 resolution 24 continue]
-# линии бродов тем же типом, что и track
-highway=ford | highway=* & ford=yes [0x12 road_class=0 road_speed=0 resolution 23]
+# A ford on an already classified road is an overlay: keep processing so the
+# ordinary highway class still owns the base road at all of its normal LODs.
+highway=* & highway!=ford & ford=yes [0x12 road_class=0 road_speed=0 resolution 23 continue]
+# Standalone highway=ford has no underlying road class to preserve.
+highway=ford [0x12 road_class=0 road_speed=0 resolution 23]
 
 highway=path & man_made=cutline {delete man_made}
 
