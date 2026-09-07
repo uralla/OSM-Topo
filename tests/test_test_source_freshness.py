@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from uralla_build.entrypoint import _test_source_exists
-from uralla_build.host import HostConfig, HostPaths
+from uralla_build.host import HostConfig, HostPaths, PublicationPolicy
 
 
 def _host(tmp_path: Path) -> HostConfig:
@@ -13,6 +13,15 @@ def _host(tmp_path: Path) -> HostConfig:
             tools_root=tmp_path / "tools",
             dem_root=tmp_path / "dem",
         ),
+        publication=PublicationPolicy(
+            img_subdir="img",
+            gmapi_subdir="gmapi",
+            img_archive=False,
+            gmapi_zip_mode="none",
+            split_zip_volumes=False,
+        ),
+        product_concurrency=1,
+        minimum_free_gib=1,
         preprocess_concurrency=1,
     )
 
