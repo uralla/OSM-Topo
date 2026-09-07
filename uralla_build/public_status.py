@@ -13,7 +13,7 @@ from .history import HistoryStore
 from .host import HostConfig
 from .map_recipe import map_recipe_fingerprint
 from .publish import gmapi_zip_name
-from .scheduler import QueueItem, build_queue
+from .scheduler import MANUAL_ONLY_PRODUCTS, QueueItem, build_queue
 
 STATUS_FILENAME = "map-update-status.txt"
 STATUS_JSON_FILENAME = "map-update-status.json"
@@ -258,7 +258,7 @@ def build_public_status_snapshot(
         row: dict[str, object] = {
             "product": product,
             "title": _display_name(product, raw_product),
-            "web_visible": _web_visible(raw_product),
+            "web_visible": product not in MANUAL_ONLY_PRODUCTS and _web_visible(raw_product),
             "web_order": _web_order(raw_product, 1_000_000 + manifest_index),
             "state": state_code,
             "state_label": _STATE_LABELS[state_code],
@@ -296,6 +296,8 @@ def _render_snapshot_text(snapshot: Mapping[str, object]) -> str:
     rows: list[tuple[str, str, str, str, str]] = []
     for raw_row in products:
         row = raw_row if isinstance(raw_row, Mapping) else {}
+        if row.get("web_visible") is not True:
+            continue
         never = bool(row.get("never_built"))
         next_update = row.get("next_update")
         next_text = "первая сборка" if never else _format_timestamp(
