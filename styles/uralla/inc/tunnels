@@ -4,24 +4,19 @@
 # generic road modifiers (access/toll/surface/roadspeed) and before ordinary
 # highway types.
 #
-# Far-zoom tunnel thresholds are deliberately softer than the road thresholds
-# they replace: 500 m -> 250 m, 200 m -> 100 m, 100 m -> 50 m. A long tunnel
-# therefore gets the same 0x08 line from a farther resolution, not an extra
-# overview copy.
+# For the current continuity test, raw per-way length is deliberately ignored.
+# Tunnel visibility follows only the road class/LOD hierarchy below.
 
 # Primary links and primary roundabouts.
-(highway=primary_link | highway=primary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=3 road_speed=5 resolution 20]
-(highway=primary_link | highway=primary & junction=roundabout) & tunnel=yes [0x08 road_class=3 road_speed=5 resolution 22]
+(highway=primary_link | highway=primary & junction=roundabout) & tunnel=yes [0x08 road_class=3 road_speed=5 resolution 20]
 
 # Secondary links and roundabouts.
-(highway=secondary_link | highway=secondary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 20]
-(highway=secondary_link | highway=secondary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 22]
+(highway=secondary_link | highway=secondary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]
 
 # Tertiary links and roundabouts keep the restored tertiary routing class.
-(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 21]
-(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 23]
+(highway=tertiary_link | highway=tertiary & junction=roundabout) & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 21]
 
-# Major roads without length generalisation at their normal overview level.
+# Major roads at their normal overview levels.
 highway=motorway & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 16]
 highway=motorway_link & tunnel=yes [0x08 road_class=4 road_speed=4 resolution 19]
 highway=trunk & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 14]
@@ -31,15 +26,8 @@ highway=trunk_link & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 18]
 highway=* & motorroad=yes & tunnel=yes [0x08 road_class=4 road_speed=5 resolution 14]
 
 highway=primary & tunnel=yes [0x08 road_class=3 road_speed=5 resolution 17]
-
-# Secondary: ordinary overview starts at 18 only above 500 m; tunnels use 250 m.
-highway=secondary & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 18]
-highway=secondary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]
-
-# Tertiary: restored ordinary overview starts at 18 above 500 m and carrier at 20;
-# tunnels keep the softer 250 m threshold but the same class/speed and LOD anchors.
-highway=tertiary & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 18]
-highway=tertiary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]
+highway=secondary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 18]
+highway=tertiary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 18]
 
 # Legacy minor and referenced unclassified roads use the higher local-road class.
 highway=minor & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 22]
@@ -51,29 +39,16 @@ highway=residential & tunnel=yes [0x08 road_class=0 road_speed=3 resolution 24]
 highway=service & tunnel=yes [0x08 road_class=0 road_speed=2 resolution 24]
 highway=pedestrian & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 24]
 
-# Tracks keep their hierarchy but get the softer 50 m cutoff.
-highway=track & tracktype=grade1 & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=1 resolution 21]
-highway=track & tracktype=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 24]
+# Tracks keep their hierarchy without per-way length pruning.
+highway=track & tracktype=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 21]
+highway=track & tracktype!=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]
 
-highway=track & tracktype!=grade1 & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=1 resolution 22]
-highway=track & tracktype!=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 24]
-
-# Close-biased bicycle and walking ways retain their hierarchy, with the
-# overview length threshold halved where one exists.
-highway=cycleway & tunnel=yes & length()>100 [0x08 road_class=0 road_speed=1 resolution 22]
-highway=cycleway & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 24]
-
-bicycle=yes & highway=path & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=1 resolution 22]
-bicycle=yes & highway=path & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 24]
-
-highway=footway & (footway=sidewalk | footway=crossing) & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=0 resolution 22]
-highway=footway & (footway=sidewalk | footway=crossing) & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 24]
-
-highway=footway & footway!=sidewalk & footway!=crossing & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=0 resolution 23]
-highway=footway & footway!=sidewalk & footway!=crossing & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 24]
-
-bicycle!=yes & highway=path & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=0 resolution 23]
-bicycle!=yes & highway=path & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 24]
+# Close-biased bicycle and walking ways retain their hierarchy without length gates.
+highway=cycleway & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]
+bicycle=yes & highway=path & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]
+highway=footway & (footway=sidewalk | footway=crossing) & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 22]
+highway=footway & footway!=sidewalk & footway!=crossing & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 23]
+bicycle!=yes & highway=path & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 23]
 
 # Any other active highway tunnel gets a close-only routable tunnel line.
 highway=* & tunnel=yes [0x08 road_class=0 road_speed=0 resolution 24]
