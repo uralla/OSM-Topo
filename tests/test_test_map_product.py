@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from uralla_build.manifest import load_manifest, validate_manifest
+from uralla_build.scheduler import MANUAL_ONLY_PRODUCTS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,7 +42,7 @@ def test_test_product_matches_ural_s_build_profile_with_own_identity() -> None:
         "output_img": "TEST.img",
     }
     assert test["web"]["title"] == "TEST"
-    assert test["web"]["visible"] is True
+    assert "test" in MANUAL_ONLY_PRODUCTS
 
 
 def test_manifest_stays_valid_with_test_product() -> None:
