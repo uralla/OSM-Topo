@@ -93,8 +93,8 @@ highway=* & (toll=yes|toll=true) { set mkgmap:toll=yes }
 # Добавляем запреты проезда для машин
 highway=* & motorcar=no | highway=* & vehicle=no | highway=* & motorcar=private | highway=* & motor_vehicle=no | highway=* & access=private {add motorcar=no; add taxi=no; add hgv=no}
 
-# зимники и ледовые переправы
-highway=* & winter_road=yes & ice_road!=yes & length()>500 | highway=* & ice_road=yes & winter_road!=yes & length()>500 [0x12 resolution 20-21 continue]
+# зимники и ледовые переправы. Raw way length is deliberately ignored.
+highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_road!=yes [0x12 resolution 20-21 continue]
 highway=* & winter_road=yes & ice_road!=yes | highway=* & ice_road=yes & winter_road!=yes [0x10 road_class=1 road_speed=2 resolution 22]
 
 # линии мостов дополнительно к дорогам
@@ -206,7 +206,8 @@ highway!=construction & highway=* & construction=* & maxspeed!=*
 # Highway tunnels stop here before ordinary road types can emit a second visible line.
 include 'inc/tunnels';
 
-highway=primary_link & length()>500 | highway=primary & junction=roundabout & length()>500 [0x03 resolution 20-21 continue]
+# Road continuity experiment: no highway LOD rule below uses raw per-way length().
+highway=primary_link | highway=primary & junction=roundabout [0x03 resolution 20-21 continue]
 highway=primary_link | highway=primary & junction=roundabout [0x03 road_class=3 road_speed=5 resolution 22]
 
 # Ways sorted roughly by descending order of class
@@ -218,54 +219,54 @@ highway=trunk_link | highway=trunk & junction=roundabout [0x02 road_class=4 road
 highway=* & motorroad=yes [0x02 road_class=4 road_speed=5 resolution 14]
 highway=primary [0x03 road_class=3 road_speed=5 resolution 17]
 
-highway=secondary_link & length()>500 | highway=secondary & junction=roundabout & length()>500 [0x07 resolution 20-21 continue]
+highway=secondary_link | highway=secondary & junction=roundabout [0x07 resolution 20-21 continue]
 highway=secondary_link | highway=secondary & junction=roundabout [0x04 road_class=2 road_speed=5 resolution 22]
-highway=secondary & length()>500 [0x07 resolution 18-19 continue]
+highway=secondary [0x07 resolution 18-19 continue]
 highway=secondary [0x04 road_class=2 road_speed=5 resolution 20]
 
-highway=tertiary_link & length()>500 | highway=tertiary & junction=roundabout & length()>500 [0x07 resolution 21-22 continue]
+highway=tertiary_link | highway=tertiary & junction=roundabout [0x07 resolution 21-22 continue]
 highway=tertiary_link | highway=tertiary & junction=roundabout [0x11 road_class=2 road_speed=5 resolution 23]
-highway=tertiary & length()>500 [0x07 resolution 18-19 continue]
+highway=tertiary [0x07 resolution 18-19 continue]
 highway=tertiary [0x11 road_class=2 road_speed=5 resolution 20]
 
 # Density-aware overview suppression starts strictly below tertiary.
 include 'inc/road_density';
 
-highway=minor & length()>400 [0x06 resolution 20-22 continue]
+highway=minor [0x06 resolution 20-22 continue]
 highway=minor [0x06 road_class=1 road_speed=5 resolution 23]
 
-highway=unclassified & length()>500 [0x07 resolution 19-21 continue]
+highway=unclassified [0x07 resolution 19-21 continue]
 highway=unclassified & junction!=roundabout [0x06 road_class=1 road_speed=4 resolution 22 continue]
 highway=unclassified & junction=roundabout [0x06 road_class=1 road_speed=2 resolution 22]
 
-highway=residential & area!=yes & length()>200 [0x07 resolution 22-22 continue]
+highway=residential & area!=yes [0x07 resolution 22-22 continue]
 highway=residential & area!=yes [0x0d road_class=0 road_speed=2 resolution 23]
 
 # [CUSTOM/АВТОРСКОЕ] Marked route members keep the same far/near visual hierarchy
-# as ordinary ways, but both thresholds are shifted one resolution farther out.
+# as ordinary ways, shifted one resolution farther out. Raw way length is ignored.
 # Routing carrier gets a mild +1 road-speed preference; road_class and access stay unchanged.
 # Never extend a marked route below resolution 20. These rules must stay before
 # the base pedestrian/path/track rules so marked ways are emitted only here.
-mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=pedestrian & area!=yes & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
-mkgmap:trail_name=* & highway=cycleway & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=cycleway & length()>100 [0x0e road_class=0 road_speed=2 resolution 23-24]
-mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x0b resolution 21-22 continue]
-mkgmap:trail_name=* & bicycle=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=2 resolution 23-24]
+mkgmap:trail_name=* & highway=pedestrian & area!=yes [0x07 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=cycleway [0x07 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=cycleway [0x0e road_class=0 road_speed=2 resolution 23-24]
+mkgmap:trail_name=* & bicycle=yes & highway=path [0x0b resolution 21-22 continue]
+mkgmap:trail_name=* & bicycle=yes & highway=path [0x16 road_class=0 road_speed=2 resolution 23-24]
 # Urban sidewalk/crossing footways stay in the pedestrian visual class.
-mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x0e road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) [0x07 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=footway & (footway=sidewalk | footway=crossing) [0x0e road_class=0 road_speed=1 resolution 23-24]
 # Other designated footways are topo trails, not pedestrian streets.
-mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & bicycle!=yes & highway=path & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
-mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x12 resolution 21-22 continue]
-mkgmap:trail_name=* & highway=track & tracktype!=grade1 & length()>100 [0x13 road_class=0 road_speed=2 resolution 23-24]
-mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x07 resolution 20-22 continue]
-mkgmap:trail_name=* & highway=track & tracktype=grade1 & length()>100 [0x0a road_class=0 road_speed=2 resolution 23-24]
-mkgmap:trail_name=* & highway=bridleway & length()>100 [0x0b resolution 22-22 continue]
-mkgmap:trail_name=* & highway=bridleway & length()>100 [0x16 road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & highway=footway & footway!=sidewalk & footway!=crossing [0x16 road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & bicycle!=yes & highway=path [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & bicycle!=yes & highway=path [0x16 road_class=0 road_speed=1 resolution 23-24]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 [0x12 resolution 21-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=2 resolution 23-24]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 [0x07 resolution 20-22 continue]
+mkgmap:trail_name=* & highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=2 resolution 23-24]
+mkgmap:trail_name=* & highway=bridleway [0x0b resolution 22-22 continue]
+mkgmap:trail_name=* & highway=bridleway [0x16 road_class=0 road_speed=1 resolution 23-24]
 
 # Some countries allow, others disallow bicycling on pedestrian streets.
 highway=pedestrian & area!=yes [0x07 road_class=0 road_speed=0 resolution 22-23 continue]
@@ -274,7 +275,7 @@ highway=pedestrian & area!=yes [0x0e road_class=0 road_speed=0 resolution 24]
 highway=living_street [0x06 road_class=0 road_speed=1 resolution 23]
 
 # Bridleways use the ordinary trail visual hierarchy; explicit bicycle access is handled by access rules.
-highway=bridleway & length()>100 [0x0b resolution 23-23 continue]
+highway=bridleway [0x0b resolution 23-23 continue]
 highway=bridleway [0x16 road_class=0 road_speed=0 resolution 24]
 # Via ferrata keeps its dedicated stable MPC visual and is intentionally non-routable.
 highway=via_ferrata [0x2e resolution 24]
@@ -285,7 +286,7 @@ highway=service & (service=alley|service=driveway) [0x07 resolution 23-23 contin
 highway=service & (service=alley|service=driveway) [0x0d road_class=0 road_speed=0 resolution 24]
 highway=service & oneway=yes [0x07 resolution 23-23 continue]
 highway=service & oneway=yes [0x0d road_class=0 road_speed=1 resolution 24]
-highway=service & length()>200 [0x07 resolution 23-23 continue]
+highway=service [0x07 resolution 23-23 continue]
 highway=service [0x0d road_class=0 road_speed=2 resolution 24]
 
 # highway=road has unknown physical/classification semantics. Keep the routing helper
@@ -304,23 +305,23 @@ highway=platform [0x16 resolution 24]
 # Mop up any unrecognised highway types
 highway=* & area!=yes & highway!=path & highway!=steps & highway!=footway & highway!=track & highway!=cycleway & highway!=service [0x07 road_class=0 road_speed=0 resolution 24]
 
-highway=cycleway & length()>200 [0x07 resolution 22-23 continue]
+highway=cycleway [0x07 resolution 22-23 continue]
 highway=cycleway [0x0e road_class=0 road_speed=1 resolution 24]
 
-bicycle=yes & highway=path & length()>100 [0x0b resolution 22-23 continue]
+bicycle=yes & highway=path [0x0b resolution 22-23 continue]
 bicycle=yes & highway=path [0x16 road_class=0 road_speed=1 resolution 24]
 
 # Sidewalks/crossings use the pedestrian visual class; other footways use the trail class.
-highway=footway & (footway=sidewalk | footway=crossing) & length()>100 [0x07 resolution 22-23 continue]
+highway=footway & (footway=sidewalk | footway=crossing) [0x07 resolution 22-23 continue]
 highway=footway & (footway=sidewalk | footway=crossing) [0x0e road_class=0 road_speed=0 resolution 24]
-highway=footway & footway!=sidewalk & footway!=crossing & length()>100 [0x0b resolution 23-23 continue]
+highway=footway & footway!=sidewalk & footway!=crossing [0x0b resolution 23-23 continue]
 highway=footway & footway!=sidewalk & footway!=crossing [0x16 road_class=0 road_speed=0 resolution 24]
 
-bicycle!=yes & highway=path & length()>100 [0x0b resolution 23-23 continue]
+bicycle!=yes & highway=path [0x0b resolution 23-23 continue]
 bicycle!=yes & highway=path [0x16 road_class=0 road_speed=0 resolution 24]
 
-highway=track & tracktype!=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]
-highway=track & tracktype=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]
+highway=track & tracktype!=grade1 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]
+highway=track & tracktype=grade1 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]
 highway=track & tracktype=grade1 [0x0a road_class=0 road_speed=1 resolution 24]
 highway=track & tracktype!=grade1 [0x13 road_class=0 road_speed=1 resolution 24]
 
