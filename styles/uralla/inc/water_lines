@@ -60,37 +60,52 @@ uralla:pier_rendered=yes {delete man_made; delete uralla:pier_rendered}
  & area!=yes & tunnel!=yes [0x10f11 resolution 24 continue]
 
 # Статический справочник опорных рек. Ранг выставляет semantic preprocessor.
-# Landmark rivers keep a progressive visual hierarchy: thin 0x18 at far zoom,
-# medium 0x19 at 20-21, then the 3px 0x1f river line from resolution 22.
-uralla:river_rank=1 { set uralla:river_landmark=yes } [0x18 resolution 16-19 continue]
-uralla:river_rank=2 { set uralla:river_landmark=yes } [0x18 resolution 17-19 continue]
-uralla:river_rank=3 { set uralla:river_landmark=yes } [0x18 resolution 18-19 continue]
+# Сначала фиксируем принадлежность к примечательной реке независимо от длины
+# конкретного OSM way; length() ниже управляет только видимостью на данном LOD.
+uralla:river_rank=* { set uralla:river_landmark=yes }
 
-# Ручной fallback только для регионально важных рек, которые короче порога
-# ранжированного каталога. Длинные реки обслуживаются только uralla:river_rank.
-waterway=river & name='Чусовая' & length()>500
-| waterway=river & name='Юрюзань' & length()>500
-| waterway=river & name='Терек' & length()>500
-| waterway=river & name='Северная Двина' & length()>500
-| waterway=river & name='Катунь' & length()>500
-| waterway=river & name='Чуя' & length()>500
-| waterway=river & name='Сосьва' & length()>500
-| waterway=river & name='Вишера' & length()>500
-| waterway=river & name='Лозьва' & length()>500
-| waterway=river & name='Косью' & length()>500
-| waterway=river & name='Тшугор' & length()>500
-| waterway=river & name='Ивдель' & length()>500
-| waterway=river & name='Уса' & length()>500
-| waterway=river & name='Кожим' & length()>500 { set uralla:river_landmark=yes } [0x18 resolution 18-19 continue]
+# Rank 1/2/3 control only the farthest overview levels. All of them use the
+# thin 1 px 0x18 line there, and only segments longer than 500 m are admitted.
+uralla:river_rank=1 & length()>500 [0x18 resolution 16-19 continue]
+uralla:river_rank=2 & length()>500 [0x18 resolution 17-19 continue]
+uralla:river_rank=3 & length()>500 [0x18 resolution 18-19 continue]
 
-uralla:river_landmark=yes [0x19 resolution 20-21 continue]
-uralla:river_landmark=yes [0x01f resolution 22-24]
+# Ручной fallback для регионально важных рек. Он задаёт принадлежность к
+# примечательной реке для всех её сегментов; LOD-пороги применяются ниже.
+waterway=river & name='Чусовая'
+| waterway=river & name='Юрюзань'
+| waterway=river & name='Терек'
+| waterway=river & name='Северная Двина'
+| waterway=river & name='Катунь'
+| waterway=river & name='Чуя'
+| waterway=river & name='Сосьва'
+| waterway=river & name='Вишера'
+| waterway=river & name='Лозьва'
+| waterway=river & name='Косью'
+| waterway=river & name='Тшугор'
+| waterway=river & name='Ивдель'
+| waterway=river & name='Уса'
+| waterway=river & name='Кожим' { set uralla:river_landmark=yes }
 
-# Ordinary rivers progress through the same widths, but the 3px 0x1f line is
-# reserved for the closest resolution. Long rivers get the thin overview first;
-# short rivers enter at the medium line.
-waterway=river & uralla:river_landmark!=yes & length()>500 [0x18 resolution 20-21 continue]
-waterway=river & uralla:river_landmark!=yes [0x19 resolution 22-23 continue]
+# Regional fallback joins rank 3 on the far overview.
+waterway=river & uralla:river_landmark=yes & uralla:river_rank!=* & length()>500 [0x18 resolution 18-19 continue]
+
+# Agreed landmark-river ladder:
+# 20: 2 px, >500 m; 21: 2 px, >300 m; 22: 3 px, >100 m;
+# 23: 3 px, >50 m; 24: 3 px without a length gate.
+uralla:river_landmark=yes & length()>500 [0x19 resolution 20 continue]
+uralla:river_landmark=yes & length()>300 [0x19 resolution 21 continue]
+uralla:river_landmark=yes & length()>100 [0x01f resolution 22 continue]
+uralla:river_landmark=yes & length()>50 [0x01f resolution 23 continue]
+uralla:river_landmark=yes [0x01f resolution 24]
+
+# Agreed ordinary-river ladder:
+# 20: 1 px, >500 m; 21: 1 px, >300 m; 22: 2 px, >100 m;
+# 23: 2 px, >50 m; 24: 3 px without a length gate.
+waterway=river & uralla:river_landmark!=yes & length()>500 [0x18 resolution 20 continue]
+waterway=river & uralla:river_landmark!=yes & length()>300 [0x18 resolution 21 continue]
+waterway=river & uralla:river_landmark!=yes & length()>100 [0x19 resolution 22 continue]
+waterway=river & uralla:river_landmark!=yes & length()>50 [0x19 resolution 23 continue]
 waterway=river & uralla:river_landmark!=yes [0x01f resolution 24]
 
 # [CUSTOM/АВТОРСКОЕ] ditch is visible only at the closest level and remains
@@ -98,10 +113,14 @@ waterway=river & uralla:river_landmark!=yes [0x01f resolution 24]
 waterway=ditch [0x10109 resolution 24 continue]
 waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
 
-# Intermittent streams/drains use a thin dash at 23 and a thicker dash at 24.
-# Keep the ranges disjoint so the two TYP lines do not overlap at resolution 24.
-(waterway=stream | waterway=drain) & intermittent=yes [0x10f1d resolution 23-23 continue]
-(waterway=stream | waterway=drain) & intermittent=yes [0x10f1e resolution 24]
+# Intermittent stream: no line at 22; thin dash at 23 only for segments >50 m;
+# thick dash at 24 for all segments.
+waterway=stream & intermittent=yes & length()>50 [0x10f1d resolution 23 continue]
+waterway=stream & intermittent=yes [0x10f1e resolution 24]
+
+# Drain intermittent behaviour is intentionally unchanged pending WATER-01.
+waterway=drain & intermittent=yes [0x10f1d resolution 23-23 continue]
+waterway=drain & intermittent=yes [0x10f1e resolution 24]
 
 # Waterfalls are POIs; no additional waterfall line is emitted.
 
@@ -110,12 +129,12 @@ waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
     {name '${whitewater:section_name}, пор. ${whitewater:section_grade}' | '${whitewater:section_name}, пор. ${whitewater:rapid_grade}' |
     '${whitewater:rapid_name}, пор. ${whitewater:section_grade}' | '${whitewater:rapid_name}, пор. ${whitewater:rapid_grade}'} [0x1001f resolution 18 continue]
 
-# Restore the original progressive stream hierarchy independently from drain/canal:
-# thin long stream at 21-22, medium stream at 23, thick stream at 24.
-# Intermittent streams are consumed by the custom dash rules above instead.
-waterway=stream & intermittent!=yes & length()>500 [0x18 resolution 21-22 continue]
-waterway=stream & intermittent!=yes [0x19 resolution 23 continue]
-waterway=stream & intermittent!=yes [0x01f resolution 24]
+# Ordinary streams intentionally differ from rivers on the far stream LOD:
+# at 22 they are a thin dash, then become a 1 px solid line at 23 and a
+# 2 px solid line at 24. This makes river/stream class readable at distance.
+waterway=stream & intermittent!=yes & length()>100 [0x10f1d resolution 22 continue]
+waterway=stream & intermittent!=yes & length()>50 [0x18 resolution 23 continue]
+waterway=stream & intermittent!=yes [0x19 resolution 24]
 
 # Drain/canal are intentionally left on their current hierarchy pending a
 # separate review; do not infer their final LOD from stream behaviour.
