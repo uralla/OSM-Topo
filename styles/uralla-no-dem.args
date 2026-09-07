@@ -45,6 +45,7 @@ min-size-polygon=10
 
 merge-lines
 allow-reverse-merge
+line-types-with-direction=0x10f11
 
 ignore-fixme-values
 draw-priority=25
