@@ -706,6 +706,35 @@ products:
     mkgmap:
       dem_poly: true
 
+  test:
+    source: russia
+    update_interval_days: 7
+    preprocess_mode: fast
+    preprocess_workers: 2
+    polygon: poly/test.poly
+    elevation: elevation/ural.osm.pbf
+    geonames: input/cities15000.zip
+    identity:
+      family_id: 1028
+      product_id: 1
+      overview_mapnumber: "01028000"
+      first_tile_mapid: "01028001"
+      last_reserved_mapid: "01028999"
+    names:
+      family: TEST
+      series: TEST
+      overview: TEST
+      description: TEST
+      output_img: TEST.img
+    web:
+      title: "TEST"
+      order: 5
+      visible: true
+    splitter:
+      max_nodes: 500000
+    mkgmap:
+      dem_poly: true
+
   volga-fed-district:
     source: russia
     update_interval_days: 7
