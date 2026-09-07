@@ -29,7 +29,7 @@ def test_village_outranks_nearby_locality_even_if_locality_has_population() -> N
     )
 
     assert lods[100] == 19
-    assert lods[200] == 20
+    assert lods[200] == 21
 
 
 def test_hamlet_outranks_equal_bottom_tier() -> None:
@@ -57,12 +57,12 @@ def test_bottom_tier_is_equal_and_population_breaks_priority() -> None:
         ]
     )
 
-    assert lods[200] == 19
-    assert lods[100] == 20
+    assert lods[200] == 21
+    assert lods[100] == 21
     assert lods[300] == 21
 
 
-def test_remote_low_priority_anchor_can_still_start_at_19() -> None:
+def test_remote_low_priority_anchor_never_goes_farther_than_21() -> None:
     lods, _ = rank_settlement_candidates(
         [
             _candidate(100, "village", lat=54.0, lon=58.0),
@@ -71,7 +71,7 @@ def test_remote_low_priority_anchor_can_still_start_at_19() -> None:
     )
 
     assert lods[100] == 19
-    assert lods[200] == 19
+    assert lods[200] == 21
 
 
 def test_place_style_uses_dedicated_settlement_lod_not_generic_screen_pressure() -> None:
@@ -80,7 +80,7 @@ def test_place_style_uses_dedicated_settlement_lod_not_generic_screen_pressure()
     assert "uralla:poi_screen_pressure=" not in text
     assert "place=village & mkgmap:area2poi!=true & uralla:settlement_lod=19" in text
     assert "place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=19" in text
-    assert "place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19" in text
+    assert "place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19 { name '${name}' } [0x6408 resolution 21]" in text
 
 
 def test_analysis_cache_and_recipe_track_settlement_algorithm() -> None:
