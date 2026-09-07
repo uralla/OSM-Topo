@@ -89,7 +89,7 @@ def _load_road_hints(path: str | Path) -> dict[int, tuple[str, str]]:
         except ValueError:
             continue
         render_class, level = str(value[0]), str(value[1])
-        if level not in {"dense", "very_dense"}:
+        if level not in {"keep", "dense", "very_dense"}:
             continue
         result[way_id] = (render_class, level)
     return result
