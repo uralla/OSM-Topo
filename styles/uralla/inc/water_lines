@@ -117,7 +117,7 @@ waterway=* & tunnel=culvert [0x10c03 resolution 24 continue]
 
 # Intermittent stream: no line at 22; thin dash at 23 only for segments >50 m;
 # thick dash at 24 for all segments.
-waterway=stream & intermittent=yes & length()>50 [0x10f1d resolution 23 continue]
+waterway=stream & intermittent=yes & length()>50 [0x10f1d resolution 23-23 continue]
 waterway=stream & intermittent=yes [0x10f1e resolution 24]
 
 # Drain intermittent behaviour is intentionally unchanged pending WATER-01.
@@ -134,8 +134,8 @@ waterway=rapid | waterway=rapids | whitewater=rapid | whitewater=rapids
 # Ordinary streams intentionally differ from rivers on the far stream LOD:
 # at 22 they are a thin dash, then become a 1 px solid line at 23 and a
 # 2 px solid line at 24. This makes river/stream class readable at distance.
-waterway=stream & intermittent!=yes & length()>100 [0x10f1d resolution 22 continue]
-waterway=stream & intermittent!=yes & length()>50 [0x18 resolution 23 continue]
+waterway=stream & intermittent!=yes & length()>100 [0x10f1d resolution 22-22 continue]
+waterway=stream & intermittent!=yes & length()>50 [0x18 resolution 23-23 continue]
 waterway=stream & intermittent!=yes [0x19 resolution 24]
 
 # Drain/canal are intentionally left on their current hierarchy pending a
