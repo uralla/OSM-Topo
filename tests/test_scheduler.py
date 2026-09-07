@@ -17,6 +17,7 @@ def _manifest() -> dict[str, object]:
             "beta": {},
             "urgent": {"priority": 10, "update_interval_days": 7},
             "disabled": {"enabled": False},
+            "test": {},
         },
     }
 
@@ -47,6 +48,10 @@ class SchedulerTests(unittest.TestCase):
     def test_running_product_is_excluded(self) -> None:
         queue = build_queue(_manifest(), {}, {"urgent", "alpha"}, now=NOW)
         self.assertEqual([item.product for item in queue], ["beta"])
+
+    def test_test_product_is_manual_only_and_never_enters_daemon_queue(self) -> None:
+        queue = build_queue(_manifest(), {}, now=NOW)
+        self.assertNotIn("test", {item.product for item in queue})
 
 
 if __name__ == "__main__":
