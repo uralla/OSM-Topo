@@ -52,6 +52,14 @@ def test_small_iremel_is_not_promoted_by_nearby_name() -> None:
     assert PEAK_LANDMARK_TAG not in tags
 
 
+def test_small_iremel_is_explicitly_blocked_from_landmark_style() -> None:
+    text = PEAK_PRIORITY.read_text(encoding="utf-8")
+
+    suppression = "natural=peak & name='Малый Иремель' {delete uralla:peak_landmark; delete note}"
+    assert suppression in text
+    assert text.index(suppression) < text.index("uralla:peak_landmark=yes {add note=great-peak}")
+
+
 def test_generic_peaks_and_hills_are_resolution_24_only() -> None:
     text = LANDUSE_POINTS.read_text(encoding="utf-8")
 
