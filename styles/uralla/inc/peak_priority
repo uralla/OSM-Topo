@@ -2,6 +2,11 @@
 # The same landmark set is still documented in landuse_points; matching here gives
 # priority peaks ownership before tourism/other generic POI rules can consume them.
 
+# Малый Иремель is a nearby secondary summit and must never inherit the overview
+# landmark status intended for Большой Иремель, even if upstream metadata happens
+# to associate both summits with the same broader Iremel Wikidata entity.
+natural=peak & name='Малый Иремель' {delete uralla:peak_landmark; delete note}
+
 # Static catalogue enrichment from the semantic preprocessor.
 uralla:peak_landmark=yes {add note=great-peak}
 
