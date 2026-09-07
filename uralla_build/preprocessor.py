@@ -48,6 +48,7 @@ WIKIDATA_RE = re.compile(r"\bQ[1-9][0-9]*\b", re.IGNORECASE)
 PEAK_LANDMARK_TAG = "uralla:peak_landmark"
 LONG_NAME_TAG = "uralla:long_name"
 DISPLAY_LABEL_TAG = "uralla:label"
+ROUTE_LABEL_TAG = "uralla:route_label"
 LONG_NAME_LIMIT = 30
 PEAK_NATURAL_TYPES = {"peak", "volcano"}
 DEFAULT_PEAK_CATALOG = Path(__file__).resolve().parents[1] / "catalog/peak-landmarks.tsv"
@@ -74,6 +75,30 @@ _GEOGRAPHIC_LEADING_ABBREVIATIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"^(?:Верхнее|Верхняя|Верхний|Верхние)\s+(.+?)$", re.IGNORECASE), "В. "),
     (re.compile(r"^(?:Нижнее|Нижняя|Нижний|Нижние)\s+(.+?)$", re.IGNORECASE), "Н. "),
 )
+
+
+_ROUTE_LABEL_SUBSTITUTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bЮжноуральск(?:ая|ий|ое|ие)\b", re.IGNORECASE), "Ю-Ур"),
+    (re.compile(r"\bЭкологическ(?:ая|ий|ое|ие)\b", re.IGNORECASE), "Эко"),
+    (re.compile(r"\bпос[её]лок\b", re.IGNORECASE), "пос"),
+    (re.compile(r"\bстанция\b", re.IGNORECASE), "ст"),
+    (re.compile(r"\bдеревня\b", re.IGNORECASE), "дер"),
+    (re.compile(r"\bозеро\b", re.IGNORECASE), "оз"),
+    (re.compile(r"\bгора\b", re.IGNORECASE), "г"),
+    (re.compile(r"\bперевал\b", re.IGNORECASE), "пер"),
+    (re.compile(r"\bурочище\b", re.IGNORECASE), "ур"),
+    (re.compile(r"\bрека\b", re.IGNORECASE), "р"),
+    (re.compile(r"\b(?:Большая|Большой|Большое|Большие)\b", re.IGNORECASE), "Бол."),
+    (re.compile(r"\b(?:Малая|Малый|Малое|Малые)\b", re.IGNORECASE), "Мал."),
+    (re.compile(r"\b(?:Верхняя|Верхний|Верхнее|Верхние)\b", re.IGNORECASE), "Верх."),
+    (re.compile(r"\b(?:Нижняя|Нижний|Нижнее|Нижние)\b", re.IGNORECASE), "Ниж."),
+)
+
+_ROUTE_LABEL_FALLBACKS = {
+    "hiking": "пеш. маршрут",
+    "bicycle": "веломаршрут",
+    "mtb": "MTB маршрут",
+}
 
 
 _GEOGRAPHIC_PREFIX_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
@@ -273,6 +298,38 @@ def enrich_long_name_tags(
         return result, False
     changed = result.get(LONG_NAME_TAG) != "yes"
     result[LONG_NAME_TAG] = "yes"
+    return result, changed
+
+
+def enrich_route_label_tags(
+    tags: Mapping[str, str] | object,
+) -> tuple[dict[str, str], bool]:
+    items = tags.items() if isinstance(tags, Mapping) else iter(tags)  # type: ignore[arg-type]
+    result = {str(key): str(value) for key, value in items}
+
+    if result.get("type") != "route":
+        return result, False
+
+    route = result.get("route", "")
+    fallback = _ROUTE_LABEL_FALLBACKS.get(route)
+    if fallback is None:
+        return result, False
+
+    name = result.get("name", "")
+    if not name or len(name) <= LONG_NAME_LIMIT:
+        return result, False
+
+    label = name
+    for pattern, replacement in _ROUTE_LABEL_SUBSTITUTIONS:
+        label = pattern.sub(replacement, label)
+    label = " ".join(label.split())
+
+    if len(label) > LONG_NAME_LIMIT:
+        ref = result.get("ref", "").strip()
+        label = ref if ref and len(ref) <= LONG_NAME_LIMIT else fallback
+
+    changed = result.get(ROUTE_LABEL_TAG) != label
+    result[ROUTE_LABEL_TAG] = label
     return result, changed
 
 
@@ -626,6 +683,9 @@ def preprocess_pbf(
                 if place_admin_added:
                     counters["place_admin_enriched"] += 1
                 final_tags, _long_name_added = enrich_long_name_tags(final_tags)
+                final_tags, route_label_added = enrich_route_label_tags(final_tags)
+                if route_label_added:
+                    counters["route_labels_enriched"] += 1
                 final_tags, kite_added = enrich_kite_tags(final_tags)
                 if kite_added:
                     counters["kite_infrastructure_enriched"] += 1
