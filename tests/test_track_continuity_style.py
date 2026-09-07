@@ -19,10 +19,6 @@ class TrackContinuityStyleTests(unittest.TestCase):
             "highway=track & tracktype=grade1 {add mkgmap:display_name = '${name}'} [0x07 resolution 21-23 continue]",
             self.text,
         )
-        self.assertNotIn(
-            "highway=track & tracktype!=grade1 & length()>100 {add mkgmap:display_name = '${name}'} [0x12 resolution 22-23 continue]",
-            self.text,
-        )
 
     def test_marked_tracks_keep_priority_without_way_length(self) -> None:
         self.assertIn(
@@ -34,15 +30,16 @@ class TrackContinuityStyleTests(unittest.TestCase):
             self.text,
         )
 
-    def test_dense_track_decluttering_still_uses_length_filter(self) -> None:
+    def test_dense_track_decluttering_uses_density_without_way_length(self) -> None:
         self.assertIn(
-            "highway=track & tracktype=grade1 & uralla:road_density=dense & length()>100",
+            "highway=track & tracktype=grade1 & uralla:road_density=dense {add mkgmap:display_name = '${name}'} [0x07 resolution 22-23 continue]",
             self.text,
         )
         self.assertIn(
-            "highway=track & tracktype!=grade1 & uralla:road_density=dense & length()>100",
+            "highway=track & tracktype!=grade1 & uralla:road_density=dense {add mkgmap:display_name = '${name}'} [0x12 resolution 23-23 continue]",
             self.text,
         )
+        self.assertNotIn("length()", self.text)
 
 
 if __name__ == "__main__":
