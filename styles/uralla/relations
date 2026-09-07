@@ -21,13 +21,25 @@
 
 # [CUSTOM/АВТОРСКОЕ] Marked hiking / bicycle / MTB routes.
 # Carry relation names to member ways; line style uses this as a fallback name.
-type=route & route=hiking & name=* {
+type=route & route=hiking & uralla:route_label=* {
+  apply {
+    set mkgmap:trail_name='$(mkgmap:trail_name);${uralla:route_label|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${uralla:route_label}';
+  }
+}
+
+type=route & route=hiking & uralla:route_label!=* & name=* {
   apply {
     set mkgmap:trail_name='$(mkgmap:trail_name);${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.}';
   }
 }
 
-type=route & (route=bicycle | route=mtb) & name=* {
+type=route & (route=bicycle | route=mtb) & uralla:route_label=* {
+  apply {
+    set mkgmap:trail_name='$(mkgmap:trail_name);${uralla:route_label|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${uralla:route_label}';
+  }
+}
+
+type=route & (route=bicycle | route=mtb) & uralla:route_label!=* & name=* {
   apply {
     set mkgmap:trail_name='$(mkgmap:trail_name);${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.}';
   }
