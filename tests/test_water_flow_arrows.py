@@ -48,6 +48,18 @@ def test_0x0f_carrier_precedes_water_visual_ownership() -> None:
     assert arrow < stream
 
 
+def test_stream_dash_styles_are_limited_to_exact_lods() -> None:
+    text = WATER.read_text(encoding="utf-8")
+
+    assert "waterway=stream & intermittent=yes & length()>50 [0x10f1d resolution 23-23 continue]" in text
+    assert "waterway=stream & intermittent=yes & length()>50 [0x10f1d resolution 23 continue]" not in text
+
+    assert "waterway=stream & intermittent!=yes & length()>100 [0x10f1d resolution 22-22 continue]" in text
+    assert "waterway=stream & intermittent!=yes & length()>50 [0x18 resolution 23-23 continue]" in text
+    assert "waterway=stream & intermittent!=yes & length()>100 [0x10f1d resolution 22 continue]" not in text
+    assert "waterway=stream & intermittent!=yes & length()>50 [0x18 resolution 23 continue]" not in text
+
+
 def test_reverse_merge_cannot_flip_0x0f_water_carrier() -> None:
     text = ARGS.read_text(encoding="utf-8")
     assert "allow-reverse-merge" in text
