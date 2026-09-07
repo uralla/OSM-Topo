@@ -4,6 +4,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WATER = ROOT / "styles" / "uralla" / "inc" / "water_lines"
 TYP = ROOT / "styles" / "uralla.txt"
+ARGS = ROOT / "styles" / "uralla.args"
+NO_DEM_ARGS = ROOT / "styles" / "uralla-no-dem.args"
 
 
 def _line_block(text: str, type_code: str) -> str:
@@ -26,8 +28,8 @@ def test_direction_overlay_precedes_water_visual_ownership() -> None:
     text = WATER.read_text(encoding="utf-8")
 
     arrow = text.index("[0x10f11 resolution 24 continue]")
-    river = text.index("uralla:river_rank=1")
-    intermittent = text.index("(waterway=stream | waterway=drain) & intermittent=yes")
+    river = text.index("uralla:river_rank=*")
+    intermittent = text.index("waterway=stream & intermittent=yes")
     stream = text.index("waterway=stream & intermittent!=yes")
 
     assert arrow < river
@@ -41,3 +43,10 @@ def test_typ_direction_overlay_is_non_routable_and_oriented() -> None:
 
     assert "Non-routable customizable line" in block
     assert "UseOrientation=Y" in block
+
+
+def test_reverse_merge_cannot_flip_water_arrow_type() -> None:
+    for path in (ARGS, NO_DEM_ARGS):
+        text = path.read_text(encoding="utf-8")
+        assert "allow-reverse-merge" in text
+        assert "line-types-with-direction=0x10f11" in text
