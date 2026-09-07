@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -10,7 +11,7 @@ import sys
 import time
 from typing import Any, Callable, Mapping
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 import yaml
 
@@ -25,6 +26,8 @@ _DOWNLOAD_ATTEMPTS = 4
 _DOWNLOAD_BACKOFF_SECONDS = (5, 15, 30)
 _DOWNLOAD_TIMEOUT_SECONDS = 300
 _DOWNLOAD_READ_BLOCK = 1 * _MIB
+_METADATA_TIMEOUT_SECONDS = 30
+_METADATA_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +38,16 @@ class SourceResult:
     action: str
     size: int
     age_days: float
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class RemoteSourceMetadata:
+    etag: str | None
+    last_modified: str | None
+    content_length: int | None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -85,6 +98,141 @@ def _progress_interval(expected: int | None) -> int:
     if expected is None:
         return 64 * _MIB
     return min(256 * _MIB, max(4 * _MIB, expected // 20))
+
+
+def _metadata_path(host: HostConfig, source_key: str) -> Path:
+    safe_key = "".join(
+        character if character.isalnum() or character in {"-", "_", "."} else "_"
+        for character in source_key
+    )
+    return host.paths.work_root / "state" / "source-metadata" / f"{safe_key}.json"
+
+
+def _parse_content_length(value: object) -> int | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text.isdigit():
+        return None
+    parsed = int(text)
+    return parsed if parsed >= 0 else None
+
+
+def _probe_remote_metadata(url: str) -> RemoteSourceMetadata | None:
+    """Read cheap HTTP validators without downloading the PBF body.
+
+    Some mirrors do not implement HEAD correctly. HTTP 403/405/501 is therefore
+    treated as "metadata unavailable" and the normal GET download remains the
+    fallback. Other network errors are logged and also fall back to the existing
+    download path, whose retry logic remains authoritative.
+    """
+
+    request = Request(
+        url,
+        method="HEAD",
+        headers={"User-Agent": "Uralla-OSM-Topo/1"},
+    )
+    try:
+        with urlopen(request, timeout=_METADATA_TIMEOUT_SECONDS) as response:
+            headers = response.headers
+            return RemoteSourceMetadata(
+                headers.get("ETag"),
+                headers.get("Last-Modified"),
+                _parse_content_length(headers.get("Content-Length")),
+            )
+    except HTTPError as exc:
+        if exc.code in {403, 405, 501}:
+            _log(f"remote metadata unavailable (HTTP {exc.code}); using normal download check")
+            return None
+        _log(f"remote metadata probe failed (HTTP {exc.code}); using normal download check")
+        return None
+    except (URLError, TimeoutError, ConnectionError, OSError) as exc:
+        detail = str(exc) or exc.__class__.__name__
+        _log(f"remote metadata probe failed ({detail}); using normal download check")
+        return None
+
+
+def _load_cached_metadata(
+    path: Path,
+    *,
+    url: str,
+) -> RemoteSourceMetadata | None:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    if not isinstance(raw, Mapping):
+        return None
+    if raw.get("schema_version") != _METADATA_SCHEMA_VERSION or raw.get("url") != url:
+        return None
+    etag = raw.get("etag")
+    last_modified = raw.get("last_modified")
+    content_length = raw.get("content_length")
+    return RemoteSourceMetadata(
+        str(etag) if isinstance(etag, str) and etag else None,
+        str(last_modified) if isinstance(last_modified, str) and last_modified else None,
+        content_length
+        if isinstance(content_length, int)
+        and not isinstance(content_length, bool)
+        and content_length >= 0
+        else None,
+    )
+
+
+def _write_cached_metadata(
+    path: Path,
+    *,
+    url: str,
+    metadata: RemoteSourceMetadata,
+    checked_at: float,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": _METADATA_SCHEMA_VERSION,
+        "url": url,
+        "etag": metadata.etag,
+        "last_modified": metadata.last_modified,
+        "content_length": metadata.content_length,
+        "checked_at": checked_at,
+    }
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.partial")
+    try:
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _remote_is_unchanged(
+    previous: RemoteSourceMetadata | None,
+    current: RemoteSourceMetadata | None,
+    *,
+    local_size: int,
+) -> bool:
+    if previous is None or current is None:
+        return False
+
+    if current.content_length is not None and current.content_length != local_size:
+        return False
+
+    if previous.etag and current.etag:
+        return previous.etag == current.etag
+
+    if previous.last_modified and current.last_modified:
+        if previous.last_modified != current.last_modified:
+            return False
+        if (
+            previous.content_length is not None
+            and current.content_length is not None
+            and previous.content_length != current.content_length
+        ):
+            return False
+        return True
+
+    return False
 
 
 def _download_once(url: str, target: Path) -> None:
@@ -192,6 +340,7 @@ def ensure_source(
     now: float | None = None,
     downloader: Callable[[str, Path], None] = _download,
     validator: Callable[[Path], None] = _validate_pbf,
+    metadata_fetcher: Callable[[str], RemoteSourceMetadata | None] | None = None,
 ) -> SourceResult | None:
     downloads = download_config.get("sources")
     if not isinstance(downloads, Mapping):
@@ -216,6 +365,8 @@ def ensure_source(
     destination.parent.mkdir(parents=True, exist_ok=True)
     current_time = time.time() if now is None else now
     previous_exists = destination.is_file() and destination.stat().st_size > 0
+    metadata_path = _metadata_path(host, source_key)
+    cached_metadata = _load_cached_metadata(metadata_path, url=url)
 
     if previous_exists:
         size = destination.stat().st_size
@@ -235,10 +386,46 @@ def ensure_source(
             )
         _log(
             f"{source_key}: local {_format_size(size)}, age {age:.2f} d; "
-            f"stale (>= {refresh_days} d), update required"
+            f"stale (>= {refresh_days} d), checking upstream metadata"
         )
     else:
         _log(f"{source_key}: local source missing, download required")
+
+    # Keep custom downloaders used by tests/callers network-free unless they
+    # explicitly provide a metadata fetcher. Production uses the built-in HEAD
+    # probe automatically with the built-in downloader.
+    if metadata_fetcher is None:
+        metadata_fetcher = _probe_remote_metadata if downloader is _download else lambda _url: None
+    remote_metadata = metadata_fetcher(url)
+
+    if previous_exists and _remote_is_unchanged(
+        cached_metadata,
+        remote_metadata,
+        local_size=destination.stat().st_size,
+    ):
+        os.utime(destination, (current_time, current_time))
+        if remote_metadata is not None:
+            _write_cached_metadata(
+                metadata_path,
+                url=url,
+                metadata=remote_metadata,
+                checked_at=current_time,
+            )
+        size = destination.stat().st_size
+        _log(
+            f"{source_key}: upstream validators unchanged; local {_format_size(size)} reused"
+        )
+        return SourceResult(
+            source_key,
+            str(destination),
+            url,
+            "reused",
+            size,
+            0.0,
+        )
+
+    if previous_exists:
+        _log(f"{source_key}: upstream changed or cannot be proven unchanged; update required")
 
     temporary = _partial_path(destination)
     temporary.unlink(missing_ok=True)
@@ -254,6 +441,13 @@ def ensure_source(
         _log("validation OK")
         _log("replacing existing source atomically" if previous_exists else "installing source atomically")
         os.replace(temporary, destination)
+        if remote_metadata is not None:
+            _write_cached_metadata(
+                metadata_path,
+                url=url,
+                metadata=remote_metadata,
+                checked_at=current_time,
+            )
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
