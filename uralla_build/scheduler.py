@@ -9,6 +9,11 @@ from typing import Mapping
 from .errors import ManifestError
 
 
+# Dedicated development products stay available to explicit build-product calls but
+# never participate in the unattended daemon rotation.
+MANUAL_ONLY_PRODUCTS = frozenset({"test"})
+
+
 @dataclass(frozen=True, slots=True)
 class QueueItem:
     product: str
@@ -41,7 +46,7 @@ def build_queue(
     *,
     now: datetime | None = None,
 ) -> list[QueueItem]:
-    """Rank enabled, non-running products without mutating history."""
+    """Rank enabled, daemon-eligible, non-running products without mutating history."""
 
     defaults = manifest.get("defaults")
     products = manifest.get("products")
@@ -58,6 +63,8 @@ def build_queue(
         if not isinstance(raw, Mapping):
             continue
         product = str(key)
+        if product in MANUAL_ONLY_PRODUCTS:
+            continue
         if not raw.get("enabled", default_enabled) or product in running:
             continue
         priority = raw.get("priority", default_priority)
