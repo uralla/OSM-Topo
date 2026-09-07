@@ -37,6 +37,12 @@ def _manifest():
                 "web": {"title": "Собираемая карта", "order": 10, "visible": True},
                 "update_interval_days": 7,
             },
+            "test": {
+                "names": {"family": "TEST", "output_img": "TEST.img"},
+                # Keep this deliberately true: manual-only policy must still win.
+                "web": {"title": "TEST", "order": 5, "visible": True},
+                "update_interval_days": 7,
+            },
         },
     }
 
@@ -112,11 +118,23 @@ def test_public_status_uses_success_ttl_and_latest_build_state(tmp_path):
     assert "актуальна" in text
     assert "Ошибка карты" in text
     assert "ошибка" in text
-    assert "Interrupted.OSM" in text
-    assert "прервано" in text
+    assert "Interrupted.OSM" not in text
     assert "Собираемая карта" in text
     assert "собирается" in text
+    assert "TEST" not in text
     assert "первая сборка" in text
+
+
+def test_snapshot_marks_manual_only_test_as_not_public(tmp_path):
+    history = HistoryStore(tmp_path / "state" / "history.sqlite3")
+    snapshot = build_public_status_snapshot(
+        _manifest(),
+        history,
+        now=datetime(2026, 9, 3, 10, 0, tzinfo=timezone.utc),
+    )
+
+    test_row = next(row for row in snapshot["products"] if row["product"] == "test")
+    assert test_row["web_visible"] is False
 
 
 def test_snapshot_keeps_running_product_downloadable(tmp_path):
@@ -180,7 +198,11 @@ def test_public_status_writes_atomic_utf8_txt_and_filtered_json(tmp_path):
     )
 
     assert target == output / "map-update-status.txt"
-    assert "Сроки обновления Garmin-карт" in target.read_text(encoding="utf-8")
+    text = target.read_text(encoding="utf-8")
+    assert "Сроки обновления Garmin-карт" in text
+    assert "TEST" not in text
+    assert "Interrupted.OSM" not in text
+
     json_target = output / "map-update-status.json"
     payload = json.loads(json_target.read_text(encoding="utf-8"))
     assert payload["schema_version"] == 1
