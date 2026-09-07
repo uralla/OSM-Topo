@@ -55,9 +55,14 @@ def test_small_iremel_is_not_promoted_by_nearby_name() -> None:
 def test_small_iremel_is_explicitly_blocked_from_landmark_style() -> None:
     text = PEAK_PRIORITY.read_text(encoding="utf-8")
 
-    suppression = "natural=peak & name='Малый Иремель' {delete uralla:peak_landmark; delete note}"
-    assert suppression in text
-    assert text.index(suppression) < text.index("uralla:peak_landmark=yes {add note=great-peak}")
+    raw = "natural=peak & name='Малый Иремель'"
+    normalized = "natural=peak & uralla:label='Малый Иремель'"
+    landmark = "uralla:peak_landmark=yes {add note=great-peak}"
+    assert raw in text
+    assert normalized in text
+    assert "{delete uralla:peak_landmark; delete note}" in text
+    assert text.index(raw) < text.index(landmark)
+    assert text.index(normalized) < text.index(landmark)
 
 
 def test_generic_peaks_and_hills_are_resolution_24_only() -> None:
