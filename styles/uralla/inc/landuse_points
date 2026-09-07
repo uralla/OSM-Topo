@@ -24,23 +24,34 @@ natural=rock {name "${name} (${ele})"} [0x6607 resolution 24]
 natural=cliff {name "${name}"} [0x6607 resolution 24]
 
 
-# Minor relief below 200 m: peak/hill is only a close-zoom terrain marker.
-# No name/elevation label is drawn for these low summits.
-(natural=peak | natural=hill) & ele < 200 [0x6615 resolution 24]
+# Low summits: weaker symbol, close zoom only, but keep useful label data.
+(natural=peak | natural=hill) & ele < 300 & name=*
+ {name "${name} (${ele} м)"} [0x6615 resolution 24]
 
-# Distant peak anchors are owned exclusively by inc/peak_priority. Generic
-# peaks/hills are close-zoom features only, so nearby secondary summits such as
-# Малый Иремель cannot compete with curated overview anchors at resolution 23.
-natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 24 continue]
+(natural=peak | natural=hill) & ele < 300 & name!=*
+ {name "${ele} м"} [0x6615 resolution 24]
 
-# Named summits without an elevation remain useful only on the closest zoom.
-(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6614 resolution 24 continue]
+# Generic summits: original LOD hierarchy.
+natural=peak & ele=* & name=* & note!=great-peak
+| natural=hill & ele=* & name=*
+ {name "${name}"} [0x6619 resolution 21-22 continue]
 
-natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 24 continue]
+natural=peak & ele=* & name=* & note!=great-peak
+| natural=hill & ele=* & name=*
+ {name "${name} (${ele} м)"} [0x6614 resolution 23-24 continue]
 
-# natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${name}"} [0x6619 resolution 24 continue]
+natural=peak & ele=* & name!=* & note!=great-peak
+| natural=hill & ele=* & name!=*
+ {name "${ele} м"} [0x6619 resolution 23-24 continue]
 
-natural=peak & ele!=* & name!=* & note!=great-peak | natural=hill & ele!=* & name!=* [0x6615 resolution 24]
+# Unknown elevation.
+(natural=peak & ele!=* & name=* & note!=great-peak)
+| (natural=hill & ele!=* & name=*)
+ {name "${name}"} [0x6619 resolution 24]
+
+natural=peak & ele!=* & name!=* & note!=great-peak
+| natural=hill & ele!=* & name!=*
+ [0x6615 resolution 24]
 
 
 natural=volcano & note!=great-peak {name "${name}"} [0x2c0c resolution 21-22 continue]
