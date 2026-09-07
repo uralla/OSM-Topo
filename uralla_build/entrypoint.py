@@ -13,7 +13,7 @@ from typing import Mapping, Sequence
 from .cli import main as cli_main
 from .errors import ManifestError, StageError
 from .history import HistoryStore
-from .host import HostConfig, load_host_config
+from .host import HostConfig, data_path, load_host_config
 from .incremental import rebuild_from_mkgmap, rebuild_from_splitter
 from .manifest import load_manifest
 from .source import DEFAULT_SOURCE_DOWNLOADS, ensure_product_source, load_source_downloads
@@ -194,6 +194,29 @@ def _human_build_summary(
     return "\n".join(lines)
 
 
+def _test_source_exists(manifest: Mapping[str, object], host: HostConfig, product_key: str) -> bool:
+    if product_key != "test":
+        return False
+    products = manifest.get("products")
+    sources = manifest.get("sources")
+    if not isinstance(products, Mapping) or not isinstance(sources, Mapping):
+        return False
+    product = products.get(product_key)
+    if not isinstance(product, Mapping):
+        return False
+    source_key = product.get("source")
+    if not isinstance(source_key, str):
+        return False
+    source = sources.get(source_key)
+    if not isinstance(source, Mapping):
+        return False
+    source_path = source.get("path")
+    if not isinstance(source_path, str) or not source_path:
+        return False
+    path = data_path(host, source_path)
+    return path.is_file() and path.stat().st_size > 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
     request = _build_product_request(arguments)
@@ -219,9 +242,16 @@ def main(argv: list[str] | None = None) -> int:
             manifest = load_manifest(manifest_path)
             host = load_host_config(host_path, repo_root)
             if from_stage is None:
-                downloads_path = (repo_root / DEFAULT_SOURCE_DOWNLOADS).resolve()
-                downloads = load_source_downloads(downloads_path)
-                ensure_product_source(manifest, host, product, downloads)
+                if _test_source_exists(manifest, host, product):
+                    print(
+                        "[source] test: existing local OSM source accepted regardless of age; refresh skipped",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                else:
+                    downloads_path = (repo_root / DEFAULT_SOURCE_DOWNLOADS).resolve()
+                    downloads = load_source_downloads(downloads_path)
+                    ensure_product_source(manifest, host, product, downloads)
         except (ManifestError, StageError, OSError) as exc:
             print(f"ERROR source: {exc}", file=sys.stderr)
             return 1
