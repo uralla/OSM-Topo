@@ -41,15 +41,16 @@ class HighwayTunnelTests(unittest.TestCase):
         self.assertIn("highway=track & tracktype!=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]", text)
         self.assertIn("highway=cycleway & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]", text)
 
-    def test_local_tunnel_hierarchy_matches_ordinary_roads(self) -> None:
+    def test_local_tunnel_hierarchy_matches_ordinary_road_start_lods(self) -> None:
         text = self._text()
         expected = (
-            "highway=minor & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 22]",
-            "highway=unclassified & ref=* & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 22]",
-            "highway=unclassified & ref!=* & tunnel=yes [0x08 road_class=0 road_speed=3 resolution 23]",
-            "highway=living_street & tunnel=yes [0x08 road_class=0 road_speed=2 resolution 24]",
-            "highway=residential & tunnel=yes [0x08 road_class=0 road_speed=3 resolution 24]",
-            "highway=service & tunnel=yes [0x08 road_class=0 road_speed=2 resolution 24]",
+            "highway=minor & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 20]",
+            "highway=unclassified & ref=* & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 19]",
+            "highway=unclassified & ref!=* & tunnel=yes [0x08 road_class=0 road_speed=3 resolution 19]",
+            "highway=living_street & tunnel=yes [0x08 road_class=0 road_speed=2 resolution 23]",
+            "highway=residential & tunnel=yes [0x08 road_class=0 road_speed=3 resolution 22]",
+            "highway=service & tunnel=yes [0x08 road_class=0 road_speed=2 resolution 23]",
+            "highway=pedestrian & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]",
         )
         for rule in expected:
             self.assertIn(rule, text)
