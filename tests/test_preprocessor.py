@@ -7,6 +7,7 @@ import unittest
 from uralla_build.preprocessor import (
     enrich_geographic_label_tags,
     enrich_long_name_tags,
+    enrich_route_label_tags,
     enrich_place_admin_tags,
     enrich_peak_landmark_tags,
     filter_tags,
@@ -67,6 +68,48 @@ class BlacklistPreprocessorTests(unittest.TestCase):
         self.assertTrue(changed)
         self.assertEqual(tags["uralla:long_name"], "yes")
         self.assertEqual(tags["name"], long_name)
+
+    def test_route_label_only_compacts_names_over_30_characters(self) -> None:
+        short = "Короткий туристический маршрут"
+        tags, changed = enrich_route_label_tags(
+            {"type": "route", "route": "hiking", "name": short}
+        )
+        self.assertFalse(changed)
+        self.assertNotIn("uralla:route_label", tags)
+
+        tags, changed = enrich_route_label_tags(
+            {
+                "type": "route",
+                "route": "hiking",
+                "name": "Южноуральская тропа - Большая Калагаза",
+            }
+        )
+        self.assertTrue(changed)
+        self.assertEqual(
+            tags["uralla:route_label"],
+            "Ю-Ур тропа - Бол. Калагаза",
+        )
+        self.assertLessEqual(len(tags["uralla:route_label"]), 30)
+
+    def test_route_label_uses_ref_then_type_fallback(self) -> None:
+        long_name = "Очень длинное название туристического маршрута через несколько перевалов"
+
+        tags, changed = enrich_route_label_tags(
+            {
+                "type": "route",
+                "route": "hiking",
+                "name": long_name,
+                "ref": "R-12",
+            }
+        )
+        self.assertTrue(changed)
+        self.assertEqual(tags["uralla:route_label"], "R-12")
+
+        tags, changed = enrich_route_label_tags(
+            {"type": "route", "route": "mtb", "name": long_name}
+        )
+        self.assertTrue(changed)
+        self.assertEqual(tags["uralla:route_label"], "MTB маршрут")
 
     def test_geographic_label_strips_duplicate_elevation_suffix_only_with_ele(self) -> None:
         tags, changed = enrich_geographic_label_tags(
