@@ -155,8 +155,8 @@ uralla:kite=yes { name '${name}' | 'кайт' } [0x6609 resolution 24]
 # Viewpoints: no synthetic permanent map text. Named viewpoints keep their real name.
 # Unnamed viewpoints keep an empty primary Garmin label and a secondary explanatory
 # label for object information/hover, so the icon stays clean but remains understandable.
-tourism=viewpoint & name=* { name '${name}' } [0x2c04 resolution 23]
-tourism=viewpoint & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='видовая точка' } [0x2c04 resolution 23]
+tourism=viewpoint & natural!=peak & natural!=hill & name=* { name '${name}' } [0x2c04 resolution 23]
+tourism=viewpoint & natural!=peak & natural!=hill & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='видовая точка' } [0x2c04 resolution 23]
 # Cave entrances use one icon progressively across two levels:
 # - resolution 23 only: named caves, icon without a permanent label;
 # - resolution 24: all caves; named caves show their real name, unnamed caves stay unlabeled.
