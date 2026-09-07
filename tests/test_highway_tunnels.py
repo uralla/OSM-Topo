@@ -28,19 +28,18 @@ class HighwayTunnelTests(unittest.TestCase):
             "highway=trunk & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 14]",
             "highway=trunk_link & tunnel=yes [0x08 road_class=4 road_speed=6 resolution 18]",
             "highway=primary & tunnel=yes [0x08 road_class=3 road_speed=5 resolution 17]",
-            "highway=secondary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 20]",
-            "highway=tertiary & tunnel=yes [0x08 road_class=1 road_speed=4 resolution 23]",
+            "highway=secondary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 18]",
+            "highway=tertiary & tunnel=yes [0x08 road_class=2 road_speed=5 resolution 18]",
         )
         for rule in expected:
             self.assertIn(rule, text)
 
-    def test_tunnel_overview_thresholds_are_softer_than_ordinary_roads(self) -> None:
+    def test_tunnel_overview_hierarchy_has_no_length_gates(self) -> None:
         text = self._text()
-        self.assertIn("highway=secondary & tunnel=yes & length()>250 [0x08 road_class=2 road_speed=5 resolution 18]", text)
-        self.assertIn("highway=tertiary & tunnel=yes & length()>250 [0x08 road_class=1 road_speed=4 resolution 19]", text)
-        self.assertIn("highway=track & tracktype=grade1 & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=1 resolution 21]", text)
-        self.assertIn("highway=track & tracktype!=grade1 & tunnel=yes & length()>50 [0x08 road_class=0 road_speed=1 resolution 22]", text)
-        self.assertIn("highway=cycleway & tunnel=yes & length()>100 [0x08 road_class=0 road_speed=1 resolution 22]", text)
+        self.assertNotIn("length()", text)
+        self.assertIn("highway=track & tracktype=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 21]", text)
+        self.assertIn("highway=track & tracktype!=grade1 & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]", text)
+        self.assertIn("highway=cycleway & tunnel=yes [0x08 road_class=0 road_speed=1 resolution 22]", text)
 
     def test_local_tunnel_hierarchy_matches_ordinary_roads(self) -> None:
         text = self._text()
