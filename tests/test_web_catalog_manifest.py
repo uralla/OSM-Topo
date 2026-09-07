@@ -2,6 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from uralla_build.manifest import load_manifest, validate_manifest
+from uralla_build.scheduler import MANUAL_ONLY_PRODUCTS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,19 +46,22 @@ def test_real_manifest_web_catalog_matches_canonical_public_set():
 
     products = manifest["products"]
     visible_products = [
-        product
-        for product in products.values()
-        if product.get("web", {}).get("visible") is True
+        (key, product)
+        for key, product in products.items()
+        if key not in MANUAL_ONLY_PRODUCTS
+        and product.get("web", {}).get("visible") is True
     ]
 
-    assert len(products) == 27
+    assert len(products) == 28
     assert len(visible_products) == 27
+    assert MANUAL_ONLY_PRODUCTS == frozenset({"test"})
 
     actual = {
         product["names"]["output_img"]: product["web"]["title"]
-        for product in visible_products
+        for _, product in visible_products
     }
     assert actual == CANONICAL_WEB_CATALOG
+    assert "TEST.img" not in actual
 
 
 def test_family_ids_and_reserved_map_ranges_are_unique():
