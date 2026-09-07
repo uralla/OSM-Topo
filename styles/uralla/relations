@@ -8,7 +8,7 @@
 # Each line is a rule, of the generalised format:
 #  OSM_tag(s)_to_match  [Garmin_type_code resolution]
 # See http://wiki.openstreetmap.org/wiki/Mkgmap/help/style_rules
-# and http://wiki.openstreetmap.org/wiki/Mkgmap/help/Custom_styles
+# and http://wiki.openstreetmap.org/wiki/mkgmap/help/Custom_styles
 # for more information.
 
 # Names of administrative boundaries.
@@ -23,13 +23,13 @@
 # Carry relation names to member ways; line style uses this as a fallback name.
 type=route & route=hiking & name=* {
   apply {
-    set mkgmap:trail_name='$(mkgmap:trail_name);${name|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name}';
+    set mkgmap:trail_name='$(mkgmap:trail_name);${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.}';
   }
 }
 
 type=route & (route=bicycle | route=mtb) & name=* {
   apply {
-    set mkgmap:trail_name='$(mkgmap:trail_name);${name|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name}';
+    set mkgmap:trail_name='$(mkgmap:trail_name);${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.|not-contained:;:mkgmap:trail_name}' | '$(mkgmap:trail_name)' | '${name|subst:Поселок=>пос.|subst:поселок=>пос.|subst:Посёлок=>пос.|subst:посёлок=>пос.}';
   }
 }
 
