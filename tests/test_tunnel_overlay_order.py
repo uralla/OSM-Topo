@@ -24,7 +24,7 @@ class TunnelOverlayOrderTests(unittest.TestCase):
         include = "include 'inc/tunnels';"
         road_speed_modifier = "highway=* & mkgmap:unpaved!=1 & smoothness ~ '.*(bad|horrible|impassable)'"
         construction_modifier = "highway!=construction & highway=* & construction=* & maxspeed!=*"
-        first_ordinary_road = "highway=primary_link & length()>500"
+        first_ordinary_road = "highway=primary_link | highway=primary & junction=roundabout [0x03 resolution 20-21 continue]"
 
         self.assertIn(include, lines)
         self.assertGreater(lines.index(include), lines.index(road_speed_modifier))
