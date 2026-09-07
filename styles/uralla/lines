@@ -110,7 +110,7 @@ highway=steps [0x12d1f resolution 24 continue]
 highway=steps [0x07 road_class=0 road_speed=0 resolution 24]
 
 # брод
-ford=yes & highway!=pedestrian & highway!=footway & highway!=path & area!=yes [0x11002 resolution 24 continue]
+ford=yes & highway=* & area!=yes [0x11002 resolution 24 continue]
 highway=ford & area!=yes [0x11002 resolution 24]
 
 highway=path & man_made=cutline {delete man_made}
