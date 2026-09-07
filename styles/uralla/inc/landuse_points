@@ -28,18 +28,17 @@ natural=cliff {name "${name}"} [0x6607 resolution 24]
 # No name/elevation label is drawn for these low summits.
 (natural=peak | natural=hill) & ele < 200 [0x6615 resolution 24]
 
-# Distant peak anchors are owned exclusively by inc/peak_priority. Generic named
-# peaks/hills intentionally start only at resolution 23 so nearby secondary
-# summits cannot compete with the curated overview anchors.
-natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 23-24 continue]
+# Distant peak anchors are owned exclusively by inc/peak_priority. Generic
+# peaks/hills are close-zoom features only, so nearby secondary summits such as
+# Малый Иремель cannot compete with curated overview anchors at resolution 23.
+natural=peak & ele=* & name=* & note!=great-peak | natural=hill & ele=* & name=* {name "${name} (${ele} м)"} [0x6614 resolution 24 continue]
 
-# Named summits without an elevation remain useful on close zooms, but do not
-# enter the overview-anchor range.
-(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6614 resolution 23-24 continue]
+# Named summits without an elevation remain useful only on the closest zoom.
+(natural=peak & ele!=* & name=* & note!=great-peak) | (natural=hill & ele!=* & name=*) {name "${name}"} [0x6614 resolution 24 continue]
 
-natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 23-24 continue]
+natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${ele} м"} [0x6619 resolution 24 continue]
 
-# natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${name}"} [0x6619 resolution 23-24 continue]
+# natural=peak & ele=* & name!=* & note!=great-peak | natural=hill & ele=* & name!=* {name "${name}"} [0x6619 resolution 24 continue]
 
 natural=peak & ele!=* & name!=* & note!=great-peak | natural=hill & ele!=* & name!=* [0x6615 resolution 24]
 
