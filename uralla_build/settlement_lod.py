@@ -146,6 +146,8 @@ def rank_settlement_candidates(
                     if _distance_km(candidate, other) <= SETTLEMENT_RADIUS_KM:
                         higher += 1
         lod = _lod_from_higher_count(higher)
+        if candidate.place in {"isolated_dwelling", "farm", "locality"}:
+            lod = max(21, lod)
         lods[candidate.osm_id] = lod
         counts[lod] += 1
     return lods, counts
