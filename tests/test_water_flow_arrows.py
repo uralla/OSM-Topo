@@ -3,30 +3,42 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WATER = ROOT / "styles" / "uralla" / "inc" / "water_lines"
-TYP = ROOT / "styles" / "uralla.txt"
 ARGS = ROOT / "styles" / "uralla.args"
 
 
-def _line_block(text: str, type_code: str) -> str:
-    marker = f"[_line]\nType={type_code}\n"
-    start = text.index(marker)
-    end = text.index("[end]", start)
-    return text[start:end]
-
-
-def test_water_flow_arrows_use_non_routable_directional_overlay() -> None:
+def test_water_flow_arrows_use_original_0x0f_carrier() -> None:
     text = WATER.read_text(encoding="utf-8")
 
-    arrow_rule = "(waterway=river | waterway=stream | waterway=drain | waterway=canal)\n & area!=yes & tunnel!=yes [0x10f11 resolution 24 continue]"
-    assert arrow_rule in text
-    assert "[0x0f road_class=" not in text
-    assert "[0x0f road_speed=" not in text
+    assert "[0x10f11 resolution 24 continue]" not in text
+    assert "[0x0f road_class=0 road_speed=0 resolution 24 continue]" in text
+    assert "add access=no; add taxi=yes; set oneway=yes" in text
 
 
-def test_direction_overlay_precedes_water_visual_ownership() -> None:
+def test_0x0f_carrier_covers_rivers_streams_and_related_waterways() -> None:
     text = WATER.read_text(encoding="utf-8")
 
-    arrow = text.index("[0x10f11 resolution 24 continue]")
+    start = text.index("(waterway=canal")
+    end = text.index("###\n", start)
+    carrier = text[start:end]
+
+    for selector in (
+        "waterway=river",
+        "waterway=stream",
+        "waterway=drain",
+        "waterway=canal",
+        "waterway=rapid",
+        "waterway=rapids",
+        "whitewater=rapid",
+        "whitewater=rapids",
+    ):
+        assert selector in carrier
+    assert "tunnel!=*" in carrier
+
+
+def test_0x0f_carrier_precedes_water_visual_ownership() -> None:
+    text = WATER.read_text(encoding="utf-8")
+
+    arrow = text.index("[0x0f road_class=0 road_speed=0 resolution 24 continue]")
     river = text.index("uralla:river_rank=*")
     intermittent = text.index("waterway=stream & intermittent=yes")
     stream = text.index("waterway=stream & intermittent!=yes")
@@ -36,15 +48,8 @@ def test_direction_overlay_precedes_water_visual_ownership() -> None:
     assert arrow < stream
 
 
-def test_typ_direction_overlay_is_non_routable_and_oriented() -> None:
-    text = TYP.read_text(encoding="utf-8")
-    block = _line_block(text, "0x10f11")
-
-    assert "Non-routable customizable line" in block
-    assert "UseOrientation=Y" in block
-
-
-def test_reverse_merge_cannot_flip_water_arrow_type() -> None:
+def test_reverse_merge_cannot_flip_0x0f_water_carrier() -> None:
     text = ARGS.read_text(encoding="utf-8")
     assert "allow-reverse-merge" in text
-    assert "line-types-with-direction=0x10f11" in text
+    assert "line-types-with-direction=0x0f" in text
+    assert "line-types-with-direction=0x10f11" not in text
