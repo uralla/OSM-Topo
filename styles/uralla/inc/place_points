@@ -71,16 +71,16 @@ place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resoluti
 place=hamlet & mkgmap:area2poi!=true [0x0b00 resolution 22]
 
 # isolated_dwelling / farm / locality are one equal lowest-priority tier.
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 19]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 20]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 21]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 21]
 (place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0b00 resolution 21]
 (place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0b00 resolution 22]
 (place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resolution 23]
 place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]
 place=farm & mkgmap:area2poi!=true [0x0b00 resolution 23]
 
-place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19 { name '${name}' } [0x6408 resolution 19]
-place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=20 { name '${name}' } [0x6408 resolution 20]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19 { name '${name}' } [0x6408 resolution 21]
+place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=20 { name '${name}' } [0x6408 resolution 21]
 place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=21 { name '${name}' } [0x6408 resolution 21]
 place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=22 { name '${name}' } [0x6408 resolution 22]
 place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=23 { name '${name}' } [0x6408 resolution 23]
