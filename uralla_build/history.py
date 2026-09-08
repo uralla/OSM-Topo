@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sqlite3
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterable, Iterator, Mapping
 from uuid import uuid4
 
 from .errors import StageError
@@ -308,6 +308,27 @@ class HistoryStore:
                    GROUP BY product"""
             ).fetchall()
         return {str(row["product"]): str(row["finished_at"]) for row in rows}
+
+    def successful_products_since(
+        self,
+        started_at: str,
+        products: Iterable[str],
+    ) -> set[str]:
+        """Return products with a successful build created at or after started_at."""
+
+        names = tuple(dict.fromkeys(str(product) for product in products))
+        if not names:
+            return set()
+        placeholders = ",".join("?" for _ in names)
+        with self.connect() as connection:
+            rows = connection.execute(
+                f"""SELECT DISTINCT product FROM builds
+                    WHERE status = 'success'
+                      AND created_at >= ?
+                      AND product IN ({placeholders})""",
+                (started_at, *names),
+            ).fetchall()
+        return {str(row["product"]) for row in rows}
 
     def latest_build_by_product(self) -> dict[str, dict[str, Any]]:
         """Return the newest build row for each product, regardless of status."""
