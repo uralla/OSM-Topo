@@ -185,18 +185,30 @@ class PipelineRunner:
                         results.append(result)
                         if result.status not in {"success", "skipped"}:
                             self.runner.history.set_build_status(identifier, "failed")
+                            self.runner.cleanup_old_build_workspaces(
+                                product, identifier
+                            )
                             return PipelineResult(
                                 identifier, product, "failed", tuple(results)
                             )
                     final_result = finalize(identifier) if finalize is not None else None
                 except KeyboardInterrupt:
                     self.runner.history.set_build_status(identifier, "interrupted")
+                    self.runner.cleanup_old_build_workspaces(
+                        product, identifier
+                    )
                     raise
                 except Exception:
                     self.runner.history.set_build_status(identifier, "failed")
+                    self.runner.cleanup_old_build_workspaces(
+                        product, identifier
+                    )
                     raise
 
                 self.runner.history.set_build_status(identifier, "success")
+                self.runner.cleanup_old_build_workspaces(
+                    product, identifier
+                )
                 return PipelineResult(
                     identifier, product, "success", tuple(results), final_result
                 )
