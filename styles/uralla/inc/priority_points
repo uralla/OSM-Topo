@@ -116,6 +116,7 @@ tourism=information { name '${name}' | 'информация' } [0x4c00 resoluti
 # Agreed removals from point display. Polygon/line representations are unaffected.
 tourism=caravan_site { delete tourism }
 (highway=speed_bump | traffic_calming=bump | traffic_calming=hump) { delete highway; delete traffic_calming }
+(highway=traffic_signals | crossing=traffic_signals) { delete highway; delete crossing }
 man_made=utility_pole { delete man_made }
 (leisure=playground | leisure=sports_center | leisure=sports_centre | leisure=pitch | leisure=swimming_pool | leisure=fitness_centre) { delete leisure }
 
