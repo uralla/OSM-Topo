@@ -14,12 +14,18 @@ import subprocess
 import sys
 from typing import Any, Mapping
 
-from .errors import ManifestError
-from .history import HistoryStore
+from .errors import ManifestError, StageError
+from .force_refresh import (
+    clear_forced_refresh,
+    forced_refresh_state_path,
+    load_forced_refresh,
+    write_forced_refresh,
+)
+from .history import HistoryStore, utc_now
 from .host import load_host_config
 from .manifest import load_manifest
 from .public_status import render_map_update_status
-from .scheduler import build_queue
+from .scheduler import QueueItem, build_queue
 from .service_control import (
     SERVICE_NAME,
     run_service_action,
@@ -174,7 +180,138 @@ def _show_map_status(manifest: Mapping[str, object], history: HistoryStore) -> N
     input("\nPress Enter to return…")
 
 
-def _daemon_menu(repo_root: Path) -> None:
+def _forced_refresh_items(
+    manifest: Mapping[str, object],
+    history: HistoryStore,
+) -> list[QueueItem]:
+    items = build_queue(
+        manifest,
+        history.latest_success_by_product(),
+        set(),
+    )
+    return sorted(
+        items,
+        key=lambda item: (
+            0 if item.never_built else 1,
+            item.due_at or item.last_success_at or "",
+            item.priority,
+            item.product,
+        ),
+    )
+
+
+def _forced_refresh_remaining(
+    state: object,
+    history: HistoryStore,
+) -> list[str]:
+    requested_at = str(getattr(state, "requested_at"))
+    products = tuple(getattr(state, "products"))
+    completed = history.successful_products_since(requested_at, products)
+    return [product for product in products if product not in completed]
+
+
+def _start_forced_refresh(
+    manifest: Mapping[str, object],
+    history: HistoryStore,
+    work_root: Path,
+) -> None:
+    path = forced_refresh_state_path(work_root)
+    try:
+        existing = load_forced_refresh(path)
+    except (OSError, StageError) as exc:
+        print(f"\nCannot read forced-refresh state: {exc}")
+        input("Press Enter…")
+        return
+    if existing is not None:
+        remaining = _forced_refresh_remaining(existing, history)
+        print(
+            f"\nForced refresh is already active: "
+            f"{len(remaining)}/{len(existing.products)} map(s) remaining."
+        )
+        input("Press Enter…")
+        return
+
+    items = _forced_refresh_items(manifest, history)
+    if not items:
+        print("\nNo daemon-managed maps are available.")
+        input("Press Enter…")
+        return
+
+    _header("FORCED MAP REFRESH")
+    for index, item in enumerate(items, 1):
+        if item.never_built:
+            planned = "never built"
+        elif item.due_at is None:
+            planned = "always due"
+        else:
+            planned = _local_time(item.due_at)
+        print(f"  {index:>2}. {item.product:<28} {planned}")
+    print(
+        f"\n  Every daemon-managed map above will receive one new successful "
+        f"build after this request."
+    )
+    answer = input("\nEnter = confirm, 0 = cancel: ").strip().lower()
+    if answer == "0":
+        return
+
+    try:
+        state = write_forced_refresh(
+            path,
+            requested_at=utc_now(),
+            products=[item.product for item in items],
+        )
+    except (OSError, StageError) as exc:
+        print(f"\nCannot create forced-refresh queue: {exc}")
+        input("Press Enter…")
+        return
+
+    daemon_state = service_state()
+    print(
+        f"\nForced refresh queued: {len(state.products)} map(s). "
+        "Running builds were not interrupted."
+    )
+    if not daemon_state.active:
+        code = run_service_action("start")
+        print(f"Daemon start finished with exit code {code}.")
+    else:
+        print("An updated idle daemon will notice the queue within 5 minutes.")
+        print(
+            "After the first git pull that adds this feature, restart the daemon "
+            "once after current builds finish so its running process loads the new code."
+        )
+    input("Press Enter…")
+
+
+def _cancel_forced_refresh(history: HistoryStore, work_root: Path) -> None:
+    path = forced_refresh_state_path(work_root)
+    try:
+        state = load_forced_refresh(path)
+    except (OSError, StageError) as exc:
+        print(f"\nCannot read forced-refresh state: {exc}")
+        input("Press Enter…")
+        return
+    if state is None:
+        print("\nForced refresh is not active.")
+        input("Press Enter…")
+        return
+    remaining = _forced_refresh_remaining(state, history)
+    answer = input(
+        f"\nCancel forced refresh with {len(remaining)} map(s) remaining? "
+        "Enter = cancel queue, 0 = keep: "
+    ).strip().lower()
+    if answer == "0":
+        return
+    clear_forced_refresh(path)
+    print("\nForced refresh cancelled. Already running builds were not interrupted.")
+    input("Press Enter…")
+
+
+def _daemon_menu(
+    repo_root: Path,
+    manifest: Mapping[str, object],
+    history: HistoryStore,
+    work_root: Path,
+) -> None:
     while True:
         state = service_state()
         _header("DAEMON")
@@ -190,12 +327,31 @@ def _daemon_menu(repo_root: Path) -> None:
             input("\nPress Enter to return…")
             return
 
+        force_path = forced_refresh_state_path(work_root)
+        try:
+            force_state = load_forced_refresh(force_path)
+        except (OSError, StageError) as exc:
+            print(f"  Forced refresh: ERROR — {exc}")
+            force_state = None
+        if force_state is None:
+            print("  Forced refresh: inactive")
+        else:
+            remaining = _forced_refresh_remaining(force_state, history)
+            next_product = remaining[0] if remaining else "finishing"
+            print(
+                f"  Forced refresh: ACTIVE — "
+                f"{len(remaining)}/{len(force_state.products)} remaining; "
+                f"next={next_product}"
+            )
+
         print("\n  1. Start")
         print("  2. Stop")
         print("  3. Restart")
         print("  4. Status")
         print("  5. Show recent log")
         print("  6. Follow log")
+        print("  7. Force refresh all maps")
+        print("  8. Cancel forced refresh")
         print("  0. Back")
         choice = input("\nSelect: ").strip().lower()
         if choice in {"0", "q", ""}:
@@ -219,6 +375,10 @@ def _daemon_menu(repo_root: Path) -> None:
                 run_service_log(follow=True)
             except KeyboardInterrupt:
                 print()
+        elif choice == "7":
+            _start_forced_refresh(manifest, history, work_root)
+        elif choice == "8":
+            _cancel_forced_refresh(history, work_root)
 
 
 def _git_head(repo_root: Path) -> str | None:
@@ -484,7 +644,7 @@ def run_interactive(
             _show_map_status(manifest, history)
             continue
         if choice == "d":
-            _daemon_menu(repo)
+            _daemon_menu(repo, manifest, history, host.paths.work_root)
             continue
         if choice == "u":
             _update_repository(repo, host_file, manifest_file)
