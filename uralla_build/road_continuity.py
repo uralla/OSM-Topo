@@ -10,7 +10,7 @@ from typing import Mapping
 
 
 ROAD_CONTINUITY_TAG = "uralla:road_continuity"
-ROAD_CONTINUITY_MAX_METRES = 3000.0
+ROAD_CONTINUITY_MAX_METRES = 6000.0
 ROAD_CONTINUITY_START_CLASSES = frozenset({"secondary", "tertiary"})
 ROAD_CONTINUITY_BRIDGE_CLASSES = frozenset(
     {"minor", "unclassified", "residential"}
