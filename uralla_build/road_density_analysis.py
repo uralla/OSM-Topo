@@ -13,13 +13,6 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from .errors import StageError
-from .road_continuity import (
-    ROAD_CONTINUITY_BRIDGE_CLASSES,
-    ROAD_CONTINUITY_MAX_METRES,
-    ROAD_CONTINUITY_START_CLASSES,
-    ROAD_CONTINUITY_TAG,
-    ROAD_CONTINUITY_TARGET_RESOLUTION,
-)
 from .road_density import (
     CELL_DEGREES,
     ROAD_DENSITY_CLASS_TAG,
@@ -42,11 +35,8 @@ from .road_density import (
 # visible trunk hanging at an ordinary junction. v6 chooses one natural
 # continuation through a branch (ref/name first, then straightness) and allows
 # that visual trunk to cross between eligible low road classes while density
-# itself remains calculated independently per concrete class. v7 adds
-# topological short-road continuity hints with per-way freshness versions.
-# v8 builds continuity topology from every consecutive OSM node pair instead
-# of treating each complete way as one endpoint-to-endpoint graph edge.
-SCHEMA_VERSION = 8
+# itself remains calculated independently per concrete class.
+SCHEMA_VERSION = 6
 ANALYSIS_KIND = "road_density"
 _VALID_LEVELS = frozenset({"dense", "very_dense", "keep"})
 
@@ -80,16 +70,6 @@ def _parameters() -> dict[str, object]:
             "at branches prefer same ref/name then straightest continuation; "
             "continuation may cross eligible low road classes"
         ),
-        "road_continuity": {
-            "max_bridge_metres": ROAD_CONTINUITY_MAX_METRES,
-            "start_classes": sorted(ROAD_CONTINUITY_START_CLASSES),
-            "bridge_classes": sorted(ROAD_CONTINUITY_BRIDGE_CLASSES),
-            "target_resolution": dict(ROAD_CONTINUITY_TARGET_RESOLUTION),
-            "topology": (
-                "consecutive OSM node-pair graph; anchors and start junctions "
-                "at every way node"
-            ),
-        },
         "thresholds": {
             name: {
                 "dense_km_per_km2": value.dense_km_per_km2,
@@ -355,7 +335,7 @@ def analyze_road_density(
     if not source.is_file() or source.stat().st_size == 0:
         raise StageError(f"road-density input is missing or empty: {source}")
 
-    levels, stats, continuity_hints = _build_density_index(source, osmium)
+    levels, stats = _build_density_index(source, osmium)
     classified, keep_ids, tagged = _representative_keep_ids(source, osmium, levels)
     ways = {
         str(way_id): [render_class, level]
@@ -381,21 +361,12 @@ def analyze_road_density(
         "parameters": _parameters(),
         "stats": stats,
         "ways": ways,
-        "continuity": {
-            str(way_id): [
-                hint.render_class,
-                hint.resolution,
-                hint.version,
-            ]
-            for way_id, hint in continuity_hints.items()
-        },
     }
     save_road_density_analysis(output_path, payload)
     if reporter is not None:
         reporter(
             f"Road-density analysis saved; hints {len(ways):,}; "
-            f"backbone keeps {len(keep_ids):,}; "
-            f"continuity {len(continuity_hints):,}"
+            f"backbone keeps {len(keep_ids):,}"
         )
     return stats
 
@@ -417,9 +388,6 @@ def apply_road_density_analysis(
     payload = load_road_density_analysis(analysis_path)
     raw_ways = payload["ways"]
     assert isinstance(raw_ways, dict)
-    raw_continuity = payload.get("continuity", {})
-    if not isinstance(raw_continuity, dict):
-        raw_continuity = {}
     hints: dict[int, tuple[str, str]] = {}
     for raw_id, raw_hint in raw_ways.items():
         if not isinstance(raw_id, str) or not isinstance(raw_hint, list) or len(raw_hint) != 2:
@@ -429,35 +397,6 @@ def apply_road_density_analysis(
         try:
             hints[int(raw_id)] = (str(raw_hint[0]), str(raw_hint[1]))
         except ValueError:
-            continue
-
-    continuity_hints: dict[int, tuple[str, int, int | None]] = {}
-    for raw_id, raw_hint in raw_continuity.items():
-        if (
-            not isinstance(raw_id, str)
-            or not isinstance(raw_hint, list)
-            or len(raw_hint) != 3
-        ):
-            continue
-        render_class = str(raw_hint[0])
-        if render_class not in ROAD_CONTINUITY_BRIDGE_CLASSES:
-            continue
-        try:
-            resolution = int(raw_hint[1])
-        except (TypeError, ValueError):
-            continue
-        if resolution not in {18, 19, 20}:
-            continue
-        try:
-            version = (
-                None if raw_hint[2] is None else int(raw_hint[2])
-            )
-            continuity_hints[int(raw_id)] = (
-                render_class,
-                resolution,
-                version,
-            )
-        except (TypeError, ValueError):
             continue
 
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -471,57 +410,21 @@ def apply_road_density_analysis(
                 if not callable(type_method) or type_method() != "way":
                     writer.add(item)
                     continue
-                item_id = int(item.id)
-                hint = hints.get(item_id)
-                continuity_hint = continuity_hints.get(item_id)
-                if hint is None and continuity_hint is None:
+                hint = hints.get(int(item.id))
+                if hint is None:
                     writer.add(item)
                     continue
+                expected_class, level = hint
                 tags = _tags_dict(item.tags)
-                render_class = road_density_class(tags)
-                changed = False
-                density_applied = False
-
-                if hint is not None:
-                    expected_class, level = hint
-                    if (
-                        render_class == expected_class
-                        and tags.get("area") != "yes"
-                    ):
-                        tags[ROAD_DENSITY_TAG] = level
-                        tags[ROAD_DENSITY_CLASS_TAG] = expected_class
-                        changed = True
-                        density_applied = True
-                    else:
-                        counters["stale_skipped"] += 1
-
-                if continuity_hint is not None:
-                    expected_class, resolution, expected_version = (
-                        continuity_hint
-                    )
-                    try:
-                        current_version = int(item.version)
-                    except (AttributeError, TypeError, ValueError):
-                        current_version = None
-                    if (
-                        render_class == expected_class
-                        and tags.get("area") != "yes"
-                        and expected_version is not None
-                        and current_version == expected_version
-                    ):
-                        tags[ROAD_DENSITY_TAG] = "keep"
-                        tags[ROAD_DENSITY_CLASS_TAG] = expected_class
-                        tags[ROAD_CONTINUITY_TAG] = str(resolution)
-                        changed = True
-                        density_applied = True
-                        counters["continuity_tagged"] += 1
-                    else:
-                        counters["continuity_stale_skipped"] += 1
-
-                writer.add(item.replace(tags=tags) if changed else item)
-                if density_applied:
-                    counters["tagged_ways"] += 1
-                if density_applied and tags.get(ROAD_DENSITY_TAG) == "keep":
+                if road_density_class(tags) != expected_class or tags.get("area") == "yes":
+                    counters["stale_skipped"] += 1
+                    writer.add(item)
+                    continue
+                tags[ROAD_DENSITY_TAG] = level
+                tags[ROAD_DENSITY_CLASS_TAG] = expected_class
+                writer.add(item.replace(tags=tags))
+                counters["tagged_ways"] += 1
+                if level == "keep":
                     counters["kept_ways"] += 1
         temporary.replace(target)
     finally:
@@ -534,9 +437,6 @@ def apply_road_density_analysis(
         "kept_ways": counters["kept_ways"],
         "stale_skipped": counters["stale_skipped"],
         "analysis_hints": len(hints),
-        "continuity_hints": len(continuity_hints),
-        "continuity_tagged": counters["continuity_tagged"],
-        "continuity_stale_skipped": counters["continuity_stale_skipped"],
     }
     if reporter is not None:
         reporter(

@@ -5,18 +5,6 @@
 # road_class, road_speed and access semantics of the near routing carrier stay
 # the same as the ordinary rules in ../lines.
 #
-# ROAD-CONT-01: a short topological bridge inherits only the missing overview
-# resolutions needed to connect the two roads. The ordinary keep rules below
-# retain the normal class-specific hierarchy and routing carrier.
-highway=minor & uralla:road_density=keep & uralla:road_continuity=18 [0x06 resolution 18-19 continue]
-highway=minor & uralla:road_density=keep & uralla:road_continuity=19 [0x06 resolution 19-19 continue]
-
-highway=unclassified & uralla:road_density=keep & uralla:road_continuity=18 [0x07 resolution 18-18 continue]
-
-highway=residential & area!=yes & uralla:road_density=keep & uralla:road_continuity=18 [0x07 resolution 18-21 continue]
-highway=residential & area!=yes & uralla:road_density=keep & uralla:road_continuity=19 [0x07 resolution 19-21 continue]
-highway=residential & area!=yes & uralla:road_density=keep & uralla:road_continuity=20 [0x07 resolution 20-21 continue]
-
 # Marked hiking/bicycle/MTB route members stay privileged. This matters mainly
 # for track members now that path/footway/cycleway/bridleway are excluded from
 # density analysis altogether.
