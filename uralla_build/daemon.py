@@ -17,6 +17,11 @@ import time
 from typing import Iterator, Mapping
 
 from .errors import ManifestError, StageError
+from .force_refresh import (
+    clear_forced_refresh,
+    forced_refresh_state_path,
+    load_forced_refresh,
+)
 from .history import HistoryStore, utc_now
 from .host import load_host_config
 from .manifest import load_manifest, validate_manifest
@@ -121,6 +126,25 @@ def _select_due(
     )
 
 
+def _select_forced(
+    items: list[QueueItem],
+    products: list[str],
+    retry_not_before: dict[str, float],
+    now_monotonic: float,
+    excluded: set[str] | None = None,
+) -> QueueItem | None:
+    skipped = excluded or set()
+    by_product = {item.product: item for item in items}
+    for product in products:
+        item = by_product.get(product)
+        if item is None or product in skipped:
+            continue
+        if retry_not_before.get(product, 0.0) > now_monotonic:
+            continue
+        return item
+    return None
+
+
 def _sleep_timeout(
     items: list[QueueItem],
     retry_not_before: dict[str, float],
@@ -190,6 +214,7 @@ def run_daemon(
     host = load_host_config(host_path, repo_root)
     history = HistoryStore(host.paths.work_root / "state" / "history.sqlite3")
     daemon_lock = host.paths.work_root / "state" / "daemon.lock"
+    force_refresh_path = forced_refresh_state_path(host.paths.work_root)
     stop_event = threading.Event()
     children: dict[str, subprocess.Popen[bytes]] = {}
     retry_not_before: dict[str, float] = {}
@@ -279,9 +304,10 @@ def run_daemon(
                     if issues:
                         raise ManifestError("; ".join(str(issue) for issue in issues))
                     running_products = history.running_products()
+                    latest_success = history.latest_success_by_product()
                     items = build_queue(
                         manifest,
-                        history.latest_success_by_product(),
+                        latest_success,
                         running_products,
                     )
                 except (ManifestError, OSError) as exc:
@@ -294,6 +320,30 @@ def run_daemon(
                         stop_event.wait(failure_retry_seconds)
                     continue
 
+                forced_remaining: list[str] = []
+                if not once:
+                    try:
+                        forced_state = load_forced_refresh(force_refresh_path)
+                    except StageError as exc:
+                        _log(f"forced-refresh state error: {exc}")
+                        forced_state = None
+                    if forced_state is not None:
+                        all_items = build_queue(manifest, latest_success, set())
+                        eligible_products = {item.product for item in all_items}
+                        completed_products = history.successful_products_since(
+                            forced_state.requested_at,
+                            forced_state.products,
+                        )
+                        forced_remaining = [
+                            product
+                            for product in forced_state.products
+                            if product in eligible_products
+                            and product not in completed_products
+                        ]
+                        if not forced_remaining:
+                            clear_forced_refresh(force_refresh_path)
+                            _log("forced refresh completed")
+
                 running_snapshot = frozenset(running_products)
                 if running_snapshot != last_running_snapshot:
                     publish_status(manifest)
@@ -303,12 +353,24 @@ def run_daemon(
                 launched = False
                 max_children = 1 if once else host.preprocess_concurrency
                 while len(children) < max_children and not once_started:
-                    item = _select_due(
-                        items,
-                        retry_not_before,
-                        time.monotonic(),
-                        excluded=active_products,
-                    )
+                    forced_active = bool(forced_remaining)
+                    if forced_active and not force_refresh_path.is_file():
+                        break
+                    if forced_active:
+                        item = _select_forced(
+                            items,
+                            forced_remaining,
+                            retry_not_before,
+                            time.monotonic(),
+                            excluded=active_products,
+                        )
+                    else:
+                        item = _select_due(
+                            items,
+                            retry_not_before,
+                            time.monotonic(),
+                            excluded=active_products,
+                        )
                     if item is None:
                         break
                     command = _build_command(
@@ -334,8 +396,9 @@ def run_daemon(
                     children[item.product] = child
                     active_products.add(item.product)
                     launched = True
+                    reason = "forced refresh" if forced_active else "schedule"
                     _log(
-                        f"starting product {item.product}; active slots "
+                        f"starting product {item.product}; reason={reason}; active slots "
                         f"{len(children)}/{max_children}"
                     )
                     if once:
