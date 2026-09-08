@@ -18,6 +18,10 @@ from .poi_context_analysis import (
     analyze_poi_context,
 )
 from .preprocessor import _load_osmium
+from .road_continuity import (
+    ROAD_CONTINUITY_BRIDGE_CLASSES,
+    ROAD_CONTINUITY_TAG,
+)
 from .road_density import ROAD_DENSITY_CLASS_TAG, ROAD_DENSITY_TAG, road_density_class
 from .road_density_analysis import analyze_road_density, load_road_density_analysis
 
@@ -76,7 +80,12 @@ def analyze_bundle(
     return results
 
 
-def _load_road_hints(path: str | Path) -> dict[int, tuple[str, str]]:
+def _load_road_hints(
+    path: str | Path,
+) -> tuple[
+    dict[int, tuple[str, str]],
+    dict[int, tuple[str, int, int | None]],
+]:
     payload = load_road_density_analysis(path)
     raw = payload["ways"]
     assert isinstance(raw, dict)
@@ -92,7 +101,30 @@ def _load_road_hints(path: str | Path) -> dict[int, tuple[str, str]]:
         if level not in {"keep", "dense", "very_dense"}:
             continue
         result[way_id] = (render_class, level)
-    return result
+
+    continuity: dict[int, tuple[str, int, int | None]] = {}
+    raw_continuity = payload.get("continuity", {})
+    if isinstance(raw_continuity, dict):
+        for raw_id, value in raw_continuity.items():
+            if (
+                not isinstance(raw_id, str)
+                or not isinstance(value, list)
+                or len(value) != 3
+            ):
+                continue
+            render_class = str(value[0])
+            if render_class not in ROAD_CONTINUITY_BRIDGE_CLASSES:
+                continue
+            try:
+                way_id = int(raw_id)
+                resolution = int(value[1])
+                version = None if value[2] is None else int(value[2])
+            except (TypeError, ValueError):
+                continue
+            if resolution not in {18, 19, 20}:
+                continue
+            continuity[way_id] = (render_class, resolution, version)
+    return result, continuity
 
 
 def _load_poi_hints(path: str | Path) -> dict[int, tuple[dict[str, str], dict[str, str]]]:
@@ -242,7 +274,9 @@ def apply_analysis_bundle(
     root = Path(analysis_dir).resolve()
     if source == target:
         raise StageError("analysis apply input and output must be different files")
-    road_hints = _load_road_hints(root / "road-density.json.gz")
+    road_hints, continuity_hints = _load_road_hints(
+        root / "road-density.json.gz"
+    )
     poi_hints = _load_poi_hints(root / "poi-context.json.gz")
     reusable_by_way: dict[int, tuple[SyntheticAreaPoi, int | None]] = {
         candidate.source_id: (candidate, source_version)
@@ -339,6 +373,28 @@ def apply_analysis_bundle(
                         else:
                             counters["road_stale_skipped"] += 1
 
+                    continuity_hint = continuity_hints.get(item_id)
+                    if continuity_hint is not None:
+                        expected_class, resolution, expected_version = (
+                            continuity_hint
+                        )
+                        try:
+                            current_version = int(item.version)
+                        except (AttributeError, TypeError, ValueError):
+                            current_version = None
+                        if (
+                            road_density_class(tags) == expected_class
+                            and tags.get("area") != "yes"
+                            and expected_version is not None
+                            and current_version == expected_version
+                        ):
+                            tags[ROAD_DENSITY_TAG] = "keep"
+                            tags[ROAD_DENSITY_CLASS_TAG] = expected_class
+                            tags[ROAD_CONTINUITY_TAG] = str(resolution)
+                            counters["continuity_tagged"] += 1
+                        else:
+                            counters["continuity_stale_skipped"] += 1
+
                 writer.add(item if tags == original_tags else item.replace(tags=tags))
         counters["area_missing_skipped"] = len(pending_reusable)
         temporary.replace(target)
@@ -356,6 +412,9 @@ def apply_analysis_bundle(
         "road_hints": len(road_hints),
         "road_tagged": counters["road_tagged"],
         "road_stale_skipped": counters["road_stale_skipped"],
+        "continuity_hints": len(continuity_hints),
+        "continuity_tagged": counters["continuity_tagged"],
+        "continuity_stale_skipped": counters["continuity_stale_skipped"],
         "poi_hints": len(poi_hints),
         "poi_tagged": counters["poi_tagged"],
         "poi_stale_skipped": counters["poi_stale_skipped"],
@@ -368,6 +427,8 @@ def apply_analysis_bundle(
             f"area merge={result['area_enriched_nodes']:,}/{result['area_enrichment_matches']:,} "
             f"stale={result['area_enrichment_stale_skipped']:,}; "
             f"road {result['road_tagged']:,}/{result['road_hints']:,}; "
+            f"continuity {result['continuity_tagged']:,}/"
+            f"{result['continuity_hints']:,}; "
             f"POI {result['poi_tagged']:,}/{result['poi_hints']:,}; "
             f"stale road={result['road_stale_skipped']:,} poi={result['poi_stale_skipped']:,}"
         )
