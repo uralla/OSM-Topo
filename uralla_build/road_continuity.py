@@ -70,7 +70,10 @@ def _haversine_metres(
 
 def _way_data(
     item: object,
-) -> tuple[int, int, float, int | None] | None:
+) -> tuple[
+    tuple[tuple[int, tuple[float, float]], ...],
+    int | None,
+] | None:
     nodes = getattr(item, "nodes", None)
     if nodes is None:
         return None
@@ -81,37 +84,29 @@ def _way_data(
     if len(node_refs) < 2:
         return None
 
-    refs: list[int] = []
-    points: list[tuple[float, float]] = []
+    points: list[tuple[int, tuple[float, float]]] = []
     for node_ref in node_refs:
         try:
-            refs.append(int(node_ref.ref))
+            node_id = int(node_ref.ref)
         except (AttributeError, TypeError, ValueError):
             return None
         point = _valid_location(node_ref)
         if point is None:
             return None
-        points.append(point)
+        points.append((node_id, point))
 
-    if refs[0] == refs[-1]:
-        return None
-
-    metres = sum(
-        _haversine_metres(a, b)
-        for a, b in zip(points, points[1:])
-    )
-    if metres <= 0.0:
+    if points[0][0] == points[-1][0]:
         return None
 
     try:
         version = int(getattr(item, "version"))
     except (AttributeError, TypeError, ValueError):
         version = None
-    return refs[0], refs[-1], metres, version
+    return tuple(points), version
 
 
 class RoadContinuityBuilder:
-    """Collect an endpoint graph and select short deterministic bridge paths."""
+    """Collect a node graph and select short deterministic bridge paths."""
 
     def __init__(self) -> None:
         self._graph: dict[int, list[_BridgeEdge]] = defaultdict(list)
@@ -132,22 +127,37 @@ class RoadContinuityBuilder:
         data = _way_data(item)
         if data is None:
             return
-        start, end, metres, version = data
+        nodes, version = data
         way_id = int(getattr(item, "id"))
 
         target_resolution = ROAD_CONTINUITY_TARGET_RESOLUTION.get(highway)
         if target_resolution is not None:
-            self._anchors[start].append((way_id, target_resolution))
-            self._anchors[end].append((way_id, target_resolution))
+            for node_id, _point in nodes:
+                self._anchors[node_id].append((way_id, target_resolution))
 
         if highway in ROAD_CONTINUITY_START_CLASSES:
-            self._starts.add((start, way_id))
-            self._starts.add((end, way_id))
+            for node_id, _point in nodes:
+                self._starts.add((node_id, way_id))
 
         if highway in ROAD_CONTINUITY_BRIDGE_CLASSES:
-            self._graph[start].append(_BridgeEdge(end, way_id, metres))
-            self._graph[end].append(_BridgeEdge(start, way_id, metres))
-            self._meta[way_id] = (highway, version)
+            added = False
+            for (node_a, point_a), (node_b, point_b) in zip(
+                nodes, nodes[1:]
+            ):
+                if node_a == node_b:
+                    continue
+                metres = _haversine_metres(point_a, point_b)
+                if metres <= 0.0:
+                    continue
+                self._graph[node_a].append(
+                    _BridgeEdge(node_b, way_id, metres)
+                )
+                self._graph[node_b].append(
+                    _BridgeEdge(node_a, way_id, metres)
+                )
+                added = True
+            if added:
+                self._meta[way_id] = (highway, version)
 
     @staticmethod
     def _path(
