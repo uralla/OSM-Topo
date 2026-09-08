@@ -18,6 +18,12 @@ from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
 
+from .road_continuity import (
+    ROAD_CONTINUITY_TAG,
+    RoadContinuityBuilder,
+    RoadContinuityHint,
+)
+
 
 ROAD_DENSITY_TAG = "uralla:road_density"
 ROAD_DENSITY_CLASS_TAG = "uralla:road_density_class"
@@ -176,13 +182,19 @@ def _cell_level(render_class: str, density: float) -> str | None:
 
 def _build_density_index(
     source: Path, osmium: Any
-) -> tuple[dict[tuple[str, int, int], str], dict[str, object]]:
+) -> tuple[
+    dict[tuple[str, int, int], str],
+    dict[str, object],
+    dict[int, RoadContinuityHint],
+]:
     length_by_cell: dict[tuple[str, int, int], float] = defaultdict(float)
     eligible_ways = 0
     eligible_metres = 0.0
+    continuity = RoadContinuityBuilder()
 
     for item in osmium.FileProcessor(str(source)).with_locations():
         tags = _tags_dict(item.tags)
+        continuity.add(item, tags)
         render_class = road_density_class(tags)
         if render_class is None or tags.get("area") == "yes":
             continue
@@ -222,7 +234,9 @@ def _build_density_index(
             for render_class in THRESHOLDS
         },
     }
-    return levels, stats
+    continuity_hints, continuity_stats = continuity.finish()
+    stats["continuity"] = continuity_stats
+    return levels, stats, continuity_hints
 
 
 def _way_level(
@@ -264,7 +278,7 @@ def augment_road_density(
 
     source = Path(input_path).resolve()
     target = Path(output_path).resolve()
-    levels, stats = _build_density_index(source, osmium)
+    levels, stats, continuity_hints = _build_density_index(source, osmium)
     if reporter is not None:
         reporter(
             "Road density: "
@@ -279,6 +293,14 @@ def augment_road_density(
                 f"{render_class}; dense={values['dense']:,}; "
                 f"very_dense={values['very_dense']:,}"
             )
+        continuity_stats = stats.get("continuity")
+        if isinstance(continuity_stats, dict):
+            reporter(
+                "Road continuity: "
+                f"starts={continuity_stats['start_junctions']:,}; "
+                f"paths={continuity_stats['paths_found']:,}; "
+                f"ways={continuity_stats['tagged_ways']:,}"
+            )
 
     temporary = target.parent / f".{target.name}.{uuid4().hex}.road-density.partial.osm.pbf"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -291,6 +313,19 @@ def augment_road_density(
                 render_class = road_density_class(tags)
                 if render_class is None or tags.get("area") == "yes":
                     writer.add(item)
+                    continue
+                continuity_hint = continuity_hints.get(int(item.id))
+                if (
+                    continuity_hint is not None
+                    and continuity_hint.render_class == render_class
+                ):
+                    tags[ROAD_DENSITY_TAG] = "keep"
+                    tags[ROAD_DENSITY_CLASS_TAG] = render_class
+                    tags[ROAD_CONTINUITY_TAG] = str(
+                        continuity_hint.resolution
+                    )
+                    writer.add(item.replace(tags=tags))
+                    tagged[(render_class, "keep")] += 1
                     continue
                 points = _way_points(item)
                 if len(points) < 2:
@@ -328,6 +363,7 @@ def augment_road_density(
         render_class: {
             "dense": tagged[(render_class, "dense")],
             "very_dense": tagged[(render_class, "very_dense")],
+            "keep": tagged[(render_class, "keep")],
         }
         for render_class in THRESHOLDS
     }
