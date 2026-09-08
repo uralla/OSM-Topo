@@ -10,6 +10,7 @@ from pathlib import Path, PurePosixPath
 import platform
 import re
 import signal
+import shutil
 import subprocess
 import sys
 import threading
@@ -195,6 +196,104 @@ class StageRunner:
         self.work_root = Path(work_root).resolve()
         self.builds_root = self.work_root / "builds"
         self.history = HistoryStore(self.work_root / "state" / "history.sqlite3")
+
+    def cleanup_old_build_workspaces(
+        self,
+        product: str,
+        keep_build_id: str,
+    ) -> list[str]:
+        """Remove heavy files from obsolete terminal workspaces.
+
+        Keep:
+        - the build that has just finished;
+        - the newest successful build with reusable splitter output;
+        - the newest failed/interrupted build with a reusable merge checkpoint.
+
+        Older workspaces retain only per-stage stdout/stderr logs.
+        """
+
+        keep = {keep_build_id}
+        with self.history.connect() as connection:
+            successful = connection.execute(
+                """SELECT build_id FROM builds
+                   WHERE product = ? AND status = 'success'
+                   ORDER BY finished_at DESC""",
+                (product,),
+            ).fetchall()
+            failed = connection.execute(
+                """SELECT build_id FROM builds
+                   WHERE product = ? AND status IN ('failed', 'interrupted')
+                   ORDER BY created_at DESC""",
+                (product,),
+            ).fetchall()
+            terminal = connection.execute(
+                """SELECT build_id FROM builds
+                   WHERE product = ? AND status != 'running'""",
+                (product,),
+            ).fetchall()
+
+        for row in successful:
+            build_id = str(row["build_id"])
+            tiles = self.builds_root / build_id / "splitter" / "tiles"
+            if (tiles / "template.args").is_file() and (
+                tiles / "areas.list"
+            ).is_file():
+                keep.add(build_id)
+                break
+
+        for row in failed:
+            build_id = str(row["build_id"])
+            checkpoint = (
+                self.builds_root
+                / build_id
+                / "merge"
+                / "enriched.osm.pbf"
+            )
+            if checkpoint.is_file() and checkpoint.stat().st_size > 0:
+                keep.add(build_id)
+                break
+
+        compacted: list[str] = []
+        log_name = re.compile(r"^(?:stdout|stderr)\.attempt-\d+\.log$")
+
+        for row in terminal:
+            build_id = str(row["build_id"])
+            if build_id in keep:
+                continue
+            workspace = self.builds_root / build_id
+            if not workspace.is_dir():
+                continue
+
+            try:
+                for stage_root in workspace.iterdir():
+                    if stage_root.is_symlink() or stage_root.is_file():
+                        stage_root.unlink()
+                        continue
+                    for entry in stage_root.iterdir():
+                        if entry.is_file() and log_name.fullmatch(entry.name):
+                            continue
+                        if entry.is_symlink() or entry.is_file():
+                            entry.unlink()
+                        elif entry.is_dir():
+                            shutil.rmtree(entry)
+            except OSError as exc:
+                print(
+                    f"[cleanup] warning: cannot compact {workspace}: {exc}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                continue
+
+            compacted.append(build_id)
+
+        if compacted:
+            print(
+                f"[cleanup] compacted {len(compacted)} old "
+                f"{product} build workspace(s)",
+                file=sys.stderr,
+                flush=True,
+            )
+        return compacted
 
     def create_build(self, product: str, metadata: Mapping[str, object] | None = None) -> str:
         if not NAME_RE.fullmatch(product):
