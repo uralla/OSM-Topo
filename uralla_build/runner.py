@@ -24,6 +24,7 @@ from .history import HistoryStore
 NAME_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HEARTBEAT_SECONDS = 30.0
 POLL_SECONDS = 1.0
+BUILD_WORKSPACE_MAX_AGE_SECONDS = 60 * 24 * 60 * 60
 # All pipeline stages stream stdout/stderr live while also writing durable logs.
 
 
@@ -210,6 +211,8 @@ class StageRunner:
         - the newest failed/interrupted build with a reusable merge checkpoint.
 
         Older workspaces retain only per-stage stdout/stderr logs.
+        As a hard retention limit, any non-running workspace older than 60 days
+        is removed completely, including orphan directories not present in history.
         """
 
         keep = {keep_build_id}
@@ -230,6 +233,10 @@ class StageRunner:
                 """SELECT build_id FROM builds
                    WHERE product = ? AND status != 'running'""",
                 (product,),
+            ).fetchall()
+            running = connection.execute(
+                """SELECT build_id FROM builds
+                   WHERE status = 'running'"""
             ).fetchall()
 
         for row in successful:
@@ -293,6 +300,50 @@ class StageRunner:
                 file=sys.stderr,
                 flush=True,
             )
+
+        running_ids = {str(row["build_id"]) for row in running}
+        cutoff = time.time() - BUILD_WORKSPACE_MAX_AGE_SECONDS
+        purged: list[str] = []
+
+        if self.builds_root.is_dir():
+            for workspace in self.builds_root.iterdir():
+                if workspace.name in running_ids:
+                    continue
+                try:
+                    stat = workspace.lstat()
+                except OSError as exc:
+                    print(
+                        f"[cleanup] warning: cannot stat {workspace}: {exc}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    continue
+                if stat.st_mtime >= cutoff:
+                    continue
+                try:
+                    if workspace.is_symlink():
+                        workspace.unlink()
+                    elif workspace.is_dir():
+                        shutil.rmtree(workspace)
+                    else:
+                        continue
+                except OSError as exc:
+                    print(
+                        f"[cleanup] warning: cannot purge {workspace}: {exc}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    continue
+                purged.append(workspace.name)
+
+        if purged:
+            print(
+                f"[cleanup] purged {len(purged)} build workspace(s) "
+                "older than 60 days",
+                file=sys.stderr,
+                flush=True,
+            )
+
         return compacted
 
     def create_build(self, product: str, metadata: Mapping[str, object] | None = None) -> str:
