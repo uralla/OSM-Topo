@@ -98,7 +98,7 @@ Type=0x1321d,12
 [_polygon]
 Type=0x01
 ;GRMN_TYPE: Urban Areas/LARGE_CITY/Large urban area, 200 000 or more inhabitants/Non NT
-String1=0x19,РіРѕСЂРѕРґ
+String1=0x19,город
 String2=0x04,city
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -112,7 +112,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x02
 ;GRMN_TYPE: Urban Areas/SMALL_CITY/Small urban area, less than 200 000 inhabitants/Non NT
-String1=0x19,РіРѕСЂРѕРґ
+String1=0x19,город
 String2=0x04,town
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -126,9 +126,9 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x03
 ;GRMN_TYPE: Urban Areas/TOWN/Urban area, less than 50 000 inhabitants/Non NT
-String1=0x19,РЅР°СЃРµР»С‘РЅРєР°
+String1=0x19,населёнка
 String2=0x04,willage, hamlet
-String3=0x00,РЅР°СЃРµР»С‘РЅРєР°
+String3=0x00,населёнка
 ExtendedLabels=Y
 FontStyle=NormalFont
 CustomColor=Day
@@ -142,7 +142,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x04
 ;GRMN_TYPE: Large Manmade Areas/MILITARY_BASE/Military base area/Non NT
-String1=0x19,РІРѕРµРЅРЅР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ
+String1=0x19,военная территория
 String2=0x04,military area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -190,7 +190,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x05
 ;GRMN_TYPE: Large Manmade Areas/PARKING_LOT/Parking lot area/Non NT
-String1=0x19,РїР°СЂРєРѕРІРєР°
+String1=0x19,парковка
 String2=0x04,parking
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -204,7 +204,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x06
 ;GRMN_TYPE: Large Manmade Areas/PARKING_GARAGE/Parking garage area/Non NT
-String1=0x19,РіР°СЂР°Р¶Рё
+String1=0x19,гаражи
 String2=0x04,garages
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -218,7 +218,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x07
 ;GRMN_TYPE: Large Manmade Areas/AIRPORT/Airport area/Non NT
-String1=0x19,Р°СЌСЂРѕРїРѕСЂС‚
+String1=0x19,аэропорт
 String2=0x04,airport
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -232,7 +232,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x08
 ;GRMN_TYPE: Large Manmade Areas/SHOPPING_AREA/Shopping area/Non NT
-String1=0x19,С‚РѕСЂРіРѕРІР»СЏ
+String1=0x19,торговля
 String2=0x04,shops
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -246,7 +246,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x0a
 ;GRMN_TYPE: Large Manmade Areas/COLLEGE/College or university area/Non NT
-String1=0x19,РѕР±СЂР°Р·РѕРІР°РЅРёРµ
+String1=0x19,образование
 String2=0x04,education
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -260,7 +260,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x0b
 ;GRMN_TYPE: Large Manmade Areas/HOSPITAL/Hospital area/Non NT
-String1=0x19,Р±РѕР»СЊРЅРёС†Р°
+String1=0x19,больница
 String2=0x04,clinic/hospital
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -274,7 +274,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x0c
 ;GRMN_TYPE: Large Manmade Areas/INDUSTRIAL_COMPLEX/Industrial complex area/Non NT
-String1=0x19,РїСЂРѕРјР·РѕРЅР°
+String1=0x19,промзона
 String2=0x04,industrial
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -288,7 +288,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x0f
 ;GRMN_TYPE: //
-String1=0x19,СЃРІР°Р»РєР°
+String1=0x19,свалка
 String2=0x04,waste dump
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -336,7 +336,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10
 ;GRMN_TYPE: //
-String1=0x19,Р¶РёР»Р°СЏ Р·РѕРЅР°
+String1=0x19,жилая зона
 String2=0x04,residential
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -350,7 +350,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x13
 ;GRMN_TYPE: Large Manmade Areas/GENERIC_MANMADE/Other or generic manmade area, such as a building/Non NT
-String1=0x19,Р·РґР°РЅРёРµ
+String1=0x19,здание
 String2=0x04,building
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -364,7 +364,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x16
 ;GRMN_TYPE: Park Areas/NATIONAL_PARK_OTHER/Small or misc sized national park/Non NT
-String1=0x19,РЅР°С†РёРѕРЅР°Р»СЊРЅС‹Р№ РїР°СЂРє
+String1=0x19,национальный парк
 String2=0x04,national park
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -412,7 +412,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x17
 ;GRMN_TYPE: Park Areas/URBAN_PARK/Small urban park, typically only a few square blocks in size/Non NT
-String1=0x19,РїР°СЂРє
+String1=0x19,парк
 String2=0x04,park
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -460,7 +460,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x18
 ;GRMN_TYPE: Large Manmade Areas/GOLF_COURSE/Golf course area/Non NT
-String1=0x19,Р»СѓРі
+String1=0x19,луг
 String2=0x04,meadow
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -508,7 +508,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x19
 ;GRMN_TYPE: Large Manmade Areas/SPORTS_COMPLEX/Sports arena or stadium/Non NT
-String1=0x19,СЃРїРѕСЂС‚
+String1=0x19,спорт
 String2=0x04,sport
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -522,7 +522,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x1a
 ;GRMN_TYPE: Large Manmade Areas/CEMETARY/Cemetary/Non NT
-String1=0x19,РєР»Р°РґР±РёС‰Рµ
+String1=0x19,кладбище
 String2=0x04,cemetary
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -616,7 +616,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x21
 ;GRMN_TYPE: //
-String1=0x19,РіРѕР»СЊС„
+String1=0x19,гольф
 String2=0x04,golf
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -673,7 +673,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x3b
 ;GRMN_TYPE: //
-String1=0x19,РІРѕРґРѕС‘Рј
+String1=0x19,водоём
 String2=0x04,water
 ExtendedLabels=Y
 FontStyle=Default
@@ -722,7 +722,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x3c
 ;GRMN_TYPE: Water Areas/LAKE_100MI/Lake less than 250 sq mi but greater or equal to 100 sq mi in area/Non NT
-String1=0x19,РІРѕРґРѕРµРј
+String1=0x19,водоем
 String2=0x04,water
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -771,7 +771,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x3f
 ;GRMN_TYPE: Water Areas/LAKE, LAKE_5MI/Medium sized lake, typically between 5 and 30 sq mi in area/Non NT
-String1=0x19,РІРѕРґРѕРµРј
+String1=0x19,водоем
 String2=0x04,water
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -786,7 +786,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x4d
 ;GRMN_TYPE: Surface Cover Areas/GLACIER/Large area of compacted snow and ice/Non NT
-String1=0x19,Р»РµРґРЅРёРє
+String1=0x19,ледник
 String2=0x04,glacier
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -835,7 +835,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x4e
 ;GRMN_TYPE: Surface Cover Areas/ORCHARD/Orchard or plantation area/Non NT
-String1=0x19,СЃР°Рґ/РѕРіРѕСЂРѕРґ
+String1=0x19,сад/огород
 String2=0x04,gardens/allotments
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -884,7 +884,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x4f
 ;GRMN_TYPE: Surface Cover Areas/SCRUB/Scrub brush area/Non NT
-String1=0x19,РєСѓСЃС‚Р°СЂРЅРёРє
+String1=0x19,кустарник
 String2=0x04,bushes
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -932,7 +932,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x50
 ;GRMN_TYPE: Surface Cover Areas/WOODS/Wooded or forested area/Non NT
-String1=0x19,Р»РµСЃ
+String1=0x19,лес
 String2=0x04,woods
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -981,7 +981,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x52
 ;GRMN_TYPE: Surface Cover Areas/TUNDRA/Area of nearly always freezing soil/Non NT
-String1=0x19,РіРѕСЂРЅР°СЏ С‚СѓРЅРґСЂР°
+String1=0x19,горная тундра
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=Day
@@ -1029,7 +1029,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x53
 ;GRMN_TYPE: Surface Cover Areas/FLAT/Sand, tidal, mud, etc. flat area/Non NT
-String1=0x19,РѕСЃС‚СЂРѕРІ
+String1=0x19,остров
 String2=0x19,island
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1077,7 +1077,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x54
 ;GRMN_TYPE: Surface Cover Areas/LAND/Land area/Non NT
-String1=0x19,РєР°РјС‹С€Рё
+String1=0x19,камыши
 String2=0x04,wet land
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1125,7 +1125,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x5d
 ;GRMN_TYPE: //
-String1=0x19,Р»РµРґРЅРёРє
+String1=0x19,ледник
 String2=0x04,glacier
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1139,7 +1139,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x61
 ;GRMN_TYPE: //
-String1=0x19,РіСЂСЏР·СЊ
+String1=0x19,грязь
 String2=0x04,mud
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1153,7 +1153,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x62
 ;GRMN_TYPE: //
-String1=0x19,РіСЂСЏР·СЊ
+String1=0x19,грязь
 String2=0x04,mud
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1201,7 +1201,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10100
 ;GRMN_TYPE: //
-String1=0x19,С…РІРѕР№РЅС‹Р№ Р»РµСЃ
+String1=0x19,хвойный лес
 String2=0x04,coniferous wood
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1250,7 +1250,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10101
 ;GRMN_TYPE: Surface Cover Areas/LAND_NON_URBAN/Non-urban land area/Non NT, NT
-String1=0x19,Р»РёСЃС‚РІРµРЅРЅС‹Р№ Р»РµСЃ
+String1=0x19,лиственный лес
 String2=0x04,deciduous wood
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1299,7 +1299,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10102
 ;GRMN_TYPE: Surface Cover Areas/LAND_URBAN/Urban land area/Non NT, NT
-String1=0x19,С‚РѕСЂС„РѕСЂР°Р·СЂР°Р±РѕС‚РєРё
+String1=0x19,торфоразработки
 String2=0x04,peat cutting
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1347,7 +1347,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10612
 ;GRMN_TYPE: Surface Cover Areas/MISC_AREA/Misc area coverage/Non NT, NT
-String1=0x19,СЃРїРѕСЂС‚РёРІРЅС‹Р№ С†РµРЅС‚СЂ
+String1=0x19,спортивный центр
 String2=0x04,sports centre
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1453,7 +1453,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10c05
 ;GRMN_TYPE: Surface Cover Areas/TUNDRA(NT)/Area of nearly always freezing soil/NT
-String1=0x19,РіРѕСЂРЅР°СЏ С‚СѓРЅРґСЂР°
+String1=0x19,горная тундра
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=Day
@@ -1467,7 +1467,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10c06
 ;GRMN_TYPE: Surface Cover Areas/FLAT(NT)/Sand, tidal, mud, etc. flat area/NT
-String1=0x19,РїРµСЃРєРё
+String1=0x19,пески
 String2=0x04,sand
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1516,7 +1516,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f00
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_1/Customizable area/Non NT, NT
-String1=0x19,РїРѕР»СЏ
+String1=0x19,поля
 String2=0x04,farmland
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1565,7 +1565,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f05
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_6/Customizable area/Non NT, NT
-String1=0x19,РїРѕР¶Р°СЂРЅР°СЏ С‡Р°СЃС‚СЊ
+String1=0x19,пожарная часть
 String2=0x04,fire dpt
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1625,7 +1625,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f0a
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_11/Customizable area/Non NT, NT
-String1=0x19,РїР°СЃРµРєР°
+String1=0x19,пасека
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -1672,7 +1672,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f0b
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_12/Customizable area/Non NT, NT
-String1=0x19,РєРѕРјРјРµСЂС†РёСЏ
+String1=0x19,коммерция
 String2=0x04,commercial
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1686,7 +1686,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f0c
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_13/Customizable area/Non NT, NT
-String1=0x19,Р·Р°РїСЂР°РІРєР°
+String1=0x19,заправка
 String2=0x04,fuel
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -1701,7 +1701,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f10
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_17/Customizable area/Non NT, NT
-String1=0x19,СЃС‚СЂРѕРёС‚РµР»СЊСЃС‚РІРѕ
+String1=0x19,строительство
 String2=0x04,construction
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1749,7 +1749,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f11
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_18/Customizable area/Non NT, NT
-String1=0x19,РїРёСЂСЃ
+String1=0x19,пирс
 String2=0x04,pier
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1763,7 +1763,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f12
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_19/Customizable area/Non NT, NT
-String1=0x19,РїРµС€РµС…РѕРґРЅР°СЏ Р·РѕРЅР°
+String1=0x19,пешеходная зона
 String2=0x04,pedestrian area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1777,7 +1777,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f13
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_20/Customizable area/Non NT, NT
-String1=0x19,С‚СѓСЂРёСЃС‚РёС‡РµСЃРєРёР№ РѕР±СЉРµРєС‚
+String1=0x19,туристический объект
 String2=0x04,tourism area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1791,7 +1791,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f14
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_21/Customizable area/Non NT, NT
-String1=0x19,РїР»Р°С‚С„РѕСЂРјР°
+String1=0x19,платформа
 String2=0x04,platform
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1805,7 +1805,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f15
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_22/Customizable area/Non NT, NT
-String1=0x19,Р·РѕРЅР° РѕС‚РґС‹С…Р°
+String1=0x19,зона отдыха
 String2=0x04,rest area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1819,7 +1819,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f16
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_23/Customizable area/Non NT, NT
-String1=0x19,РґРѕСЂРѕР¶РЅР°СЏ Р·РѕРЅР°
+String1=0x19,дорожная зона
 String2=0x04,road area
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1833,7 +1833,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f17
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_24/Customizable area/Non NT, NT
-String1=0x19,Р°СЂС…РµРѕР»РѕРіРёС‡РµСЃРєРёР№ РѕР±СЉРµРєС‚
+String1=0x19,археологический объект
 String2=0x04,archaeological site
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1847,7 +1847,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x10f18
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_25/Customizable area/Non NT, NT
-String1=0x19,С‚СЋСЂСЊРјР°
+String1=0x19,тюрьма
 String2=0x04,prison
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1895,7 +1895,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x10f19
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_26/Customizable area/Non NT, NT
-String1=0x19,РјРѕСЃС‚
+String1=0x19,мост
 String2=0x04,bridge
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -1909,7 +1909,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x11100
 ;GRMN_TYPE: //
-String1=0x19,РєР°РјРЅРё
+String1=0x19,камни
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -1956,7 +1956,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x1170d
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_142/Customizable area/Non NT, NT
-String1=0x19,РєР°РјРЅРё
+String1=0x19,камни
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -2015,7 +2015,7 @@ Xpm="0 0 1 0"
 [_polygon]
 Type=0x1171d
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_158/Customizable area/Non NT, NT
-String1=0x19,Р±РѕР»РѕС‚Рѕ
+String1=0x19,болото
 String2=0x04,wetland
 ExtendedLabels=Y
 FontStyle=Default
@@ -2155,7 +2155,7 @@ Xpm="32 32 2 1"
 [_polygon]
 Type=0x1321b
 ;GRMN_TYPE: Customizable Areas/CUSTOMIZABLE_AREA_1020/Customizable area/Non NT, NT
-String1=0x19,Р»СѓРі
+String1=0x19,луг
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -2327,7 +2327,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #BD0000"
 "2 c #000000"
-String1=0x19,Р°РІС‚РѕРјР°РіРёСЃС‚СЂР°Р»СЊ
+String1=0x19,автомагистраль
 String2=0x04,motorway
 ExtendedLabels=N
 [end]
@@ -2342,7 +2342,7 @@ BorderWidth=2
 Xpm="0 0 2 0"
 "1 c #FFFFFF"
 "2 c #000000"
-String1=0x19,С€РѕСЃСЃРµ
+String1=0x19,шоссе
 String2=0x04,highway
 ExtendedLabels=N
 [end]
@@ -2357,7 +2357,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFFFFF"
 "2 c #000000"
-String1=0x19,РѕСЃРЅРѕРІРЅР°СЏ
+String1=0x19,основная
 String2=0x04,primary highway
 ExtendedLabels=N
 [end]
@@ -2372,7 +2372,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFCA00"
 "2 c #101010"
-String1=0x19,РІС‚РѕСЂРѕСЃС‚РµРїРµРЅРЅР°СЏ
+String1=0x19,второстепенная
 String2=0x04,secondary highway
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2390,7 +2390,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFFFFF"
 "2 c #000000"
-String1=0x19,РґРѕСЂРѕРіР°
+String1=0x19,дорога
 String2=0x04,unclassified highway
 ExtendedLabels=Y
 FontStyle=Default
@@ -2420,7 +2420,7 @@ UseOrientation=N
 LineWidth=7
 Xpm="0 0 1 0"
 "1 c #626262"
-String1=0x19,С‚СѓРЅРЅРµР»СЊ
+String1=0x19,туннель
 String2=0x04,tunnel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -2439,7 +2439,7 @@ Xpm="32 2 2  1"
 "!!!!!!!!!!!#####!!!!!!!!!!!#####"
 "!!!!!!!!!!!#####!!!!!!!!!!!#####"
 ;12345678901234567890123456789012
-String1=0x19,РґРѕСЂРѕРіР°
+String1=0x19,дорога
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -2473,7 +2473,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFFFFF"
 "2 c #000000"
-String1=0x19,Р¶РёР»Р°СЏ СѓР»РёС†Р°
+String1=0x19,жилая улица
 String2=0x04,residential street
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2534,7 +2534,7 @@ Xpm="32 4 2  1"
 "###!!!!!!!!!!######!!!!!!!!!!###"
 "######!!!!############!!!!######"
 ;12345678901234567890123456789012
-String1=0x19,Р·РёРјРЅРёРє
+String1=0x19,зимник
 String2=0x04,winter/ice road
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2553,7 +2553,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFFF6A"
 "2 c #101010"
-String1=0x19,РґРѕСЂРѕРіР°
+String1=0x19,дорога
 String2=0x04,tertiary highway
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -2571,7 +2571,7 @@ Xpm="32 1 2  1"
 "# c #FFFFFF"
 "!!!!!!##!!!!!!##!!!!!!##!!!!!!##"
 ;12345678901234567890123456789012
-String1=0x19,РґРѕСЂРѕРіР°
+String1=0x19,дорога
 String2=0x04,track
 ExtendedLabels=N
 [end]
@@ -2587,7 +2587,7 @@ Xpm="32 2 2  1"
 "!!!!!###!!!!!###!!!!!###!!!!!###"
 "!!!!!###!!!!!###!!!!!###!!!!!###"
 ;12345678901234567890123456789012
-String1=0x19,РґРѕСЂРѕРіР°
+String1=0x19,дорога
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -2649,7 +2649,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #FFFFFF"
 "2 c #000000"
-String1=0x19,СЂСѓР»С‘Р¶РЅР°СЏ РґРѕСЂРѕР¶РєР°
+String1=0x19,рулёжная дорожка
 String2=0x04,taxiway
 ExtendedLabels=N
 [end]
@@ -2793,7 +2793,7 @@ Xpm="32 1 2  1"
 "# c #00006A"
 "!!!!####!!!!####!!!!####!!!!####"
 ;12345678901234567890123456789012
-String1=0x19,РёР·РѕР±Р°С‚Р°
+String1=0x19,изобата
 String2=0x04,elevation contour
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2809,7 +2809,7 @@ UseOrientation=Y
 LineWidth=1
 Xpm="0 0 1 0"
 "1 c #00006A"
-String1=0x19,РёР·РѕР±Р°С‚Р°
+String1=0x19,изобата
 String2=0x04,elevation contour
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2826,7 +2826,7 @@ UseOrientation=Y
 LineWidth=2
 Xpm="0 0 1 0"
 "1 c #00006A"
-String1=0x19,РёР·РѕР±Р°С‚Р°
+String1=0x19,изобата
 String2=0x04,elevation contour
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2874,7 +2874,7 @@ Xpm="32 5 2  1"
 "   !! !!                        "
 "    !!!                         "
 ;12345678901234567890123456789012
-String1=0x19,С‚СЂСѓР±РѕРїСЂРѕРІРѕРґ
+String1=0x19,трубопровод
 String2=0x04,pipe line
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -2896,7 +2896,7 @@ Xpm="32 5 2  1"
 "   !!!   !   !!!                "
 "     !   !   !                  "
 ;12345678901234567890123456789012
-String1=0x19,Р›Р­Рџ
+String1=0x19,ЛЭП
 String2=0x04,power line
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -2946,7 +2946,7 @@ Xpm="32 16 2  1"
 "        ! !        !    ! !  !  "
 "         !      !          !!   "
 ;12345678901234567890123456789012
-String1=0x19,СѓР¶Р°СЃРЅР°СЏ
+String1=0x19,ужасная
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -2976,7 +2976,7 @@ Xpm="32 14 2  1"
 "       !           !   ! !      "
 "                        !       "
 ;12345678901234567890123456789012
-String1=0x19,РїР»РѕС…Р°СЏ
+String1=0x19,плохая
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3000,7 +3000,7 @@ Xpm="32 8 2  1"
 "     !!      !!      !!      !! "
 "     !!      !!      !!      !! "
 ;12345678901234567890123456789012
-String1=0x19,РїРѕСЂРѕРіРё
+String1=0x19,пороги
 String2=0x04,rapids
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -3022,7 +3022,7 @@ Xpm="32 5 2  1"
 "                                "
 "  !   !   !   !   !   !   !   ! "
 ;12345678901234567890123456789012
-String1=0x19,СЃРєРёС‚СѓСЂ
+String1=0x19,скитур
 String2=0x04,skitour
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -3042,7 +3042,7 @@ Xpm="0 0 2 0"
 "1 c #3900D5"
 "2 c #00FFFF"
 String1=0x04,easy
-String2=0x19,РїСЂРѕСЃС‚Р°СЏ
+String2=0x19,простая
 ExtendedLabels=N
 [end]
 
@@ -3057,7 +3057,7 @@ Xpm="0 0 2 0"
 "1 c #FF0000"
 "2 c #00FFFF"
 String1=0x04,intermediate
-String2=0x19,СЃСЂРµРґРЅСЏСЏ
+String2=0x19,средняя
 ExtendedLabels=N
 [end]
 
@@ -3072,7 +3072,7 @@ Xpm="0 0 2 0"
 "1 c #000000"
 "2 c #00FFFF"
 String1=0x04,advanced
-String2=0x19,РїРѕРґРіРѕС‚РѕРІР»РµРЅРЅС‹Рµ
+String2=0x19,подготовленные
 ExtendedLabels=N
 [end]
 
@@ -3087,7 +3087,7 @@ Xpm="0 0 2 0"
 "1 c #00CA00"
 "2 c #00FFFF"
 String1=0x04,novice
-String2=0x19,РЅРѕРІРёС‡РєРё
+String2=0x19,новички
 ExtendedLabels=N
 [end]
 
@@ -3101,7 +3101,7 @@ BorderWidth=1
 Xpm="0 0 2 0"
 "1 c #0095FF"
 "2 c #7B6500"
-String1=0x19,РєР°РЅР°РІР°
+String1=0x19,канава
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3120,7 +3120,7 @@ Xpm="32 3 2  1"
 "###!!!!!!!!########!!!!!!!!#####"
 "###!!!!!!!!########!!!!!!!!#####"
 ;12345678901234567890123456789012
-String1=0x19,РЅРµРґРµР№СЃС‚РІ. Р¶/Рґ
+String1=0x19,недейств. ж/д
 String2=0x04,abandoned rail
 ExtendedLabels=N
 [end]
@@ -3152,7 +3152,7 @@ Xpm="32 18 2  1"
 "                                "
 " ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !"
 ;12345678901234567890123456789012
-String1=0x19,РґСЂРµРЅР°Р¶
+String1=0x19,дренаж
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3172,7 +3172,7 @@ Xpm="32 4 2  1"
 "!   !   !   !   !   !   !   !   "
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
-String1=0x19,РЅР°СЃС‹РїСЊ
+String1=0x19,насыпь
 String2=0x04,embankment
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3219,7 +3219,7 @@ Xpm="32 9 2  1"
 "   !   !       !   !   !       !"
 "   !               !            "
 ;12345678901234567890123456789012
-String1=0x19,С…СЂРµР±РµС‚
+String1=0x19,хребет
 String2=0x04,ridge
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -3242,7 +3242,7 @@ Xpm="32 5 2  1"
 "                   !           !"
 "                   !            "
 ;12345678901234567890123456789012
-String1=0x19,С…СЂРµР±РµС‚
+String1=0x19,хребет
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3270,7 +3270,7 @@ Xpm="32 12 2  1"
 "  !          !      !     !     "
 " !           !                  "
 ;12345678901234567890123456789012
-String1=0x19,РѕРІСЂР°Рі
+String1=0x19,овраг
 String2=0x1F,gully
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3286,7 +3286,7 @@ UseOrientation=N
 LineWidth=7
 Xpm="0 0 1 0"
 "1 c #626262"
-String1=0x19,С‚СѓРЅРЅРµР»СЊ
+String1=0x19,туннель
 String2=0x04,tunnel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3306,7 +3306,7 @@ Xpm="32 3 2  1"
 "###!!!!!!!!########!!!!!!!!#####"
 "################################"
 ;12345678901234567890123456789012
-String1=0x19,РјРµС‚СЂРѕ
+String1=0x19,метро
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3328,7 +3328,7 @@ Xpm="32 5 2  1"
 "    !!!!      !!!!       !!!!   "
 ;12345678901234567890123456789012
 String1=0x04,funicular
-String2=0x19,С„СѓРЅРёРєСѓР»РµСЂ
+String2=0x19,фуникулер
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -3343,7 +3343,7 @@ UseOrientation=N
 LineWidth=5
 Xpm="0 0 1 0"
 "1 c #B4B4B4"
-String1=0x19,РїРёСЂСЃ
+String1=0x19,пирс
 String2=0x04,pier
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3362,7 +3362,7 @@ Xpm="32 2 2  1"
 " ! ! !   ! ! !   ! ! !   ! ! !  "
 "! ! !   ! ! !   ! ! !   ! ! !   "
 ;12345678901234567890123456789012
-String1=0x19,РїСЂРѕСЃРµРєР°
+String1=0x19,просека
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3391,7 +3391,7 @@ Xpm="32 13 2  1"
 "           !!                   "
 "          !!                    "
 ;12345678901234567890123456789012
-String1=0x19,РѕРґРЅРѕСЃС‚РѕСЂРѕРЅРЅСЏСЏ
+String1=0x19,односторонняя
 String2=0x04,oneway
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3412,7 +3412,7 @@ Xpm="32 4 2  1"
 "###!!!!!!!!########!!!!!!!!#####"
 "###!!!!!!!!########!!!!!!!!#####"
 ;12345678901234567890123456789012
-String1=0x19,Р¶/Рґ
+String1=0x19,ж/д
 String2=0x04,railroad
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -3433,7 +3433,7 @@ Xpm="32 3 2  1"
 "###!!!!!!!!########!!!!!!!!#####"
 "###!!!!!!!!########!!!!!!!!#####"
 ;12345678901234567890123456789012
-String1=0x19,С‚СЂР°РјРІР°Р№
+String1=0x19,трамвай
 String2=0x04,tram
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3453,7 +3453,7 @@ Xpm="32 3 2  1"
 "                                "
 "    !!!!    !!!!    !!!!    !!!!"
 ;12345678901234567890123456789012
-String1=0x19,РєР°РЅР°С‚РєР°
+String1=0x19,канатка
 String2=0x04,aerialway
 ExtendedLabels=N
 [end]
@@ -3479,7 +3479,7 @@ Xpm="32 12 2  1"
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
-String1=0x19,РјРѕСЃС‚
+String1=0x19,мост
 String2=0x04,bridge
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3502,7 +3502,7 @@ Xpm="32 6 2  1"
 "      !!!!!           !!!!!     "
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
-String1=0x19,СЃРєР°Р»Р°
+String1=0x19,скала
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=Day
@@ -3520,7 +3520,7 @@ BorderWidth=2
 Xpm="0 0 2 0"
 "1 c #BD6500"
 "2 c #FFFFFF"
-String1=0x19,РїРµС€РµС…РѕРґРЅС‹Р№ РјРѕСЃС‚
+String1=0x19,пешеходный мост
 String2=0x04,foot bridge
 ExtendedLabels=N
 [end]
@@ -3538,7 +3538,7 @@ Xpm="32 4 2  1"
 "        !!!!!!!         !!!!!!! "
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
-String1=0x19,СЂРµРјРѕРЅС‚
+String1=0x19,ремонт
 String2=0x04,construction
 ExtendedLabels=N
 [end]
@@ -3565,7 +3565,7 @@ Xpm="32 2 2  1"
 "!!!!!   !!!!!   !!!!!   !!!!!   "
 "!!!!!   !!!!!   !!!!!   !!!!!   "
 ;12345678901234567890123456789012
-String1=0x19,РїСЂРёСЃС‚Р°РЅСЊ
+String1=0x19,пристань
 String2=0x04,marina
 ExtendedLabels=N
 [end]
@@ -3617,7 +3617,7 @@ Xpm="32 3 2  1"
 "###!!!!!!!!########!!!!!!!!#####"
 "###!!!!!!!!########!!!!!!!!#####"
 ;12345678901234567890123456789012
-String1=0x19,Р¶/Рґ
+String1=0x19,ж/д
 String2=0x04,railroad
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3651,7 +3651,7 @@ Xpm="32 17 2  1"
 "!!!     !!!     !!!     !!!     "
 "     !       !       !       !  "
 ;12345678901234567890123456789012
-String1=0x19,Р±СЂРѕРґ
+String1=0x19,брод
 String2=0x04,ford
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3676,7 +3676,7 @@ Xpm="32 7 2  1"
 "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 ;12345678901234567890123456789012
 String1=0x04,dam
-String2=0x19,РґР°РјР±Р°
+String2=0x19,дамба
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3693,7 +3693,7 @@ Xpm="32 1 2  1"
 "# c #FFFFFF"
 "!!#!!!#!!!#!!!#!!!#!!!#!!!#!!!#!"
 ;12345678901234567890123456789012
-String1=0x19,Р·Р°Р±РѕСЂ
+String1=0x19,забор
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -3712,7 +3712,7 @@ Xpm="32 3 2  1"
 "###!###!###!###!###!###!###!###!"
 "!#!!!#!!!#!!!#!!!#!!!#!!!#!!!#!!"
 ;12345678901234567890123456789012
-String1=0x19,РіСЂР°РЅРёС†Р°
+String1=0x19,граница
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -3737,7 +3737,7 @@ Xpm="32 9 2  1"
 " !       !       !       !      "
 " !       !       !       !      "
 ;12345678901234567890123456789012
-String1=0x19,Р»РµСЃС‚РЅРёС†Р°
+String1=0x19,лестница
 String2=0x04,stairs
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -3850,7 +3850,7 @@ DayXpm="6 6 5 1"   Colormode=16
 Type=0x00a
 SubType=0x00
 ;GRMN_TYPE: Political Entities/CITY_10K/City with the range of (10, 20] thousand inhabitants/Non NT
-String1=0x19,СѓСЂРѕС‡РёС‰Рµ
+String1=0x19,урочище
 String2=0x04,locality
 ExtendedLabels=Y
 FontStyle=NormalFont
@@ -3902,7 +3902,7 @@ DayXpm="6 6 5 1"   Colormode=16
 Type=0x016
 SubType=0x00
 ;GRMN_TYPE: //
-String1=0x19,РјР°СЏРє
+String1=0x19,маяк
 String2=0x04,beacon
 ExtendedLabels=N
 DayXpm="16 13 3 1"   Colormode=16
@@ -3930,7 +3930,7 @@ DayXpm="16 13 3 1"   Colormode=16
 Type=0x016
 SubType=0x13
 ;GRMN_TYPE: //
-String1=0x19,СЃС‚Р°РЅС†РёСЏ РјРµС‚СЂРѕ
+String1=0x19,станция метро
 String2=0x04,subway station
 ExtendedLabels=Y
 FontStyle=Default
@@ -3966,7 +3966,7 @@ DayXpm="16 16 4 1"   Colormode=16
 Type=0x016
 SubType=0x14
 ;GRMN_TYPE: //
-String1=0x19,РІС…РѕРґ РІ РјРµС‚СЂРѕ
+String1=0x19,вход в метро
 String2=0x04,subway entrance
 ExtendedLabels=Y
 FontStyle=Default
@@ -4002,7 +4002,7 @@ DayXpm="16 16 4 1"   Colormode=16
 Type=0x016
 SubType=0x15
 ;GRMN_TYPE: //
-String1=0x19,Р¶/Рґ РїРµСЂРµРµР·Рґ
+String1=0x19,ж/д переезд
 String2=0x04,crossing
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4036,7 +4036,7 @@ DayXpm="16 16 3 1"   Colormode=16
 Type=0x016
 SubType=0x16
 ;GRMN_TYPE: //
-String1=0x19,СЃРІРµС‚РѕС„РѕСЂ
+String1=0x19,светофор
 String2=0x04,traffic signals
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4103,7 +4103,7 @@ DayXpm="8 18 34 2"   Colormode=16
 Type=0x02a
 SubType=0x00
 ;GRMN_TYPE: Business - Food and Drink/RESTAURANT/General restaurant of unknown genre/Non NT
-String1=0x19,СЃС‚РѕР»РѕРІР°СЏ
+String1=0x19,столовая
 String2=0x04,dining
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4133,7 +4133,7 @@ DayXpm="11 12 3 1"   Colormode=16
 Type=0x02b
 SubType=0x01
 ;GRMN_TYPE: Business - Lodging/HOTEL/Hotel/Non NT
-String1=0x19,РіРѕСЃС‚РёРЅРёС†Р°
+String1=0x19,гостиница
 String2=0x04,hotel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4162,7 +4162,7 @@ DayXpm="14 11 3 1"   Colormode=16
 Type=0x02b
 SubType=0x02
 ;GRMN_TYPE: Business - Lodging/BED_AND_BREAKFAST/Bed and breakfast inn/Non NT
-String1=0x19,С…РѕСЃС‚РµР»
+String1=0x19,хостел
 String2=0x04,hostel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4190,7 +4190,7 @@ DayXpm="14 11 2 1"   Colormode=0
 Type=0x02b
 SubType=0x03
 ;GRMN_TYPE: Business - Lodging/CAMPGROUND/Campground/Non NT
-String1=0x19,СЃС‚РѕСЏРЅРєР°
+String1=0x19,стоянка
 String2=0x04,camp site
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4224,7 +4224,7 @@ DayXpm="20 16 3 1"   Colormode=16
 Type=0x02b
 SubType=0x05
 ;GRMN_TYPE: //
-String1=0x19,РЅР°РІРµСЃ
+String1=0x19,навес
 String2=0x04,shelter
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4286,7 +4286,7 @@ DayXpm="12 16 3 1"   Colormode=16
 Type=0x02b
 SubType=0x07
 ;GRMN_TYPE: //
-String1=0x19,РёР·Р±СѓС€РєР°
+String1=0x19,избушка
 String2=0x04,backcountry hut
 ExtendedLabels=Y
 FontStyle=Default
@@ -4323,7 +4323,7 @@ DayXpm="16 19 3 1"   Colormode=16
 Type=0x02c
 SubType=0x02
 ;GRMN_TYPE: Business - Attractions/MUSEUM/Museum or historical society/Non NT
-String1=0x19,РјСѓР·РµР№
+String1=0x19,музей
 String2=0x04,museum
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4354,7 +4354,7 @@ DayXpm="13 13 3 1"   Colormode=16
 Type=0x02c
 SubType=0x03
 ;GRMN_TYPE: Business - Attractions/LIBRARY/Library/Non NT
-String1=0x19,Р±РёР±Р»РёРѕС‚РµРєР°
+String1=0x19,библиотека
 String2=0x04,library
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4387,7 +4387,7 @@ DayXpm="18 15 3 1"   Colormode=16
 Type=0x02c
 SubType=0x04
 ;GRMN_TYPE: Business - Attractions/LANDMARK/Landmark/Non NT
-String1=0x19,РґРѕСЃС‚РѕРїСЂРёРјРµС‡Р°С‚РµР»СЊРЅРѕСЃС‚СЊ
+String1=0x19,достопримечательность
 String2=0x04,landmark
 ExtendedLabels=N
 DayXpm="14 10 3 1"   Colormode=16
@@ -4412,7 +4412,7 @@ DayXpm="14 10 3 1"   Colormode=16
 Type=0x02c
 SubType=0x05
 ;GRMN_TYPE: Business - Attractions/SCHOOL/School/Non NT
-String1=0x19,РѕР±СЂР°Р·РѕРІР°РЅРёРµ
+String1=0x19,образование
 String2=0x04,education
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4443,7 +4443,7 @@ DayXpm="11 12 4 1"   Colormode=16
 Type=0x02c
 SubType=0x06
 ;GRMN_TYPE: Business - Attractions/GARDEN, PARK/Garden, park/Non NT
-String1=0x19,РїР°СЂРє
+String1=0x19,парк
 String2=0x04,park
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4490,7 +4490,7 @@ DayXpm="12 13 19 2"   Colormode=16
 Type=0x02c
 SubType=0x07
 ;GRMN_TYPE: Business - Attractions/ZOO/Zoo/Non NT
-String1=0x19,Р·РѕРѕРїР°СЂРє
+String1=0x19,зоопарк
 String2=0x04,zoo
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -4638,7 +4638,7 @@ DayXpm="15 16 3 1"   Colormode=16
 Type=0x02c
 SubType=0x0c
 ;GRMN_TYPE: //
-String1=0x19,РІСѓР»РєР°РЅ
+String1=0x19,вулкан
 String2=0x04,volcano
 ExtendedLabels=Y
 FontStyle=NormalFont
@@ -4672,7 +4672,7 @@ DayXpm="13 15 4 1"   Colormode=16
 Type=0x02d
 SubType=0x01
 ;GRMN_TYPE: Business - Entertainment/LIVE_THEATER/Live theater/Non NT
-String1=0x19,С‚РµР°С‚СЂ
+String1=0x19,театр
 String2=0x04,theatre
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4709,7 +4709,7 @@ DayXpm="23 18 4 1"   Colormode=16
 Type=0x02d
 SubType=0x02
 ;GRMN_TYPE: Business - Entertainment/BAR/Bar or club/Non NT
-String1=0x19,Р±Р°СЂ
+String1=0x19,бар
 String2=0x04,bar
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4742,7 +4742,7 @@ DayXpm="15 15 3 1"   Colormode=16
 Type=0x02d
 SubType=0x03
 ;GRMN_TYPE: Business - Entertainment/MOVIE_THEATER/Movie theater or cinema/Non NT
-String1=0x19,РєРёРЅРѕС‚РµР°С‚СЂ
+String1=0x19,кинотеатр
 String2=0x04,cinema
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4775,7 +4775,7 @@ DayXpm="17 14 4 1"   Colormode=16
 Type=0x02d
 SubType=0x06
 ;GRMN_TYPE: Business - Entertainment/SKI_CENTER/Ski area or resort/Non NT
-String1=0x19,Р»С‹Р¶Рё
+String1=0x19,лыжи
 String2=0x04,skiing
 ExtendedLabels=N
 DayXpm="16 16 4 1"   Colormode=16
@@ -4807,7 +4807,7 @@ DayXpm="16 16 4 1"   Colormode=16
 Type=0x02d
 SubType=0x07
 ;GRMN_TYPE: Business - Entertainment/BOWLING/Bowling alley/Non NT
-String1=0x19,Р±РѕСѓР»РёРЅРі
+String1=0x19,боулинг
 String2=0x04,bowling
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -4858,7 +4858,7 @@ DayXpm="13 16 20 2"   Colormode=16
 Type=0x02d
 SubType=0x08
 ;GRMN_TYPE: Business - Entertainment/ICE_SKATING/Ice skating rink/Non NT
-String1=0x19,РєР°С‚РѕРє
+String1=0x19,каток
 String2=0x04,ice rink
 ExtendedLabels=N
 DayXpm="16 16 4 1"   Colormode=16
@@ -4890,7 +4890,7 @@ DayXpm="16 16 4 1"   Colormode=16
 Type=0x02d
 SubType=0x09
 ;GRMN_TYPE: Business - Entertainment/SWIMMING_POOL/Swimming pool/Non NT
-String1=0x19,Р±Р°СЃСЃРµР№РЅ
+String1=0x19,бассейн
 String2=0x04,swimming
 ExtendedLabels=N
 DayXpm="16 16 4 1"   Colormode=16
@@ -4922,7 +4922,7 @@ DayXpm="16 16 4 1"   Colormode=16
 Type=0x02d
 SubType=0x0a
 ;GRMN_TYPE: Business - Entertainment/FITNESS_CENTER/Fitness center or gym/Non NT
-String1=0x19,С„РёС‚РЅРµСЃСЃ
+String1=0x19,фитнесс
 ExtendedLabels=Y
 FontStyle=Default
 CustomColor=No
@@ -4988,7 +4988,7 @@ DayXpm="14 14 4 1"   Colormode=16
 Type=0x02e
 SubType=0x00
 ;GRMN_TYPE: //
-String1=0x19,РјР°РіР°Р·РёРЅ
+String1=0x19,магазин
 String2=0x04,shop
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5020,7 +5020,7 @@ DayXpm="13 13 4 1"   Colormode=16
 Type=0x02e
 SubType=0x02
 ;GRMN_TYPE: Business - Shopping/GROCERY_STORE/Grocery store/Non NT
-String1=0x19,РїСЂРѕРґСѓРєС‚С‹
+String1=0x19,продукты
 String2=0x04,grocery
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5050,7 +5050,7 @@ DayXpm="11 11 4 1"   Colormode=16
 Type=0x02e
 SubType=0x05
 ;GRMN_TYPE: Business - Shopping/PHARMACY/Pharmacy/Non NT
-String1=0x19,Р°РїС‚РµРєР°
+String1=0x19,аптека
 String2=0x04,pharmacy
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5082,7 +5082,7 @@ DayXpm="14 14 3 1"   Colormode=0
 Type=0x02f
 SubType=0x01
 ;GRMN_TYPE: Business - Services/GAS_STATION/Gas, fuel station/Non NT
-String1=0x19,РђР—РЎ
+String1=0x19,АЗС
 String2=0x04,fuel
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5112,7 +5112,7 @@ DayXpm="12 12 3 1"   Colormode=16
 Type=0x02f
 SubType=0x03
 ;GRMN_TYPE: Business - Services/AUTO_REPAIR/Car repair, mechanic/Non NT
-String1=0x19,Р°РІС‚РѕСЃРµСЂРІРёСЃ
+String1=0x19,автосервис
 String2=0x04,auto repair
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5205,7 +5205,7 @@ DayXpm="13 14 36 2"   Colormode=16
 Type=0x02f
 SubType=0x05
 ;GRMN_TYPE: Business - Services/POST_OFFICE/Post office/Non NT
-String1=0x19,РїРѕС‡С‚Р°
+String1=0x19,почта
 String2=0x04,post office
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -5235,7 +5235,7 @@ DayXpm="16 12 3 1"   Colormode=16
 Type=0x02f
 SubType=0x06
 ;GRMN_TYPE: Business - Services/BANK/Bank/Non NT
-String1=0x19,Р±Р°РЅРє
+String1=0x19,банк
 String2=0x04,bank
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5281,7 +5281,7 @@ DayXpm="11 14 17 1"   Colormode=16
 Type=0x02f
 SubType=0x08
 ;GRMN_TYPE: Business - Services/GND_TRANSPORT/Ground transportation status, i.e. a bus station/Non NT
-String1=0x19,РѕСЃС‚Р°РЅРѕРІРєР°
+String1=0x19,остановка
 String2=0x04,stop
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5320,7 +5320,7 @@ DayXpm="16 16 8 1"   Colormode=16
 Type=0x02f
 SubType=0x0b
 ;GRMN_TYPE: Business - Services/PARKING/Parking/Non NT
-String1=0x19,РїР°СЂРєРѕРІРєР°
+String1=0x19,парковка
 String2=0x04,parking
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5355,7 +5355,7 @@ DayXpm="14 16 4 1"   Colormode=16
 Type=0x02f
 SubType=0x0d
 ;GRMN_TYPE: Business - Services/AUTO_CLUB/Automobile club/Non NT
-String1=0x19,Р°РІС‚РѕСЃР°Р»РѕРЅ
+String1=0x19,автосалон
 String2=0x04,car sale
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5385,7 +5385,7 @@ DayXpm="16 11 4 1"   Colormode=16
 Type=0x02f
 SubType=0x0e
 ;GRMN_TYPE: Business - Services/CAR_WASH/Car wash/Non NT
-String1=0x19,Р°РІС‚РѕРјРѕР№РєР°
+String1=0x19,автомойка
 String2=0x04,car wash
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5430,7 +5430,7 @@ DayXpm="16 16 14 1"   Colormode=16
 Type=0x02f
 SubType=0x11
 ;GRMN_TYPE: Business - Services/SERVICES_BUSINESS/Business services/Non NT
-String1=0x19,С‚Р°РєСЃРё
+String1=0x19,такси
 String2=0x04,taxi
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5453,7 +5453,7 @@ DayXpm="15 6 2 1"   Colormode=0
 Type=0x02f
 SubType=0x12
 ;GRMN_TYPE: Business - Services/COMMUNICATION_SERVICES/Communication services/Non NT
-String1=0x19,С‚РµР»РµС„РѕРЅ
+String1=0x19,телефон
 String2=0x04,telephone
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5484,7 +5484,7 @@ DayXpm="16 13 3 1"   Colormode=16
 Type=0x02f
 SubType=0x15
 ;GRMN_TYPE: Business - Services/UTILITY/Utility (gas, electric, water) services/Non NT
-String1=0x19,РїРѕРјРѕР№РєР°
+String1=0x19,помойка
 String2=0x04,recycling
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5516,7 +5516,7 @@ DayXpm="14 14 3 1"   Colormode=16
 Type=0x02f
 SubType=0x17
 ;GRMN_TYPE: Business - Services/TRANSIT_SERVICES/Mass transit services/Non NT
-String1=0x19,Р¶/Рґ СЃС‚Р°РЅС†РёСЏ
+String1=0x19,ж/д станция
 String2=0x04,railroad station
 ExtendedLabels=N
 DayXpm="18 21 3 1"   Colormode=16
@@ -5552,7 +5552,7 @@ DayXpm="18 21 3 1"   Colormode=16
 Type=0x02f
 SubType=0x18
 ;GRMN_TYPE: //
-String1=0x19,РІРµР»РѕСЃРёРїРµРґС‹
+String1=0x19,велосипеды
 String2=0x04,bicycle
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -5584,7 +5584,7 @@ DayXpm="14 14 3 1"   Colormode=16
 Type=0x02f
 SubType=0x19
 ;GRMN_TYPE: //
-String1=0x19,С„РѕРЅС‚Р°РЅ
+String1=0x19,фонтан
 String2=0x04,fountain
 ExtendedLabels=N
 DayXpm="13 12 3 1"   Colormode=16
@@ -5611,7 +5611,7 @@ DayXpm="13 12 3 1"   Colormode=16
 Type=0x02f
 SubType=0x1a
 ;GRMN_TYPE: //
-String1=0x19,РїР°СЃРµРєР°
+String1=0x19,пасека
 ExtendedLabels=Y
 FontStyle=Default
 CustomColor=No
@@ -5644,7 +5644,7 @@ DayXpm="13 14 5 1"   Colormode=16
 Type=0x030
 SubType=0x01
 ;GRMN_TYPE: Business - Emergency and Government/POLICE_STATION/Police station/Non NT
-String1=0x19,РїРѕР»РёС†РёСЏ
+String1=0x19,полиция
 String2=0x04,police
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5689,7 +5689,7 @@ DayXpm="13 14 16 1"   Colormode=16
 Type=0x030
 SubType=0x02
 ;GRMN_TYPE: Business - Emergency and Government/HOSPITAL/Hospital/Non NT
-String1=0x19,РјРµРґРёС†РёРЅР°
+String1=0x19,медицина
 String2=0x04,medicine
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5721,7 +5721,7 @@ DayXpm="14 14 3 1"   Colormode=0
 Type=0x030
 SubType=0x03
 ;GRMN_TYPE: Business - Emergency and Government/CITY_HALL/City hall/Non NT
-String1=0x19,СѓС‡СЂРµР¶РґРµРЅРёРµ
+String1=0x19,учреждение
 String2=0x04,government institution
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5760,7 +5760,7 @@ DayXpm="16 21 3 1"   Colormode=16
 Type=0x030
 SubType=0x04
 ;GRMN_TYPE: Business - Emergency and Government/COURTHOUSE/Courthouse/Non NT
-String1=0x19,СЃСѓРґ
+String1=0x19,суд
 String2=0x04,court
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5789,7 +5789,7 @@ DayXpm="15 11 3 1"   Colormode=16
 Type=0x030
 SubType=0x05
 ;GRMN_TYPE: Business - Emergency and Government/COMMUNITY_CENTER/Community center/Non NT
-String1=0x19,РѕР±С‰РµСЃС‚РІРµРЅРЅС‹Р№ С†РµРЅС‚СЂ
+String1=0x19,общественный центр
 String2=0x04,community center
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5821,7 +5821,7 @@ DayXpm="14 12 5 1"   Colormode=16
 Type=0x030
 SubType=0x07
 ;GRMN_TYPE: Business - Emergency and Government/GOV_OFFICE/Government Office/Non NT
-String1=0x19,Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЏ
+String1=0x19,администрация
 String2=0x04,public building
 ExtendedLabels=N
 DayXpm="10 14 32 2"   Colormode=0
@@ -5913,7 +5913,7 @@ DayXpm="6 16 5 1"   Colormode=16
 Type=0x030
 SubType=0x09
 ;GRMN_TYPE: //
-String1=0x19,С‚СЋСЂСЊРјР°
+String1=0x19,тюрьма
 String2=0x04,prison
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5944,7 +5944,7 @@ DayXpm="14 14 2 1"   Colormode=16
 Type=0x030
 SubType=0x10
 ;GRMN_TYPE: //
-String1=0x19,СЃС‚РѕРјР°С‚РѕР»РѕРіРёСЏ
+String1=0x19,стоматология
 String2=0x04,dentist
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -5976,7 +5976,7 @@ DayXpm="14 14 3 1"   Colormode=0
 Type=0x043
 SubType=0x00
 ;GRMN_TYPE: //
-String1=0x19,РїСЂРёСЃС‚Р°РЅСЊ
+String1=0x19,пристань
 String2=0x04,marina
 ExtendedLabels=N
 DayXpm="14 13 3 1"   Colormode=16
@@ -6004,7 +6004,7 @@ DayXpm="14 13 3 1"   Colormode=16
 Type=0x04a
 SubType=0x00
 ;GRMN_TYPE: Misc. Points of Interest/PICNIC_AREA/Picnic area/Non NT, NT
-String1=0x19,СЃС‚РѕСЏРЅРєР°
+String1=0x19,стоянка
 String2=0x04,picnic site
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6038,7 +6038,7 @@ DayXpm="20 16 3 1"   Colormode=16
 Type=0x04a
 SubType=0x01
 ;GRMN_TYPE: //
-String1=0x19,СЃС‚РѕСЏРЅРєР°
+String1=0x19,стоянка
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -6068,7 +6068,7 @@ DayXpm="18 13 3 1"   Colormode=16
 Type=0x04c
 SubType=0x00
 ;GRMN_TYPE: Misc. Points of Interest/INFORMATION/Information/Non NT, NT
-String1=0x19,РёРЅС„РѕСЂРјР°С†РёСЏ
+String1=0x19,информация
 String2=0x04,information
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6098,7 +6098,7 @@ DayXpm="12 12 3 1"   Colormode=16
 Type=0x04e
 SubType=0x00
 ;GRMN_TYPE: Misc. Points of Interest/RESTROOMS/Restrooms/Non NT, NT
-String1=0x19,С‚СѓР°Р»РµС‚
+String1=0x19,туалет
 String2=0x04,toilet
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6128,7 +6128,7 @@ DayXpm="14 12 3 1"   Colormode=16
 Type=0x050
 SubType=0x01
 ;GRMN_TYPE: //
-String1=0x19,РІРѕРґР°
+String1=0x19,вода
 String2=0x04,water
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6158,7 +6158,7 @@ DayXpm="9 12 3 1"   Colormode=16
 Type=0x056
 SubType=0x00
 ;GRMN_TYPE: Misc. Points of Interest/CONTROLLED_AREA/Controlled area/Non NT, NT
-String1=0x19,РѕРіСЂР°РЅРёС‡РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё
+String1=0x19,ограничение скорости
 String2=0x04,speed limit
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6188,7 +6188,7 @@ DayXpm="11 11 4 1"   Colormode=16
 Type=0x058
 SubType=0x00
 ;GRMN_TYPE: Misc. Points of Interest/RESTRICTED_AREA/Restricted area/Non NT, NT
-String1=0x19,С€Р»Р°РіР±Р°СѓРј
+String1=0x19,шлагбаум
 String2=0x04,gate
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6216,7 +6216,7 @@ DayXpm="18 9 4 1"   Colormode=16
 Type=0x058
 SubType=0x01
 ;GRMN_TYPE: //
-String1=0x19,РІРѕСЂРѕС‚Р°
+String1=0x19,ворота
 String2=0x04,gateway
 ExtendedLabels=N
 DayXpm="11 8 3 1"   Colormode=16
@@ -6239,7 +6239,7 @@ DayXpm="11 8 3 1"   Colormode=16
 Type=0x064
 SubType=0x00
 ;GRMN_TYPE: //
-String1=0x19,Р¶/Рґ СЃС‚Р°РЅС†РёСЏ
+String1=0x19,ж/д станция
 String2=0x04,railroad station
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6264,7 +6264,7 @@ DayXpm="8 8 2 1"   Colormode=16
 Type=0x064
 SubType=0x01
 ;GRMN_TYPE: Geographical Named Points of Interest/BRIDGE/Bridge/Non NT, NT
-String1=0x19,РјРѕСЃС‚
+String1=0x19,мост
 String2=0x04,bridge
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6292,7 +6292,7 @@ DayXpm="6 10 3 1"   Colormode=16
 Type=0x064
 SubType=0x02
 ;GRMN_TYPE: Geographical Named Points of Interest/BUILDING/Building/Non NT, NT
-String1=0x19,Р·РґР°РЅРёРµ
+String1=0x19,здание
 String2=0x04,building
 ExtendedLabels=Y
 FontStyle=NormalFont
@@ -6325,7 +6325,7 @@ DayXpm="14 15 3 1"   Colormode=16
 Type=0x064
 SubType=0x03
 ;GRMN_TYPE: Geographical Named Points of Interest/CEMETERY/Cemetery/Non NT, NT
-String1=0x19,РєР»Р°РґР±РёС‰Рµ
+String1=0x19,кладбище
 String2=0x04,cemetery
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6359,7 +6359,7 @@ DayXpm="13 14 5 1"   Colormode=16
 Type=0x064
 SubType=0x04
 ;GRMN_TYPE: Geographical Named Points of Interest/CHURCH/Church, mosque, etc./Non NT, NT
-String1=0x19,РїРѕРіСЂР°РЅРёС‡РЅС‹Р№ РєР°РјРµРЅСЊ
+String1=0x19,пограничный камень
 String2=0x04,boundary stone
 ExtendedLabels=N
 DayXpm="13 14 5 1"   Colormode=16
@@ -6407,7 +6407,7 @@ DayXpm="1 1 1 1"   Colormode=0
 Type=0x064
 SubType=0x06
 ;GRMN_TYPE: Geographical Named Points of Interest/CROSSING/Crossing/Non NT, NT
-String1=0x19,Р±СЂРѕРґ
+String1=0x19,брод
 String2=0x04,ford
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6461,7 +6461,7 @@ DayXpm="17 12 2 1"   Colormode=16
 Type=0x064
 SubType=0x08
 ;GRMN_TYPE: //
-String1=0x19,СѓСЂРѕС‡РёС‰Рµ
+String1=0x19,урочище
 ExtendedLabels=Y
 FontStyle=NormalFont
 CustomColor=No
@@ -6492,7 +6492,7 @@ DayXpm="15 15 2 1"   Colormode=16
 Type=0x064
 SubType=0x09
 ;GRMN_TYPE: Geographical Named Points of Interest/LEVEE/Levee/Non NT, NT
-String1=0x19,С‚СѓСЂР°
+String1=0x19,тура
 String2=0x04,cairn
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6524,7 +6524,7 @@ DayXpm="13 13 4 1"   Colormode=16
 Type=0x064
 SubType=0x0a
 ;GRMN_TYPE: Geographical Named Points of Interest/LOCALE/Locale/Non NT, NT
-String1=0x19,РїРµСЂРµРІР°Р»
+String1=0x19,перевал
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
@@ -6549,7 +6549,7 @@ DayXpm="8 8 3 1"   Colormode=16
 Type=0x064
 SubType=0x0b
 ;GRMN_TYPE: Geographical Named Points of Interest/MILITARY/Military point of interest/Non NT, NT
-String1=0x19,Р±СѓРЅРєРµСЂ
+String1=0x19,бункер
 String2=0x04,bunker
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6579,7 +6579,7 @@ DayXpm="16 11 4 1"   Colormode=16
 Type=0x064
 SubType=0x0c
 ;GRMN_TYPE: Geographical Named Points of Interest/MINE/Mine/Non NT, NT
-String1=0x19,РєР°СЂСЊРµСЂ
+String1=0x19,карьер
 String2=0x04,mine
 ExtendedLabels=N
 DayXpm="9 9 2 1"   Colormode=16
@@ -6602,7 +6602,7 @@ DayXpm="9 9 2 1"   Colormode=16
 Type=0x064
 SubType=0x0d
 ;GRMN_TYPE: Geographical Named Points of Interest/OILFIELD/Oilfield/Non NT, NT
-String1=0x19,РєРѕС‚С‚РµРґР¶
+String1=0x19,коттедж
 String2=0x04,chalet
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6630,7 +6630,7 @@ DayXpm="14 11 2 1"   Colormode=0
 Type=0x064
 SubType=0x0e
 ;GRMN_TYPE: //
-String1=0x19,Р·Р°РјРѕРє
+String1=0x19,замок
 String2=0x04,castle
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6665,7 +6665,7 @@ DayXpm="16 13 7 1"   Colormode=16
 Type=0x064
 SubType=0x0f
 ;GRMN_TYPE: //
-String1=0x19,СЂСѓРёРЅС‹
+String1=0x19,руины
 String2=0x04,ruins
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6743,7 +6743,7 @@ DayXpm="13 26 3 1"   Colormode=16
 Type=0x064
 SubType=0x11
 ;GRMN_TYPE: Geographical Named Points of Interest/TOWER/Tower/Non NT, NT
-String1=0x19,Р±Р°С€РЅСЏ
+String1=0x19,башня
 String2=0x04,tower
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6806,7 +6806,7 @@ DayXpm="13 13 3 1"   Colormode=16
 Type=0x064
 SubType=0x13
 ;GRMN_TYPE: Geographical Named Points of Interest/TUNNEL/Tunnel/Non NT, NT
-String1=0x19,С‚СѓРїРёРє
+String1=0x19,тупик
 String2=0x04,dead end
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6828,7 +6828,7 @@ DayXpm="5 5 2 1"   Colormode=16
 Type=0x064
 SubType=0x14
 ;GRMN_TYPE: Geographical Named Points of Interest/WELL/Well/Non NT, NT
-String1=0x19,РїРёРєРµС‚
+String1=0x19,пикет
 String2=0x04,picket
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6857,7 +6857,7 @@ DayXpm="6 11 3 1"   Colormode=16
 Type=0x064
 SubType=0x15
 ;GRMN_TYPE: Geographical Named Points of Interest/HISTORICAL_TOWN/Historical (ghost) town/Non NT, NT
-String1=0x19,СЃРµРјР°С„РѕСЂ
+String1=0x19,семафор
 String2=0x04,semaphore
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -6902,7 +6902,7 @@ DayXpm="8 25 5 1"   Colormode=16
 Type=0x064
 SubType=0x16
 ;GRMN_TYPE: Geographical Named Points of Interest/SUBDIVISION/Non NT, NT/
-String1=0x19,РіРѕСЂСЏС‡РёР№ РёСЃС‚РѕС‡РЅРёРє
+String1=0x19,горячий источник
 String2=0x04,hot spring
 ExtendedLabels=N
 DayXpm="12 12 3 1"   Colormode=16
@@ -6929,7 +6929,8 @@ DayXpm="12 12 3 1"   Colormode=16
 Type=0x064
 SubType=0x17
 ;GRMN_TYPE: //
-String1=0x01,
+String1=0x04,cross
+String2=0x19,крест
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -6953,7 +6954,7 @@ DayXpm="5 8 2 1"   Colormode=16
 Type=0x064
 SubType=0x1a
 ;GRMN_TYPE: //
-String1=0x19,РІРµС‚СЂСЏРє
+String1=0x19,ветряк
 String2=0x04,wind power
 ExtendedLabels=N
 DayXpm="12 17 4 1"   Colormode=16
@@ -6986,7 +6987,7 @@ DayXpm="12 17 4 1"   Colormode=16
 Type=0x064
 SubType=0x1b
 ;GRMN_TYPE: //
-String1=0x19,РјРµР»СЊРЅРёС†Р°
+String1=0x19,мельница
 String2=0x04,windmill
 ExtendedLabels=N
 DayXpm="12 17 4 1"   Colormode=16
@@ -7058,7 +7059,7 @@ DayXpm="13 22 3 1"   Colormode=16
 Type=0x064
 SubType=0x1d
 ;GRMN_TYPE: //
-String1=0x19,РІРѕРґРѕРЅР°РїРѕСЂРЅР°СЏ Р±Р°С€РЅСЏ
+String1=0x19,водонапорная башня
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -7095,7 +7096,7 @@ DayXpm="12 18 5 1"   Colormode=16
 Type=0x065
 SubType=0x03
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/BAY/Bay/Non NT, NT
-String1=0x19,Р·Р°Р»РёРІ/РјС‹СЃ
+String1=0x19,залив/мыс
 String2=0x04,bay/cape
 ExtendedLabels=N
 DayXpm="7 7 3 1"   Colormode=16
@@ -7117,7 +7118,7 @@ DayXpm="7 7 3 1"   Colormode=16
 Type=0x065
 SubType=0x08
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/WATERFALL/Waterfall/Non NT, NT
-String1=0x19,РІРѕРґРѕРїР°Рґ
+String1=0x19,водопад
 String2=0x04,waterfall
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -7146,7 +7147,7 @@ DayXpm="9 11 3 1"   Colormode=16
 Type=0x065
 SubType=0x0e
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/RAPIDS/Rapids/Non NT, NT
-String1=0x19,РїРѕСЂРѕРі
+String1=0x19,порог
 String2=0x04,rapid
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -7181,7 +7182,7 @@ DayXpm="6 16 4 1"   Colormode=16
 Type=0x065
 SubType=0x11
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/SPRING/Spring/Non NT, NT
-String1=0x19,РёСЃС‚РѕС‡РЅРёРє
+String1=0x19,источник
 String2=0x04,spring
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -7219,7 +7220,7 @@ DayXpm="12 19 4 1"   Colormode=16
 Type=0x065
 SubType=0x12
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/STREAM/Stream/Non NT, NT
-String1=0x19,РїРµСЂРµСЃС‹С…Р°СЋС‰РёР№ РёСЃС‚РѕС‡РЅРёРє
+String1=0x19,пересыхающий источник
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
@@ -7256,7 +7257,7 @@ Type=0x065
 SubType=0x13
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/SWAMP/Swamp/Non NT, NT
 String1=0x04,wetland
-String2=0x19,Р±РѕР»РѕС‚Рѕ
+String2=0x19,болото
 ExtendedLabels=N
 DayXpm="40 30 2 1"   Colormode=16
 "!	c #0000FF"
@@ -7299,7 +7300,7 @@ DayXpm="40 30 2 1"   Colormode=16
 Type=0x065
 SubType=0x14
 ;GRMN_TYPE: //
-String1=0x19,РІС‹С…РѕРґ
+String1=0x19,выход
 String2=0x04,egress
 ExtendedLabels=N
 DayXpm="16 16 54 2"   Colormode=16
@@ -7381,7 +7382,7 @@ DayXpm="16 16 54 2"   Colormode=16
 Type=0x065
 SubType=0x15
 ;GRMN_TYPE: //
-String1=0x19,РІС…РѕРґ
+String1=0x19,вход
 String2=0x04,put in
 ExtendedLabels=N
 DayXpm="16 16 56 2"   Colormode=16
@@ -7465,7 +7466,7 @@ DayXpm="16 16 56 2"   Colormode=16
 Type=0x065
 SubType=0x16
 ;GRMN_TYPE: //
-String1=0x19,РІС…РѕРґ/РІС‹С…РѕРґ
+String1=0x19,вход/выход
 String2=0x04,put_in/egress
 ExtendedLabels=N
 DayXpm="16 16 53 2"   Colormode=16
@@ -7546,7 +7547,7 @@ DayXpm="16 16 53 2"   Colormode=16
 Type=0x065
 SubType=0x17
 ;GRMN_TYPE: //
-String1=0x19,РѕРїР°СЃРЅРѕСЃС‚СЊ
+String1=0x19,опасность
 String2=0x04,hazard
 ExtendedLabels=N
 DayXpm="16 16 182 2"   Colormode=32
@@ -7756,7 +7757,7 @@ DayXpm="16 16 182 2"   Colormode=32
 Type=0x066
 SubType=0x01
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/ARCH/Arch/Non NT, NT
-String1=0x19,РїРµС‰РµСЂР°
+String1=0x19,пещера
 String2=0x04,cave
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -7783,7 +7784,7 @@ DayXpm="18 9 3 1"   Colormode=16
 Type=0x066
 SubType=0x02
 ;GRMN_TYPE: //
-String1=0x19,Р·Р°РІР°Р»
+String1=0x19,завал
 String2=0x04,debris / fallen tree
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -7842,7 +7843,7 @@ DayXpm="7 7 3 1"   Colormode=16
 Type=0x066
 SubType=0x04
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/BEACH/Beach/Non NT, NT
-String1=0x19,РїР»СЏР¶
+String1=0x19,пляж
 String2=0x04,beach
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -7876,7 +7877,7 @@ DayXpm="17 16 3 1"   Colormode=16
 Type=0x066
 SubType=0x06
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/CAPE/Cape/Non NT, NT
-String1=0x19,РјС‹СЃ
+String1=0x19,мыс
 String2=0x04,cape
 ExtendedLabels=N
 DayXpm="7 7 3 1"   Colormode=16
@@ -7898,7 +7899,7 @@ DayXpm="7 7 3 1"   Colormode=16
 Type=0x066
 SubType=0x07
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/CLIFF/Cliff/Non NT, NT
-String1=0x19,СЃРєР°Р»Р°
+String1=0x19,скала
 String2=0x04,cliff
 ExtendedLabels=N
 DayXpm="13 13 2 1"   Colormode=16
@@ -7925,7 +7926,7 @@ DayXpm="13 13 2 1"   Colormode=16
 Type=0x066
 SubType=0x08
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/CRATER/Crater/Non NT, NT
-String1=0x19,РїРµС‰РµСЂР°
+String1=0x19,пещера
 String2=0x04,cave entrance
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -7950,7 +7951,7 @@ DayXpm="16 7 3 1"   Colormode=16
 Type=0x066
 SubType=0x09
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/FLAT/Flat/Non NT, NT
-String1=0x19,РєР°Р№С‚
+String1=0x19,кайт
 String2=0x04,kitesurfing
 ExtendedLabels=Y
 FontStyle=SmallFont
@@ -7988,7 +7989,7 @@ DayXpm="20 20 3 1"   Colormode=16
 Type=0x066
 SubType=0x0f
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/PILLAR/Pillar/Non NT, NT
-String1=0x19,РїСЂРµРіСЂР°РґР°
+String1=0x19,преграда
 String2=0x04,barrier
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
@@ -8047,7 +8048,7 @@ Type=0x066
 SubType=0x15
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/SLOPE/Slope/Non NT, NT
 String1=0x04,peak
-String2=0x19,РІРµСЂС€РёРЅР°
+String2=0x19,вершина
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=Day
@@ -8101,12 +8102,98 @@ DayXpm="14 11 4 1"   Colormode=16
 Type=0x066
 SubType=0x17
 ;GRMN_TYPE: Geographical Named Points of Interest - Land Related/VALLEY/Valley/Non NT, NT
-String1=0x19,РўСЂРёРіРѕРїСѓРЅРєС‚
+String1=0x19,Тригопункт
 ExtendedLabels=Y
 FontStyle=SmallFont
 CustomColor=No
 ContourColor=No
 DayXpm="9 8 2 1"   Colormode=16
+"!	c #101010"
+"  	c none"
+"    !    "
+"    !    "
+"  !!!!!  "
+"    !    "
+"   !!!   "
+"  ! ! !  "
+" !  !  ! "
+"!   !   !"
+;123456789
+[end]
+
+
+[_point]
+Type=0x066
+SubType=0x18
+;GRMN_TYPE: Geographical Named Points of Interest - Land Related/WOODS/Wooded area/Non NT, NT
+String1=0x19,лес
+String2=0x04,forest
+ExtendedLabels=Y
+FontStyle=SmallFont
+CustomColor=No
+ContourColor=No
+DayXpm="15 14 21 2"   Colormode=16
+"!!	c #F89400"
+"!#	c #F8FCF8"
+"!%	c #000000"
+"!?	c #00D800"
+"!$	c #00DC00"
+"!*	c #00FC00"
+"!=	c #00E800"
+"!1	c #00EC00"
+"!2	c #00E400"
+"!3	c #00CC00"
+"!4	c #00D000"
+"!5	c #00C800"
+"!6	c #00C000"
+"!7	c #00C400"
+"!8	c #00BC00"
+"!9	c #00B800"
+"#!	c #00AC00"
+"##	c #00A800"
+"#%	c #009400"
+"#?	c #00B000"
+"  	c none"
+"          !#      !#          "
+"        !#!%!#!#!#!%!#        "
+"    !#!#!%!?!%!%!%!$!%!#!#    "
+"  !#!%!%!*!=!?!1!*!1!$!%!%!#  "
+"!#!%!%!%!%!2!%!%!%!=!%!%!%!%!#"
+"  !#!#!%!$!?!3!%!$!$!4!%!#!#  "
+"  !#!%!5!3!5!6!3!4!3!7!8!%!#  "
+"!#!%!%!%!%!9!%!%!%!8!%!%!%!%!#"
+"  !#!#!%#!###%!%#?#!##!%!#!#  "
+"  !#!%!%!%!%!%!%!%!%!%!%!%!#  "
+"  !#!#!#!%!!!%!#!%!!!%!#!#!#  "
+"      !#!%!!!%!#!%!!!%!#      "
+"      !#!%!%!%!#!%!%!%!#      "
+"      !#!#!#!#!#!#!#!#!#      "
+;123456789012345
+[end]
+
+
+[_point]
+Type=0x066
+SubType=0x19
+;GRMN_TYPE: //
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=Day
+DaycustomColor:#7B3000
+ContourColor=No
+DayXpm="8 7 3 1"   Colormode=16
+"!	c #313131"
+"#	c #737373"
+"  	c none"
+"   !!   "
+"  !##!  "
+"  !##!  "
+" !####! "
+" !####! "
+"!######!"
+"!!!!!!!!"
+;12345678
+[end]2 1"   Colormode=16
 "!	c #101010"
 "  	c none"
 "    !    "
