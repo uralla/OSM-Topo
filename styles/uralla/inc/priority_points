@@ -141,6 +141,12 @@ natural=shrub & name!=* { delete natural }
 # [CUSTOM/АВТОРСКОЕ] Trail obstacles: fallen logs/debris are one visual class.
 (barrier=log | obstacle=fallen_tree | barrier=debris) [0x6602 resolution 23]
 
+# Crosses are local landmarks. Keep them at the closest level and use a
+# NoLabel TYP symbol so they do not compete with nearby summit labels.
+# If one OSM node is both a cross and a summit, summit semantics win.
+man_made=cross & natural!=peak & natural!=hill
+ { name '${name}' | 'крест' } [0x6417 resolution 24]
+
 # Agreed terrain / tourist POIs. A real mountain_pass must continue to the richer
 # rule in inc/landuse_points instead of being consumed as a generic saddle.
 natural=saddle & mountain_pass!=yes [0x640a resolution 23]
