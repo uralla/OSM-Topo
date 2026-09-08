@@ -1,4 +1,4 @@
-
+; -*- coding: utf-8 -*-
 
 [_id]
 ProductCode=1
@@ -6930,7 +6930,7 @@ Type=0x064
 SubType=0x17
 ;GRMN_TYPE: //
 String1=0x04,cross
-String2=0x19,крест
+String2=0x19,РєСЂРµСЃС‚
 ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
