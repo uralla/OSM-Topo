@@ -44,7 +44,9 @@ from .road_density import (
 # that visual trunk to cross between eligible low road classes while density
 # itself remains calculated independently per concrete class. v7 adds
 # topological short-road continuity hints with per-way freshness versions.
-SCHEMA_VERSION = 7
+# v8 builds continuity topology from every consecutive OSM node pair instead
+# of treating each complete way as one endpoint-to-endpoint graph edge.
+SCHEMA_VERSION = 8
 ANALYSIS_KIND = "road_density"
 _VALID_LEVELS = frozenset({"dense", "very_dense", "keep"})
 
@@ -83,6 +85,10 @@ def _parameters() -> dict[str, object]:
             "start_classes": sorted(ROAD_CONTINUITY_START_CLASSES),
             "bridge_classes": sorted(ROAD_CONTINUITY_BRIDGE_CLASSES),
             "target_resolution": dict(ROAD_CONTINUITY_TARGET_RESOLUTION),
+            "topology": (
+                "consecutive OSM node-pair graph; anchors and start junctions "
+                "at every way node"
+            ),
         },
         "thresholds": {
             name: {
