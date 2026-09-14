@@ -7,7 +7,7 @@
 include 'inc/peak_priority';
 
 # Hardcoded landmark: exact exje.ru handicraft/jewelry point stays visible from resolution 19.
-craft=handicraft & name='Посольство Уральских Гор' & operator=exje.ru & shop=jewelry { name '${name}' } [0x02c04 resolution 19]
+craft=handicraft & name='Посольство Уральских Гор' & operator=exje.ru & shop=jewelry { name '${name}' } [0x6600 resolution 19]
 
 # Agreed removals from point display.
 (amenity=casino | amenity=cinema | amenity=concert_hall | amenity=conference_centre | amenity=kindergarten | amenity=nightclub | amenity=theatre) { delete amenity; delete building }
@@ -63,21 +63,21 @@ place=suburb & mkgmap:area2poi!=true        [0x0600 resolution 21]
 place=neighbourhood & mkgmap:area2poi!=true [0x0900 resolution 22]
 
 # Hamlets are the second settlement-priority tier.
-place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 19]
-place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 20]
-place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0b00 resolution 21]
-place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0b00 resolution 22]
-place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resolution 23]
-place=hamlet & mkgmap:area2poi!=true [0x0b00 resolution 22]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x6418 resolution 19]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x6418 resolution 20]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x6418 resolution 21]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x6418 resolution 22]
+place=hamlet & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x6418 resolution 23]
+place=hamlet & mkgmap:area2poi!=true [0x6418 resolution 22]
 
 # isolated_dwelling / farm / locality are one equal lowest-priority tier.
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x0b00 resolution 21]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x0b00 resolution 21]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x0b00 resolution 21]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x0b00 resolution 22]
-(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x0b00 resolution 23]
-place=isolated_dwelling & mkgmap:area2poi!=true [0x0b00 resolution 23]
-place=farm & mkgmap:area2poi!=true [0x0b00 resolution 23]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=19 [0x6418 resolution 21]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=20 [0x6418 resolution 21]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=21 [0x6418 resolution 21]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=22 [0x6418 resolution 22]
+(place=isolated_dwelling | place=farm) & mkgmap:area2poi!=true & uralla:settlement_lod=23 [0x6418 resolution 23]
+place=isolated_dwelling & mkgmap:area2poi!=true [0x6418 resolution 23]
+place=farm & mkgmap:area2poi!=true [0x6418 resolution 23]
 
 place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=19 { name '${name}' } [0x6408 resolution 21]
 place=locality & name=* & mkgmap:area2poi!=true & uralla:settlement_lod=20 { name '${name}' } [0x6408 resolution 21]

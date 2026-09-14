@@ -11,26 +11,26 @@ uralla:poi_lod_class=L & (highway=bus_stop | public_transport=platform & (bus=ye
 # Fuel: one fuel POI for amenity/waterway=fuel; convenience store gets an additional
 # grocery POI. HGV diesel and the duplicate 0x11603 fuel icon are intentionally gone.
 (amenity=fuel | waterway=fuel) { set uralla:fuel_rendered=yes } [0x2f01 resolution 24 continue]
-uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x2e02 resolution 24 continue]
+uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x6504 resolution 24 continue]
 uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete fuel:HGV_diesel; delete uralla:fuel_rendered }
 
 # Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
-(amenity=restaurant | amenity=cafe | amenity=fast_food | amenity=food_court) [0x2a00 resolution 24]
+(amenity=restaurant | amenity=cafe | amenity=fast_food | amenity=food_court) [0x6501 resolution 24]
 
 # Grocery group. Final adaptive visibility is consumed from uralla:poi_lod_class,
 # produced by the preprocessor from rarity + activity context + screen pressure +
 # intrinsic category floor. Untagged fallbacks preserve legacy safety:
 # supermarkets=23, other groceries=24.
 # Unnamed convenience shops stay visually unlabeled but expose "магазинчик" on hover.
-uralla:poi_lod_class=H & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 22]
-uralla:poi_lod_class=M & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 23]
-uralla:poi_lod_class=L & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 24]
-uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 22]
-uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 23]
-uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 24]
-shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x2e02 resolution 24]
-(shop=supermarket | amenity=supermarket) { name '${name}' } [0x2e02 resolution 23]
-(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x2e02 resolution 24]
+uralla:poi_lod_class=H & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 22]
+uralla:poi_lod_class=M & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 23]
+uralla:poi_lod_class=L & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24]
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 22]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 23]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24]
+shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24]
+(shop=supermarket | amenity=supermarket) { name '${name}' } [0x6504 resolution 23]
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24]
 
 # Bicycle shop remains a distinct tourist-useful POI and uses adaptive LOD.
 uralla:poi_lod_class=H & shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 22]
@@ -42,11 +42,11 @@ amenity=bicycle_rental { name '${name}' | 'прокат велосипедов' 
 # amenity=bicycle_parking { name '${name}' | 'велопарковка' } [0x2f18 resolution 24]
 
 # Marketplaces: node POIs and area-derived centre POIs use one shopping symbol.
-amenity=marketplace { name '${name}' | 'рынок' } [0x2e00 resolution 23]
+amenity=marketplace { name '${name}' | 'рынок' } [0x6505 resolution 23]
 
 # Parcel pickup points: current OSM tags plus the deprecated vending-machine form.
 # Keep labels simple: use the real name, otherwise a generic designation.
-(amenity=parcel_locker | post_office=post_partner | shop=outpost | amenity=vending_machine & vending~'.*parcel_pickup.*') { name '${name}' | 'пункт выдачи' } [0x2f05 resolution 24]
+(amenity=parcel_locker | post_office=post_partner | shop=outpost | amenity=vending_machine & vending~'.*parcel_pickup.*') { name '${name}' | 'пункт выдачи' } [0x650b resolution 24]
 
 # Car rental and car sharing are one transport-service POI.
 (amenity=car_rental | amenity=car_sharing | shop=car_rental) [0x2f0d resolution 24]
@@ -54,40 +54,40 @@ amenity=marketplace { name '${name}' | 'рынок' } [0x2e00 resolution 23]
 # Motor-vehicle shops/services are one class; rental is handled above.
 (shop=car_parts | shop=car_repair | shop=car_wrecker | shop=tires | shop=tyres | shop=motorcycle) [0x2f03 resolution 24]
 
-# Ticket shops use the information POI icon. 0x4c00 is NoLabel in the TYP, so
+# Ticket shops use the information POI icon. 0x6507 is NoLabel in the TYP, so
 # the primary Garmin label is available to hover/details without permanent map text.
-shop=ticket { name '${name}' | 'билеты' } [0x4c00 resolution 24]
+shop=ticket { name '${name}' | 'билеты' } [0x6507 resolution 24]
 
 # Tourist-useful non-food shops only. Broad shop=* fallback is intentionally absent:
 # specialist retail such as books, phones, medical supplies, fashion, etc. is omitted.
-uralla:poi_lod_class=H & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 22]
-uralla:poi_lod_class=M & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 23]
-uralla:poi_lod_class=L & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]
-(shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x2e00 resolution 24]
-uralla:poi_lod_class=H & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 22]
-uralla:poi_lod_class=M & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 23]
-uralla:poi_lod_class=L & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]
-(shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x2e00 resolution 24]
+uralla:poi_lod_class=H & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x6505 resolution 22]
+uralla:poi_lod_class=M & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x6505 resolution 23]
+uralla:poi_lod_class=L & (shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x6505 resolution 24]
+(shop=hardware | shop=doityourself | shop=houseware) { name '${name}' | 'хозтовары' } [0x6505 resolution 24]
+uralla:poi_lod_class=H & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x6505 resolution 22]
+uralla:poi_lod_class=M & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x6505 resolution 23]
+uralla:poi_lod_class=L & (shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x6505 resolution 24]
+(shop=sports | shop=outdoor) { name '${name}' | 'спорттовары' } [0x6505 resolution 24]
 
 # Tourist accommodation / shelters. Adaptive visibility consumes final LOD class.
-uralla:poi_lod_class=H & tourism=guest_house { name '${name}' } [0x2b01 resolution 22]
-uralla:poi_lod_class=M & tourism=guest_house { name '${name}' } [0x2b01 resolution 23]
-uralla:poi_lod_class=L & tourism=guest_house { name '${name}' } [0x2b01 resolution 24]
-tourism=guest_house { name '${name}' } [0x2b01 resolution 24]
-uralla:poi_lod_class=H & tourism=hotel { name '${name}' } [0x2b01 resolution 22]
-uralla:poi_lod_class=M & tourism=hotel { name '${name}' } [0x2b01 resolution 23]
-uralla:poi_lod_class=L & tourism=hotel { name '${name}' } [0x2b01 resolution 24]
-tourism=hotel { name '${name}' } [0x2b01 resolution 24]
-tourism=motel [0x2b01 resolution 24]
-uralla:poi_lod_class=H & tourism=hostel { name '${name}' } [0x2b02 resolution 22]
-uralla:poi_lod_class=M & tourism=hostel { name '${name}' } [0x2b02 resolution 23]
-uralla:poi_lod_class=L & tourism=hostel { name '${name}' } [0x2b02 resolution 24]
-tourism=hostel { name '${name}' } [0x2b02 resolution 24]
-amenity=shelter & mkgmap:area2poi!=true [0x2b05 resolution 23]
-uralla:poi_lod_class=H & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 22]
-uralla:poi_lod_class=M & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 23]
-uralla:poi_lod_class=L & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 24]
-(tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x2b07 resolution 23]
+uralla:poi_lod_class=H & tourism=guest_house { name '${name}' } [0x650d resolution 22]
+uralla:poi_lod_class=M & tourism=guest_house { name '${name}' } [0x650d resolution 23]
+uralla:poi_lod_class=L & tourism=guest_house { name '${name}' } [0x650d resolution 24]
+tourism=guest_house { name '${name}' } [0x650d resolution 24]
+uralla:poi_lod_class=H & tourism=hotel { name '${name}' } [0x650d resolution 22]
+uralla:poi_lod_class=M & tourism=hotel { name '${name}' } [0x650d resolution 23]
+uralla:poi_lod_class=L & tourism=hotel { name '${name}' } [0x650d resolution 24]
+tourism=hotel { name '${name}' } [0x650d resolution 24]
+tourism=motel [0x650d resolution 24]
+uralla:poi_lod_class=H & tourism=hostel { name '${name}' } [0x6510 resolution 22]
+uralla:poi_lod_class=M & tourism=hostel { name '${name}' } [0x6510 resolution 23]
+uralla:poi_lod_class=L & tourism=hostel { name '${name}' } [0x6510 resolution 24]
+tourism=hostel { name '${name}' } [0x6510 resolution 24]
+amenity=shelter & mkgmap:area2poi!=true [0x6519 resolution 23]
+uralla:poi_lod_class=H & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x651a resolution 22]
+uralla:poi_lod_class=M & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x651a resolution 23]
+uralla:poi_lod_class=L & (tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x651a resolution 24]
+(tourism=wilderness_hut | tourism=alpine_hut) { name '${name}' | 'избушка' } [0x651a resolution 23]
 
 # Antennas are useful terrain landmarks but noisy in dense built-up areas.
 # Consume the universal POI LOD class; the old generic point rule remains a
@@ -116,9 +116,9 @@ amenity=signpost { name '${name}' | '${label}' } [0x5a00 resolution 24]
 
 # Information POIs: only the real name or a generic designation may become the label.
 # operator/ref remain source/details data and are intentionally excluded from fallbacks.
-tourism=information & information=guidepost { name '${name}' | 'указатель' } [0x4c00 resolution 23]
-tourism=information & (information=route_marker | information=trail_blaze) { name '${name}' | 'маркер' } [0x4c00 resolution 24]
-tourism=information { name '${name}' | 'информация' } [0x4c00 resolution 24]
+tourism=information & information=guidepost { name '${name}' | 'указатель' } [0x6507 resolution 23]
+tourism=information & (information=route_marker | information=trail_blaze) { name '${name}' | 'маркер' } [0x6507 resolution 24]
+tourism=information { name '${name}' | 'информация' } [0x6507 resolution 24]
 
 # Agreed removals from point display. Polygon/line representations are unaffected.
 tourism=caravan_site { delete tourism }
@@ -136,8 +136,8 @@ boundary=national_park { delete boundary }
 # over secondary tags such as tourism=attraction. Needle-leaved named trees use the
 # conifer icon; broad-leaved or otherwise unspecified named trees use the tree icon.
 # Unnamed trees stay completely out of POI rendering, including attraction fallback.
-natural=tree & name=* & leaf_type=needleleaved { name '${name}' } [0x2c09 resolution 24]
-natural=tree & name=* { name '${name}' } [0x2c08 resolution 24]
+natural=tree & name=* & leaf_type=needleleaved { name '${name}' } [0x660e resolution 24]
+natural=tree & name=* { name '${name}' } [0x660d resolution 24]
 natural=tree & name!=* { delete natural; delete tourism }
 natural=shrub & name!=* { delete natural }
 

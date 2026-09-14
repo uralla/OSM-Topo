@@ -50,4 +50,4 @@ uralla:poi_lod_class=M & natural=spring & (intermittent=yes | (seasonal=* & seas
 uralla:poi_lod_class=L & natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 24]
 natural=spring & (intermittent=yes | (seasonal=* & seasonal!=no)) { name '${name|subst: (сезонный)=>|subst: (Сезонный)=>} (пересых.)' | 'пересых. источник' } [0x6512 resolution 24]
 
-amenity=water_point [0x5001 resolution 23]
+amenity=water_point [0x6500 resolution 23]
