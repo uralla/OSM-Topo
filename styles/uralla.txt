@@ -7093,6 +7093,44 @@ DayXpm="12 18 5 1"   Colormode=16
 
 
 [_point]
+Type=0x064
+SubType=0x1e
+;GRMN_TYPE: Business - Services/GND_TRANSPORT/Ground transportation status, i.e. a bus station/Non NT
+String1=0x19,остановка
+String2=0x04,stop
+ExtendedLabels=Y
+FontStyle=NoLabel (invisible)
+CustomColor=No
+ContourColor=No
+DayXpm="16 16 8 1"   Colormode=16
+"!	c #000000"
+"#	c #FFFF00"
+"%	c #0000FF"
+"?	c #808000"
+"$	c #808080"
+"*	c #000080"
+"=	c #FFFFFF"
+"  	c none"
+"   ==========   "
+"  =!!!!!!!!!!=  "
+" =!##########!= "
+"=!#!!!!!!!!!!#!="
+"=!#!%%%%%%%%!#!="
+"=!#!%%%%%%!%!#!="
+"=!#!%%%%%!%!!#!="
+"=!#!!!!!!!!!!#!="
+"=!############!="
+"=!#??######??#!="
+"=!#$*##**##*$#!="
+"=!############!="
+"=!!!!!!!!!!!!!!="
+" =!!!======!!!= "
+" =!!!=    =!!!= "
+"  ===      ===  "
+;1234567890123456
+[end]
+
+[_point]
 Type=0x065
 SubType=0x03
 ;GRMN_TYPE: Geographical Named Points of Interest - Water Related/BAY/Bay/Non NT, NT
