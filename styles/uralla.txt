@@ -5757,22 +5757,9 @@ ExtendedLabels=Y
 FontStyle=NoLabel (invisible)
 CustomColor=No
 ContourColor=No
-DayXpm="11 11 4 1"   Colormode=16
-"!	c #FFFFFF"
-"#	c #0000FF"
-"%	c #000000"
+DayXpm="1 1 1 1"   Colormode=16
 "  	c none"
-"        !! "
-" !!!!!!!##!"
-"!#########!"
-"!#!#!#!#!! "
-"!#!#!#!#!  "
-"!#!#!#!#!  "
-"!#######!  "
-"!!!!!!!#!  "
-"!%%%%%%%%! "
-"!%%!!!!%%! "
-" !!    !!  "
+" "
 ;12345678901
 [end]
 
