@@ -4558,7 +4558,7 @@ SubType=0x00
 String1=0x19,
 String2=0x04,
 ExtendedLabels=Y
-FontStyle=NormalFont
+FontStyle=LargeFont
 CustomColor=No
 ContourColor=No
 DayXpm="6 6 5 1"   Colormode=16
@@ -4584,7 +4584,7 @@ SubType=0x00
 String1=0x19,урочище
 String2=0x04,locality
 ExtendedLabels=Y
-FontStyle=NormalFont
+FontStyle=LargeFont
 CustomColor=No
 ContourColor=No
 DayXpm="6 6 5 1"   Colormode=16
@@ -4610,7 +4610,7 @@ SubType=0x00
 String1=0x19,
 String2=0x04,
 ExtendedLabels=Y
-FontStyle=NormalFont
+FontStyle=LargeFont
 CustomColor=No
 ContourColor=No
 DayXpm="6 6 5 1"   Colormode=16
