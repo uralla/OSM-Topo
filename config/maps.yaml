@@ -711,6 +711,7 @@ products:
     update_interval_days: 7
     preprocess_mode: fast
     preprocess_workers: 2
+    preprocess_cache: false
     polygon: poly/test.poly
     elevation: null
     geonames: input/cities15000.zip
