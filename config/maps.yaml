@@ -85,7 +85,7 @@ products:
     update_interval_days: 14
     extract: false
     polygon: poly/belarus.poly
-    elevation: null
+    elevation: elevation/belarus.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1055
@@ -136,7 +136,7 @@ products:
     source: russia
     update_interval_days: 7
     polygon: poly/central-fed-district.poly
-    elevation: null
+    elevation: elevation/ele_10_ru_central-fed-district.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1006
@@ -215,7 +215,7 @@ products:
     update_interval_days: 14
     extract: false
     polygon: poly/georgia.poly
-    elevation: null
+    elevation: elevation/georgia.osm.pbf
     geonames: null
     identity:
       family_id: 1052
@@ -396,7 +396,7 @@ products:
     update_interval_days: 14
     extract: false
     polygon: poly/mongolia.poly
-    elevation: null
+    elevation: elevation/mongolia.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1056
@@ -577,7 +577,7 @@ products:
     source: russia
     update_interval_days: 7
     polygon: poly/south-fed-district.poly
-    elevation: null
+    elevation: elevation/ele_10_ru_south-fed-district.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1002
@@ -627,7 +627,7 @@ products:
     source: russia
     update_interval_days: 7
     polygon: poly/ural-fed-district.poly
-    elevation: null
+    elevation: elevation/ele_10_ru_ural-fed-district.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1005
@@ -712,7 +712,7 @@ products:
     preprocess_mode: fast
     preprocess_workers: 2
     polygon: poly/test.poly
-    elevation: elevation/ural.osm.pbf
+    elevation: null
     geonames: input/cities15000.zip
     identity:
       family_id: 1028
@@ -739,7 +739,7 @@ products:
     source: russia
     update_interval_days: 7
     polygon: poly/volga-fed-district.poly
-    elevation: null
+    elevation: elevation/ele_10_ru_volga-fed-district.osm.pbf
     geonames: input/cities15000.zip
     identity:
       family_id: 1003
