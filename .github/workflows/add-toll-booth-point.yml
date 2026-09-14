@@ -31,7 +31,6 @@ jobs:
 
           p = Path('styles/uralla/inc/priority_points')
           s = p.read_text(encoding='utf-8')
-
           fuel_old = "uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x6504 resolution 24 continue]\n"
           fuel_native = "uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x2e02 resolution 24 continue]\n"
           if s.count(fuel_old) != 1:
@@ -41,11 +40,7 @@ jobs:
           s = s.replace(fuel_old, fuel_native + fuel_old, 1)
 
           anchor = '# Unnamed convenience shops stay visually unlabeled but expose "магазинчик" on hover.\n'
-          product_native = (
-              '# Native Garmin product-store search carrier. Its TYP icon is transparent; continue lets\n'
-              '# the same OSM object reach the visible custom 0x6504 LOD rules below.\n'
-              "(shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24 continue]\n"
-          )
+          product_native = '# Native Garmin product-store search carrier. Its TYP icon is transparent; continue lets\n# the same OSM object reach the visible custom 0x6504 LOD rules below.\n' + "(shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24 continue]\n"
           if s.count(anchor) != 1:
               raise SystemExit('product-store insertion anchor changed unexpectedly')
           s = s.replace(anchor, anchor + product_native, 1)
@@ -58,25 +53,8 @@ jobs:
           if len(matches) != 1:
               raise SystemExit(f'expected one 0x02e/0x02 TYP block, found {len(matches)}')
           block = matches[0].group(0)
-          old_xpm = '''DayXpm="11 11 4 1"   Colormode=16
-"!\tc #FFFFFF"
-"#\tc #0000FF"
-"%\tc #000000"
-"  \tc none"
-"        !! "
-" !!!!!!!##!"
-"!#########!"
-"!#!#!#!#!! "
-"!#!#!#!#!  "
-"!#!#!#!#!  "
-"!#######!  "
-"!!!!!!!#!  "
-"!%%%%%%%%! "
-"!%%!!!!%%! "
-" !!    !!  "'''
-          new_xpm = '''DayXpm="1 1 1 1"   Colormode=16
-"  \tc none"
-" "'''
+          old_xpm = 'DayXpm="11 11 4 1"   Colormode=16\n"!\tc #FFFFFF"\n"#\tc #0000FF"\n"%\tc #000000"\n"  \tc none"\n"        !! "\n" !!!!!!!##!"\n"!#########!"\n"!#!#!#!#!! "\n"!#!#!#!#!  "\n"!#!#!#!#!  "\n"!#######!  "\n"!!!!!!!#!  "\n"!%%%%%%%%! "\n"!%%!!!!%%! "\n" !!    !!  "'
+          new_xpm = 'DayXpm="1 1 1 1"   Colormode=16\n"  \tc none"\n" "'
           if block.count(old_xpm) != 1:
               raise SystemExit('0x2e02 product-store XPM changed unexpectedly')
           new_block = block.replace(old_xpm, new_xpm, 1)
