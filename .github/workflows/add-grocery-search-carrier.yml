@@ -1,3 +1,4 @@
+# Temporary one-shot migration workflow; remove after successful patch.
 name: Add product-store search carrier
 
 on:
@@ -29,8 +30,6 @@ jobs:
               if got != sha:
                   raise SystemExit(f'{path}: expected {sha}, got {got}; aborting')
 
-          # 1) Emit native Garmin 0x2e02 as an invisible search carrier, then
-          # continue to the existing visible custom 0x6504 rules.
           p = Path('styles/uralla/inc/priority_points')
           s = p.read_text(encoding='utf-8')
 
@@ -55,8 +54,6 @@ jobs:
           s = s.replace(grocery_anchor, grocery_anchor + product_native, 1)
           p.write_text(s, encoding='utf-8')
 
-          # 2) Preserve native Garmin 0x2e02 category identity and search strings,
-          # but make its map bitmap transparent to avoid a second visible icon.
           typ_path = Path('styles/uralla.txt')
           typ = typ_path.read_text(encoding='utf-8')
           block_re = re.compile(r'(?ms)^\[_point\]\nType=0x02e\nSubType=0x02\n.*?^\[end\]')
@@ -93,7 +90,6 @@ jobs:
           typ = typ[:matches[0].start()] + new_block + typ[matches[0].end():]
           typ_path.write_text(typ, encoding='utf-8')
 
-          # Verify the intended architecture and nothing else in these files.
           out = p.read_text(encoding='utf-8')
           if out.count('[0x2e02 resolution 24 continue]') != 2:
               raise SystemExit('expected exactly two native 0x2e02 search-carrier rules')
