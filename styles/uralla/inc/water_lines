@@ -119,9 +119,20 @@ waterway=river & uralla:river_landmark!=yes & uralla:water_tunnel!=yes & length(
 waterway=river & uralla:river_landmark!=yes & uralla:water_tunnel=yes [0x19 resolution 23 continue]
 waterway=river & uralla:river_landmark!=yes [0x01f resolution 24]
 
-# [CUSTOM/АВТОРСКОЕ] ditch is visible from resolution 23 and remains visually
-# distinct from stream/drain/canal.
-waterway=ditch [0x10109 resolution 23-24 continue]
+# Ditch uses the same visual hierarchy as streams.
+# Unnamed ditches use the generic fallback "канава".
+waterway=ditch { name '${name}' | 'канава' }
+
+# Intermittent ditch: same hierarchy as intermittent stream.
+waterway=ditch & intermittent=yes & uralla:water_tunnel!=yes & length()>50 [0x10f1d resolution 23-23 continue]
+waterway=ditch & intermittent=yes & uralla:water_tunnel=yes [0x10f1d resolution 23-23 continue]
+waterway=ditch & intermittent=yes [0x10f1e resolution 24]
+
+# Ordinary ditch: same hierarchy as ordinary stream.
+waterway=ditch & intermittent!=yes & uralla:water_tunnel!=yes & length()>100 [0x10f1d resolution 22-22 continue]
+waterway=ditch & intermittent!=yes & uralla:water_tunnel!=yes & length()>50 [0x18 resolution 23-23 continue]
+waterway=ditch & intermittent!=yes & uralla:water_tunnel=yes [0x18 resolution 23-23 continue]
+waterway=ditch & intermittent!=yes [0x19 resolution 24]
 
 # Intermittent stream: no line at 22; thin dash at 23 only for segments >50 m;
 # thick dash at 24 for all segments.
