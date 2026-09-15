@@ -11,8 +11,8 @@ uralla:poi_lod_class=L & (highway=bus_stop | public_transport=platform & (bus=ye
 # Fuel: one fuel POI for amenity/waterway=fuel; convenience store gets an additional
 # grocery POI. HGV diesel and the duplicate 0x11603 fuel icon are intentionally gone.
 (amenity=fuel | waterway=fuel) { set uralla:fuel_rendered=yes } [0x2f01 resolution 24 continue]
-uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x2e02 resolution 24 continue]
 uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x6504 resolution 24 continue]
+uralla:fuel_rendered=yes & amenity=fuel & shop=convenience { name '${name} (продукты)' } [0x2e02 resolution 24 continue]
 uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete fuel:HGV_diesel; delete uralla:fuel_rendered }
 
 # Food: one icon, cuisine details stay in OSM but do not create visual subclasses.
@@ -23,18 +23,26 @@ uralla:fuel_rendered=yes { delete amenity; delete waterway; delete shop; delete 
 # intrinsic category floor. Untagged fallbacks preserve legacy safety:
 # supermarkets=23, other groceries=24.
 # Unnamed convenience shops stay visually unlabeled but expose "магазинчик" on hover.
-# Native Garmin product-store search carrier. Its TYP icon is transparent; continue lets
-# the same OSM object reach the visible custom 0x6504 LOD rules below.
-(shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24 continue]
-uralla:poi_lod_class=H & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 22]
-uralla:poi_lod_class=M & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 23]
-uralla:poi_lod_class=L & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24]
-uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 22]
-uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 23]
-uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24]
-shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24]
-(shop=supermarket | amenity=supermarket) { name '${name}' } [0x6504 resolution 23]
-(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24]
+# Visible custom 0x6504 is emitted first; native 0x2e02 search carrier follows at
+# the same coordinate. Conditions/LOD are otherwise unchanged.
+uralla:poi_lod_class=H & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 22 continue]
+uralla:poi_lod_class=H & shop=convenience & name!=* { name 'магазинчик' } [0x2e02 resolution 24]
+uralla:poi_lod_class=M & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 23 continue]
+uralla:poi_lod_class=M & shop=convenience & name!=* { name 'магазинчик' } [0x2e02 resolution 24]
+uralla:poi_lod_class=L & shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24 continue]
+uralla:poi_lod_class=L & shop=convenience & name!=* { name 'магазинчик' } [0x2e02 resolution 24]
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 22 continue]
+uralla:poi_lod_class=H & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 23 continue]
+uralla:poi_lod_class=M & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24 continue]
+uralla:poi_lod_class=L & (shop=supermarket | amenity=supermarket | shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24]
+shop=convenience & name!=* { set mkgmap:label:1=' '; set mkgmap:label:2='магазинчик' } [0x6504 resolution 24 continue]
+shop=convenience & name!=* { name 'магазинчик' } [0x2e02 resolution 24]
+(shop=supermarket | amenity=supermarket) { name '${name}' } [0x6504 resolution 23 continue]
+(shop=supermarket | amenity=supermarket) { name '${name}' | 'продукты' } [0x2e02 resolution 24]
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' } [0x6504 resolution 24 continue]
+(shop=bakers | shop=bakery | shop=butcher | shop=convenience | shop=general | shop=grocery | shop=organic) { name '${name}' | 'продукты' } [0x2e02 resolution 24]
 
 # Bicycle shop remains a distinct tourist-useful POI and uses adaptive LOD.
 uralla:poi_lod_class=H & shop=bicycle { name '${name}' | 'велосипеды' } [0x2f18 resolution 22]
