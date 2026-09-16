@@ -1470,9 +1470,8 @@ Type=0x10c06
 String1=0x19,пески
 String2=0x04,sand
 ExtendedLabels=Y
-FontStyle=SmallFont
-CustomColor=Day
-DaycustomColor:#FF9500
+FontStyle=NoLabel (invisible)
+CustomColor=No
 ContourColor=No
 Xpm="32 32 2 1"
 "! c #FFCA8B"
@@ -5724,7 +5723,7 @@ SubType=0x00
 String1=0x19,магазин
 String2=0x04,shop
 ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
+FontStyle=SmallFont
 CustomColor=No
 ContourColor=No
 DayXpm="13 13 4 1"   Colormode=16
@@ -5755,14 +5754,26 @@ SubType=0x02
 ;GRMN_TYPE: Business - Shopping/GROCERY_STORE/Grocery store/Non NT
 String1=0x19,продукты
 String2=0x04,grocery
-ExtendedLabels=Y
-FontStyle=NoLabel (invisible)
-CustomColor=No
-ContourColor=No
-DayXpm="1 1 1 1"   Colormode=16
+ExtendedLabels=N
+DayXpm="13 13 4 1"   Colormode=16
+"!	c #FFFFFF"
+"#	c #FF9500"
+"%	c #000000"
 "  	c none"
-" "
-;12345678901
+" !!!!!!!!!!! "
+"!!!!!!!!!!!!!"
+"!!!!!!!!!##!!"
+"!!#########!!"
+"!!#!#!#!#!!!!"
+"!!#!#!#!#!!!!"
+"!!#!#!#!#!!!!"
+"!!#######!!!!"
+"!!!!!!!!#!!!!"
+"!!%%%%%%%%!!!"
+"!!%%!!!!%%!!!"
+"!!!!!!!!!!!!!"
+" !!!!!!!!!!! "
+;1234567890123
 [end]
 
 
