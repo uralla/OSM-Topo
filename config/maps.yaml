@@ -415,7 +415,9 @@ products:
       order: 270
       visible: true
     splitter:
-      max_nodes: 2000000
+      max_nodes: 500000
+    mkgmap:
+      dem_dists: 15000
 
   north-caucasus-fed-district:
     source: russia
