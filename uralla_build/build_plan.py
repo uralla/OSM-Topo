@@ -23,7 +23,7 @@ class ProductBuildPlan:
     build_id: str
     stages: tuple[PipelineStage, ...]
     img_source: str
-    gmapi_source: str
+    gmapi_source: str | None
     stable_areas: str | None
     warnings: tuple[str, ...]
 
@@ -338,13 +338,16 @@ def plan_product_build(
         f"--overview-mapname={_text(names.get('overview'), f'products.{product_key}.names.overview')}",
         f"--overview-mapnumber={_text(identity.get('overview_mapnumber'), f'products.{product_key}.identity.overview_mapnumber')}",
         f"--code-page={defaults.get('code_page')}",
-        "--gmapi",
         "--gmapsupp",
         f"--bounds={bounds}",
         f"--precomp-sea={sea}",
         "--output-dir=garmin",
         f"--dem={host.paths.dem_root}",
     ]
+    if host.publication.mapsource_enabled:
+        mkgmap_command.append("--gmapi")
+    else:
+        mkgmap_command.extend(("--no-gmapi", "--no-tdbfile"))
     dem_dists = mkgmap.get("dem_dists")
     if dem_dists is not None:
         mkgmap_command.append(f"--dem-dists={dem_dists}")
@@ -358,12 +361,16 @@ def plan_product_build(
             str(typ_source),
         )
     )
-    gmapi = garmin / f"{family_name}.gmap"
+    expected_outputs = ("garmin/gmapsupp.img",)
+    gmapi = None
+    if host.publication.mapsource_enabled:
+        gmapi = garmin / f"{family_name}.gmap"
+        expected_outputs += (f"garmin/{gmapi.name}",)
     stages.append(
         PipelineStage(
             "mkgmap",
             tuple(mkgmap_command),
-            ("garmin/gmapsupp.img", f"garmin/{family_name}.gmap"),
+            expected_outputs,
             ("garmin",),
         )
     )
@@ -373,7 +380,7 @@ def plan_product_build(
         build_id,
         tuple(stages),
         str(garmin / "gmapsupp.img"),
-        str(gmapi),
+        str(gmapi) if gmapi is not None else None,
         str(stable_areas) if stable_areas.is_file() else None,
         tuple(warnings),
     )

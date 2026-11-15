@@ -14,7 +14,7 @@ The shortcode reads the public build-status feed:
 https://www.uralla.ru/garmin.img/map-update-status.json
 ```
 
-and renders the map catalog with current build state, publication/update times, IMG and BaseCamp download buttons, artifact sizes, and the `recipe_state` warning for maps built by an older map recipe.
+and renders the map catalog with current build state, publication/update times, Garmin IMG and BaseCamp download buttons and artifact sizes.
 
 ## Installation
 
@@ -33,9 +33,10 @@ The plugin does not require external JavaScript, icon libraries, or third-party 
 
 The block understands the public states `current`, `due`, `building`, `error`, `interrupted`, and `unknown`.
 
-When `recipe_state` is present, `stale` and `legacy` maps are marked with `⚠️`. The map remains downloadable; the warning only means that it was built with a previous version of the style/build algorithms and will become fully current after the next successful rebuild.
-
-If `recipe_state` is absent (for example while an older status generator is still running), the page still renders normally and simply omits the recipe warning.
+The IMG button uses the URL provided by the status feed and displays “Скачать IMG
+(ZIP)” for an archived map. The BaseCamp button is hidden for all maps when
+the feed has `mapsource_enabled: false`. Older feeds without the field retain
+the BaseCamp buttons.
 
 ## Maintenance
 

@@ -31,6 +31,7 @@ class PublicationPolicy:
     img_archive: bool
     gmapi_zip_mode: str
     split_zip_volumes: bool
+    mapsource_enabled: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,10 +113,17 @@ def load_host_config(path: str | Path, repo_root: str | Path) -> HostConfig:
         tools_root=_expanded_path(paths.get("tools_root"), root),
         dem_root=_expanded_path(paths.get("dem_root"), root),
     )
+    img_archive = publication.get("img_archive", False)
+    mapsource_enabled = publication.get("mapsource_enabled", True)
+    if not isinstance(img_archive, bool):
+        raise ManifestError("publication.img_archive must be a boolean")
+    if not isinstance(mapsource_enabled, bool):
+        raise ManifestError("publication.mapsource_enabled must be a boolean")
     policy = PublicationPolicy(
         img_subdir=str(publication.get("img_subdir", ".")),
         gmapi_subdir=str(publication.get("gmapi_subdir", "mapsource")),
-        img_archive=bool(publication.get("img_archive", False)),
+        img_archive=img_archive,
+        mapsource_enabled=mapsource_enabled,
         gmapi_zip_mode=str(publication.get("gmapi_zip_mode", "store")),
         split_zip_volumes=bool(publication.get("split_zip_volumes", False)),
     )
@@ -142,8 +150,6 @@ def validate_host_config(config: HostConfig) -> list[ValidationIssue]:
 
     issues: list[ValidationIssue] = []
     policy = config.publication
-    if policy.img_archive:
-        issues.append(ValidationIssue("host.publication.img_archive", "must be false"))
     if policy.gmapi_zip_mode != "store":
         issues.append(ValidationIssue("host.publication.gmapi_zip_mode", "must be 'store'"))
     if policy.split_zip_volumes:

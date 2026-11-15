@@ -578,7 +578,7 @@ def build_parser() -> argparse.ArgumentParser:
     publish_parser.add_argument("product")
     publish_parser.add_argument("--repo-root", default=Path("."), type=Path)
     publish_parser.add_argument("--img", required=True, type=Path)
-    publish_parser.add_argument("--gmapi", required=True, type=Path)
+    publish_parser.add_argument("--gmapi", type=Path, help="Required when MapSource is enabled")
     publish_parser.add_argument("--apply", action="store_true")
     publish_parser.set_defaults(handler=_publish)
 
