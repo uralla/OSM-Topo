@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,10 +36,12 @@ class ProductBuildPlanTests(unittest.TestCase):
         self.manifest = load_manifest(PROJECT_ROOT / "config/maps.yaml")
         self.lock = load_tools_lock(PROJECT_ROOT / "config/tools.lock.yaml")
 
-    def _plan(self, root: Path, product: str, manifest=None):
+    def _plan(self, root: Path, product: str, manifest=None, *, mapsource_enabled=True):
+        host = _host(root)
+        host = replace(host, publication=replace(host.publication, mapsource_enabled=mapsource_enabled))
         return plan_product_build(
             manifest or self.manifest,
-            _host(root),
+            host,
             self.lock,
             product_key=product,
             build_id="build-1",
@@ -82,6 +85,17 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertEqual(mkgmap.prepare_directories, ("garmin",))
             self.assertTrue(plan.img_source.endswith("/mkgmap/garmin/gmapsupp.img"))
             self.assertTrue(plan.gmapi_source.endswith("/mkgmap/garmin/Topo-Ural-N.gmap"))
+
+    def test_mapsource_disabled_keeps_only_garmin_output(self) -> None:
+        with TemporaryDirectory() as directory:
+            plan = self._plan(Path(directory), "ural-n", mapsource_enabled=False)
+            mkgmap = next(stage for stage in plan.stages if stage.name == "mkgmap")
+
+            self.assertIn("--no-gmapi", mkgmap.command)
+            self.assertIn("--no-tdbfile", mkgmap.command)
+            self.assertIn("--gmapsupp", mkgmap.command)
+            self.assertEqual(mkgmap.expected_outputs, ("garmin/gmapsupp.img",))
+            self.assertIsNone(plan.gmapi_source)
 
     def test_optional_extract_and_elevation_stages_follow_manifest(self) -> None:
         with TemporaryDirectory() as directory:

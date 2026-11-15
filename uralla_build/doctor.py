@@ -249,9 +249,19 @@ def run_doctor(
         )
 
     publish_img = host.paths.publish_root / host.publication.img_subdir
-    publish_gmapi = host.paths.publish_root / host.publication.gmapi_subdir
-    for label, directory in (("publish:img", publish_img), ("publish:gmapi", publish_gmapi)):
-        checks.append(_check(label, directory.is_dir() and os.access(directory, os.W_OK), str(directory)))
+    checks.append(_check(
+        "publish:img",
+        publish_img.is_dir() and os.access(publish_img, os.W_OK),
+        str(publish_img),
+    ))
+    if host.publication.mapsource_enabled:
+        publish_gmapi = host.paths.publish_root / host.publication.gmapi_subdir
+        anchor = _nearest_existing(publish_gmapi)
+        checks.append(_check(
+            "publish:gmapi",
+            anchor is not None and anchor.is_dir() and os.access(anchor, os.W_OK | os.X_OK),
+            str(publish_gmapi),
+        ))
     if probe_publish:
         ok, detail = _probe_atomic_rename(publish_img)
         checks.append(_check("publish:atomic-rename", ok, detail))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 import os
 from tempfile import TemporaryDirectory
@@ -34,6 +35,35 @@ class PublicationTests(unittest.TestCase):
             targets = publication_targets(_host(root), PRODUCT, root / "map.img", root / "map.gmap")
             self.assertEqual(Path(targets[0].target), root / "publish/Topo-Ural-N.img")
             self.assertEqual(Path(targets[1].target), root / "publish/mapsource/Topo-Ural-N-ms.zip")
+
+    def test_img_zip_publication_and_mapsource_reenable(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            host = _host(root)
+            host = replace(host, publication=replace(
+                host.publication, img_archive=True, mapsource_enabled=False,
+            ))
+            img = root / "gmapsupp.img"
+            payload = b"garmin-img" * 1024
+            img.write_bytes(payload)
+
+            (artifact,) = publish_product(host, PRODUCT, img)
+            target = Path(artifact.path)
+            self.assertEqual(target.name, "Topo-Ural-N.img.zip")
+            self.assertFalse(target.with_suffix("").exists())
+            self.assertFalse((target.parent / "mapsource").exists())
+            with zipfile.ZipFile(target) as archive:
+                self.assertEqual(archive.namelist(), ["Topo-Ural-N.img"])
+                self.assertEqual(archive.read("Topo-Ural-N.img"), payload)
+            self.assertLess(artifact.size, len(payload))
+
+            host = replace(host, publication=replace(host.publication, mapsource_enabled=True))
+            gmapi = root / "Topo-Ural-N.gmap"
+            gmapi.mkdir()
+            (gmapi / "Info.xml").write_text("<info/>", encoding="utf-8")
+            _, basecamp = publish_product(host, PRODUCT, img, gmapi)
+            self.assertTrue(Path(basecamp.path).is_file())
+            self.assertEqual(Path(basecamp.path).parent, target.parent / "mapsource")
 
     def test_img_and_single_store_zip_are_published(self) -> None:
         with TemporaryDirectory() as directory:

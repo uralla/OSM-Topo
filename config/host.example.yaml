@@ -24,7 +24,8 @@ paths:
 publication:
   img_subdir: .
   gmapi_subdir: mapsource
-  img_archive: false
+  mapsource_enabled: true
+  img_archive: true
   gmapi_zip_mode: store
   split_zip_volumes: false
 

@@ -1,3 +1,4 @@
+from dataclasses import replace
 import json
 from datetime import datetime, timezone
 
@@ -220,3 +221,29 @@ def test_public_status_writes_atomic_utf8_txt_and_filtered_json(tmp_path):
     assert fresh["basecamp"]["url"] == "mapsource/Fresh.OSM-ms.zip"
     assert not list(output.glob(".map-update-status.txt.*.partial"))
     assert not list(output.glob(".map-update-status.json.*.partial"))
+
+
+def test_public_status_uses_img_zip_and_omits_disabled_basecamp(tmp_path):
+    host = _host(tmp_path)
+    host = replace(host, publication=replace(
+        host.publication, img_archive=True, mapsource_enabled=False,
+    ))
+    output = host.paths.publish_root
+    mapsource = output / "mapsource"
+    mapsource.mkdir(parents=True)
+    (mapsource / "Fresh.OSM-ms.zip").write_bytes(b"older BaseCamp")
+    (output / "Fresh.OSM.img").write_bytes(b"older IMG")
+    (output / "Fresh.OSM.img.zip").write_bytes(b"published ZIP")
+    write_map_update_status(_manifest(), host)
+
+    payload = json.loads((output / "map-update-status.json").read_text(encoding="utf-8"))
+    assert payload["mapsource_enabled"] is False
+    products = {row["product"]: row for row in payload["products"]}
+    assert products["fresh"]["img"] == {
+        "filename": "Fresh.OSM.img.zip",
+        "url": "Fresh.OSM.img.zip",
+        "available": True,
+        "size": len(b"published ZIP"),
+    }
+    assert products["running"]["img"]["available"] is False
+    assert all("basecamp" not in row for row in products.values())

@@ -44,12 +44,19 @@ def gmapi_zip_name(output_img: str) -> str:
     return f"{name[:-4]}-ms.zip"
 
 
+def published_img_name(output_img: str, *, archive: bool) -> str:
+    name = Path(output_img).name
+    if not name.lower().endswith(".img"):
+        raise StageError(f"output_img must end in .img: {output_img!r}")
+    return f"{name}.zip" if archive else name
+
+
 def publication_targets(
     host: HostConfig,
     product: Mapping[str, object],
     img_source: str | Path,
-    gmapi_source: str | Path,
-) -> tuple[PublicationTarget, PublicationTarget]:
+    gmapi_source: str | Path | None = None,
+) -> tuple[PublicationTarget, ...]:
     issues = validate_host_config(host)
     if issues:
         raise StageError("; ".join(str(issue) for issue in issues))
@@ -57,16 +64,16 @@ def publication_targets(
     if not isinstance(names, Mapping) or not isinstance(names.get("output_img"), str):
         raise StageError("product.names.output_img is required")
     output_img = str(names["output_img"])
-    img_target = host.paths.publish_root / host.publication.img_subdir / Path(output_img).name
-    zip_target = (
-        host.paths.publish_root
-        / host.publication.gmapi_subdir
-        / gmapi_zip_name(output_img)
-    )
-    return (
-        PublicationTarget("img", str(Path(img_source)), str(img_target)),
-        PublicationTarget("gmapi_zip", str(Path(gmapi_source)), str(zip_target)),
-    )
+    img_name = published_img_name(output_img, archive=host.publication.img_archive)
+    img_target = host.paths.publish_root / host.publication.img_subdir / img_name
+    targets = (PublicationTarget("img", str(Path(img_source)), str(img_target)),)
+    if not host.publication.mapsource_enabled:
+        return targets
+    if gmapi_source is None:
+        raise StageError("GMAPI source is required when MapSource is enabled")
+
+    zip_target = host.paths.publish_root / host.publication.gmapi_subdir / gmapi_zip_name(output_img)
+    return targets + (PublicationTarget("gmapi_zip", str(Path(gmapi_source)), str(zip_target)),)
 
 
 def _sha256(path: Path) -> str:
@@ -136,14 +143,21 @@ def _write_store_zip(source: Path, target: Path) -> None:
             raise StageError(f"GMAPI ZIP is not a single store archive: {target}")
 
 
-def _stage_img(source: Path, target: Path) -> Path:
+def _stage_img(source: Path, target: Path, *, archive: bool) -> Path:
     _validate_img(source)
     target.parent.mkdir(parents=True, exist_ok=True)
     descriptor, raw_path = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
     os.close(descriptor)
     staged = Path(raw_path)
     try:
-        shutil.copyfile(source, staged)
+        if archive:
+            with zipfile.ZipFile(staged, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=3) as output:
+                output.write(source, arcname=target.name.removesuffix(".zip"))
+            with zipfile.ZipFile(staged, "r") as output:
+                if output.testzip() is not None:
+                    raise StageError(f"IMG ZIP validation failed: {target}")
+        else:
+            shutil.copyfile(source, staged)
         os.chmod(staged, 0o644)
         _validate_img(staged)
         _fsync_file(staged)
@@ -180,19 +194,23 @@ def publish_product(
     host: HostConfig,
     product: Mapping[str, object],
     img_source: str | Path,
-    gmapi_source: str | Path,
-) -> tuple[PublishedArtifact, PublishedArtifact]:
-    """Stage and validate both artifacts before replacing either release."""
+    gmapi_source: str | Path | None = None,
+) -> tuple[PublishedArtifact, ...]:
+    """Stage and validate all enabled artifacts before replacing the release."""
 
     targets = publication_targets(host, product, img_source, gmapi_source)
-    img_target = Path(targets[0].target)
-    zip_target = Path(targets[1].target)
     staged: list[tuple[str, Path, Path]] = []
     backups: dict[Path, Path] = {}
     installed: list[Path] = []
     try:
-        staged.append(("img", _stage_img(Path(img_source), img_target), img_target))
-        staged.append(("gmapi_zip", _stage_gmapi(Path(gmapi_source), zip_target), zip_target))
+        for item in targets:
+            target = Path(item.target)
+            source = Path(item.source)
+            if item.kind == "img":
+                temporary = _stage_img(source, target, archive=host.publication.img_archive)
+            else:
+                temporary = _stage_gmapi(source, target)
+            staged.append((item.kind, temporary, target))
 
         for _, _, target in staged:
             if target.exists():
@@ -222,8 +240,7 @@ def publish_product(
         for backup in backups.values():
             backup.unlink(missing_ok=True)
 
-    artifacts = tuple(
+    return tuple(
         PublishedArtifact(kind, str(target), target.stat().st_size, _sha256(target))
         for kind, _, target in staged
     )
-    return artifacts  # type: ignore[return-value]

@@ -155,7 +155,6 @@ mkdir -p \
   "$DATA_ROOT/input" \
   "$DATA_ROOT/elevation" \
   "$PUBLISH_ROOT" \
-  "$PUBLISH_ROOT/mapsource" \
   "$DEM_ROOT" \
   "$TOOLS_ROOT"
 
@@ -175,7 +174,8 @@ paths:
 publication:
   img_subdir: .
   gmapi_subdir: mapsource
-  img_archive: false
+  mapsource_enabled: true
+  img_archive: true
   gmapi_zip_mode: store
   split_zip_volumes: false
 

@@ -12,7 +12,7 @@ from uuid import uuid4
 from .history import HistoryStore
 from .host import HostConfig
 from .map_recipe import map_recipe_fingerprint
-from .publish import gmapi_zip_name
+from .publish import gmapi_zip_name, published_img_name
 from .scheduler import MANUAL_ONLY_PRODUCTS, QueueItem, build_queue
 
 STATUS_FILENAME = "map-update-status.txt"
@@ -272,16 +272,21 @@ def build_public_status_snapshot(
         names = raw_product.get("names") if isinstance(raw_product, Mapping) else None
         output_img = names.get("output_img") if isinstance(names, Mapping) else None
         if host is not None and isinstance(output_img, str) and output_img:
-            img_relative = _relative_public_path(host.publication.img_subdir, output_img)
-            basecamp_relative = _relative_public_path(
-                host.publication.gmapi_subdir, gmapi_zip_name(output_img)
+            img_relative = _relative_public_path(
+                host.publication.img_subdir,
+                published_img_name(output_img, archive=host.publication.img_archive),
             )
             row["img"] = _artifact_info(host.paths.publish_root, img_relative)
-            row["basecamp"] = _artifact_info(host.paths.publish_root, basecamp_relative)
+            if host.publication.mapsource_enabled:
+                basecamp_relative = _relative_public_path(
+                    host.publication.gmapi_subdir, gmapi_zip_name(output_img)
+                )
+                row["basecamp"] = _artifact_info(host.paths.publish_root, basecamp_relative)
         rows.append(row)
 
     return {
         "schema_version": STATUS_JSON_SCHEMA_VERSION,
+        "mapsource_enabled": host is None or host.publication.mapsource_enabled,
         "generated_at": current.isoformat(timespec="seconds").replace("+00:00", "Z"),
         "timezone": "UTC",
         "note": _STATUS_NOTE,
@@ -372,6 +377,7 @@ def _public_json(snapshot: Mapping[str, object]) -> dict[str, object]:
     )
     return {
         "schema_version": snapshot.get("schema_version"),
+        "mapsource_enabled": snapshot.get("mapsource_enabled", True),
         "generated_at": snapshot.get("generated_at"),
         "timezone": snapshot.get("timezone"),
         "note": snapshot.get("note"),

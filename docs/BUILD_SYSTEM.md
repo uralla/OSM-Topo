@@ -258,12 +258,32 @@ The initial publication root is the existing `/mnt/nod/garmin` Syncthing tree,
 with the MapSource/GMAPI package under its existing `mapsource` subdirectory.
 The path is host configuration, not repeated in every product record.
 
-Publication format is fixed:
+Publication is configured globally in the host's `host.yaml`. For ZIP downloads
+with MapSource switched off, set these keys in the existing `publication` section:
 
-- one ready `.img` file, not wrapped in ZIP;
-- one GMAPI/MapSource store ZIP;
-- no `zip -s` split volumes;
-- temporary names during assembly and one atomic promotion after validation.
+```yaml
+publication:
+  mapsource_enabled: false
+  img_archive: true
+```
+
+- `img_archive: true` publishes a single compressed `<name>.img.zip` containing
+  `<name>.img`. Enable it explicitly on existing hosts. New host configurations
+  enable it by default. The status feed links to the ZIP once it is published.
+- `mapsource_enabled: true` builds and publishes one GMAPI store ZIP per map.
+  It is the default for existing configs. The publisher creates the configured
+  `gmapi_subdir` if it is missing.
+- `mapsource_enabled: false` skips desktop package generation and publication.
+  The daemon publishes the global setting in `map-update-status.json` and the
+  WordPress plugin hides the BaseCamp buttons.
+- Split ZIP volumes are unsupported. All enabled artifacts are staged and
+  validated before promotion.
+
+Restart the daemon after changing these options. After switching on IMG ZIPs,
+maps without a ZIP show an unavailable download until the first successful
+publication in the new format. Previous raw IMG files are retained for manual
+cleanup after their ZIPs become available. You can remove the `mapsource`
+directory manually once builds using the previous settings have stopped.
 
 ## Bootstrap and doctor
 

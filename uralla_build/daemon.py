@@ -220,7 +220,7 @@ def run_daemon(
     retry_not_before: dict[str, float] = {}
     once_started = False
     once_exit: int | None = None
-    last_running_snapshot: frozenset[str] = frozenset()
+    last_running_snapshot: frozenset[str] | None = None
 
     def publish_status(manifest: Mapping[str, object]) -> None:
         try:
@@ -257,12 +257,14 @@ def run_daemon(
                 f"{host.preprocess_concurrency}; splitter/mkgmap phase=exclusive"
             )
             while True:
+                reaped_child = False
                 # Reap finished children first so their slots are immediately reusable.
                 for product, child in list(children.items()):
                     exit_code = child.poll()
                     if exit_code is None:
                         continue
                     del children[product]
+                    reaped_child = True
                     if exit_code == 0:
                         retry_not_before.pop(product, None)
                         _log(f"product {product} completed successfully")
@@ -284,6 +286,7 @@ def run_daemon(
                     return 0
 
                 if once_started and not children:
+                    publish_status(manifest)
                     return int(once_exit or 0)
 
                 # Never run stale-build recovery while children owned by this daemon
@@ -345,7 +348,7 @@ def run_daemon(
                             _log("forced refresh completed")
 
                 running_snapshot = frozenset(running_products)
-                if running_snapshot != last_running_snapshot:
+                if reaped_child or running_snapshot != last_running_snapshot:
                     publish_status(manifest)
                     last_running_snapshot = running_snapshot
 

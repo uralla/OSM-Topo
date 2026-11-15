@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Garmin OSM Topo — Map Status
  * Description: Shortcode [garmin_map_status] for the public Garmin map download/status block.
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 
 if (!defined('ABSPATH')) {
@@ -125,6 +125,7 @@ function uralla_garmin_download_button($artifact, $label) {
 
 function uralla_garmin_map_status_shortcode() {
     $data = uralla_garmin_status_fetch();
+    $show_basecamp = is_array($data) && ($data['mapsource_enabled'] ?? true) !== false;
 
     ob_start();
     ?>
@@ -156,7 +157,7 @@ function uralla_garmin_map_status_shortcode() {
                 <span>🟡 ожидает обновления</span>
                 <span>🔵 собирается</span>
                 <span>🔴 ошибка</span>
-                <span>⚠️ собрана предыдущей версией</span>
+               <!-- <span>ℹ️ собрана на устаревшей конфигурации</span> -->
             </div>
 
             <div class="garmin-map-grid">
@@ -175,17 +176,14 @@ function uralla_garmin_map_status_shortcode() {
                     $never = !empty($product['never_built']);
 
                     $img = is_array($product['img'] ?? null) ? $product['img'] : [];
+                    $img_filename = (string) ($img['filename'] ?? '');
+                    $img_label = substr(strtolower($img_filename), -4) === '.zip' ? 'Скачать IMG (ZIP)' : 'Скачать IMG';
                     $basecamp = is_array($product['basecamp'] ?? null) ? $product['basecamp'] : [];
                 ?>
                     <article class="garmin-map-card <?php echo esc_attr($state['class']); ?>">
                         <div class="garmin-map-card-top">
                             <h3>
                                 <?php echo esc_html($title); ?>
-                                <?php if ($recipe_old) : ?>
-                                    <span class="garmin-map-recipe-warning"
-                                          title="Карта собрана предыдущей версией стиля или алгоритмов"
-                                          aria-label="Собрана предыдущей версией">⚠️</span>
-                                <?php endif; ?>
                             </h3>
                             <div class="garmin-map-state">
                                 <span aria-hidden="true"><?php echo esc_html($state['icon']); ?></span>
@@ -207,15 +205,17 @@ function uralla_garmin_map_status_shortcode() {
                             <?php endif; ?>
                         </div>
 
-                        <?php if ($recipe_old) : ?>
+<!--                        <?php if ($recipe_old) : ?>
                             <div class="garmin-map-recipe-note">
-                                ⚠️ Карта рабочая, но собрана предыдущей версией стиля/алгоритмов.
+                                ℹ️ Собрана на устаревшей конфигурации
                             </div>
                         <?php endif; ?>
-
+-->
                         <div class="garmin-map-actions">
-                            <?php echo uralla_garmin_download_button($img, 'Скачать IMG'); ?>
-                            <?php echo uralla_garmin_download_button($basecamp, 'BaseCamp'); ?>
+                            <?php echo uralla_garmin_download_button($img, $img_label); ?>
+                            <?php if ($show_basecamp) : ?>
+                                <?php echo uralla_garmin_download_button($basecamp, 'BaseCamp'); ?>
+                            <?php endif; ?>
                         </div>
                     </article>
                 <?php endforeach; ?>
