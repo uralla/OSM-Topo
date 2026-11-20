@@ -222,15 +222,24 @@ def publish_product(
             installed.append(target)
             _fsync_directory(target.parent)
     except Exception as exc:
+        rollback_errors = []
         for target in reversed(installed):
             backup = backups.get(target)
             try:
-                if backup is not None and backup.exists():
+                if backup is not None:
                     os.replace(backup, target)
                 else:
                     target.unlink(missing_ok=True)
-            except OSError:
-                pass
+            except OSError as rollback_error:
+                detail = f"{target}: {rollback_error}"
+                if backup is not None:
+                    del backups[target]
+                    detail += f" (recovery copy: {backup})"
+                rollback_errors.append(detail)
+        if rollback_errors:
+            raise StageError(
+                f"publication failed: {exc}; rollback failed: " + "; ".join(rollback_errors)
+            ) from exc
         if isinstance(exc, StageError):
             raise
         raise StageError(f"atomic publication failed: {exc}") from exc

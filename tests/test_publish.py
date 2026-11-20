@@ -160,6 +160,18 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(previous_img.read_bytes(), b"previous-img")
             self.assertEqual(previous_zip.read_bytes(), b"previous-zip")
 
+            def fail_install_and_rollback(source: object, target: object) -> None:
+                if Path(target) == previous_zip or Path(source).suffix == ".previous":
+                    raise OSError("simulated rename failure")
+                real_replace(source, target)
+
+            with patch("uralla_build.publish.os.replace", side_effect=fail_install_and_rollback):
+                with self.assertRaisesRegex(StageError, "rollback failed") as error:
+                    publish_product(_host(root), PRODUCT, img, gmapi)
+            recovery, = publish.glob(".*.previous")
+            self.assertIn(str(recovery), str(error.exception))
+            self.assertEqual(recovery.read_bytes(), b"previous-img")
+
 
 if __name__ == "__main__":
     unittest.main()

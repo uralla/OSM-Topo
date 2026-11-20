@@ -203,19 +203,11 @@ class StageRunner:
         product: str,
         keep_build_id: str,
     ) -> list[str]:
-        """Remove heavy files from obsolete terminal workspaces.
+        """Keep stage logs and the inputs used by incremental rebuilds.
 
-        Keep:
-        - the build that has just finished;
-        - the newest successful build with reusable splitter output;
-        - the newest failed/interrupted build with a reusable merge checkpoint.
-
-        Older workspaces retain only per-stage stdout/stderr logs.
-        As a hard retention limit, any non-running workspace older than 60 days
-        is removed completely, including orphan directories not present in history.
+        The pipeline calls this after finalization under the product lock.
         """
-
-        keep = {keep_build_id}
+        retained_inputs: set[Path] = set()
         with self.history.connect() as connection:
             successful = connection.execute(
                 """SELECT build_id FROM builds
@@ -226,6 +218,9 @@ class StageRunner:
             failed = connection.execute(
                 """SELECT build_id FROM builds
                    WHERE product = ? AND status IN ('failed', 'interrupted')
+                     AND EXISTS (SELECT 1 FROM stage_attempts AS a
+                                 WHERE a.build_id = builds.build_id
+                                   AND a.stage_name = 'merge' AND a.status = 'success')
                    ORDER BY created_at DESC""",
                 (product,),
             ).fetchall()
@@ -234,9 +229,9 @@ class StageRunner:
                    WHERE product = ? AND status != 'running'""",
                 (product,),
             ).fetchall()
-            running = connection.execute(
+            excluded = connection.execute(
                 """SELECT build_id FROM builds
-                   WHERE status = 'running'"""
+                   WHERE product != ? OR status = 'running'""", (product,)
             ).fetchall()
 
         for row in successful:
@@ -245,7 +240,7 @@ class StageRunner:
             if (tiles / "template.args").is_file() and (
                 tiles / "areas.list"
             ).is_file():
-                keep.add(build_id)
+                retained_inputs.add(tiles)
                 break
 
         for row in failed:
@@ -257,7 +252,7 @@ class StageRunner:
                 / "enriched.osm.pbf"
             )
             if checkpoint.is_file() and checkpoint.stat().st_size > 0:
-                keep.add(build_id)
+                retained_inputs.add(checkpoint)
                 break
 
         compacted: list[str] = []
@@ -265,10 +260,8 @@ class StageRunner:
 
         for row in terminal:
             build_id = str(row["build_id"])
-            if build_id in keep:
-                continue
             workspace = self.builds_root / build_id
-            if not workspace.is_dir():
+            if workspace.is_symlink() or not workspace.is_dir():
                 continue
 
             try:
@@ -277,6 +270,8 @@ class StageRunner:
                         stage_root.unlink()
                         continue
                     for entry in stage_root.iterdir():
+                        if entry in retained_inputs:
+                            continue
                         if entry.is_file() and log_name.fullmatch(entry.name):
                             continue
                         if entry.is_symlink() or entry.is_file():
@@ -301,13 +296,15 @@ class StageRunner:
                 flush=True,
             )
 
-        running_ids = {str(row["build_id"]) for row in running}
+        protected_ids = {str(row["build_id"]) for row in excluded}
+        protected_ids.update(path.relative_to(self.builds_root).parts[0] for path in retained_inputs)
+        protected_ids.add(keep_build_id)
         cutoff = time.time() - BUILD_WORKSPACE_MAX_AGE_SECONDS
         purged: list[str] = []
 
         if self.builds_root.is_dir():
             for workspace in self.builds_root.iterdir():
-                if workspace.name in running_ids:
+                if workspace.name in protected_ids:
                     continue
                 try:
                     stat = workspace.lstat()

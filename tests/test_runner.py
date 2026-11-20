@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import redirect_stderr
 import io
 import json
+import os
 from pathlib import Path
 import sqlite3
 import sys
@@ -23,6 +24,29 @@ def _write_command(filename: str = "result.txt", content: str = "ok") -> list[st
 
 
 class StageRunnerTests(unittest.TestCase):
+    def test_cleanup_keeps_rebuild_inputs_even_in_old_workspaces(self) -> None:
+        with TemporaryDirectory() as directory:
+            runner = StageRunner(directory)
+            build = runner.create_build("crimea")
+            workspace = runner.builds_root / build
+            tiles = workspace / "splitter/tiles"
+            tiles.mkdir(parents=True)
+            for name in ("areas.list", "template.args", "tile.osm.pbf"):
+                (tiles / name).touch()
+            unused = workspace / "splitter/scratch"
+            unused.touch()
+            runner.history.set_build_status(build, "success")
+            failed = runner.run(product="crimea", stage="merge",
+                                command=_write_command("enriched.osm.pbf"))
+            runner.history.set_build_status(failed.build_id, "failed")
+            os.utime(workspace, (1, 1))
+            runner.cleanup_old_build_workspaces("crimea", failed.build_id)
+            self.assertTrue((tiles / "tile.osm.pbf").is_file())
+            self.assertFalse(unused.exists())
+            self.assertTrue((runner.builds_root / failed.build_id / "merge/enriched.osm.pbf").is_file())
+            runner.cleanup_old_build_workspaces("belarus", "other-build")
+            self.assertTrue((tiles / "template.args").is_file())
+
     def test_v1_history_is_migrated_with_io_metrics(self) -> None:
         with TemporaryDirectory() as directory:
             database = Path(directory) / "history.sqlite3"

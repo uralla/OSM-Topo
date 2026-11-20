@@ -108,7 +108,8 @@ class ProductBuildPlanTests(unittest.TestCase):
             self.assertIn("merge", [stage.name for stage in northwestern.stages])
             self.assertNotIn("extract", [stage.name for stage in belarus.stages])
             self.assertIn("preprocess", [stage.name for stage in belarus.stages])
-            self.assertNotIn("merge", [stage.name for stage in belarus.stages])
+            merge = next(stage for stage in belarus.stages if stage.name == "merge")
+            self.assertIn(str(root / "data/elevation/belarus.pbf"), merge.command)
 
     def test_existing_managed_areas_are_reused(self) -> None:
         with TemporaryDirectory() as directory:
